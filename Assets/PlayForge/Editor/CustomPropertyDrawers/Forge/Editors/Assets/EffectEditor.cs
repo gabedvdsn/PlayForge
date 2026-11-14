@@ -145,6 +145,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 {
                     DefinitionPath(nameof(GameplayEffectDefinition.Description)), DefinitionPath(nameof(GameplayEffectDefinition.Visibility)),
                     DefinitionPath(nameof(GameplayEffectDefinition.Textures)),
+                    DefinitionPath(nameof(GameplayEffectDefinition.InheritFromOrigin)), DefinitionPath(nameof(GameplayEffectDefinition.OriginTexture)),
                 },
                 OnImportComplete = OnSectionReplaced,
                 OnClearComplete = OnSectionReplaced,
@@ -199,6 +200,15 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 Repaint();
             });
             content.Add(texturesField);
+
+            // Its icon from its origin, the ability, item or entity that applied it, by a tag, its own where the origin has
+            // none; the tag under Inherit From Origin alone (FN-25)
+            var inherit = CreatePropertyField(serializedObject.FindProperty(DefinitionPath(nameof(GameplayEffectDefinition.InheritFromOrigin))), "InheritFromOrigin", "Inherit From Origin");
+            content.Add(inherit);
+            var originTexture = CreatePropertyField(serializedObject.FindProperty(DefinitionPath(nameof(GameplayEffectDefinition.OriginTexture))), "OriginTexture", "Origin Texture");
+            content.Add(originTexture);
+            ForgeShowWhen.Track(originTexture, serializedObject, serialized =>
+                ForgeShowWhen.IsOn(serialized.FindProperty(DefinitionPath(nameof(GameplayEffectDefinition.InheritFromOrigin)))));
         }
 
         // ═══════════════════════════════════════════════════════════════════════════

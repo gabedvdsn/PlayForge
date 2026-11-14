@@ -10,7 +10,7 @@ namespace FarEmerald.PlayForge
     /// Supports level scaling for linked effects and abilities.
     /// </summary>
     [CreateAssetMenu(menuName = "PlayForge/Item", fileName = "Item_", order = 22)]
-    public class Item : BaseForgeLevelProvider, IWorkerGroupSource, ISerializationCallbackReceiver, IMovesToComponents
+    public class Item : BaseForgeLevelProvider, IWorkerGroupSource, ISerializationCallbackReceiver, IMovesToComponents, IHasTextures
     {
         public ItemDefinition Definition = new();
         public ItemTags Tags = new();
@@ -204,6 +204,8 @@ namespace FarEmerald.PlayForge
         {
             return ForgeHelper.GetTextureItem(Definition.Textures, PlayForge.Tags.PRIMARY);
         }
+
+        public IReadOnlyList<TextureItem> GetTextureItems() => Definition?.Textures;
 
         // ═══════════════════════════════════════════════════════════════════════════
         // ILevelProvider Implementation (BaseForgeLinkProvider)

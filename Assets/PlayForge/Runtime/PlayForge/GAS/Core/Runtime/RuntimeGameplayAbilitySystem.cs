@@ -13,7 +13,7 @@ namespace FarEmerald.PlayForge
     ///   var gas = new RuntimeGameplayAbilitySystem(entityData);
     ///   var relay = ProcessControl.Register(gas).With(dataPacket).Run().Relay;
     /// </summary>
-    public partial class RuntimeGameplayAbilitySystem : LazyRuntimeProcess, IGameplayAbilitySystem
+    public partial class RuntimeGameplayAbilitySystem : LazyRuntimeProcess, IGameplayAbilitySystem, IHasTextures
     {
         public RuntimeEntityIdentity EntityData;
 
@@ -253,6 +253,9 @@ namespace FarEmerald.PlayForge
         public LevelCallbackStatus ModifyLevel(Tag key, IntValuePair delta) => core.LevelSystem.TryModifyLevel(key, delta);
         public bool IsActive() => !IsDead;
 
+        // Its identity's textures, as an effect it applies may take one of them (FN-25)
+        public IReadOnlyList<TextureItem> GetTextureItems() => EntityData?.Textures;
+
         // Its process's name when it has no Entity Data, which threw
         public override string GetName() => EntityData?.Name ?? base.GetName();
 
@@ -297,7 +300,7 @@ namespace FarEmerald.PlayForge
         public LocalDataStructure GetLocalDataStructure() => core.LocalData;
     }
 
-    public class RuntimeEntityIdentity : IHasReadableDefinition, ITagSource, ILocalDataSource, IWorkerGroupSource
+    public class RuntimeEntityIdentity : IHasReadableDefinition, ITagSource, ILocalDataSource, IWorkerGroupSource, IHasTextures
     {
         public string Name;
         public string Description;
@@ -393,6 +396,8 @@ namespace FarEmerald.PlayForge
         {
             return ForgeHelper.GetTextureItem(Textures, PlayForge.Tags.PRIMARY);
         }
+
+        public IReadOnlyList<TextureItem> GetTextureItems() => Textures;
         public int GetMaxLevel()
         {
             return MaxLevel;

@@ -41,6 +41,18 @@ namespace FarEmerald.PlayForge
             return first;
         }
 
+        /// <summary>
+        /// The texture under exactly a tag, or null where none has a texture under it: no first texture in its place, as
+        /// an effect inheriting its origin's texture keeps its own where the origin has none of that tag (FN-25).
+        /// </summary>
+        public static Texture2D TextureUnder(IEnumerable<TextureItem> textures, Tag tag)
+        {
+            if (textures is null || string.IsNullOrEmpty(tag.GetLeafName())) return null;
+            foreach (var ti in textures)
+                if (ti?.Texture != null && ti.Tag == tag) return ti.Texture;
+            return null;
+        }
+
         public static float RelativeOffsetValue(IntValuePairClamped valuePair, float offset = 1f)
         {
             return valuePair.MaxValue > valuePair.MinValue && valuePair.MaxValue > offset 

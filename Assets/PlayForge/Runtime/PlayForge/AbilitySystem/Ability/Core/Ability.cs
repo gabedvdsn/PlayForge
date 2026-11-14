@@ -9,7 +9,7 @@ using Object = UnityEngine.Object;
 namespace FarEmerald.PlayForge
 {
     [CreateAssetMenu(menuName = "PlayForge/Ability", fileName = "Ability_", order = 20)]
-    public class Ability : BaseForgeLevelProvider, IWorkerGroupSource, ISerializationCallbackReceiver, IMovesToComponents
+    public class Ability : BaseForgeLevelProvider, IWorkerGroupSource, ISerializationCallbackReceiver, IMovesToComponents, IHasTextures
     {
         public AbilityDefinition Definition = new();
         public AbilityTags Tags = new();
@@ -284,6 +284,8 @@ namespace FarEmerald.PlayForge
         {
             return ForgeHelper.GetTextureItem(Definition.Textures, PlayForge.Tags.PRIMARY);
         }
+
+        public IReadOnlyList<TextureItem> GetTextureItems() => Definition?.Textures;
 
         // ═══════════════════════════════════════════════════════════════════════════
         // ILevelProvider Implementation

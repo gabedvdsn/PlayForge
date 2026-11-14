@@ -7,6 +7,9 @@ tracks each fix below by its ID.
 ## [Unreleased]
 
 ### Added
+- An effect's **Inherit From Origin** and **Origin Texture**: its icon is the texture of its origin, the ability, item or
+  entity that applied it, under a tag, `Primary` to start, or its own where the origin has none. `GameplayEffectSpec.GetIcon()`
+  reads it, and `IHasTextures` gives an origin's textures (FN-25).
 - A Scaler asset's **Try** section: what it gives at each level of a range, with the parts behind each, against a
   caster, a target and a caller whose values the author types or fills from an Entity asset; kept for the session,
   never in the asset. `ScalerTry` reads the same in code (LVL-5).

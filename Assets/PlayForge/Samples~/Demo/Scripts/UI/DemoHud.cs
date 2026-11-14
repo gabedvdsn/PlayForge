@@ -365,7 +365,7 @@ namespace FarEmerald.PlayForge.Samples.Demo
 
         private void ShowEffects(DemoUnit me)
         {
-            var shown = new List<(GameplayEffect effect, int stacks, float left)>();
+            var shown = new List<(GameplayEffect effect, int stacks, float left, Texture2D icon)>();
             var shelf = me.Gas.GetEffectSystem()?.Shelf;
             if (shelf != null)
             {
@@ -376,8 +376,9 @@ namespace FarEmerald.PlayForge.Samples.Demo
                     if (effect == null || effect.Definition.Visibility == Tags.NOT_VISIBLE) continue;
                     int stacks = container is AbstractStackingEffectContainer stacking ? stacking.Stacks : 1;
                     int at = shown.FindIndex(each => each.effect == effect);
-                    if (at >= 0) shown[at] = (effect, shown[at].stacks + stacks, Mathf.Max(shown[at].left, container.DurationRemaining));
-                    else shown.Add((effect, stacks, container.DurationRemaining));
+                    if (at >= 0) shown[at] = (effect, shown[at].stacks + stacks, Mathf.Max(shown[at].left, container.DurationRemaining), shown[at].icon);
+                    // Its spec's icon, which may be its origin's (FN-25)
+                    else shown.Add((effect, stacks, container.DurationRemaining, container.Spec.GetIcon()));
                 }
             }
             while (buffs.childCount < shown.Count)
@@ -389,12 +390,12 @@ namespace FarEmerald.PlayForge.Samples.Demo
             while (buffs.childCount > shown.Count) buffs.RemoveAt(buffs.childCount - 1);
             for (int i = 0; i < shown.Count; i++)
             {
-                var (effect, stacks, left) = shown[i];
+                var (effect, stacks, left, icon) = shown[i];
                 var chip = (Label)buffs[i];
                 string time = left > 0f && left < 999f ? $" {left:0.0}s" : "";
                 chip.text = stacks > 1 ? $"{effect.GetName()} ×{stacks}{time}" : $"{effect.GetName()}{time}";
                 chip.tooltip = effect.GetDescription();
-                chip.style.backgroundImage = effect.GetDefaultIcon() is { } icon ? new StyleBackground(icon) : new StyleBackground(StyleKeyword.None);
+                chip.style.backgroundImage = icon != null ? new StyleBackground(icon) : new StyleBackground(StyleKeyword.None);
             }
         }
 

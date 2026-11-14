@@ -154,6 +154,20 @@ namespace FarEmerald.PlayForge
             Base.OwnProcCoefficient ? Base.ProcCoefficient.Evaluate(NumberContext.Of(this))
             : Origin?.GetReadableDefinition() is Ability ability ? ability.Definition.ProcCoefficient.Evaluate(NumberContext.Of(this)) : 1f;
 
+        /// <summary>
+        /// Its icon: its effect's own, or, under its effect's Inherit From Origin, its origin's texture under the effect's
+        /// Origin Texture, the ability, item or entity that applied it, its own where the origin has none of it (FN-25).
+        /// </summary>
+        public Texture2D GetIcon()
+        {
+            var definition = Base?.Definition;
+            if (definition is { InheritFromOrigin: true } && Origin?.GetReadableDefinition() is IHasTextures origin
+                && !ReferenceEquals(origin, Base)
+                && ForgeHelper.TextureUnder(origin.GetTextureItems(), definition.OriginTexture) is { } inherited)
+                return inherited;
+            return Base?.GetDefaultIcon();
+        }
+
         public GameplayEffectSpec(GameplayEffect GameplayEffect, IEffectOrigin origin, ITarget target)
         {
             Base = GameplayEffect;

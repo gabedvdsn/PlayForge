@@ -7,7 +7,7 @@ namespace FarEmerald.PlayForge
     /// A GAS on a GameObject. What makes it a GAS lives in <see cref="GASCore"/>, which it builds as it initializes and
     /// forwards to. What stays here is the asset it is made from, its place in the scene, and how it goes away (GAS-S1).
     /// </summary>
-    public partial class GameplayAbilitySystem : LazyMonoProcess, IGameplayAbilitySystem
+    public partial class GameplayAbilitySystem : LazyMonoProcess, IGameplayAbilitySystem, IHasTextures
     {
         public EntityIdentity EntityData;
 
@@ -169,6 +169,9 @@ namespace FarEmerald.PlayForge
         #region IAttributeDerivation
         public ISource GetSource() => this;
         public IHasReadableDefinition GetReadableDefinition() => this;
+
+        // Its identity's textures, as an effect it applies may take one of them (FN-25)
+        public IReadOnlyList<TextureItem> GetTextureItems() => EntityData != null ? EntityData.Textures : null;
         public List<Tag> GetContextTags() => EntityData.ContextTags;
         public TagCache GetTagCache() => TagCache;
         public Tag GetAssetTag() => EntityData.AssetTag;

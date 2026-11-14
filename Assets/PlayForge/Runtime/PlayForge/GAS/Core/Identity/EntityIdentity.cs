@@ -7,7 +7,7 @@ using UnityEngine.Serialization;
 namespace FarEmerald.PlayForge
 {
     [CreateAssetMenu(menuName = "PlayForge/Entity", fileName = "Entity_", order = 25)]
-    public class EntityIdentity : BaseForgeLevelProvider, IWorkerGroupSource, ISerializationCallbackReceiver, IMovesToComponents
+    public class EntityIdentity : BaseForgeLevelProvider, IWorkerGroupSource, ISerializationCallbackReceiver, IMovesToComponents, IHasTextures
     {
         public string Name;
         public string Description;
@@ -102,6 +102,8 @@ namespace FarEmerald.PlayForge
         {
             return ForgeHelper.GetTextureItem(Textures, PlayForge.Tags.PRIMARY);
         }
+
+        public IReadOnlyList<TextureItem> GetTextureItems() => Textures;
         public override int GetMaxLevel()
         {
             return MaxLevel;

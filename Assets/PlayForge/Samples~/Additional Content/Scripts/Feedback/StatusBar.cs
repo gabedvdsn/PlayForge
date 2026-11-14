@@ -123,7 +123,8 @@ namespace FarEmerald.PlayForge.AdditionalContent
                 }
                 if (icons.Count >= MaxIcons) continue;
                 found[effect] = icons.Count;
-                icons.Add(new Icon(effect, stacks, left, effect.GetDefaultIcon(), Letters(effect.GetName())));
+                // Its spec's icon, which may be its origin's (FN-25)
+                icons.Add(new Icon(effect, stacks, left, container.Spec.GetIcon(), Letters(effect.GetName())));
             }
         }
 

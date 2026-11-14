@@ -1408,7 +1408,7 @@ them, worked in its order.
 | FN-22 | An effect's Impact has no lifesteal of its own: lifesteal is the Lifesteal attribute alone, as its holder's, which reverses Decision 78's own lifesteal of an effect. Done: `EffectLifesteal` and an effect's Lifesteal go, from its Impact section and from what the Lifesteal worker reads, a hit healing by its dealer's Lifesteal alone. The Additional Content's Vampiric Strike, a blow with its own, is Vampirism, an Infinite +0.5 Lifesteal, with a Lifesteal attribute beside the recipes' Health; the Dota lab's Monkey King heals his 30% by his Lifesteal, which Jingu Mastery Lifesteal raises by 0.3 as his charges come and takes off at frame's end once they're spent, its Removal condition reading them, and the lab has a Lifesteal attribute (`Lifesteal.cs`, `GameplayEffect.cs`, `EffectEditor.cs`) | Refactor | verified |
 | FN-23 | Fields that don't apply are hidden: an ability's Buffer Window and Buffer Priority but under Queue or its entity's policy, which may be Queue; an effect's Proc Coefficient but under Own Proc Coefficient; and others where they don't apply. Done: those, an ability's Activation Roll and an effect's Chance Roll but for a chance that can miss, a plain 1 or more having nothing to roll, and a roll's Luck but under Own Luck, in a drawer of the roll's own; each hidden by `ForgeShowWhen`, which reads its object as it changes, an Undo among its changes, a selection whose values differ showing it; the style doc says so (`ForgeShowWhen.cs`, `ChanceRollDrawer.cs`, `AbilityEditor.cs`, `EffectEditor.cs`) | UI | verified |
 | FN-24 | A pass over the ability tasks: those a framework should have (Decision 83: waits for an event, a tag gained or lost and an attribute crossing a value; sending an event, tags while a stage runs and cancelling abilities by tag; Dash, Blink and Area Effect, and Consume Item and Apply To Caster, from the Demo), the others refactored, Run Sequence's picker searchable as the framework's others are, Scalable numbers where they belong, and the task picker grouped by category, which each task names | Feature | open |
-| FN-25 | An effect's texture from its origin, the ability, item or entity that applied it: Inherit From Origin and a tag, Primary to start, its own where the origin has none (Decision 83: one option per effect) | Feature | open |
+| FN-25 | An effect's texture from its origin, the ability, item or entity that applied it: Inherit From Origin and a tag, Primary to start, its own where the origin has none (Decision 83: one option per effect). Done: an effect's Definition has Inherit From Origin and Origin Texture, shown under it alone; `GameplayEffectSpec.GetIcon()` gives the origin's texture under exactly that tag, its own where the origin has none, through `IHasTextures`, which abilities, items, effects, entity identities and both hubs give; the Demo's bar and the Additional Content's status bar show a spec's icon (`GameplayEffect.cs`, `GameplayEffectSpec.cs`, `IHasReadableDefinition.cs`, `ForgeHelper.cs`, `EffectEditor.cs`) | Feature | verified |
 
 ### The tag review (TAG)
 
@@ -1460,6 +1460,17 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-14, **FN-25: an effect's texture from its origin.** The user's note: an option for an effect to inherit its
+  texture from its origin, by a tag, Primary or another, its own where the origin has none. As Decision 83 chose, one
+  option per effect: its Definition's Inherit From Origin, and Origin Texture, the tag, shown under it alone by FN-23's
+  `ForgeShowWhen`. A spec's `GetIcon()` reads it at once, so a change shows on an effect already applied; it takes the
+  texture under exactly that tag, `ForgeHelper.TextureUnder`, where `GetDefaultIcon` falls back to the first texture,
+  so an origin with none under it leaves the effect its own. An origin gives its textures through `IHasTextures`: an
+  ability, an item, an effect, an entity's identity, and either hub, a running entity's being its identity's, where a
+  Mono hub gave no icon at all. The Demo's bar and the Additional Content's status bar show a spec's icon.
+  - Red: FN-25's runtime tests didn't compile against the code before it, a spec having no GetIcon nor an effect Inherit From Origin and Origin Texture.
+  - Gates, on a frozen snapshot of the package with the Demo imported: EditMode 956 of 956; PlayMode 1921 of 1929, 8 skipped, none failing; golden 25 of 25, in the private copy.
 
 - 2026-11-14, **FN-23: fields shown only where they apply.** The user's note: hide what doesn't apply, as an ability's
   Buffer Window and Buffer Priority under a policy that isn't Queue or the entity's, whose policy may be Queue, and an

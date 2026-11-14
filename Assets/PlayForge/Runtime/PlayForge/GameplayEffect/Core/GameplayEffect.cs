@@ -9,7 +9,7 @@ using UnityEngine.Serialization;
 namespace FarEmerald.PlayForge
 {
     [CreateAssetMenu(menuName = "PlayForge/Gameplay Effect", fileName = "Effect_", order = 21)]
-    public class GameplayEffect : BaseForgeLevelProvider, ISerializationCallbackReceiver, IMovesToComponents
+    public class GameplayEffect : BaseForgeLevelProvider, ISerializationCallbackReceiver, IMovesToComponents, IHasTextures
     {
         public GameplayEffectDefinition Definition = new();
         public GameplayEffectTags Tags = new();
@@ -351,15 +351,25 @@ namespace FarEmerald.PlayForge
         {
             return ForgeHelper.GetTextureItem(Definition.Textures, PlayForge.Tags.PRIMARY);
         }
+
+        public IReadOnlyList<TextureItem> GetTextureItems() => Definition?.Textures;
     }
 
     [Serializable]
     public class GameplayEffectDefinition
-    { 
+    {
         public string Name;
         public string Description;
         [ForgeTagContext(ForgeContext.Visibility)] public Tag Visibility;
         public List<TextureItem> Textures;
+
+        [Tooltip("Its icon is its origin's, the ability, item or entity that applied it: the origin's texture under Origin " +
+                 "Texture, its own where the origin has none (FN-25)")]
+        public bool InheritFromOrigin;
+
+        [Tooltip("The origin's texture it takes, by its tag: Primary, or another")]
+        [ForgeTagContext(ForgeContext.TextureSlot)]
+        public Tag OriginTexture = Tags.PRIMARY;
         [ForgeTagContext(ForgeContext.RetentionGroup)] public Tag RetentionGroup = Tags.IgnoreRetention;
     }
 

@@ -38,6 +38,11 @@ the same name.
   `Not Visible`. The Forge lists it. The runtime doesn't act on it.
 - **Textures**: icons, each paired with a tag. The texture tagged `Primary` is the effect's icon. Without one, the
   first texture is used.
+- **Inherit From Origin** (FN-25): its icon is its origin's, the ability, item or entity that applied it: the origin's
+  texture under **Origin Texture**, a tag, `Primary` to start, which shows under it. Where the origin has none under
+  that tag, the effect's own stands. A spec reads it, `spec.GetIcon()`, as the Demo's bar and the Additional Content's
+  status bar do; an origin holds textures through `IHasTextures`, as abilities, items, effects, entities and both hubs
+  do.
 
 ## Leveling
 
