@@ -388,7 +388,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         {
             if (asset is not Ability ability) return;
             var message = NeverRunOut(ability);
-            if (message != null) problems.Add(new ForgeProblem(asset, ForgeProblemSeverity.Warning, message, nameof(Ability.Charges)));
+            if (message != null) problems.Add(new ForgeProblem(asset, ForgeProblemSeverity.Warning, message, nameof(Ability.Components)));
         }
 
         /// <summary>
@@ -426,7 +426,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             if (asset is Ability ability && ability.Toggles != null
                 && ability.Toggles.DurationSpecification?.DurationPolicy == EEffectDurationPolicy.Instant)
                 problems.Add(new ForgeProblem(asset, ForgeProblemSeverity.Warning,
-                    "It toggles an Instant effect, which is never on to turn off. Toggle a lasting one.", nameof(Ability.Toggles)));
+                    "It toggles an Instant effect, which is never on to turn off. Toggle a lasting one.", nameof(Ability.Components)));
 
             if (asset is not GameplayEffect effect || effect.Transfers == null) return;
             for (int i = 0; i < effect.Transfers.Count; i++)

@@ -149,22 +149,6 @@ passes it in, and one effect serves every strength.
   its caster has less than they come to, lacks the attribute, or no attribute plays the role, and they're paid where a
   Cost is, as the ability starts or its stage applies usage. The section's line says them, as "30 Mana". They took the
   place of TW-28's Mana Cost, which spent the project's Mana alone.
-- **Charges** (TW-17): how many uses it holds, a number that can scale by level, each use spending a charge. With 1 it
-  is an ordinary cooldown. With more, the Cooldown check refuses it only with none in hand, and its **Recharge** says
-  how spent ones come back: **Each Charge** (the default) starts the Cooldown for each charge spent, a container of its
-  own whatever the effect does when applied again, and each brings its charge back as it ends, so three spent a second
-  apart come back a second apart; **All At Once** starts the Cooldown only as the last is spent, and its end brings them
-  all back. Write a recharge of your own by extending `AbstractChargeRecharge`: override `InHand` (how many are in
-  hand) and `Spend` (what a use does), using `AbilityCharges`' `Max`, `Spent`, `Cooldowns` and `StartCooldown`; one
-  of your own counts even a single charge, unless its `CountsASingleCharge` says not. Code reads an ability's charges
-  through its spec's `Charges`, as `container.Spec.Charges.InHand`. The section's line counts them, as "3 charges",
-  and a warning under Recharge, as in the Problems view, says where built-in charges have no Cooldown to bring them
-  back, so they never run out.
-- **Toggles** (TW-20): an effect the ability turns on and off on its caster, as a mana shield: used, it puts the effect
-  on where its usage would be paid, paying its Cost and Attribute Costs and starting no cooldown; used again, it takes
-  the effect off, paying nothing and asking no cost, and starts its Cooldown, or spends a charge. Neither its cost nor
-  its cooldown stops it turning off. It counts only the effect it put on; one another put there leaves it off. Code asks
-  through its spec's `IsToggledOn`. The Problems view warns where it toggles an Instant effect, which is never on.
 - **Targeting**: the task that picks what the ability acts on, such as an entity the player clicks, or the caster
   itself. Targeting holds the activation's claim. If the task fails while its **Break Runtime On Invalid** is on, or it
   doesn't finish, the activation ends. Leave Targeting empty to skip this step.
@@ -284,6 +268,30 @@ An ability's components are features it carries, each a class with hooks into it
 A component of your own derives from `AbstractAbilityComponent` and overrides the hooks it needs, each a no-op
 otherwise. It's the ability's, shared by everything that holds it, so what it keeps for one entity's ability it keeps through its
 context: `ctx.GetState<T>(this)`.
+
+### Charges
+
+A **Charges** component (TW-17) says how many uses the ability holds, a number that can scale by level, each use spending a charge. With 1 it
+is an ordinary cooldown. With more, the Cooldown check refuses it only with none in hand, and its **Recharge** says
+how spent ones come back: **Each Charge** (the default) starts the Cooldown for each charge spent, a container of its
+own whatever the effect does when applied again, and each brings its charge back as it ends, so three spent a second
+apart come back a second apart; **All At Once** starts the Cooldown only as the last is spent, and its end brings them
+all back. Write a recharge of your own by extending `AbstractChargeRecharge`: override `InHand` (how many are in
+hand) and `Spend` (what a use does), using `AbilityCharges`' `Max`, `Spent`, `Cooldowns` and `StartCooldown`; one
+of your own counts even a single charge, unless its `CountsASingleCharge` says not. Code reads an ability's charges
+through its spec's `Charges`, as `container.Spec.Charges.InHand`. The section's line counts them, as "3 charges",
+and a warning under the Components list, as in the
+Problems view, says where built-in charges have no Cooldown to bring them
+back, so they never run out. An ability holds one at most (FN-14).
+
+### Toggle
+
+A **Toggle** component (TW-20) holds an **Effect** the ability turns on and off on its caster, as a mana shield: used, it puts the effect
+on where its usage would be paid, paying its Cost and Attribute Costs and starting no cooldown; used again, it takes
+the effect off, paying nothing and asking no cost, and starts its Cooldown, or spends a charge. Neither its cost nor
+its cooldown stops it turning off. It counts only the effect it put on; one another put there leaves it off. Code asks
+through its spec's `IsToggledOn`. The Problems view warns where it toggles an Instant effect, which is never on. As its holder forgets the ability, the effect comes off; it stayed on (FN-14). An ability
+holds one at most.
 
 ### Auras
 

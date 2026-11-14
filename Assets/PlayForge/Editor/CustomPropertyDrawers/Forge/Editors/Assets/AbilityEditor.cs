@@ -33,7 +33,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
         // Under the cooldown, while no stage applies the usage effects (ED-41)
         private HelpBox chargesNote;
-        private VisualElement rechargeField;
 
         private SectionResult levelingSection;
         private SectionResult tagsSection;
@@ -347,8 +346,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                     DefinitionPath(nameof(AbilityDefinition.BufferPriority)), DefinitionPath(nameof(AbilityDefinition.ActivateImmediately)),
                     DefinitionPath(nameof(AbilityDefinition.ChanceToActivate)), DefinitionPath(nameof(AbilityDefinition.ActivationRoll)),
                     DefinitionPath(nameof(AbilityDefinition.ProcCoefficient)), DefinitionPath(nameof(AbilityDefinition.IgnoresCrowdControl)),
-                    nameof(Ability.Cost), nameof(Ability.AttributeCosts), nameof(Ability.Cooldown), nameof(Ability.Charges), nameof(Ability.Recharge),
-                    nameof(Ability.Toggles), BehaviourPath(nameof(AbilityBehaviour.Targeting)),
+                    nameof(Ability.Cost), nameof(Ability.AttributeCosts), nameof(Ability.Cooldown), BehaviourPath(nameof(AbilityBehaviour.Targeting)),
                     BehaviourPath(nameof(AbilityBehaviour.UseImplicitTargeting)), BehaviourPath(nameof(AbilityBehaviour.ImplicitTag)),
                 },
                 OnImportComplete = OnSectionReplaced,
@@ -407,19 +405,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
             content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(Ability.AttributeCosts)), "AttributeCosts", "Attribute Costs"));
             content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(Ability.Cooldown)), "Cooldown", "Cooldown"));
 
-            // Its charges, several uses with a cooldown each, and how they come back, shown while they're counted, with a
-            // note where they never run out (TW-17). A note under the cooldown said no stage applied it (ED-41); TW-17
-            // applies it as the ability starts
-            content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(Ability.Charges)), "Charges", "Charges"));
-            rechargeField = CreatePropertyField(serializedObject.FindProperty(nameof(Ability.Recharge)), "Recharge", "Recharge");
-            content.Add(rechargeField);
-            chargesNote = new HelpBox("", HelpBoxMessageType.Warning) { name = "ChargesNeverRunOut" };
-            content.Add(chargesNote);
-            ShowCharges();
-
-            // An effect it turns on and off, paying its cost as it turns on and starting its cooldown as it turns off (TW-20)
-            content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(Ability.Toggles)), "Toggles", "Toggles"));
-
             // The targeting is an object each ability keeps of its own, which a multiple selection can't edit safely (ED-12)
             if (IsMultiple) content.Add(CreateNote("Select one ability to edit its targeting."));
             else content.Add(CreatePropertyField(serializedObject.FindProperty(BehaviourPath(nameof(AbilityBehaviour.Targeting))), "Targeting", "Targeting"));
@@ -446,12 +431,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
             if (implicitTagField != null) implicitTagField.style.display = shown ? DisplayStyle.Flex : DisplayStyle.None;
         }
 
-        // Recharge shows while the charges may be counted, and the note while they never run out, in the Problems view's
-        // words (TW-17)
+        // The note under the components while its charges never run out, in the Problems view's words (TW-17, FN-14)
         private void ShowCharges()
         {
-            if (rechargeField != null)
-                rechargeField.style.display = IsMultiple || ChargesRule.Counted(ability) ? DisplayStyle.Flex : DisplayStyle.None;
             if (chargesNote == null) return;
             var message = IsMultiple ? null : ChargesRule.NeverRunOut(ability);
             chargesNote.text = message ?? "";
@@ -573,6 +555,11 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 return;
             }
             componentsSection.Content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(Ability.Components)), "Components", ""));
+
+            // Its charges, a component, with a note under the list where they never run out (TW-17)
+            chargesNote = new HelpBox("", HelpBoxMessageType.Warning) { name = "ChargesNeverRunOut" };
+            componentsSection.Content.Add(chargesNote);
+            ShowCharges();
         }
 
         private void BuildWorkersSection(VisualElement parent)

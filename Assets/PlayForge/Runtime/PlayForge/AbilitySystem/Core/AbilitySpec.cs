@@ -71,6 +71,12 @@ namespace FarEmerald.PlayForge
         }
 
         /// <summary>Whether the effect it toggles is on its caster, put there by it (TW-20).</summary>
+        /// <summary>Takes its toggled effect off its caster, where it's on: as its holder forgets the ability (FN-14).</summary>
+        internal void ToggleOff()
+        {
+            if (IsToggledOn) Source.ToGAS()?.GetEffectSystem()?.RemoveGameplayEffect(Base.Toggles, this);
+        }
+
         public bool IsToggledOn =>
             Base.Toggles is { } toggles && Source?.ToGAS()?.GetEffectSystem() is { } effects && effects.CountFrom(toggles, this) > 0;
 

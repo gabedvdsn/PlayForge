@@ -43,18 +43,32 @@ namespace FarEmerald.PlayForge
         [ForgeEffectTemplate("Cooldown", "Cooldown")]
         public GameplayEffect Cooldown;
 
-        [Tooltip("How many uses it holds, each spending a charge that comes back as its Recharge says; 1 is an ordinary " +
-                 "cooldown (TW-17)")]
-        public ScalableInt Charges = 1;
+        // Its charges, recharge and toggle as a save before components kept them, each moved into its component as it
+        // loads (FN-14)
+        [SerializeField, HideInInspector, FormerlySerializedAs("Charges")] private ScalableInt legacyCharges = 1;
+        [SerializeReference, HideInInspector, FormerlySerializedAs("Recharge")] private AbstractChargeRecharge legacyRecharge = new EachChargeRecharge();
+        [SerializeField, HideInInspector, FormerlySerializedAs("Toggles")] private GameplayEffect legacyToggles;
 
-        [SerializeReference]
-        [Tooltip("How its spent charges come back: each on a cooldown of its own, or all at once as one cooldown ends once " +
-                 "they're all spent, or as a recharge of your own says (TW-17)")]
-        public AbstractChargeRecharge Recharge = new EachChargeRecharge();
+        /// <summary>Its charges: its Charges component's, or one, an ordinary cooldown (TW-17, FN-14).</summary>
+        public ScalableInt Charges => FirstComponent<ChargesAbilityComponent>() is { Charges: { } charges } ? charges : OneCharge;
 
-        [Tooltip("An effect it toggles on its caster: used, it puts the effect on, paying its cost; used again, it takes the " +
-                 "effect off, paying and asking nothing, and starts its cooldown. None, it doesn't toggle (TW-20)")]
-        public GameplayEffect Toggles;
+        /// <summary>How its spent charges come back: its Charges component's, or each on a cooldown of its own (TW-17, FN-14).</summary>
+        public AbstractChargeRecharge Recharge => FirstComponent<ChargesAbilityComponent>() is { Recharge: { } recharge } ? recharge : EachCharge;
+
+        /// <summary>The effect it toggles on its caster: its Toggle component's, or none, where it doesn't toggle (TW-20, FN-14).</summary>
+        public GameplayEffect Toggles => FirstComponent<ToggleAbilityComponent>()?.Effect;
+
+        private static readonly ScalableInt OneCharge = 1;
+        private static readonly AbstractChargeRecharge EachCharge = new EachChargeRecharge();
+
+        // Its first component of a kind, or null
+        private T FirstComponent<T>() where T : AbstractAbilityComponent
+        {
+            if (Components == null) return null;
+            foreach (var component in Components)
+                if (component is T found) return found;
+            return null;
+        }
 
         /// <summary>
         /// Whether a stage marked Apply Usage Effects takes its cost and cooldown; where none does, they apply as it starts,
@@ -95,12 +109,36 @@ namespace FarEmerald.PlayForge
         // An older save's fields, each moved into a component as it loads, in the editor and in a build (FN-14, Decision 76)
         void ISerializationCallbackReceiver.OnAfterDeserialize()
         {
-            if (Auras is not { Count: > 0 }) return;
-            Components ??= new List<AbstractAbilityComponent>();
-            foreach (var aura in Auras)
-                if (aura != null) Components.Add(new AuraAbilityComponent { Aura = aura });
-            Auras.Clear();
-            MovedToComponents = true;
+            if (Auras is { Count: > 0 })
+            {
+                Components ??= new List<AbstractAbilityComponent>();
+                foreach (var aura in Auras)
+                    if (aura != null) Components.Add(new AuraAbilityComponent { Aura = aura });
+                Auras.Clear();
+                MovedToComponents = true;
+            }
+
+            // Charges more than one, or that scale, or a recharge of another kind: each kept plain data, so a load, which
+            // mustn't ask Unity anything, can tell
+            bool charged = legacyCharges != null && (legacyCharges.Magnitude > 1 || !AbstractScaler.IsNone(legacyCharges.Scaler));
+            bool recharged = legacyRecharge != null && legacyRecharge.GetType() != typeof(EachChargeRecharge);
+            if (charged || recharged)
+            {
+                Components ??= new List<AbstractAbilityComponent>();
+                Components.Add(new ChargesAbilityComponent { Charges = legacyCharges ?? 1, Recharge = legacyRecharge ?? new EachChargeRecharge() });
+                legacyCharges = 1;
+                legacyRecharge = new EachChargeRecharge();
+                MovedToComponents = true;
+            }
+
+            // A toggle, by its reference alone, which a load can read
+            if (!ReferenceEquals(legacyToggles, null))
+            {
+                Components ??= new List<AbstractAbilityComponent>();
+                Components.Add(new ToggleAbilityComponent { Effect = legacyToggles });
+                legacyToggles = null;
+                MovedToComponents = true;
+            }
         }
 
         [Tooltip("Its holder heals a share of each loss it deals, while it's known (TW-15)")]

@@ -444,6 +444,10 @@ tracks each fix below by its ID.
   page, through one table of links in the editor.
 
 ### Changed
+- Charges and Toggles are ability components, a Charges component holding its charges and recharge and a Toggle
+  component its effect, in the Components section, where they were fields of Activation. `Ability.Charges`,
+  `Ability.Recharge` and `Ability.Toggles` read them and can't be set: add a `ChargesAbilityComponent` or a
+  `ToggleAbilityComponent` instead. A saved ability's move into components as it loads (FN-14).
 - Auras are components: an Aura component on an effect, an ability, an item or an entity, in its Components section,
   where they were a list in Workers. `GameplayEffect.Auras`, `Ability.Auras`, `Item.Auras`, `EntityIdentity.Auras` and
   `RuntimeEntityIdentity.Auras` are gone; add an `AuraEffectComponent`, `AuraAbilityComponent`, `AuraItemComponent` or
@@ -775,6 +779,7 @@ tracks each fix below by its ID.
   Asking whether its sequence was paused took 24 bytes a frame.
 
 ### Fixed
+- A toggle's effect comes off as its ability is forgotten; it stayed on, which nothing could turn off (FN-14).
 - An entity's Death section shows Death's fields in it, each by its name; one field of the whole drew a foldout of its
   own inside the section (FN-17).
 - A unique tag is remembered by its prefix, its text and its length apart: run together, another split of the same
