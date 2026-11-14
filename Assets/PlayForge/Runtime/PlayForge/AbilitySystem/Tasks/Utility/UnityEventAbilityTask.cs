@@ -6,6 +6,7 @@ using UnityEngine.Events;
 
 namespace FarEmerald.PlayForge
 {
+    [ForgeCategory("Utility")]
     public class UnityEventAbilityTask : AbstractAbilityTask
     {
         public List<UnityEvent> Events;

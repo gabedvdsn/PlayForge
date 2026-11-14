@@ -208,7 +208,12 @@ MonoBehaviour:
     - rid: 2403794261189067254
       type: {class: DelayTask, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:
-        DelayMilliseconds: 200
+        DelayMilliseconds:
+          Magnitude: 200
+          RealMagnitude: 2
+          Scaler:
+            rid: -2
+          Rounding: 0
     - rid: 2403794261189067255
       type: {class: CreateMonoProcessAbilityTask, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:

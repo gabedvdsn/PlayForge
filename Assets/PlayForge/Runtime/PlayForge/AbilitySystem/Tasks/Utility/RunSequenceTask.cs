@@ -6,6 +6,7 @@ using UnityEngine.Serialization;
 
 namespace FarEmerald.PlayForge
 {
+    [ForgeCategory("Sequence")]
     public class RunSequenceTask : AbstractAbilityTask
     {
         [FormerlySerializedAs("SequenceReference")] public TaskSequenceReference Sequence;

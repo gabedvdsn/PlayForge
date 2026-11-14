@@ -7,6 +7,8 @@ tracks each fix below by its ID.
 ## [Unreleased]
 
 ### Added
+- `[ForgeCategory("...")]`: a kind's picker lists the kinds that name a category in a submenu for each, as the ability
+  and targeting tasks now do, its search finding any kind whatever its category (FN-24).
 - `[ShownWhen]`: a field of a kind, as a task's or a scaler's, shown only while a toggle of its object is on or an enum
   is one of the values given; and `Read(number, data)` for a task's numbers, at its ability's level (FN-20).
 - An effect's **Inherit From Origin** and **Origin Texture**: its icon is the texture of its origin, the ability, item or
@@ -475,6 +477,10 @@ tracks each fix below by its ID.
   page, through one table of links in the editor.
 
 ### Changed
+- Run Sequence's **Sequence** picks from a searchable dropdown, a field as a kind field is, each class's sequences under
+  its name where more than one class holds them, where it was Unity's popup; `TaskSequenceReferenceDrawer.Pick` makes a
+  pick in code. Delay's, Channel's, Apply Effects' and Run Process's numbers are Scalable, each its name and unit
+  kept; Channel drops its commented-out cast bar (FN-24).
 - An effect's side change is an effect component, **Side Change**, one at most, in its Components section, where it was
   a field of the effect's own with a switch; its Priority is a Scalable whole number, read as it lands.
   `GameplayEffect.SideChange` reads the component, and the `SideChange` class and its drawer are gone (FN-26).

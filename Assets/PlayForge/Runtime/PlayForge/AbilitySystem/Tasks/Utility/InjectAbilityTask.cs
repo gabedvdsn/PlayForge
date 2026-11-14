@@ -4,6 +4,7 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
+    [ForgeCategory("Sequence")]
     public class InjectAbilityTask : AbstractAbilityTask
     {
         // A new task interrupts by default. The drawer wrote this into an empty field as it drew, which no longer

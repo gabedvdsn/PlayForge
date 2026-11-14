@@ -14,6 +14,7 @@ namespace FarEmerald.PlayForge
     /// the player must select a target within a specific radius.
     /// </summary>
     [Serializable]
+    [ForgeCategory("Picked")]
     public class SelectGasTargetInRangeTask : AbstractGasTargetingAbilityTask
     {
         [Tooltip("Layers to raycast against when selecting targets")]

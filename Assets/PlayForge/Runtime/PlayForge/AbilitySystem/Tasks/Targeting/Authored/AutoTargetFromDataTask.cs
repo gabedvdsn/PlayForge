@@ -17,6 +17,7 @@ namespace FarEmerald.PlayForge
     /// targeting invalid behavior.
     /// </summary>
     [Serializable]
+    [ForgeCategory("Automatic")]
     public class AutoTargetFromDataTask : AbstractGasTargetingAbilityTask
     {
         [Tooltip("The data packet key to read the target from")]

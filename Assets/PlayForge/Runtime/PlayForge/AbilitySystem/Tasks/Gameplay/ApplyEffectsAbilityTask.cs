@@ -7,10 +7,14 @@ using FarEmerald.PlayForge.Extended;
 
 namespace FarEmerald.PlayForge
 {
+    [ForgeCategory("Effects")]
     public class ApplyEffectsAbilityTask : AbstractAbilityTask
     {
+        [Tooltip("The effects it applies to each of the activation's targets, in order")]
         public List<GameplayEffect> Effects;
-        public int DelayBetweenApplicationMs;
+
+        [Tooltip("How long it waits between its effects, in milliseconds of its caster's time; 0, none")]
+        [NumberMin(0f)] public ScalableInt DelayBetweenApplicationMs = 0;
 
         /// <summary>
         /// As an effect lands on the target, the activation's data takes this tag, so a later stage can run on a hit and
@@ -28,6 +32,7 @@ namespace FarEmerald.PlayForge
             // Each target, as an area ability has several. Only the first was struck (GAS-62)
             int targets = data.Count(Tags.TARGET_REAL);
             if (targets == 0) return;
+            int between = Read(DelayBetweenApplicationMs, data);
 
             for (int e = 0; e < Effects.Count; e++)
             {
@@ -47,8 +52,8 @@ namespace FarEmerald.PlayForge
                 }
                 // Between effects, where there's a delay: a delay of 0 waited a frame, so a second effect, as a heal's
                 // lockout, landed a frame after the first; and the last waited for nothing to follow (GAS-74)
-                if (DelayBetweenApplicationMs > 0 && e < Effects.Count - 1)
-                    await SequenceTaskLibrary.Delay(DelayBetweenApplicationMs / 1000f, token);
+                if (between > 0 && e < Effects.Count - 1)
+                    await SequenceTaskLibrary.Delay(between / 1000f, token);
             }
         }
         public override bool IsCriticalSection => false;

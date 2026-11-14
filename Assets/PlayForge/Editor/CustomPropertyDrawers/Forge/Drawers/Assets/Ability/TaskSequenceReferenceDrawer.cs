@@ -9,11 +9,14 @@ using UnityEngine.UIElements;
 namespace FarEmerald.PlayForge.Extended.Editor
 {
     /// <summary>
-    /// A sequence reference (ED-57): Unity's popup of the project's sequences, the static methods marked
-    /// [TaskSequenceMethod] that take nothing and return a sequence, by their names, None first. A pick is one Undo step.
-    /// A method the reference names that the project no longer has shows as missing until another is picked.
+    /// A sequence reference (ED-57, FN-24): a field as a kind field is, the sequence's name in its box, which opens a
+    /// searchable dropdown of the project's sequences, the static methods marked [TaskSequenceMethod] that take nothing and
+    /// return a sequence, by their names, None first, each class's under its name where more than one class holds them. A
+    /// pick is one Undo step. A method the reference names that the project no longer has shows as missing until another
+    /// is picked.
     /// <para>
-    /// It was an IMGUI popup, which wrote "(None)", and which searched every type of every assembly for the methods.
+    /// It was Unity's popup, one long list, and before that an IMGUI popup, which wrote "(None)", and which searched every
+    /// type of every assembly for the methods.
     /// </para>
     /// </summary>
     [CustomPropertyDrawer(typeof(TaskSequenceReference))]
@@ -78,12 +81,16 @@ namespace FarEmerald.PlayForge.Extended.Editor
             }
 
             var entries = Entries();
-            var popup = new PopupField<string>(preferredLabel ?? property.displayName)
+            var root = new VisualElement { name = "SequenceReference" };
+            // The style sheet lays out the field, wherever it's drawn, as a kind field's (ED-20)
+            ForgeTheme.Apply(root);
+            var field = new ForgeTypeField(preferredLabel ?? property.displayName)
             {
                 name = "Sequence",
                 tooltip = "The sequence it runs: a static method marked [TaskSequenceMethod] that takes nothing and returns one",
             };
-            popup.AddToClassList(BaseField<string>.alignedFieldUssClassName);
+            field.AddToClassList(BaseField<string>.alignedFieldUssClassName);
+            root.Add(field);
 
             // The name of the sequence a reference names, None for none, or the method marked missing
             string NameOf(SerializedProperty reference)
@@ -102,40 +109,47 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 var reference = Fresh();
                 if (reference == null) return;
                 var shown = NameOf(reference);
-                var choices = new List<string> { None };
-                // A missing method keeps its place until another is picked
-                if (shown != None && entries.All(entry => entry.Name != shown)) choices.Add(shown);
-                choices.AddRange(entries.Select(entry => entry.Name));
-                popup.choices = choices;
-                popup.showMixedValue = reference.hasMultipleDifferentValues;
-                popup.SetValueWithoutNotify(shown);
+                field.showMixedValue = reference.hasMultipleDifferentValues;
+                // A missing method shows as missing until another is picked
+                if (!field.showMixedValue) field.Show(shown == None ? null : shown, shown == None, shown == None ? "No sequence: pick one" : shown);
             }
 
-            popup.RegisterValueChangedCallback(change =>
+            field.Opened += opened =>
             {
-                var reference = Fresh();
-                if (reference == null) return;
-                var typeProp = reference.FindPropertyRelative(TypeField);
-                var methodProp = reference.FindPropertyRelative(MethodField);
-                if (change.newValue == None)
+                new ForgeSequencePicker(entries, picked =>
                 {
-                    typeProp.stringValue = "";
-                    methodProp.stringValue = "";
-                }
-                else
-                {
-                    var picked = entries.FirstOrDefault(entry => entry.Name == change.newValue);
-                    if (picked.Method == null) return;
-                    typeProp.stringValue = picked.Method.DeclaringType?.AssemblyQualifiedName;
-                    methodProp.stringValue = picked.Method.Name;
-                }
-                serialized.ApplyModifiedProperties();
-                Show();
-            });
+                    var reference = Fresh();
+                    if (reference == null) return;
+                    Pick(reference, picked?.Method);
+                    Show();
+                }).Show(opened.Box.worldBound);
+            };
 
-            popup.TrackSerializedObjectValue(serialized, _ => Show());
+            root.TrackSerializedObjectValue(serialized, _ => Show());
             Show();
-            return popup;
+            return root;
+        }
+
+        /// <summary>
+        /// Points a sequence reference at a sequence method, or at none for null, as one Undo step: what a pick in its
+        /// picker does (FN-24).
+        /// </summary>
+        public static void Pick(SerializedProperty reference, MethodInfo method)
+        {
+            if (reference == null) return;
+            var typeProp = reference.FindPropertyRelative(TypeField);
+            var methodProp = reference.FindPropertyRelative(MethodField);
+            if (method == null)
+            {
+                typeProp.stringValue = "";
+                methodProp.stringValue = "";
+            }
+            else
+            {
+                typeProp.stringValue = method.DeclaringType?.AssemblyQualifiedName;
+                methodProp.stringValue = method.Name;
+            }
+            reference.serializedObject.ApplyModifiedProperties();
         }
     }
 }

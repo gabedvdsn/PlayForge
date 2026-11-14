@@ -5,6 +5,7 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
+    [ForgeCategory("Effects")]
     public class ApplyRemoveEffectsAbilityTask : AbstractAbilityTask
     {
         public List<GameplayEffect> Effects;

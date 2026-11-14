@@ -1462,6 +1462,20 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 
 Record baselines, gate results and notable decisions here, newest first.
 
+- 2026-11-14, **FN-24a-c: the ability tasks' pickers and numbers.** The user's notes: the task picker organized by
+  category, which the tasks didn't name; Run Sequence's picker hard to use with many sequences; Scalable numbers in the
+  tasks. A kind names its category by `[ForgeCategory]`, held by the classes made from one, and the kind picker lists
+  a submenu for each, those naming none after, so a project's own task, Battle's Shoot among them, sits after
+  PlayForge's; every PlayForge ability and targeting task names one but Composite, which composes the others. Run
+  Sequence's Sequence is a field as a kind field is, opening a searchable dropdown, each class's sequences under its
+  name where more than one class holds them; ED-57's test of Unity's popup is FN-24's. Delay's Delay Milliseconds,
+  Channel's Channel Duration, Apply Effects' Delay Between Application Ms and Run Process's Max Duration are Scalable,
+  read for the activation at the ability's level, their names and units kept, since the user's own uncommitted test of
+  the ability lifecycle sets Delay Milliseconds by its name; the 37 the Demo and Proving Grounds saved as plain values
+  re-authored. Channel's commented-out cast bar goes.
+  - Red: FN-24a-c's four tests failed on the code before them: no category to name, a picker listing its kinds flat, a task's plain number, and Unity's popup for a sequence (fn24_red).
+  - Gates, on a frozen snapshot of the package with the Demo imported: EditMode 959 of 960, ED-56's test of a kind's list writing Delay Milliseconds as a plain int, now its Magnitude, which with FN-24's passes since (9 of 9, fn24ac_ed56); PlayMode 1924 of 1932, 8 skipped, none failing; golden 25 of 25, in the private copy.
+
 - 2026-11-14, **FN-26: an effect's side change is a component.** The user, after the notes: a gameplay effect's side
   change logic should be an effect component. As FN-14 moved Area and Transfers: a Side Change component, one at most,
   holds Source, Sides, Priority and Interrupts, the component itself in place of the Changes switch, and the Sides show

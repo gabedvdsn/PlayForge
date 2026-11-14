@@ -6,12 +6,20 @@ using UnityEngine.Serialization;
 
 namespace FarEmerald.PlayForge
 {
+    [ForgeCategory("Process")]
     public class RunProcessTask : AbstractAbilityTask
     {
+        [Tooltip("The processes it runs, each registered for its caster as it starts")]
         [SerializeReference] public List<AbstractRuntimeProcess> Processes;
+
+        [Tooltip("The step of Unity's player loop it counts its time in")]
         public PlayerLoopTiming UpdateTiming = PlayerLoopTiming.Update;
-        public float MaxDuration = 999f;
+
+        [Tooltip("The longest it waits for its processes, in seconds, read as it starts at its ability's level")]
+        [NumberMin(0f)] public ScalableFloat MaxDuration = 999f;
+
         // Scaled by default: unscaled, a process ran on apart from the game's time scale and its caster's (TS-6)
+        [Tooltip("Counts its time unscaled, apart from the game's time scale and its caster's")]
         public bool UseUnscaledDeltaTime;
         
         public override bool IsCriticalSection => false;
@@ -34,6 +42,7 @@ namespace FarEmerald.PlayForge
         public override async UniTask Activate(AbilityDataPacket data, CancellationToken token)
         {
             var relays = data.GetTaskState<List<ProcessRelay>>(this);
+            float most = Read(MaxDuration, data);
             float elapsedDuration = 0f;
             await ProcessTaskUtil.DoWhileAsync(
                 body: () =>
@@ -44,7 +53,7 @@ namespace FarEmerald.PlayForge
                     return UniTask.CompletedTask;
                 },
                 condition: () => 
-                    elapsedDuration < MaxDuration 
+                    elapsedDuration < most 
                     && relays.TrueForAny(relay => relay.ProcessActive),
                 token: token,
                 timing: UpdateTiming

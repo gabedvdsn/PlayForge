@@ -18,6 +18,7 @@ namespace FarEmerald.PlayForge
     /// - Buff all allies in range
     /// </summary>
     [Serializable]
+    [ForgeCategory("Automatic")]
     public class AutoTargetByAffinityTask : AbstractGasTargetingAbilityTask
     {
         [Tooltip("Which affiliations to include relative to the caster")]

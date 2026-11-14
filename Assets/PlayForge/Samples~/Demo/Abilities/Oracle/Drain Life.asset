@@ -234,14 +234,23 @@ MonoBehaviour:
         - {fileID: 11400000, guid: bce871dbd86536f46ace4d28eb0f15da, type: 2}
         - {fileID: 11400000, guid: bce871dbd86536f46ace4d28eb0f15da, type: 2}
         - {fileID: 11400000, guid: bce871dbd86536f46ace4d28eb0f15da, type: 2}
-        DelayBetweenApplicationMs: 1000
+        DelayBetweenApplicationMs:
+          Magnitude: 1000
+          RealMagnitude: 2
+          Scaler:
+            rid: -2
+          Rounding: 0
         RecordLandedAs:
           Name: 
           DisplayName: 
     - rid: 2403794261189067264
       type: {class: ChannelAbilityTask, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:
-        ChannelDuration: 3
+        ChannelDuration:
+          Magnitude: 3
+          RealMagnitude: 2
+          Scaler:
+            rid: -2
         Timing: 8
     - rid: 2403794261189067265
       type: {class: ShareBackWorker, ns: FarEmerald.PlayForge.Samples.Demo, asm: FarEmerald.PlayForge.Samples.Demo}

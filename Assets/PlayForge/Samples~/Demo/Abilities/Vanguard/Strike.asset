@@ -167,13 +167,23 @@ MonoBehaviour:
     - rid: 2403794261189067219
       type: {class: DelayTask, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:
-        DelayMilliseconds: 150
+        DelayMilliseconds:
+          Magnitude: 150
+          RealMagnitude: 2
+          Scaler:
+            rid: -2
+          Rounding: 0
     - rid: 2403794261189067220
       type: {class: ApplyEffectsAbilityTask, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:
         Effects:
         - {fileID: 11400000, guid: 98a3be6a8f81e0e43b94fc3989503388, type: 2}
-        DelayBetweenApplicationMs: 0
+        DelayBetweenApplicationMs:
+          Magnitude: 0
+          RealMagnitude: 2
+          Scaler:
+            rid: -2
+          Rounding: 0
         RecordLandedAs:
           Name: 
           DisplayName: 

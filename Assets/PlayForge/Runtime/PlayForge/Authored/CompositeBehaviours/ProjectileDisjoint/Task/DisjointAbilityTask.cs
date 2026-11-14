@@ -3,6 +3,7 @@ using Cysharp.Threading.Tasks;
 
 namespace FarEmerald.PlayForge
 {
+    [ForgeCategory("Process")]
     public class DisjointAbilityTask : AbstractAbilityTask
     {
         public override bool IsCriticalSection => false;

@@ -15,6 +15,7 @@ namespace FarEmerald.PlayForge
     /// Useful for skill shots, dashes, line attacks, etc.
     /// </summary>
     [Serializable]
+    [ForgeCategory("Picked")]
     public class SelectDirectionTargetTask : AbstractTargetingAbilityTask
     {
         [Tooltip("Layers to raycast against when selecting direction")]

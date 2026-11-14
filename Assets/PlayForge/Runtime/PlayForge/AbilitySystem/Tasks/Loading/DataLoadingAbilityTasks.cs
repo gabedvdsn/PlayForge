@@ -9,6 +9,7 @@ using UnityEngine.Serialization;
 namespace FarEmerald.PlayForge
 {
     [Serializable]
+    [ForgeCategory("Asset Loaders")]
     public abstract class AbstractSetAssetsTask : AbstractAbilityTask
     {
         public override UniTask Activate(AbilityDataPacket data, CancellationToken token)

@@ -7,8 +7,10 @@ namespace FarEmerald.PlayForge.Extended.Editor
 {
     /// <summary>
     /// The picker a kind field opens (ED-56): Unity's searchable dropdown, as Add Component's, of the kinds a field can
-    /// hold, by their names, with None first where the field may be empty. It was a list drawn under the field in tinted
-    /// boxes, from styles set in C#.
+    /// hold, by their names, with None first where the field may be empty. Kinds that name a category, by
+    /// <see cref="ForgeCategoryAttribute"/>, are listed in a submenu for each, in name order, the kinds that name none after
+    /// them; its search finds any kind whatever its category (FN-24). It was a list drawn under the field in tinted boxes,
+    /// from styles set in C#.
     /// </summary>
     internal sealed class ForgeTypePicker : AdvancedDropdown
     {
@@ -41,10 +43,31 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 root.AddChild(new AdvancedDropdownItem("None") { id = NoneId });
                 root.AddSeparator();
             }
-            for (int i = 0; i < kinds.Count; i++) root.AddChild(new AdvancedDropdownItem(kinds[i].Name) { id = i });
+            // Each category a submenu, in name order, and the kinds that name none after them (FN-24)
+            var groups = new SortedDictionary<string, AdvancedDropdownItem>(StringComparer.OrdinalIgnoreCase);
+            var loose = new List<AdvancedDropdownItem>();
+            for (int i = 0; i < kinds.Count; i++)
+            {
+                var item = new AdvancedDropdownItem(kinds[i].Name) { id = i };
+                var category = CategoryOf(kinds[i].Type);
+                if (string.IsNullOrEmpty(category))
+                {
+                    loose.Add(item);
+                    continue;
+                }
+                if (!groups.TryGetValue(category, out var group)) groups[category] = group = new AdvancedDropdownItem(category);
+                group.AddChild(item);
+            }
+            foreach (var group in groups.Values) root.AddChild(group);
+            if (groups.Count > 0 && loose.Count > 0) root.AddSeparator();
+            foreach (var item in loose) root.AddChild(item);
             if (kinds.Count == 0) root.AddChild(new AdvancedDropdownItem("No kinds for this field") { enabled = false });
             return root;
         }
+
+        /// <summary>The category a kind names, its class's or the one it's made from, or null for none (FN-24).</summary>
+        internal static string CategoryOf(Type type) =>
+            type == null ? null : (System.Attribute.GetCustomAttribute(type, typeof(ForgeCategoryAttribute), true) as ForgeCategoryAttribute)?.Name;
 
         protected override void ItemSelected(AdvancedDropdownItem item)
         {
