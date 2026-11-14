@@ -417,6 +417,25 @@ namespace FarEmerald.PlayForge.Extended.Editor
     /// impact's, or one that names no attribute to give or to get; and an ability that toggles an Instant effect, which is
     /// never on to turn off.
     /// </summary>
+    /// <summary>An entity whose Respawn never revives it, as it ends as it dies (FN-14).</summary>
+    internal sealed class RespawnRule : ForgeValidationRule
+    {
+        public override string Name => "Respawns that never revive";
+
+        public override void Check(Object asset, List<ForgeProblem> problems)
+        {
+            if (asset is not EntityIdentity entity || entity.Components == null || EntityDeath.Stays(entity.Death)) return;
+            for (int i = 0; i < entity.Components.Count; i++)
+            {
+                if (entity.Components[i] is not RespawnEntityComponent) continue;
+                problems.Add(new ForgeProblem(asset, ForgeProblemSeverity.Warning,
+                    "Its Respawn never revives it: it ends as it dies. Set its Death to stay.",
+                    $"{nameof(EntityIdentity.Components)}.Array.data[{i}]"));
+                return;
+            }
+        }
+    }
+
     internal sealed class TransfersRule : ForgeValidationRule
     {
         public override string Name => "Transfers and toggles that never work";

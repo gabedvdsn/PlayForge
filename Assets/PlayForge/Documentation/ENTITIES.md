@@ -121,15 +121,34 @@ Each Max field is a number, or, by its kind, a scaler that changes the limit wit
 ## Components
 
 An entity's components are features it carries, each a class with hooks into its life, added with the list's **+**
-(FN-14). A component hears the entity **Register**, its systems set up; **Death**, whether it stays or ends; **Revive**, for one that stays; and **End**. A kind that makes no sense twice is offered only while the entity holds none of it.
+(FN-14). A component hears the entity **Register**, its systems set up; **Death**, whether it stays or ends, its context's
+`Killer` the one whose loss killed it, as its Died event names; **Revive**, for one that stays; and **End**. A kind that
+makes no sense twice is offered only while the entity holds none of it.
 
 A component of your own derives from `AbstractEntityComponent` and overrides the hooks it needs, each a no-op
 otherwise. It's the entity's, shared by everything that holds it, so what it keeps for one entity it keeps through its
 context: `ctx.GetState<T>(this)`.
 
+### Auras
+
 An **Aura** component holds an effect on those near the entity as long as it lives, as a captain's command aura
 (TW-10, [EFFECTS.md](EFFECTS.md#auras)). An entity that dies takes its auras' effects off, and one that stays and
 revives holds them again.
+
+### Bounty
+
+A **Bounty** component gives the entity's killer an **Effect** as it dies, from the entity, so the effect reads its
+level, as gold or experience (FN-14). With a **Share Radius**, read at its level, the killer's allies within it of the
+entity take the effect too, as an assist, measured along the ground unless **Flat** is off. A death no one dealt gives
+none. An entity holds as many as it gives.
+
+### Respawn
+
+A **Respawn** component revives an entity that stays as it dies once its **Delay**, in seconds of its own time and read
+at its level, has passed, at its **Home**, where it stood as it registered, **Where It Died**, or a **Point** (FN-14),
+as a hero comes back at its fountain. Its Death's On Revive effects land as it does, as any revive's do, and a revive
+before its time, as a buyback, ends the wait. An entity that ends as it dies has nothing to revive, which the Problems
+view says. A save keeps neither the entity's death nor its wait. An entity holds one at most.
 
 ## Workers
 

@@ -59,12 +59,12 @@ namespace FarEmerald.PlayForge
         // What its identity's components keep for it (FN-14)
         private readonly ComponentStates componentStates = new();
 
-        // Its identity's components, each hearing a moment of it (FN-14)
-        private void HearComponents(System.Action<AbstractEntityComponent, EntityComponentContext> moment)
+        // Its identity's components, each hearing a moment of it, its killer's for its death (FN-14)
+        private void HearComponents(System.Action<AbstractEntityComponent, EntityComponentContext> moment, ISource killer = null)
         {
             var components = Identity?.Components;
             if (components == null) return;
-            var ctx = new EntityComponentContext(owner, componentStates);
+            var ctx = new EntityComponentContext(owner, componentStates, killer);
             foreach (var component in components)
                 if (component != null) moment(component, ctx);
         }
@@ -205,6 +205,9 @@ namespace FarEmerald.PlayForge
 
                 // Its auras check who's near by its own time too (TW-10)
                 Auras.Step(Clock.DeltaTime);
+
+                // And a revive its Respawn waits on counts down by it (FN-14)
+                StepRevive(Clock.DeltaTime);
 
                 // And its barriers decay by it (TW-12)
                 AttributeSystem.StepBarriers(Clock.DeltaTime);
@@ -361,8 +364,8 @@ namespace FarEmerald.PlayForge
             Send(owner, Tags.DIED, EventData(killer, owner));
             if (killer is IGameplayAbilitySystem slayer) Send(slayer, Tags.KILL, EventData(killer, owner));
 
-            // Its components hear it die, then its effects' (FN-14)
-            HearComponents((component, ctx) => component.Death(ctx));
+            // Its components hear it die, and who killed it, then its effects' (FN-14)
+            HearComponents((component, ctx) => component.Death(ctx), killer);
             EffectSystem.HearDeath();
 
             // One that stays dies at its frame's end and stays; any other ends there, as it always did (TW-4)
@@ -385,6 +388,7 @@ namespace FarEmerald.PlayForge
         {
             if (!IsDead || !EntityDeath.Stays(Identity?.Death)) return false;
             IsDead = false;
+            reviveIn = float.NaN;
             pendingDeath = false;
             foreach (var worker in AnalysisCache.Workers) worker?.Rearm(owner);
             if (at.HasValue && owner.GetTargetingPacket() is { } packet) packet.position = at.Value;
@@ -397,6 +401,43 @@ namespace FarEmerald.PlayForge
             HearComponents((component, ctx) => component.Revive(ctx));
             return true;
         }
+
+        // A revive a Respawn waits on: the time left, by the entity's own clock, and where; none waits while it's NaN. A
+        // revive before its time, as a buyback, ends the wait (FN-14)
+        private float reviveIn = float.NaN;
+        private UnityEngine.Vector3? reviveAt;
+
+        /// <summary>
+        /// Revives the entity, where it stays dead, once <paramref name="seconds"/> of its own time pass, at
+        /// <paramref name="at"/> or where it is, at the end of that frame (FN-14).
+        /// </summary>
+        internal void ReviveIn(float seconds, UnityEngine.Vector3? at)
+        {
+            reviveIn = UnityEngine.Mathf.Max(0f, seconds);
+            reviveAt = at;
+        }
+
+        // The wait counted down; at its end, the revive queued for the frame's end, as a respawn timer's worker revives
+        private void StepRevive(float deltaTime)
+        {
+            if (float.IsNaN(reviveIn)) return;
+            reviveIn -= deltaTime;
+            if (reviveIn > 0f) return;
+            reviveIn = float.NaN;
+            QueueRevive(reviveAt);
+        }
+
+        // The revive queued in a method of its own: a closure in the step's own body was made as the step began, every
+        // frame, whether it revived or not, 40 bytes an entity
+        private void QueueRevive(UnityEngine.Vector3? at) => QueueAction(new LambdaAction(_ => Revive(at), "Respawn"));
+
+        /// <summary>The core a hub forwards to, or null for another kind of entity (FN-14).</summary>
+        internal static GASCore Of(IGameplayAbilitySystem gas) => gas switch
+        {
+            GameplayAbilitySystem mono => mono.Core,
+            RuntimeGameplayAbilitySystem runtime => runtime.Core,
+            _ => null,
+        };
 
         // A staying entity's death: the effects it ends, its body gone, the effects it takes, as a respawn timer
         private void Die()

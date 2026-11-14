@@ -192,12 +192,19 @@ namespace FarEmerald.PlayForge
         /// <summary>The entity.</summary>
         public readonly IGameplayAbilitySystem System;
 
+        /// <summary>
+        /// For its death, who killed it: the source of the last loss it took from another, as its Died event names; null at
+        /// any other moment, or for a death no one dealt (FN-14).
+        /// </summary>
+        public readonly ISource Killer;
+
         private readonly ComponentStates states;
 
-        public EntityComponentContext(IGameplayAbilitySystem system, ComponentStates states)
+        public EntityComponentContext(IGameplayAbilitySystem system, ComponentStates states, ISource killer = null)
         {
             System = system;
             this.states = states;
+            Killer = killer;
         }
 
         /// <summary>What <paramref name="component"/> keeps for this entity.</summary>

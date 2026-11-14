@@ -7,6 +7,9 @@ tracks each fix below by its ID.
 ## [Unreleased]
 
 ### Added
+- Bounty and Respawn components on entities: a Bounty gives an entity's killer an effect from it as it dies, and the
+  killer's allies near where it shares; a Respawn revives an entity that stays as it dies after its delay, at its home,
+  where it died or a point. An entity component's context names the `Killer` as it dies (FN-14).
 - A Spread component on effects: it spreads its effect, or another, from the one it's on to those near them as it lands,
   each tick, as it ends or as the one it's on dies, of the sides it takes, the nearest first, passing over those who
   have it, as far as its Hops allow. An effect component hears a fifth moment, `Death`, as the one it's on dies (FN-14).
