@@ -212,6 +212,9 @@ doesn't kill it.
   spawns the identity's Body, where it has one (FN-18). The body it had ends first, `UseBody(null)` lets one go, ending
   it, and a dead entity takes none.
 
+A dead entity takes no one else's effects, as the dead in the games are untargetable: its own still land, as its On Death
+respawn timer and its On Revive effects, and an effect another applies to it while it's dead is refused (FN-16).
+
 `Revive(at)` on either hub brings a staying entity back, at a point or where it was; it re-arms the entity's analysis
 workers, so its death watcher sees its next death. Callbacks hear `OnEntityRevived`, as they hear `OnEntityDied`.
 

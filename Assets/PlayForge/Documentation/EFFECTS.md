@@ -78,9 +78,26 @@ links the effect to that asset.
   of these, or a child of one, by its asset tag, a context tag or a tag it grants, comes off, at the next tick, as a
   removed effect does. `Status.Debuff` takes off `Status.Debuff.Poison` and `Status.Debuff.Burn`, and `State.Burning`
   takes off whatever grants it.
+- **Purges** makes the effect a purge, by the project's purge levels ([Purging](#purging)): as it lands, the effects on the
+  target its strength reaches, of the kinds it names and applied by whom it says, come off.
 - **Blocks Effects Tagged** makes the effect an immunity. While it's on the target and its ongoing requirements hold,
   an effect tagged with one of these, or a child of one, the same way, can't land, and applying it returns false. It
   leaves the effects already on the target; add the same tags to Removes Effects Tagged to clear them as it lands.
+
+## Purging
+
+A project's **Purge Levels**, under Forge Project in Project Settings → PlayForge, rank its purges (FN-16). Each **Tier**
+is a tag, weakest first, as Purge.Basic, Purge.Strong; an effect is at the first tier whose tag it carries, as its asset
+tag or a context tag, or a child of one. A purge of a tier takes the effects at that tier or under it, as a Strong
+dispel takes the Basic too, and an effect at no tier is never purged, but by death (Decision 80).
+
+A purge, an effect's **Purges** or `ForgePurge.Purge(entity, purge)` in code, has a **Strength**, a tier's tag; its
+**Kinds**, tags an effect must carry one of to be taken, as Status.Debuff, or any where it names none; **Applied By**,
+whom it takes the effects of, by who applied each against the one purged: itself, its allies (its buffs) or its
+enemies (its debuffs), an applier sharing none of its sides an enemy; and **Filters** of a project's own, each an
+`AbstractPurgeFilter` whose `Takes` says yes or no, as **Except Tagged** spares the effects carrying the tags it names.
+An effect a purge takes comes off at the next tick, as a removed effect does, and a purge never takes the effect doing
+it. `ForgePurge.Purge(entity, strength)` purges by a strength alone, of every kind.
 
 ## Duration
 

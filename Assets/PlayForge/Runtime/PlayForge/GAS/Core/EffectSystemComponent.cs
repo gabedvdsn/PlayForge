@@ -95,6 +95,10 @@ namespace FarEmerald.PlayForge
         {
             if (spec is null) return false;
 
+            // The dead take no one else's effects, as the dead in the games are untargetable; their own, as their death's
+            // respawn timer and their revive's, still land (FN-16, Decision 79)
+            if (Self.IsDead && !ReferenceEquals(spec.Origin?.GetSource(), Self)) return false;
+
             // Under its own marker in the Profiler, a contained effect's within its container's (FEAT-18)
             using var sample = ForgeProfiler.ApplyEffect.Auto();
 
@@ -163,8 +167,10 @@ namespace FarEmerald.PlayForge
 
                 requirementsDirty = true;
 
-                // A cleanse takes off the effects it names as it lands, before its own contained effects do (FEAT-8)
+                // A cleanse takes off the effects it names as it lands, before its own contained effects do (FEAT-8), and a
+                // purge those its strength reaches (FN-16)
                 RemoveEffectsNamedBy(spec);
+                if (spec.Base.Purges is { Purges: true } purge) ForgePurge.Purge(Self, purge, spec.Origin?.GetSource(), spec.Base);
 
                 // Recorded where the callback fires, for analysis workers. Nothing recorded it (GAS-28)
                 Self.GetFrameSummary()?.RecordEffectApplied(spec);
@@ -946,6 +952,23 @@ namespace FarEmerald.PlayForge
         /// Ends each effect on the shelf that one of <paramref name="tags"/> names, by its asset tag, a context tag or a tag it
         /// grants, or one under them, as a cleanse ends them; how many it ended (TW-4).
         /// </summary>
+        /// <summary>
+        /// Takes off each effect on the shelf that <paramref name="takes"/> says to, at the next tick, as a removed effect
+        /// goes, a purge's, and how many (FN-16).
+        /// </summary>
+        public int Purge(Func<AbstractEffectContainer, bool> takes)
+        {
+            if (takes == null || EffectShelf.Count == 0) return 0;
+            int ended = 0;
+            foreach (var container in EffectShelf.ToArray())
+            {
+                if (container == null || finishedSet.Contains(container) || !takes(container)) continue;
+                MarkFinished(container);
+                ended++;
+            }
+            return ended;
+        }
+
         public int RemoveEffectsTagged(List<Tag> tags)
         {
             if (tags == null || tags.Count == 0) return 0;

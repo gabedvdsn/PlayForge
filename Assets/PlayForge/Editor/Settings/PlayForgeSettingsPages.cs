@@ -314,6 +314,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
             // What each entity's combat log writes, and how many entries it keeps (TW-22)
             section.Add(new PropertyField(settings.FindPropertyRelative(nameof(ProjectSettingsData.CombatLog)), "Combat Log") { name = "CombatLog" });
 
+            // Its purge levels, the tiers a purge reaches and what a death keeps (FN-16)
+            section.Add(new PropertyField(settings.FindPropertyRelative(nameof(ProjectSettingsData.PurgeLevels)), "Purge Levels") { name = "PurgeLevels" });
+
             // The workers every entity in the project has, the Lifesteal worker among them as a project starts (FN-15)
             section.Add(new PropertyField(settings.FindPropertyRelative(nameof(ProjectSettingsData.Workers)), "Workers") { name = "Workers" });
 

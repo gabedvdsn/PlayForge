@@ -46,6 +46,10 @@ namespace FarEmerald.PlayForge
                  "the Cost and Cooldown templates (TW-30)")]
         public ForgeAuthoringSettings Authoring = new();
 
+        [Tooltip("Its purge levels: the tiers of tags an effect carries, weakest first, a purge of a tier taking the effects at " +
+                 "it or under it, and the categories a death keeps (FN-16)")]
+        public PurgeLevels PurgeLevels = new();
+
         [Tooltip("Workers every entity in the project has, beside its own, as it registers: the Lifesteal worker, which heals " +
                  "by its Lifesteal, as a project starts (FN-15)")]
         public StandardWorkerGroup Workers = new()

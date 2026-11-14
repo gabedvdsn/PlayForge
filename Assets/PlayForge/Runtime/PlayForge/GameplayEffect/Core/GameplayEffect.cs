@@ -14,6 +14,10 @@ namespace FarEmerald.PlayForge
         public GameplayEffectDefinition Definition = new();
         public GameplayEffectTags Tags = new();
 
+        [Tooltip("Its purge, as it lands on its target: the effects there at its strength's tier or under it, by the " +
+                 "project's Purge Levels, of the kinds it names and applied by whom it says, come off (FN-16)")]
+        public EffectPurge Purges = new();
+
         /// <summary>
         /// The abilities the target has while this effect is on it, each at the level of what applied the effect, and
         /// interrupted, if it's running, as the effect comes off. An instant effect lends none, as it's never on its

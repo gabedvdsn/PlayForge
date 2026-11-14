@@ -295,7 +295,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 {
                     TagsPath(nameof(GameplayEffectTags.GrantedTags)), nameof(GameplayEffect.GrantedAbilities), nameof(GameplayEffect.SideChange),
                     TagsPath(nameof(GameplayEffectTags.ContextTags)),
-                    TagsPath(nameof(GameplayEffectTags.RemovesEffectsTagged)), TagsPath(nameof(GameplayEffectTags.BlocksEffectsTagged)),
+                    TagsPath(nameof(GameplayEffectTags.RemovesEffectsTagged)), nameof(GameplayEffect.Purges),
+                    TagsPath(nameof(GameplayEffectTags.BlocksEffectsTagged)),
                 },
                 OnImportComplete = OnSectionReplaced,
                 OnClearComplete = OnSectionReplaced,
@@ -316,6 +317,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 "RemovesEffectsTagged", "Removes Effects Tagged");
             removes.tooltip = "Effects on the target tagged with one of these, or a child of one, come off as this lands";
             content.Add(removes);
+            // A purge, by the project's Purge Levels: the effects its strength reaches come off as this lands (FN-16)
+            content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(GameplayEffect.Purges)), "Purges", "Purges"));
             var blocks = CreatePropertyField(serializedObject.FindProperty(TagsPath(nameof(GameplayEffectTags.BlocksEffectsTagged))),
                 "BlocksEffectsTagged", "Blocks Effects Tagged");
             blocks.tooltip = "While this is on the target, an effect tagged with one of these, or a child of one, can't land";

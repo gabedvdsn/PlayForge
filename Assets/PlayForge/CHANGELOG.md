@@ -7,6 +7,9 @@ tracks each fix below by its ID.
 ## [Unreleased]
 
 ### Added
+- Purging: a Forge Project's **Purge Levels**, tiers of tags weakest first, and purges of a strength, of the kinds they
+  name, of the effects applied by whom they say, through filters of a project's own (`AbstractPurgeFilter`, **Except
+  Tagged** among them); an effect's **Purges**, as it lands; `ForgePurge.Purge` for code (FN-16).
 - `UseBody(process)` on either hub gives a running entity a body of its own, which it follows and which ends with it as
   it dies (FN-18).
 - The Lifesteal role and the Lifesteal worker, which heals its holder its Lifesteal's share of each loss it deals another,
@@ -464,6 +467,8 @@ tracks each fix below by its ID.
   page, through one table of links in the editor.
 
 ### Changed
+- A dead entity takes no one else's effects: one another applies to it while it's dead is refused, its own landing still,
+  as its death's and revive's (FN-16).
 - An effect's own Lifesteal raises its caster's Lifesteal for its own hits, which the Lifesteal worker heals by, its
   project's or its own; it heals nothing where no worker reads it. Its **Attribute** is gone: the worker's **Heals**, or
   the Health role, names what it heals. `ForgeLifesteal.Steal` is gone with it (FN-15).
