@@ -1507,6 +1507,18 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 
 Record baselines, gate results and notable decisions here, newest first.
 
+- 2026-11-14, **The release check again, with phase 5 in.** `Tools/export-unitypackage.py --tests --build` on PF 48ba694:
+  the export clean, 2.1 MB; a fresh project imports it with no error, warning or missing type; its samples 0 missing
+  scripts, references and types; the golden tests there 25 of 25; a Windows player from it, Succeeded, 0 errors, 0
+  warnings, 85 MB.
+  - CI on PG 8e2ee92 (PF 48ba694): every job green, EditMode, PlayMode as written and in both shuffled orders, the
+    planted failures.
+  - Once, on CI's Linux editor, the EditMode job crashed instead of failing (PG 717d139): a native stack overflow in
+    Unity's own binding, `SerializedProperty.IsReorderable` under a deferred `BindingRequest`, as ED-15's header-count
+    test bound an Ability inspector in a runtime panel. Nothing that push changed reaches that inspector, the run
+    before it and the run after it passed that test, and every local run has. Unity's, it seems, and intermittent;
+    should it come back, it gets a row.
+
 - 2026-11-14, **LAB-17: the Debugger's journals, and phase 5 done.** The Timeline keeps an effect journal of the entities
   it lists and an effect's refusals as its track's ticks; the Entities view's combat log shows a hit's steps. With it the
   lab's phase 5 is done, LAB-12 to LAB-17 (Decision 88).
