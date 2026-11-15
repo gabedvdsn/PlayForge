@@ -77,7 +77,7 @@ from. It lives outside `Assets/` so it never ships in the package.
 - **PlayForge Proving Grounds:** `C:\Users\17074\Documents\GitHub\PlayForge Proving Grounds`, a separate project
   in its own git repo, public at github.com/gabedvdsn/PlayForge-Proving-Grounds since 2026-11-05 (Decision 35). Push
   its `main` after each batch, as PlayForge's, fast-forward only. It consumes `Assets/PlayForge` as the package
-  `com.faremerald.playforge` 0.1.0. It was created with
+  `com.faremerald.playforge` 1.0.0 (0.1.0 until SP-31). It was created with
   `Unity.exe -batchmode -nographics -createProject "<path>" -quit -logFile <path>`.
   - **Manifest:** three lines on top of Unity's default project. Relative `file:` paths resolve from the project's
     `Packages` folder, so Arcade Fighter, which also sits next to PlayForge, can use the same lines (Decision 3).
@@ -1223,6 +1223,7 @@ reads the old demos' fullest assets, so it moves to the new demo's as the old go
 | SP-28 | M | — | Proving Grounds' CI, red since 2026-11-07, in part: in either shuffled PlayMode order every allocation test failed at 1,216 bytes a frame, from the first Demo test on. A profile names it: Unity's `PreUpdate.InputForUIUpdate`, the input UI Toolkit's runtime panels read, which the Demo's HUD started and which polled on, allocating, after the panel went. Fixed: the Demo's tests open their HUD's panel again and dispose it, which lets the provider go, through the panel settings' own members, as Unity has no public way; in the order that found it, every allocation test passes | the Demo's `DemoTests.cs` | verified |
 | SP-29 | H | — | Found by the release checklist's clean import (`PUBLISHING.md`): imported into a project without the Test Framework, the Demo's and Additional Content's tests didn't compile, 57 errors, as Unity defines `UNITY_INCLUDE_TESTS` for every assembly under Assets; a buyer who imported either sample without it got a project that wouldn't build. Fixed: as the test kit does, each compiles only where `com.unity.test-framework` is, through a version define, `UNITY_TESTS_FRAMEWORK` | the two samples' test assembly definitions | verified |
 | SP-30 | M | — | The tests that edit an inspector by design met Unity's `IsInSyncWithParentSerializedObject` assertion, two to four a CI run and now and then locally: Unity binds an inspector in slices of 50 ms and defers the rest, and an edit made before a deferred field binds leaves its property out of step with its object. Unity's, not the asset's: each test still found its asset back as it was. Tolerated (Decision 87): the 36 tests that edit take `UnsyncedBindsTolerated`, which lets that assertion through and logs every other error again as it ends, so their log check still fails on it; a test that only looks stays strict, as the assertion there means something wrote (ED-85) | Proving Grounds' `InspectorUndoTests.cs`, `AssetTagTests.cs`, `EditorSmokeTests.cs`, `PurgeEditorTests.cs`, `ScalerDrawerTests.cs` | fixed |
+| SP-31 | M | — | The first submission's version and changelog (Decision 87): the package was 0.1.0, and its changelog every change by tracker ID, 1,190 lines a buyer would read. Fixed: 1.0.0, with a short entry for buyers, its date set as it's submitted; the detailed history, change by change, is the repository's `Docs/HISTORY.md`, which doesn't ship, and takes each change's line from now on | `package.json`, `CHANGELOG.md`, `Docs/HISTORY.md`, Proving Grounds' `ReleaseTests.cs` | fixed |
 
 ### Missing features (Phase 5)
 
@@ -1502,6 +1503,12 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-14, **SP-31: 1.0.0.** Decision 87's version and changelog: `package.json` is 1.0.0, `CHANGELOG.md` a buyer's
+  short entry, and the history it held is `Docs/HISTORY.md`'s, where each change's line goes from now on, under
+  Toward 1.0.0 until the submission.
+  - Red: SP-31's test, on the package as it was: its version 0.1.0.
+  - Checked, on a frozen snapshot: SP-31's test, and ED-16's help links.
 
 - 2026-11-14, **Decision 87's first parts: SP-30 and the Levels section.** The user's answers in an interview. The 36
   tests that edit an inspector by design tolerate Unity's out-of-step bind, and only it (SP-30). The effect inspector's
