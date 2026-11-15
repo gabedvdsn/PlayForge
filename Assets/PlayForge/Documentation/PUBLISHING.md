@@ -19,38 +19,35 @@ completed groundwork ☑.
   Built-in pipeline and URP, and its PlayMode tests play every hero's abilities, but nobody has played it by hand
   yet.
 
-## ☐ 2. The packaging branch: embed UniTask, include the samples
+## ☑ 2. The export: embed UniTask, include the samples
 
-A `.unitypackage` exports `Assets/PlayForge` and nothing else. On the packaging branch, and not before:
+A `.unitypackage` exports `Assets/PlayForge` and nothing else, and a package under Assets resolves no dependency and
+imports no folder whose name ends in `~`. Proving Grounds' `Tools/export-unitypackage.py` builds the package as a buyer
+gets it, in a throwaway project, so PlayForge's own repository never changes and Decision 19 holds (Decision 87):
 
-1. Copy UniTask 2.5.11's source from `https://github.com/Cysharp/UniTask` (path
-   `src/UniTask/Assets/Plugins/UniTask`, tag `2.5.11`) into `Assets/PlayForge/ThirdParty/UniTask/`, and remove
-   `com.cysharp.unitask` from `Packages/manifest.json`. The embedded copy's assembly is also named `UniTask`, so no
-   assembly definition changes.
-2. Unity skips folders whose names end in `~`, so an export leaves `Samples~` out. Copy each sample from `Samples~`
-   into `Assets/PlayForge/Samples/` for the export.
-3. Verify the compile and the golden tests.
-4. Tell buyers: *"If you already use UniTask via UPM, delete `PlayForge/ThirdParty/UniTask` after import."*
+1. UniTask 2.5.11's source, from GitHub's archive of its tag (`src/UniTask/Assets/Plugins/UniTask`), goes in
+   `PlayForge/ThirdParty/UniTask/`, and its licence in `PlayForge/Third-Party Notices.txt`. The embedded copy's
+   assembly is also named `UniTask`, so no assembly definition changes.
+2. Each sample is copied out of `Samples~` into `PlayForge/Samples/`.
+3. `Documentation/IMPACT_MODEL_REFACTOR.md` and this checklist are left out; `Tests/` and the test kit ship.
+4. The throwaway project compiles it, with `com.unity.ugui` and `com.unity.profiling.core`, and exports
+   `PlayForge-<version>.unitypackage`. A fresh project imports that, and the gate is the clean import's: no compile
+   error or warning, no missing type, and no missing script, reference or type in the samples. `--tests` runs the
+   golden tests there, and `--build` builds a Windows player from it.
 
-Keep the UPM install, pinned to `#2.5.11`, for day-to-day development.
+The throwaway project stays, at `%TEMP%\claude\export\build` unless `--out` says otherwise, for the Asset Store Tools to
+upload `Assets/PlayForge` from. Under **Set your dependencies**, turn on **Include Package Manifest** and pick
+`com.unity.ugui` and `com.unity.profiling.core`, which `package.json` names for a UPM install, so a buyer's import
+installs them. The notice tells buyers to delete `PlayForge/ThirdParty/UniTask` where UniTask already comes from Package
+Manager.
 
-## ☐ 3. Third-party notices
+The UPM install, UniTask pinned to `#2.5.11` in the manifest, stays the one for day-to-day development.
 
-Third-party content: **UniTask (MIT, © Cysharp, Inc.)**, once it's embedded. QuickOutline, whose licence reserved all
-rights, is gone; the Demo has an outline of its own.
+## ☑ 3. Third-party notices
 
-- ☐ Add `Assets/PlayForge/Third-Party Notices.txt` when UniTask is embedded:
-
-```
-Third-Party Notices
-This package contains third-party software components governed by the license(s) below.
-
-Component: UniTask (https://github.com/Cysharp/UniTask)
-License: MIT
-Copyright (c) 2019 Yoshifumi Kawai / Cysharp, Inc.
-
-<insert full MIT license text from the UniTask repository LICENSE file>
-```
+Third-party content: **UniTask (MIT, © Cysharp, Inc.)**, which the export embeds. Its `Third-Party Notices.txt` names
+it, where it is, and carries its licence word for word from the archive's `LICENSE`. QuickOutline, whose licence
+reserved all rights, is gone; the Demo has an outline of its own.
 
 ## ☑ 4. Code readiness (keep it true)
 
@@ -63,15 +60,16 @@ Copyright (c) 2019 Yoshifumi Kawai / Cysharp, Inc.
 
 ## ☐ 5. Dress rehearsal (mandatory before submitting)
 
-1. On the packaging branch, export `Assets/PlayForge` (and nothing else) as a `.unitypackage`.
-2. Import it into a **brand-new** Unity 6 project.
-3. Zero console errors and warnings on import, and no import-time log spam. `Tools/clean-import.py` checks the UPM
-   import the same way.
-4. Run the golden tests, and open The Forge and the Debugger.
-5. Open and play each sample scene.
-6. Make a **Windows standalone build** (and an IL2CPP one if claiming support); it must succeed. Headless:
-   `Unity -batchmode -nographics -projectPath <proj> -executeMethod FarEmerald.PlayForge.Extended.Editor.BuildVerification.BuildWindowsPlayer`.
-   With no scene enabled in the build settings, it builds an empty scene it makes for the purpose.
+`python Tools/export-unitypackage.py --tests --build`, in Proving Grounds, does the first four; the rest is by hand.
+
+1. ☑ Export `Assets/PlayForge` (and nothing else) as a `.unitypackage`.
+2. ☑ Import it into a **brand-new** Unity 6 project.
+3. ☑ Zero console errors and warnings on import, and no import-time log spam; no missing script, reference or type in
+   the samples. `Tools/clean-import.py` checks the UPM import the same way.
+4. ☑ Run the golden tests, and make a **Windows standalone build** (an IL2CPP one too, if claiming support): with no
+   scene enabled in the build settings, `BuildVerification` builds an empty scene it makes for the purpose.
+5. ☐ In the check project, `%TEMP%\claude\export\check`, open The Forge and the Debugger.
+6. ☐ Open and play each sample scene.
 
 ## ☐ 6. Submission mechanics
 

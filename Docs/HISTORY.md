@@ -10,6 +10,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## Toward 1.0.0, since 0.1.0
 
 ### Added
+- The Asset Store export, Proving Grounds' `Tools/export-unitypackage.py`: the package as a buyer gets it, UniTask
+  embedded and the samples out of `Samples~`, built in a throwaway project, exported, and imported into a fresh one to
+  check, with the golden tests and a Windows player (SP-33, Decision 87).
 - Tasks a framework should have (FN-24): Wait For Event, Wait For Tag and Wait For Attribute, each with a timeout and
   a stage flag it records; Send Event, Grant Tags while a stage runs, and Cancel Abilities by tag. Area Effect, Apply To
   Caster, Dash, Blink and Consume Item, the Demo's own, are PlayForge's, with `IForgeMover`, which the movement tasks
@@ -860,6 +863,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   Asking whether its sequence was paused took 24 bytes a frame.
 
 ### Fixed
+- From the Asset Store, under Assets, the golden tests compiled in a project with no Test Framework, as Unity defines
+  `UNITY_INCLUDE_TESTS` for every assembly there, and failed with 4 errors. They compile only where the Test Framework
+  is, as the samples' tests and the test kit do (SP-32).
 - The Demo and Additional Content samples import into a project without the Test Framework: their tests compile only
   where it is, as the test kit's do (SP-29).
 - An effect's Additional Impact runs its own attribute's workers, and its Base change rescales its own attribute: both

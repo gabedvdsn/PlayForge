@@ -7,11 +7,13 @@ task pipelines, and tags glue everything together for requirements, filtering an
 ## Requirements
 
 - **Unity 6.0+** (built and tested on 6000.0)
-- **UniTask** 2.5.11 (Cysharp, MIT): add it in Package Manager by git URL, pinned to that release:
-  `https://github.com/Cysharp/UniTask.git?path=src/UniTask/Assets/Plugins/UniTask#2.5.11`.
-  A package can't declare a git dependency, so the project's manifest has to name it.
-- The samples import from Package Manager's Samples tab. **Battle**, a battle that plays itself, needs nothing
-  more. **Demo**, a hero arena to pick heroes, give items and fight, needs nothing more either: it reads the Input
+- **UniTask** 2.5.11 (Cysharp, MIT). From the Asset Store, PlayForge includes it, in `PlayForge/ThirdParty/UniTask`;
+  a project that already has UniTask from Package Manager deletes that folder. Installed as a package from git, it
+  needs UniTask added in Package Manager by git URL, pinned to that release:
+  `https://github.com/Cysharp/UniTask.git?path=src/UniTask/Assets/Plugins/UniTask#2.5.11`. A package can't declare a
+  git dependency, so the project's manifest has to name it.
+- The samples are in `PlayForge/Samples` from the Asset Store, and import from Package Manager's Samples tab where
+  PlayForge is a package. **Battle**, a battle that plays itself, needs nothing more. **Demo**, a hero arena to pick heroes, give items and fight, needs nothing more either: it reads the Input
   System where the project has it, and the Input Manager otherwise. **Code Examples** needs nothing more.
 - The samples render in the **Built-in Render Pipeline** or **URP**. HDRP isn't supported.
 
