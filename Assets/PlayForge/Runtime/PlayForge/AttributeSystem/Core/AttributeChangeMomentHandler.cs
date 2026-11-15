@@ -60,8 +60,13 @@ namespace FarEmerald.PlayForge
         /// Run all workers for an attribute change event.
         /// Inline workers execute immediately, deferred workers queue actions.
         /// </summary>
-        public void RunWorkers(WorkerContext context)
+        public void RunWorkers(WorkerContext context) => RunWorkers(context, null);
+
+        // With a recorder, each worker's step is recorded and told, its change before and after and the actions it queued
+        // (LAB-13)
+        internal void RunWorkers(WorkerContext context, ChangeStepRecorder steps)
         {
+            if (steps is { Recording: false }) steps = null;
             // The attribute changed, not its carrier's: an effect's spec carries every impact it makes (GAS-78)
             var attribute = context.Change.Attribute ?? context.Change.Value.Carrier?.GetAttribute();
             if (attribute is null) return;
@@ -75,6 +80,9 @@ namespace FarEmerald.PlayForge
                 
                 // Full validation with system context
                 if (!worker.ValidateWorkFor(context)) continue;
+
+                var before = steps != null ? context.Change.Value.ToAttributeValue() : default;
+                int queued = steps != null && context.ActionQueue != null ? context.ActionQueue.TotalCount : 0;
                 
                 // Route based on execution mode
                 switch (worker.Execution)
@@ -99,6 +107,11 @@ namespace FarEmerald.PlayForge
                     default:
                         throw new ArgumentOutOfRangeException();
                 }
+
+                if (steps == null) continue;
+                int now = context.ActionQueue != null ? context.ActionQueue.TotalCount : 0;
+                steps.Add(new ChangeStep(EChangeStepKind.Worker, attribute, worker, ForgeWorkerNames.Of(worker), steps.Timing,
+                    worker.Execution, before, context.Change.Value.ToAttributeValue(), now - queued));
             }
         }
         

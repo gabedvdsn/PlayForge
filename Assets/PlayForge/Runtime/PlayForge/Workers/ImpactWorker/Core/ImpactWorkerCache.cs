@@ -90,6 +90,10 @@ namespace FarEmerald.PlayForge
                 _actionQueue
             );
             
+            // Where the dealer is heard, each worker's run is told, with what it queued (LAB-12)
+            var callbacks = (holder as IGameplayAbilitySystem)?.GetCallbacks();
+            bool told = callbacks is { HasImpactWorkerListeners: true };
+
             // The kinds that run once for a hit and have run for this one, the first held apart so one kind asks no list
             System.Type ranOnce = null;
             List<System.Type> moreRanOnce = null;
@@ -119,22 +123,36 @@ namespace FarEmerald.PlayForge
                 {
                     case EWorkerExecution.Inline:
                         worker.ActivateInline(impactData);
+                        if (told) callbacks.ImpactWorkerRan(new ImpactWorkerRun(impactData, worker, worker.Execution, holder as IGameplayAbilitySystem, null));
                         break;
                         
                     case EWorkerExecution.Deferred:
-                        var actions = worker.CreateDeferredActions(context);
-                        _actionQueue?.EnqueueRange(actions);
+                        Queue(worker, worker.CreateDeferredActions(context), impactData, holder, told ? callbacks : null);
                         break;
 
                     // Both halves, as attribute workers run it. With no case, it ran neither (GAS-27)
                     case EWorkerExecution.InlineAndDeferred:
                         worker.ActivateInline(impactData);
-                        _actionQueue?.EnqueueRange(worker.CreateDeferredActions(context));
+                        Queue(worker, worker.CreateDeferredActions(context), impactData, holder, told ? callbacks : null);
                         break;
                 }
             }
         }
         
+        // A worker's actions, queued; told with them where its dealer is heard (LAB-12)
+        private void Queue(AbstractImpactWorker worker, IEnumerable<IRootAction> actions, in ImpactData impactData, ISource holder,
+            GameplayAbilitySystemCallbacks callbacks)
+        {
+            if (callbacks == null)
+            {
+                _actionQueue?.EnqueueRange(actions);
+                return;
+            }
+            var queued = actions != null ? new List<IRootAction>(actions) : new List<IRootAction>();
+            for (int i = 0; i < queued.Count; i++) _actionQueue?.Enqueue(queued[i]);
+            callbacks.ImpactWorkerRan(new ImpactWorkerRun(impactData, worker, worker.Execution, holder as IGameplayAbilitySystem, queued));
+        }
+
         /// <summary>
         /// Check if any workers are registered for an attribute.
         /// </summary>

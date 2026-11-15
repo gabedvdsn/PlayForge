@@ -58,16 +58,19 @@ namespace FarEmerald.PlayForge
 
     /// <summary>
     /// One entry of an entity's combat log (TW-22): when, what kind, who else, the effect behind it, the attribute, the value
-    /// before and the change, its run through its pipeline (TW-2), and, for a hit, whether it killed.
+    /// before and the change, its run through its pipeline (TW-2), its change as made and each step it took to land
+    /// (LAB-13), and, for a hit, whether it killed.
     /// </summary>
     public readonly struct CombatLogEntry
     {
         private static readonly ValueStep[] NoSteps = Array.Empty<ValueStep>();
+        private static readonly ChangeStep[] NoChangeSteps = Array.Empty<ChangeStep>();
         private readonly ValueStep[] steps;
+        private readonly ChangeStep[] changeSteps;
 
         internal CombatLogEntry(ECombatLogKind kind, float time, int frame, ITarget other, GameplayEffect effect,
             IHasReadableDefinition source, IAttribute attribute, AttributeValue before, AttributeValue change, Tag eventTag,
-            ValueStep[] steps, bool killed)
+            ValueStep[] steps, bool killed, AttributeValue made = default, ChangeStep[] changeSteps = null)
         {
             Kind = kind;
             Time = time;
@@ -81,6 +84,8 @@ namespace FarEmerald.PlayForge
             Event = eventTag;
             this.steps = steps;
             Killed = killed;
+            Made = made;
+            this.changeSteps = changeSteps;
         }
 
         public ECombatLogKind Kind { get; }
@@ -121,8 +126,35 @@ namespace FarEmerald.PlayForge
         /// <summary>Whether this hit killed the entity it struck.</summary>
         public bool Killed { get; }
 
+        /// <summary>
+        /// The change as it was made, before any attribute worker, barrier or scaling took a step (LAB-13); what landed,
+        /// for a change that took no step or a modifier's.
+        /// </summary>
+        public AttributeValue Made { get; }
+
+        /// <summary>
+        /// Each step the change took between being made and landing, in order (LAB-13): each attribute worker's, before its
+        /// commit or after, inline or queued, a barrier's soak, a gain's scaling; empty where none was taken.
+        /// </summary>
+        public IReadOnlyList<ChangeStep> ChangeSteps => changeSteps ?? NoChangeSteps;
+
         internal CombatLogEntry AsKilling() =>
-            new(Kind, Time, Frame, Other, Effect, Source, Attribute, Before, Change, Event, steps, true);
+            new(Kind, Time, Frame, Other, Effect, Source, Attribute, Before, Change, Event, steps, true, Made, changeSteps);
+
+        /// <summary>
+        /// Its change's steps in a line, as made, each step, and what landed: "-30 as made → Math -30 → -15 (inline) →
+        /// landed -15"; empty for an event.
+        /// </summary>
+        public string StepsText
+        {
+            get
+            {
+                if (Kind == ECombatLogKind.Event) return "";
+                var text = new StringBuilder($"{ChangeStep.Number(Made.CurrentValue)} as made");
+                foreach (var step in ChangeSteps) text.Append(" → ").Append(step);
+                return text.Append(" → landed ").Append(ChangeStep.Number(Change.CurrentValue)).ToString();
+            }
+        }
 
         /// <summary>Its run in a line, as "-10 → × 2 -20", or empty.</summary>
         public string BreakdownText
@@ -324,7 +356,7 @@ namespace FarEmerald.PlayForge
         }
 
         // An entry for a change: the effect behind it, or what else carried it, and its run through its pipeline, copied,
-        // as its spec keeps one run and fills it again with the next
+        // as its spec keeps one run and fills it again with the next; and its steps, copied from its commit (LAB-13)
         private static CombatLogEntry Of(ECombatLogKind kind, ITarget other, in ImpactData impact)
         {
             var carrier = impact.SourcedModifier.Carrier;
@@ -337,8 +369,16 @@ namespace FarEmerald.PlayForge
                 steps = new ValueStep[breakdown.Steps.Count];
                 for (int i = 0; i < steps.Length; i++) steps[i] = breakdown.Steps[i];
             }
+            var recorded = impact.Steps;
+            ChangeStep[] changeSteps = null;
+            if (recorded != null && recorded.Steps.Count > 0)
+            {
+                changeSteps = new ChangeStep[recorded.Steps.Count];
+                for (int i = 0; i < changeSteps.Length; i++) changeSteps[i] = recorded.Steps[i];
+            }
+            var made = recorded is { HasMade: true } ? recorded.Made : impact.RealImpact;
             return new CombatLogEntry(kind, ForgeTime.Time, ForgeTime.FrameCount, other, effect, effect != null ? effect : source,
-                impact.Attribute, impact.OldValue, impact.RealImpact, default, steps, false);
+                impact.Attribute, impact.OldValue, impact.RealImpact, default, steps, false, made, changeSteps);
         }
 
         // Marks its newest entry of a kind with another as the blow that killed: the hit it took from its killer, or the

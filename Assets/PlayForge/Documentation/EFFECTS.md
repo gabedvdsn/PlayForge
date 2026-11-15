@@ -291,7 +291,8 @@ Write a cue of your own by deriving from `AbstractCueHandler` and overriding the
 
 **Chance to Apply** comes first: how likely the effect is to land, from 0 to 1, which can scale by level. It gates
 the whole application, as the Applying rows do. Each application draws once from PlayForge's random source
-(`ForgeRandom`), and a miss is refused, so applying returns false, as an immunity's refusal does. 1, the default,
+(`ForgeRandom`), and a miss is refused, so applying returns false, as an immunity's refusal does, and the target's
+callbacks hear it, `OnEffectRefused`, with why (LAB-12; [ENTITIES.md](ENTITIES.md#effect-journal)). 1, the default,
 always lands, and 0 never does; neither draws, so an effect without a chance leaves the numbers others draw as they
 were. A contained effect draws its own: a strike with a bleed at 0.3 lands every time, and its bleed about one time
 in three. The section's summary shows a chance short of 1.

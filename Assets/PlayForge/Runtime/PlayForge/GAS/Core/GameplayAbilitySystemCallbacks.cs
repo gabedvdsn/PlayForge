@@ -122,7 +122,71 @@ namespace FarEmerald.PlayForge
         }
         
         public void EffectTick(GameplayEffectSpec spec, int tickCount) => _onEffectTick?.Invoke(spec, tickCount);
-        
+
+        /// <summary>An effect that didn't land on this entity, and why (LAB-12).</summary>
+        public delegate void EffectRefusedDelegate(GameplayEffectSpec spec, EEffectRefusal refusal);
+
+        private EffectRefusedDelegate _onEffectRefused;
+        public event EffectRefusedDelegate OnEffectRefused
+        {
+            add => _onEffectRefused += value;
+            remove => _onEffectRefused -= value;
+        }
+
+        public void EffectRefused(GameplayEffectSpec spec, EEffectRefusal refusal) => _onEffectRefused?.Invoke(spec, refusal);
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // WORKERS RUN (LAB-12, LAB-13): told only where something listens, so a worker no one hears costs nothing more
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        /// <summary>An effect's worker heard one of its effect's moments on this entity: its own, or a hit it dealt.</summary>
+        public delegate void EffectWorkerDelegate(in EffectWorkerRun run);
+
+        private EffectWorkerDelegate _onEffectWorkerRan;
+        public event EffectWorkerDelegate OnEffectWorkerRan
+        {
+            add => _onEffectWorkerRan += value;
+            remove => _onEffectWorkerRan -= value;
+        }
+
+        /// <summary>Whether anything hears this entity's effects' workers run.</summary>
+        public bool HasEffectWorkerListeners => _onEffectWorkerRan != null;
+
+        public void EffectWorkerRan(in EffectWorkerRun run) => _onEffectWorkerRan?.Invoke(in run);
+
+        /// <summary>One of this entity's impact workers ran for a hit it dealt.</summary>
+        public delegate void ImpactWorkerDelegate(in ImpactWorkerRun run);
+
+        private ImpactWorkerDelegate _onImpactWorkerRan;
+        public event ImpactWorkerDelegate OnImpactWorkerRan
+        {
+            add => _onImpactWorkerRan += value;
+            remove => _onImpactWorkerRan -= value;
+        }
+
+        /// <summary>Whether anything hears this entity's impact workers run.</summary>
+        public bool HasImpactWorkerListeners => _onImpactWorkerRan != null;
+
+        public void ImpactWorkerRan(in ImpactWorkerRun run) => _onImpactWorkerRan?.Invoke(in run);
+
+        /// <summary>
+        /// A step a change to one of this entity's attributes took, as it was taken: an attribute worker's, a barrier's
+        /// soak or a gain's scaling (LAB-13).
+        /// </summary>
+        public delegate void ChangeStepDelegate(in ChangeStep step);
+
+        private ChangeStepDelegate _onAttributeChangeStep;
+        public event ChangeStepDelegate OnAttributeChangeStep
+        {
+            add => _onAttributeChangeStep += value;
+            remove => _onAttributeChangeStep -= value;
+        }
+
+        /// <summary>Whether anything hears the steps this entity's changes take.</summary>
+        public bool HasChangeStepListeners => _onAttributeChangeStep != null;
+
+        public void AttributeChangeStep(in ChangeStep step) => _onAttributeChangeStep?.Invoke(in step);
+
         // ═══════════════════════════════════════════════════════════════════════════
         // TAG WORKER LIFECYCLE
         // ═══════════════════════════════════════════════════════════════════════════

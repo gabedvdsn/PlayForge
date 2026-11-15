@@ -282,6 +282,11 @@ namespace FarEmerald.PlayForge
             var change = scratch.Change;
             var ctx = new WorkerContext(Self, AttributeCache, change, _frameSummary, _actionQueue);
 
+            // Each step the change takes, recorded where the combat log keeps entries or anything hears its steps (LAB-13)
+            var told = Self.GetCallbacks();
+            var steps = scratch.Steps;
+            steps.Begin(runEvents && (ForgeCombatLog.Keeps || told is { HasChangeStepListeners: true }), told);
+
             // ═══════════════════════════════════════════════════════════════════════
             // PHASE 0: A commit proposes its incoming delta.
             //
@@ -333,6 +338,7 @@ namespace FarEmerald.PlayForge
                 incoming = cached.PreviewCommit(carrier, commitImpacters);
                 change.Value = new SourcedModifiedAttributeValue(sourcedModifiedValue,
                     incoming.CurrentValue, incoming.BaseValue, sourcedModifiedValue.ImpactIsWorkable);
+                steps.MadeAs(incoming);
             }
 
             Callbacks.AttributePreChange(attribute, change);
@@ -340,18 +346,32 @@ namespace FarEmerald.PlayForge
             // ═══════════════════════════════════════════════════════════════════════
             // PHASE 1: Pre-change workers
             // ═══════════════════════════════════════════════════════════════════════
-            if (runEvents) PreChangeHandler.RunWorkers(ctx);
+            if (runEvents) PreChangeHandler.RunWorkers(ctx, steps);
 
             // A barrier takes a workable loss first, as much as it holds (TW-12)
             if (mode == ECommitMode.CommitImpact && sourcedModifiedValue.ImpactIsWorkable && change.Value.CurrentValue < 0f)
+            {
+                var unsoaked = change.Value.ToAttributeValue();
                 SoakIntoBarriers(attribute, change);
+                if (steps.Recording && change.Value.ToAttributeValue() != unsoaked)
+                    steps.Add(new ChangeStep(EChangeStepKind.Barrier, attribute, null, "Barrier",
+                        AbstractAttributeWorker.EChangeEventTiming.PreChange, EWorkerExecution.Inline, unsoaked,
+                        change.Value.ToAttributeValue(), 0));
+            }
 
             // A workable gain to its current, multiplied by the attribute it names, as Healing Received scales a heal and 0
             // blocks it (TW-15)
             if (mode == ECommitMode.CommitImpact && sourcedModifiedValue.ImpactIsWorkable && change.Value.CurrentValue > 0f
                 && attribute is Attribute { GainsScaledBy: { } scaledBy } && AttributeCache.TryGetValue(scaledBy, out var scale))
+            {
+                var unscaled = change.Value.ToAttributeValue();
                 change.Value = new SourcedModifiedAttributeValue(change.Value,
                     change.Value.CurrentValue * Mathf.Max(0f, scale.ActiveValue.CurrentValue), change.Value.BaseValue, change.Value.ImpactIsWorkable);
+                if (steps.Recording)
+                    steps.Add(new ChangeStep(EChangeStepKind.Scaled, attribute, null, scaledBy.GetName(),
+                        AbstractAttributeWorker.EChangeEventTiming.PreChange, EWorkerExecution.Inline, unscaled,
+                        change.Value.ToAttributeValue(), 0));
+            }
 
             // ═══════════════════════════════════════════════════════════════════════
             // PHASE 2: Dispatch per mode.
@@ -392,7 +412,8 @@ namespace FarEmerald.PlayForge
             // ═══════════════════════════════════════════════════════════════════════
             // PHASE 3: Post-change workers
             // ═══════════════════════════════════════════════════════════════════════
-            if (runEvents) PostChangeHandler.RunWorkers(ctx);
+            steps.Timing = AbstractAttributeWorker.EChangeEventTiming.PostChange;
+            if (runEvents) PostChangeHandler.RunWorkers(ctx, steps);
 
             // ═══════════════════════════════════════════════════════════════════════
             // PHASE 4: Calculate real impact and relay
@@ -407,6 +428,8 @@ namespace FarEmerald.PlayForge
                 change.Value.ToAttributeValue(), holdValue);
             // A modifier coming off is a change, and no hit (GAS-85)
             impactData.Ends = mode == ECommitMode.UnregisterModifier;
+            // Its steps, for the combat log to copy as it writes, during the commit (LAB-13)
+            if (steps.Recording) impactData.Steps = steps;
 
             // Record RECEIVED impact on this (target) GAS — fires target-side callbacks
             Self.RecordFrameImpactReceived(impactData);
@@ -467,6 +490,9 @@ namespace FarEmerald.PlayForge
             /// <summary>The commit's impacters, each frozen at the magnitude it has now.</summary>
             public readonly List<IAttributeImpacter> Frozen = new();
 
+            /// <summary>The steps its change takes, where they're recorded (LAB-13).</summary>
+            public readonly ChangeStepRecorder Steps = new();
+
             // Frozen's impacters, kept by place: the n-th one frozen is always the n-th made
             private readonly List<FrozenImpacter> made = new();
 
@@ -523,6 +549,7 @@ namespace FarEmerald.PlayForge
             public void Release()
             {
                 Frozen.Clear();
+                Steps.End();
                 if (Change.Kept) Change = new ChangeValue(default);
                 else
                 {

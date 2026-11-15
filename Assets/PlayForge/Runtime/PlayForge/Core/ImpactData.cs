@@ -10,6 +10,7 @@
             RealImpact = realImpact;
             OldValue = oldValue;
             Ends = false;
+            Steps = null;
         }
 
         public ITarget Target;
@@ -24,6 +25,10 @@
         /// impact, its dealer's impact workers don't run, and no Impact Taken or Dealt is sent (GAS-85, Decision 84).
         /// </summary>
         public bool Ends;
+
+        // Its commit's steps, while the commit is in progress, where they're recorded: the combat log copies them as it
+        // writes (LAB-13). Null otherwise
+        internal ChangeStepRecorder Steps;
 
         public static ImpactData Generate(ITarget target, IAttribute attribute, SourcedModifiedAttributeValue sourcedModifier, AttributeValue realImpact, AttributeValue oldValue)
         {

@@ -97,26 +97,25 @@ namespace FarEmerald.PlayForge
 
             // The dead take no one else's effects, as the dead in the games are untargetable; their own, as their death's
             // respawn timer and their revive's, still land (FN-16, Decision 79)
-            if (Self.IsDead && !ReferenceEquals(spec.Origin?.GetSource(), Self)) return false;
+            if (Self.IsDead && !ReferenceEquals(spec.Origin?.GetSource(), Self)) return Refused(spec, EEffectRefusal.Dead);
 
             // Under its own marker in the Profiler, a contained effect's within its container's (FEAT-18)
             using var sample = ForgeProfiler.ApplyEffect.Auto();
 
-            if (!ForgeHelper.ValidateEffectApplicationRequirements(spec, Self.GetAffiliation()))
-            {
-                return false;
-            }
+            // Each refusal is told, and why (LAB-12): its affiliation, then its requirements, as the check ran them together
+            if (!ForgeHelper.ValidateAffiliationPolicy(spec, Self.GetAffiliation())) return Refused(spec, EEffectRefusal.Affiliation);
+            if (!spec.Base.ValidateApplicationRequirements(spec)) return Refused(spec, EEffectRefusal.Requirements);
 
             // An immunity on the target refuses an effect it names, and a miss on its chance to apply refuses it too (FEAT-8)
-            if (IsImmuneTo(spec.Base)) return false;
-            if (!RollsToApply(spec)) return false;
+            if (IsImmuneTo(spec.Base)) return Refused(spec, EEffectRefusal.Immunity);
+            if (!RollsToApply(spec)) return Refused(spec, EEffectRefusal.Chance);
 
             // A Block or Evade stage in its hits' pipelines, or one a modifier brings, rolls once as it lands; on a stop
             // nothing of it lands, and each side hears it (TW-12)
             if (StoppedBy(spec) is { } stop)
             {
                 HearStopped(spec, stop);
-                return false;
+                return Refused(spec, EEffectRefusal.Stopped);
             }
 
             // Its area, its Area component's: each the area takes near this one takes it too, and spreads it no further
@@ -128,6 +127,13 @@ namespace FarEmerald.PlayForge
             if (!Land(spec)) return false;
             if (spreads) SpreadOverArea(spec, area);
             return true;
+        }
+
+        // An effect this one didn't take, told with why (LAB-12)
+        private bool Refused(GameplayEffectSpec spec, EEffectRefusal refusal)
+        {
+            Self.GetCallbacks()?.EffectRefused(spec, refusal);
+            return false;
         }
 
         // Lands the effect on this one, once nothing refused it: numbered, applied, told and its contained effects applied.
@@ -144,7 +150,7 @@ namespace FarEmerald.PlayForge
                                      "application is refused. An effect that contains itself, directly or through " +
                                      "other effects, would recurse until the stack overflowed.", spec.Base);
                 }
-                return false;
+                return Refused(spec, EEffectRefusal.Cycle);
             }
 
             // Numbered as it lands, by the entity it lands on (FEAT-13)

@@ -43,6 +43,22 @@ its end of frame, where they can change anything. A focused attribute worker, on
 sets its **Timing** (Pre Change, Post Change or both), its **Sign Policy** (the changes it takes: losses, gains or
 either), and **Allow Self Modification** (whether it takes changes whose source and target are the same entity).
 
+## Hearing workers run
+
+An entity tells its workers' runs to whoever listens to its callbacks, and to no one else, so a worker no one hears
+costs nothing more (LAB-12, LAB-13):
+
+- `OnEffectWorkerRan`: one of its effects' workers heard one of the effect's moments, its **Hook** (Application, Tick,
+  Removal or Impact), on its **Side** (the **Target**, or the **Dealer** for a hit, as the map says), with the **System**
+  it ran on and the actions it **Queued**. A tick, which its workers hear every frame, is told only as one executes or a
+  worker queues something.
+- `OnImpactWorkerRan`: one of its impact workers ran for a hit it dealt, with its **Execution** and what it queued.
+- `OnAttributeChangeStep`: a step a change to one of its attributes took, an attribute worker's, with its **Timing**,
+  its **Execution**, the change **Before** and **After** and what it **Queued**; a barrier's soak; or a gain's scaling.
+  The combat log keeps each hit's steps ([ENTITIES.md](ENTITIES.md#combat-log)).
+
+An `EffectJournal` hears all of it for the entities it's given ([ENTITIES.md](ENTITIES.md#effect-journal)).
+
 ## Workable and unworkable
 
 A change is **workable** unless it says it isn't (`SourcedModifiedAttributeValue.ImpactIsWorkable`). An unworkable one

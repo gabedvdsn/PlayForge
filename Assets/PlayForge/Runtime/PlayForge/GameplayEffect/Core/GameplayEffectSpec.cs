@@ -239,7 +239,7 @@ namespace FarEmerald.PlayForge
         }
         public void RunWorkerApplication(EffectWorkerContext ctx)
         {
-            foreach (AbstractEffectWorker worker in Base.Workers) ctx.ActionQueue.EnqueueRange(worker.OnEffectApplication(ctx));
+            foreach (AbstractEffectWorker worker in Base.Workers) Run(worker, worker.OnEffectApplication(ctx), in ctx, EEffectWorkerHook.Application);
             // Its components hear it, at the moment its workers do (FN-14)
             if (Base.Components != null)
                 foreach (var component in Base.Components) component?.Land(new EffectComponentContext(ctx));
@@ -247,7 +247,7 @@ namespace FarEmerald.PlayForge
         public void RunWorkerTick(EffectWorkerContext ctx)
         {
             // A periodic effect's workers are called every frame, with the ticks that frame executes, most frames none
-            foreach (var worker in Base.Workers) ctx.ActionQueue.EnqueueRange(worker.OnEffectTick(ctx));
+            foreach (var worker in Base.Workers) Run(worker, worker.OnEffectTick(ctx), in ctx, EEffectWorkerHook.Tick);
             // Its components hear a tick as one executes, at the moment its workers do (FN-14): each call was a tick to
             // them, so a Spread each tick spread every frame (GAS-79)
             if (Base.Components != null && ctx.ExecuteTicks > 0)
@@ -255,11 +255,29 @@ namespace FarEmerald.PlayForge
         }
         public void RunWorkerRemoval(EffectWorkerContext ctx)
         {
-            foreach (AbstractEffectWorker worker in Base.Workers) ctx.ActionQueue.EnqueueRange(worker.OnEffectRemoval(ctx));
+            foreach (AbstractEffectWorker worker in Base.Workers) Run(worker, worker.OnEffectRemoval(ctx), in ctx, EEffectWorkerHook.Removal);
             // Its components hear it, at the moment its workers do (FN-14)
             if (Base.Components != null)
                 foreach (var component in Base.Components) component?.End(new EffectComponentContext(ctx));
         }
+        // A worker's actions, queued; and where the entity it ran on is heard, its run told with what it queued (LAB-12). A
+        // tick, which its workers hear every frame and most frames have none of, is told only as one executes or a worker
+        // queues something. Its hits run on their dealer's side, the rest on the side it's on
+        private void Run(AbstractEffectWorker worker, IEnumerable<IRootAction> actions, in EffectWorkerContext ctx, EEffectWorkerHook hook)
+        {
+            var callbacks = ctx.System?.GetCallbacks();
+            if (callbacks == null || !callbacks.HasEffectWorkerListeners)
+            {
+                ctx.ActionQueue.EnqueueRange(actions);
+                return;
+            }
+            var queued = actions != null ? new List<IRootAction>(actions) : new List<IRootAction>();
+            for (int i = 0; i < queued.Count; i++) ctx.ActionQueue.Enqueue(queued[i]);
+            if (hook == EEffectWorkerHook.Tick && ctx.ExecuteTicks <= 0 && queued.Count == 0) return;
+            var side = hook == EEffectWorkerHook.Impact ? EWorkerSide.Dealer : EWorkerSide.Target;
+            callbacks.EffectWorkerRan(new EffectWorkerRun(this, worker, hook, side, ctx.System, queued));
+        }
+
         /// <summary>Its components hear the one it's on die, while it's on them (FN-14).</summary>
         internal void RunComponentDeath(EffectWorkerContext ctx)
         {
@@ -269,7 +287,7 @@ namespace FarEmerald.PlayForge
 
         public void RunWorkerImpact(EffectWorkerContext ctx)
         {
-            foreach (AbstractEffectWorker worker in Base.Workers) ctx.ActionQueue.EnqueueRange(worker.OnEffectImpact(ctx));
+            foreach (AbstractEffectWorker worker in Base.Workers) Run(worker, worker.OnEffectImpact(ctx), in ctx, EEffectWorkerHook.Impact);
             // Its components hear it, at the moment its workers do (FN-14)
             if (Base.Components != null)
                 foreach (var component in Base.Components) component?.Hit(new EffectComponentContext(ctx));

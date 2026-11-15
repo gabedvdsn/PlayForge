@@ -10,6 +10,13 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## Toward 1.0.0, since 0.1.0
 
 ### Added
+- An effect's journal (LAB-12): `EffectJournal` listens to the entities it's given and keeps each application, with its
+  first impact's number traced as it landed, each refusal and why, each tick, impact and removal, and each worker that
+  ran, by hook and side, with the actions it queued and whether they ran. Callbacks tell `OnEffectRefused` with an
+  `EEffectRefusal`, and, to whoever listens and no one else, `OnEffectWorkerRan`, `OnImpactWorkerRan` and
+  `OnAttributeChangeStep`.
+- A hit's steps in the combat log (LAB-13): each entry's change as **Made**, its **ChangeSteps** (each attribute
+  worker's, before and after, inline or queued, a barrier's soak, a gain's scaling) and **StepsText**.
 - The Asset Store export, Proving Grounds' `Tools/export-unitypackage.py`: the package as a buyer gets it, UniTask
   embedded and the samples out of `Samples~`, built in a throwaway project, exported, and imported into a fresh one to
   check, with the golden tests and a Windows player (SP-33, Decision 87).

@@ -241,6 +241,41 @@ its pipeline (TW-2), and whether it **Killed**, marked on the blow that killed i
 oldest first; **Of(kind)**, **By(effect)** and **With(entity)** filter them, and **Total(kind, attribute)** adds their
 changes up, as the damage an entity took. An entry reads as a line: "Took -20 Health from Lina (Fireball)".
 
+An entry tells how its change came to land, too (LAB-13): its change as **Made**, before any step, and its
+**ChangeSteps**, each step it took on the way: each attribute worker that heard it, with its **Timing** (before the
+commit or after), its **Execution** (inline, or the actions it **Queued**) and the change **Before** and **After** it; a
+barrier's soak; a gain's scaling, as Healing Received's. **StepsText** reads them as a line: "-30 as made → Math -30 →
+-15 (inline) → Answering (queued 1, after) → landed -15". The steps are recorded only where the log keeps entries, or
+something hears the entity's `OnAttributeChangeStep`.
+
+## Effect Journal
+
+An `EffectJournal` keeps the life of each effect on the entities it listens to (LAB-12): `Listen(gas)` one, `Follow(list)`
+these and no others, `Forget(gas)` one, and `Dispose()` all; what it wrote stays. Its **Entries** run oldest first, its
+last **Keep** of them, 500 unless it's told; **Of(effect)** and **On(entity)** filter them, **Written** counts every one
+it wrote, and **Wrote** is raised as each is. It records only while it listens, and an entity no journal listens to pays
+nothing: the Creator Lab's bottom panel reads one, and the Debugger's Timeline.
+
+Each entry is an `EffectJournalEntry`: its **Kind**, its **Time** and **Frame**, the **Entity** it happened on, the
+**Effect**, its **Spec** and its **Source**, and what its kind tells:
+
+- **Applied**: the effect landed, with its first impact's number read as it landed, part by part (**Trace**, a
+  `NumberTrace`).
+- **Refused**: it didn't, and its **Refusal** says why: the entity is **Dead**, its **Affiliation** policy doesn't take
+  the entity, its **Requirements** don't hold, an **Immunity** names it, its **Chance** missed, a Block or Evade
+  **Stopped** it, or it was asked for again inside its own application (**Cycle**). Callbacks hear each as
+  `OnEffectRefused(spec, refusal)`.
+- **Ticked**: its ticks executed, **Ticks** of them.
+- **Impact**: a change it made, to its **Attribute**, by its **Change**, with its **Breakdown** through its pipeline.
+- **Removed**: it came off.
+- **Worker**: one of its workers heard one of its moments, or one of its dealer's impact workers ran for its hit: the
+  **Worker**, its **WorkerName**, the **Hook** (Application, Tick, Removal or Impact), the **Side** it ran on (the
+  **Target**, or the **Dealer** for a hit, as [WORKERS.md](WORKERS.md#the-map) says), and the **Actions** it queued,
+  each **Queued**, **Ran** or **Dropped**.
+
+An entry reads as a line: "Burn landed on Target, from Caster", "Poison refused by Target: immunity", "Burn's Noting heard
+it tick on Target, queuing Ticked".
+
 ## Local Data
 
 Local Data is a list of named values stored on the asset. Each row has a **Key** (a tag), a **Type**, and a value of
