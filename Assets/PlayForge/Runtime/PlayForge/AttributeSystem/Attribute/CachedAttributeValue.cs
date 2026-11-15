@@ -659,12 +659,14 @@ namespace FarEmerald.PlayForge
             //
             // Carried for whoever changed Base, by a carrier kept for them, and queued in an action this attribute keeps.
             // Each rescale made a new carrier, its list and a new action (GAS-P9)
+            // On the attribute changed, not its carrier's, which is an effect's first impact's for each of its impacts (GAS-78)
             var changed = ctx.Change.Value.Carrier;
-            var derivation = RescaleCarriers.For(changed.GetOrigin().GetSource(), changed.GetAttribute(),
+            var attribute = ctx.Change.Attribute ?? changed.GetAttribute();
+            var derivation = RescaleCarriers.For(changed.GetOrigin().GetSource(), attribute,
                 Tags.IgnoreRetention, RescaleImpactTypes);
             var scaleAmount = new SourcedModifiedAttributeValue(derivation, delta, 0f, false);
             ctx.ActionQueue.Enqueue(ModifyAttributeAction.Rent(spareRescales ??= new Stack<ModifyAttributeAction>(),
-                ctx.System, changed.GetAttribute(), scaleAmount, false));
+                ctx.System, attribute, scaleAmount, false));
         }
 
         // The carriers rescales are carried by, one table for every attribute, and the impact types each is made with

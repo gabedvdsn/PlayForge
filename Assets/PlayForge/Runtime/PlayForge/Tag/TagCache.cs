@@ -14,6 +14,8 @@ namespace FarEmerald.PlayForge
     {
         private readonly ITagHandler _handler;
         private readonly List<AbstractTagWorker> _tagWorkers;
+        // How many sources give each tag worker: one stays until the last takes it back, and runs once (GAS-83)
+        private readonly Dictionary<AbstractTagWorker, int> _givenTagWorkers = new();
         // Not readonly: a rebuild swaps it with the weights it had before (FEAT-3)
         private Dictionary<Tag, int> _tagWeights;
 
@@ -74,8 +76,9 @@ namespace FarEmerald.PlayForge
         
         public TagCache(ITagHandler handler, List<AbstractTagWorker> workers) : this(handler)
         {
+            // Counted as any given later are, so one of them given again stays until both take it back (GAS-83)
             if (workers != null)
-                _tagWorkers.AddRange(workers);
+                foreach (var worker in workers) ProvideWorker(worker);
             CountEveryFrameWorkers();
         }
         
@@ -346,7 +349,11 @@ namespace FarEmerald.PlayForge
         
         public void ProvideWorker(AbstractTagWorker worker)
         {
-            if (worker == null || _tagWorkers.Contains(worker)) return;
+            if (worker == null) return;
+            // Given again, as by a second copy of an item, it's counted (GAS-83)
+            _givenTagWorkers.TryGetValue(worker, out int given);
+            _givenTagWorkers[worker] = given + 1;
+            if (given > 0 || _tagWorkers.Contains(worker)) return;
             _tagWorkers.Add(worker);
             _workersDirty = true;
             CountEveryFrameWorkers();
@@ -355,6 +362,13 @@ namespace FarEmerald.PlayForge
         public void RemoveWorker(AbstractTagWorker worker)
         {
             if (worker == null) return;
+            // It stays while another source still gives it (GAS-83)
+            if (_givenTagWorkers.TryGetValue(worker, out int given) && given > 1)
+            {
+                _givenTagWorkers[worker] = given - 1;
+                return;
+            }
+            _givenTagWorkers.Remove(worker);
             
             if (_tagWorkers.Remove(worker))
             {
@@ -362,12 +376,13 @@ namespace FarEmerald.PlayForge
                 CountEveryFrameWorkers();
             }
             
-            // If it was active, resolve it
+            // If it was active, resolve it, as its callbacks hear (GAS-81)
             if (_activeWorkers.Contains(worker))
             {
                 _activeWorkers.Remove(worker);
                 _tickCounters.Remove(worker);
                 worker.Resolve(_system);
+                _system?.GetCallbacks()?.TagWorkerResolved(worker);
             }
         }
         
@@ -498,10 +513,11 @@ namespace FarEmerald.PlayForge
 
         public void ResetCache()
         {
-            // Resolve all active workers
+            // Resolve all active workers, as their callbacks hear (GAS-81)
             foreach (var worker in _activeWorkers.ToList())
             {
                 worker.Resolve(_system);
+                _system?.GetCallbacks()?.TagWorkerResolved(worker);
             }
             
             _activeWorkers.Clear();

@@ -93,7 +93,9 @@ namespace FarEmerald.PlayForge
 
             ItemShelf.Add(container);
             container.HearGiven();
-            
+            // Every held item's tag is its holder's, so the tags compile as it comes: they waited for the next (GAS-82)
+            Self.CompileGrantedTags();
+
             Callbacks.ItemGiven(ItemCallbackStatus.Generate(container, this, true));
             
             return true;
@@ -256,7 +258,9 @@ namespace FarEmerald.PlayForge
                 ItemShelf[i].Index -= 1;
             }
             container.HearRemoved();
-            
+            // Its tag goes with it: unequipping compiled while it was still held (GAS-82)
+            Self.CompileGrantedTags();
+
             Callbacks.ItemRemoved(ItemCallbackStatus.Generate(container, this, true));
 
             return true;

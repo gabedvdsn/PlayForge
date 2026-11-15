@@ -99,11 +99,10 @@ namespace FarEmerald.PlayForge.Extended.Editor
             Undo.CollapseUndoOperations(group);
         }
 
-        // The name as a file has it, with only the characters a file can't have left out
+        // The name as a file has it, with only the characters a file can't have on any platform left out (ED-86)
         private static string FileNameKeepingSpaces(string name)
         {
-            var file = (name ?? "").Trim();
-            foreach (var invalid in System.IO.Path.GetInvalidFileNameChars()) file = file.Replace(invalid.ToString(), "");
+            var file = ForgeAssetCreation.WithoutUnportableCharacters((name ?? "").Trim());
             return string.IsNullOrEmpty(file) ? "Asset" : file;
         }
 

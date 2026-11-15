@@ -278,7 +278,7 @@ namespace FarEmerald.PlayForge
             if (attribute is null || !AttributeCache.ContainsKey(attribute)) return default;
 
             var cached = AttributeCache[attribute];
-            var scratch = RentScratch(sourcedModifiedValue);
+            var scratch = RentScratch(attribute, sourcedModifiedValue);
             var change = scratch.Change;
             var ctx = new WorkerContext(Self, AttributeCache, change, _frameSummary, _actionQueue);
 
@@ -405,6 +405,8 @@ namespace FarEmerald.PlayForge
                 attribute,
                 sourcedModifiedValue,
                 change.Value.ToAttributeValue(), holdValue);
+            // A modifier coming off is a change, and no hit (GAS-85)
+            impactData.Ends = mode == ECommitMode.UnregisterModifier;
 
             // Record RECEIVED impact on this (target) GAS — fires target-side callbacks
             Self.RecordFrameImpactReceived(impactData);
@@ -442,10 +444,12 @@ namespace FarEmerald.PlayForge
 
         private readonly Stack<CommitScratch> spareScratch = new();
 
-        private CommitScratch RentScratch(SourcedModifiedAttributeValue value)
+        // A commit's scratch, its change to the attribute given (GAS-78)
+        private CommitScratch RentScratch(IAttribute attribute, SourcedModifiedAttributeValue value)
         {
             var scratch = spareScratch.Count > 0 ? spareScratch.Pop() : new CommitScratch();
             scratch.Change.Value = value;
+            scratch.Change.Attribute = attribute;
             return scratch;
         }
 
@@ -520,7 +524,11 @@ namespace FarEmerald.PlayForge
             {
                 Frozen.Clear();
                 if (Change.Kept) Change = new ChangeValue(default);
-                else Change.Value = default;
+                else
+                {
+                    Change.Value = default;
+                    Change.Attribute = null;
+                }
             }
         }
 
@@ -606,7 +614,7 @@ namespace FarEmerald.PlayForge
                         // worker that checks types passes it by. It takes the post-change half of the pipeline and
                         // reaches the frame summary; it fired OnAttributeChanged alone (GAS-27, Decision 14)
                         var sourcedModifier = new SourcedModifiedAttributeValue(cached.Root, realImpact.CurrentValue, realImpact.BaseValue);
-                        var scratch = RentScratch(sourcedModifier);
+                        var scratch = RentScratch(relative, sourcedModifier);
                         var ctx = new WorkerContext(Self, AttributeCache, scratch.Change, _frameSummary, _actionQueue);
                         cached.EnforceScaling(ctx);
                         PostChangeHandler.RunWorkers(ctx);

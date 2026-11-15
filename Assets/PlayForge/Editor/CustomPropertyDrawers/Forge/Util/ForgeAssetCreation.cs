@@ -188,11 +188,25 @@ namespace FarEmerald.PlayForge.Extended.Editor
             return tag;
         }
 
+        /// <summary>
+        /// The characters no file name may have on any platform a project opens on: Windows', which take in macOS's and
+        /// Linux's own two, the slash and the null character. <c>Path.GetInvalidFileNameChars()</c> gives only the
+        /// platform's, so a name made on a Mac kept a colon Windows can't open (ED-86).
+        /// </summary>
+        internal static readonly char[] UnportableFileCharacters =
+            Enumerable.Range(0, 32).Select(code => (char)code).Concat("\"<>|:*?\\/").ToArray();
+
+        /// <summary>A file name without any character a platform's files can't have (ED-86).</summary>
+        internal static string WithoutUnportableCharacters(string file)
+        {
+            foreach (var each in UnportableFileCharacters) file = file.Replace(each.ToString(), "");
+            return file;
+        }
+
         // A file name from a display name: its letters and digits, the spaces dropped, as The Forge's Create does
         internal static string FileNameOf(string name)
         {
-            var file = Regex.Replace(name ?? "", @"\s+", "");
-            foreach (var invalid in Path.GetInvalidFileNameChars()) file = file.Replace(invalid.ToString(), "");
+            var file = WithoutUnportableCharacters(Regex.Replace(name ?? "", @"\s+", ""));
             return string.IsNullOrEmpty(file) ? "Asset" : file;
         }
 

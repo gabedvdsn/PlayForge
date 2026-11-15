@@ -31,9 +31,12 @@
             
             // Call worker's activate
             _worker.Activate(_system);
-            
+
             // Record in frame summary
             _frameSummary?.RecordTagWorkerActivated(_worker);
+
+            // Its callbacks hear it: declared and never raised (GAS-81)
+            _system.GetCallbacks()?.TagWorkerActivated(_worker);
         }
     }
     
@@ -68,9 +71,12 @@
             
             // Mark as inactive in cache
             _system.GetTagCache()?.MarkWorkerInactive(_worker);
-            
+
             // Record in frame summary
             _frameSummary?.RecordTagWorkerResolved(_worker);
+
+            // Its callbacks hear it: declared and never raised (GAS-81)
+            _system.GetCallbacks()?.TagWorkerResolved(_worker);
         }
     }
 }

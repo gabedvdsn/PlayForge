@@ -63,6 +63,8 @@ namespace FarEmerald.PlayForge
             
             var status = LevelCallbackStatus.GenerateForLevelChanged(level, key, prevLevel, prevMax, true);
             Callbacks.LevelChanged(status);
+            // Declared and never raised (GAS-81)
+            if (prevMax != level.MaxValue) Callbacks.MaxLevelChanged(status);
                 
             if (status.IsLevelUp) Callbacks.LevelUp(status);
             else if (status.IsLevelDown) Callbacks.LevelDown(status);
@@ -88,6 +90,8 @@ namespace FarEmerald.PlayForge
             
             var status = LevelCallbackStatus.GenerateForLevelChanged(level, key, prevLevel, prevMax, true);
             Callbacks.LevelChanged(status);
+            // Declared and never raised (GAS-81)
+            if (prevMax != level.MaxValue) Callbacks.MaxLevelChanged(status);
                 
             if (status.IsLevelUp) Callbacks.LevelUp(status);
             else if (status.IsLevelDown) Callbacks.LevelDown(status);

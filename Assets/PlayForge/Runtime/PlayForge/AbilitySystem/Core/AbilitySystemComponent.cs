@@ -1079,8 +1079,8 @@ namespace FarEmerald.PlayForge
 
             // Run effect-specific workers — only ICarrierApplication carriers have a
             // worker lifecycle. Synthetic delta carriers (SourceAttributeImpact, etc.)
-            // skip this entirely.
-            if (impactData.SourcedModifier.Carrier is ICarrierApplication appCarrier)
+            // skip this entirely. A modifier coming off is no impact to them, nor a hit to the impact workers (GAS-85)
+            if (!impactData.Ends && impactData.SourcedModifier.Carrier is ICarrierApplication appCarrier)
             {
                 var effectContext = new EffectWorkerContext(
                     Self, impactData.SourcedModifier.Carrier,
@@ -1090,7 +1090,7 @@ namespace FarEmerald.PlayForge
             }
 
             // Run global impact workers (source-side)
-            if (runWorkers)
+            if (runWorkers && !impactData.Ends)
             {
                 ImpactWorkerCache.RunImpactData(impactData, Self);
             }

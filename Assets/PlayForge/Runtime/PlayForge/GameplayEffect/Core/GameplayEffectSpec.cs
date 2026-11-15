@@ -246,9 +246,11 @@ namespace FarEmerald.PlayForge
         }
         public void RunWorkerTick(EffectWorkerContext ctx)
         {
+            // A periodic effect's workers are called every frame, with the ticks that frame executes, most frames none
             foreach (var worker in Base.Workers) ctx.ActionQueue.EnqueueRange(worker.OnEffectTick(ctx));
-            // Its components hear it, at the moment its workers do (FN-14)
-            if (Base.Components != null)
+            // Its components hear a tick as one executes, at the moment its workers do (FN-14): each call was a tick to
+            // them, so a Spread each tick spread every frame (GAS-79)
+            if (Base.Components != null && ctx.ExecuteTicks > 0)
                 foreach (var component in Base.Components) component?.Tick(new EffectComponentContext(ctx));
         }
         public void RunWorkerRemoval(EffectWorkerContext ctx)

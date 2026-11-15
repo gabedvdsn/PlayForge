@@ -141,6 +141,13 @@ namespace FarEmerald.PlayForge
     {
         public SourcedModifiedAttributeValue Value;
 
+        /// <summary>
+        /// The attribute this change is to. Its carrier's attribute is its effect's first impact's for every impact the
+        /// effect makes, so the workers and the rescale found by it ran on the wrong attribute for an additional impact
+        /// (GAS-78).
+        /// </summary>
+        public IAttribute Attribute { get; internal set; }
+
         // Set once a deferred worker is handed the change, so its commit leaves it to that worker's actions
         internal bool Kept;
 

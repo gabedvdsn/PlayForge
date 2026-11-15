@@ -9,6 +9,7 @@
             SourcedModifier = sourcedModifier;
             RealImpact = realImpact;
             OldValue = oldValue;
+            Ends = false;
         }
 
         public ITarget Target;
@@ -17,6 +18,12 @@
         public AttributeValue RealImpact;
         public AttributeValue OldValue;
         public AttributeValue LiveValue => OldValue + RealImpact;
+
+        /// <summary>
+        /// A lasting modifier coming off: a change, told as every change is, but no hit. Its effect's workers hear no
+        /// impact, its dealer's impact workers don't run, and no Impact Taken or Dealt is sent (GAS-85, Decision 84).
+        /// </summary>
+        public bool Ends;
 
         public static ImpactData Generate(ITarget target, IAttribute attribute, SourcedModifiedAttributeValue sourcedModifier, AttributeValue realImpact, AttributeValue oldValue)
         {

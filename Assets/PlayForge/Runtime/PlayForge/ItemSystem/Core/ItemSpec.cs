@@ -21,7 +21,8 @@ namespace FarEmerald.PlayForge
         // Constructor
         // ═══════════════════════════════════════════════════════════════════════════
 
-        public ItemSpec(ISource owner, Item item, int level) : base(owner, new IntValuePairClamped(level, item.MaxLevel), item.Tags.AssetTag)
+        // Its max level as its item gives it, a linked item its provider's; it took the item's own (GAS-82)
+        public ItemSpec(ISource owner, Item item, int level) : base(owner, new IntValuePairClamped(level, item.GetMaxLevel()), item.Tags.AssetTag)
         {
             Base = item;
         }

@@ -10,6 +10,10 @@ namespace FarEmerald.PlayForge
     public class ImpactWorkerCache
     {
         private Dictionary<IAttribute, List<AbstractImpactWorker>> _cache = new();
+
+        // How many sources give each worker for each attribute: given again, as by a second copy of an item, a worker ran
+        // once for each; it runs once and stays until the last source takes it back (GAS-83)
+        private readonly Dictionary<(IAttribute, AbstractImpactWorker), int> _given = new();
         
         // References for deferred execution
         private ActionQueue _actionQueue;
@@ -49,11 +53,21 @@ namespace FarEmerald.PlayForge
         
         public void ProvideWorker(IAttribute attribute, AbstractImpactWorker worker)
         {
-            _cache.SafeAdd(attribute, worker);
+            var key = (attribute, worker);
+            _given.TryGetValue(key, out int given);
+            _given[key] = given + 1;
+            if (given == 0) _cache.SafeAdd(attribute, worker);
         }
-        
+
         public void RemoveWorker(IAttribute attribute, AbstractImpactWorker worker)
         {
+            var key = (attribute, worker);
+            if (_given.TryGetValue(key, out int given) && given > 1)
+            {
+                _given[key] = given - 1;
+                return;
+            }
+            _given.Remove(key);
             if (!_cache.ContainsKey(attribute)) return;
             _cache[attribute].Remove(worker);
         }
@@ -143,6 +157,7 @@ namespace FarEmerald.PlayForge
         public void Clear()
         {
             _cache.Clear();
+            _given.Clear();
         }
 
     }

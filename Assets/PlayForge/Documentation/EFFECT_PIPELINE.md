@@ -107,7 +107,7 @@ impact relay (`ImpactData`, frame summaries, source-side `TrackImpact`, `Attribu
 | Verb | Dispatch | Used by |
 |---|---|---|
 | `RegisterModifier(attr, smv, impacters)` | register/refresh in `modifiers` + recompute | Continuous entries on apply / stack refresh / replace |
-| `UnregisterModifier(attr, smv)` | remove carrier's entries + recompute | removal & replacement — **fires callbacks like any change**, so regulated attributes refresh (removal used to be silent → stale derived values) |
+| `UnregisterModifier(attr, smv)` | remove carrier's entries + recompute | removal & replacement — **fires callbacks like any change**, so regulated attributes refresh (removal used to be silent → stale derived values). It's no hit, though: its `ImpactData.Ends` holds, so its effect's workers and components hear no impact, its dealer's impact workers don't run and no Impact Taken or Dealt is sent (GAS-85, Decision 84) |
 | `CommitImpact(attr, smv, impacters)` | permanent per-group commit | OnApply / Periodic entries |
 | `ModifyAttribute(attr, smv)` | CommitImpact; a delta-only carrier's delta commits as constant Adds in its retention group | init pulse, `EnforceScaling` propagation, external systems (`TryModifyAttribute`) |
 
@@ -252,8 +252,8 @@ blueprint scalers create live dependencies.
 ## 6. Initialization & auto-scaling
 
 - `ProvideAttributeSet`: register attributes → initialize each cached value (first recompute)
-  → zero-delta `ModifyAttribute` pulse per attribute (workers/callbacks observe initial values;
-  commits nothing).
+  → zero-delta `ModifyAttribute` pulse per attribute (callbacks observe initial values; no worker does, as the pulse
+  runs none and is unworkable; commits nothing) (GAS-86).
 - `EnforceScaling` (`AutoScaleWithBase`): Base changes, a dependent's refresh included, enqueue a
   deferred proportional Current adjustment through a synthetic carrier, kept for whoever changed Base
   (GAS-P9) — lands as ordinary committed history. The carrier is typed `DisallowImpact` and unworkable, as the pulse is, so no worker that

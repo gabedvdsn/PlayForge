@@ -287,7 +287,8 @@ namespace FarEmerald.PlayForge
             var settings = ForgeCombatLog.Settings;
             if (settings == null) return;
             var dealer = impact.SourcedModifier.Source;
-            if (impact.SourcedModifier.ImpactIsWorkable && dealer != null && !ReferenceEquals(dealer, self))
+            // A modifier coming off is a change, not a hit (GAS-85)
+            if (!impact.Ends && impact.SourcedModifier.ImpactIsWorkable && dealer != null && !ReferenceEquals(dealer, self))
             {
                 if ((settings.Records & ECombatLogRecords.HitsTaken) != 0) Write(Of(ECombatLogKind.Taken, dealer, impact), settings.Keep);
                 return;
@@ -303,7 +304,7 @@ namespace FarEmerald.PlayForge
             var settings = ForgeCombatLog.Settings;
             if (settings == null || (settings.Records & ECombatLogRecords.HitsDealt) == 0) return;
             var target = impact.Target;
-            if (!impact.SourcedModifier.ImpactIsWorkable || target == null || ReferenceEquals(target, self)) return;
+            if (impact.Ends || !impact.SourcedModifier.ImpactIsWorkable || target == null || ReferenceEquals(target, self)) return;
             Write(Of(ECombatLogKind.Dealt, target, impact), settings.Keep);
         }
 

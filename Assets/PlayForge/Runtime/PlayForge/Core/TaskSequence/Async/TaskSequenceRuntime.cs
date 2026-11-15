@@ -415,12 +415,15 @@ namespace FarEmerald.PlayForge
                     _jumpToStageRequest = null;
                 }
                 
+                // An interrupt ends the run here, before the next stage or, after the last, before the run counts as a
+                // success: looked for only as a stage began, one in the last stage left the run successful, and a
+                // repeating sequence went round again with it lost (TS-AF)
+                token.ThrowIfCancellationRequested();
+
                 if (StageIndex >= Definition.Stages.Count)
                 {
                     break;
                 }
-
-                token.ThrowIfCancellationRequested();
                 
                 var stage = Definition.Stages[StageIndex];
                 CurrentStage = stage;

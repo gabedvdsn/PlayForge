@@ -24,6 +24,8 @@ namespace FarEmerald.PlayForge
         protected IEnumerable<IRootAction> PerformThresholdWork(EffectWorkerContext ctx)
         {
             if (!ctx.System.TryGetAttributeValue(TargetAttribute, out var value)) return null;
+            // A value it can't compare meets no threshold, Not Equal's no more than another's (GAS-84)
+            if (!CanCompare(value)) return null;
             switch (Policy)
             {
 
@@ -51,6 +53,9 @@ namespace FarEmerald.PlayForge
             
             return OnThresholdMet(ctx);
         }
+
+        /// <summary>Whether the value can be compared at all: one that can't meets no threshold (GAS-84).</summary>
+        protected virtual bool CanCompare(AttributeValue attributeValue) => true;
 
         protected virtual bool MeetsThreshold(AttributeValue attributeValue, Func<float, float, bool> policyFunc)
         {

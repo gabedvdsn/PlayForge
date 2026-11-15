@@ -249,7 +249,8 @@ Object fields take project assets, not scene objects.
 
 When a `GameplayAbilitySystem` component initializes, it loads the entity's Local Data into a store of its own. Code and
 workers read and write that store through the GAS, with `TryGetLocalData` and `SetLocalData`. Threshold analysis
-workers, for example, note there that they have fired. A `RuntimeGameplayAbilitySystem` starts with an empty store.
+workers, for example, note there that they have fired. A `RuntimeGameplayAbilitySystem` loads its identity's rows the same way, the entity asset's where it's made from one
+(GAS-86).
 
 ## Used By
 

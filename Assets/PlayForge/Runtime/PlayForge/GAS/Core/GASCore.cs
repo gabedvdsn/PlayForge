@@ -96,8 +96,8 @@ namespace FarEmerald.PlayForge
             Sides.Changed = SidesChanged;
 
             // An effect that reads a level reads it again as it changes (GAS-58)
+            // A max's change raises Level Changed too, so the core hears it once (GAS-81)
             LevelSystem.Callbacks.OnLevelChanged += LevelChanged;
-            LevelSystem.Callbacks.OnMaxLevelChanged += LevelChanged;
         }
 
         /// <summary>
@@ -294,6 +294,8 @@ namespace FarEmerald.PlayForge
 
             if (!pendingDestruction) return false;
 
+            // Told once: one stepped by hand kept it set and told it again at every end of frame after (GAS-80)
+            pendingDestruction = false;
             Callbacks?.SystemDisabled();
             return true;
         }
@@ -519,7 +521,8 @@ namespace FarEmerald.PlayForge
             Callbacks?.ImpactDealt(impact);
             // In its combat log, where the project writes the hits it deals (TW-22)
             CombatLog.WriteDealt(impact, owner);
-            SendImpactEvent(Tags.IMPACT_DEALT, impact, owner, impact.Target);
+            // A modifier coming off deals no hit (GAS-85)
+            if (!impact.Ends) SendImpactEvent(Tags.IMPACT_DEALT, impact, owner, impact.Target);
         }
 
         public void RecordImpactReceived(ImpactData impact)
@@ -529,7 +532,8 @@ namespace FarEmerald.PlayForge
             Callbacks?.ImpactReceived(impact);
             // In its combat log, where the project writes the hits it takes or its other changes (TW-22)
             CombatLog.WriteReceived(impact, owner);
-            SendImpactEvent(Tags.IMPACT_TAKEN, impact, impact.SourcedModifier.Source, owner);
+            // A modifier coming off is no hit taken (GAS-85)
+            if (!impact.Ends) SendImpactEvent(Tags.IMPACT_TAKEN, impact, impact.SourcedModifier.Source, owner);
         }
 
         // ═══════════════════════════════════════════════════════════════════════════

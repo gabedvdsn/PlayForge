@@ -859,6 +859,18 @@ tracks each fix below by its ID.
   Asking whether its sequence was paused took 24 bytes a frame.
 
 ### Fixed
+- An effect's Additional Impact runs its own attribute's workers, and its Base change rescales its own attribute: both
+  were found by the effect's first impact's attribute (GAS-78).
+- A Spread each tick spreads once a tick, not every frame of a periodic effect (GAS-79).
+- An interrupt in a sequence's last stage ends the run unsuccessfully; a repeating sequence stops there (TS-AF).
+- A runtime GAS stepped by hand ends as it dies, and its System Disabled fires once (GAS-80).
+- Max Level Changed, Tag Worker Activated and Tag Worker Resolved are raised (GAS-81).
+- An item's tag comes and goes with it, and a linked item takes its provider's max level (GAS-82).
+- A worker two copies of an item share stays until the last copy comes off, and runs once (GAS-83, Decision 85).
+- A ratio threshold compares Current to Base whatever its Target, and a zero Base meets none (GAS-84, Decision 86).
+- A lasting modifier's coming off is no hit: no impact to its effect's workers, no impact workers, no Impact Taken or
+  Dealt (GAS-85, Decision 84).
+- A new or renamed asset's file name leaves out what any platform forbids, not only the editor's own (ED-86).
 - A projectile made in code flies: under a mono process's new Synchronous default, which has no run, one stood where it
   spawned and never landed or ended (PC-35).
 - An effect's Area made in code lands: its Max Targets, a Scalable whole number, had no value, and it threw (FN-19a).

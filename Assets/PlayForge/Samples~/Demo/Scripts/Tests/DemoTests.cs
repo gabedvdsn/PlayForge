@@ -3,12 +3,14 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
+using UnityEngine.UIElements;
 
 namespace FarEmerald.PlayForge.Samples.Demo.Tests
 {
@@ -22,6 +24,16 @@ namespace FarEmerald.PlayForge.Samples.Demo.Tests
         private DemoGame game;
         private DemoRoster roster;
         private string folder;
+
+        // The panel settings the scene's UI documents draw on. As the HUD goes with its scene, Unity lets its panel go and
+        // leaves UI Toolkit subscribed to its input provider, InputForUI, which then polls every frame, allocating, for
+        // the rest of the run: every test after a Demo test measured it, the allocation tests among them (SP-28). A panel
+        // disposed outright lets the provider go, so the tests open the panel again and dispose it, through the panel
+        // settings' own members, as Unity has no public way; where a version has neither, nothing happens
+        private readonly List<PanelSettings> panels = new();
+        private const BindingFlags Members = BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public;
+        private static readonly PropertyInfo PanelOf = typeof(PanelSettings).GetProperty("panel", Members);
+        private static readonly MethodInfo DisposePanel = typeof(PanelSettings).GetMethod("DisposePanel", Members, null, System.Type.EmptyTypes, null);
 
         // ═══════════════════════════════════════════════════════════════════════════
         // The scene
@@ -37,6 +49,9 @@ namespace FarEmerald.PlayForge.Samples.Demo.Tests
 
             yield return EditorSceneManager.LoadSceneAsyncInPlayMode($"{folder}/Demo.unity", new LoadSceneParameters(LoadSceneMode.Single));
             yield return Frames(5);
+            panels.Clear();
+            panels.AddRange(Object.FindObjectsByType<UIDocument>(FindObjectsInactive.Include, FindObjectsSortMode.None)
+                .Select(document => document.panelSettings).Where(settings => settings != null).Distinct());
             game = DemoGame.Current;
             Assert.That(game, Is.Not.Null, "the scene has its game");
         }
@@ -59,6 +74,15 @@ namespace FarEmerald.PlayForge.Samples.Demo.Tests
             ProcessControl.Instance = null;
             GameRoot.Instance = null;
             TagRegistry.Reset();
+            // The HUD's panels opened again and disposed, and the input polling with them (SP-28)
+            if (PanelOf != null && DisposePanel != null)
+                foreach (var settings in panels)
+                {
+                    if (settings == null) continue;
+                    PanelOf.GetValue(settings);
+                    DisposePanel.Invoke(settings, null);
+                }
+            panels.Clear();
         }
 
         private static IEnumerator Frames(int count)

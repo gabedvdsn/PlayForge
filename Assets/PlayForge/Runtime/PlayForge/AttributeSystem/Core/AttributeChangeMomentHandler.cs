@@ -11,33 +11,45 @@ namespace FarEmerald.PlayForge
     public class AttributeChangeMomentHandler
     {
         private Dictionary<IAttribute, List<AbstractAttributeWorker>> _workers = new();
-        
+
+        // How many sources give each worker for each attribute: two copies of an item share its workers, so one stays
+        // until the last copy goes, and runs once (GAS-83)
+        private readonly Dictionary<(IAttribute, AbstractAttributeWorker), int> _given = new();
+
         /// <summary>
-        /// Add a worker for a specific attribute.
+        /// Add a worker for a specific attribute. A worker given again is counted, not added again, and stays until each
+        /// source that gave it takes it back (GAS-83). True where it's new.
         /// </summary>
         public bool AddWorker(IAttribute attribute, AbstractAttributeWorker worker)
         {
-            if (_workers.ContainsKey(attribute))
-            {
-                if (_workers[attribute].Contains(worker)) return false;
-                _workers[attribute].Add(worker);
-            }
-            else
-            {
-                _workers[attribute] = new List<AbstractAttributeWorker> { worker };
-            }
+            var key = (attribute, worker);
+            _given.TryGetValue(key, out int given);
+            _given[key] = given + 1;
+            if (given > 0) return false;
+
+            if (_workers.TryGetValue(attribute, out var workers)) workers.Add(worker);
+            else _workers[attribute] = new List<AbstractAttributeWorker> { worker };
             return true;
         }
-        
+
         /// <summary>
-        /// Remove a worker for a specific attribute.
+        /// Remove a worker for a specific attribute: one source's giving of it, the worker going with the last (GAS-83).
+        /// True where a source gave it.
         /// </summary>
         public bool RemoveWorker(IAttribute attribute, AbstractAttributeWorker worker)
         {
-            if (!_workers.ContainsKey(attribute)) return false;
-            
-            bool removed = _workers[attribute].Remove(worker);
-            if (_workers[attribute].Count == 0)
+            var key = (attribute, worker);
+            if (!_given.TryGetValue(key, out int given)) return false;
+            if (given > 1)
+            {
+                _given[key] = given - 1;
+                return true;
+            }
+            _given.Remove(key);
+
+            if (!_workers.TryGetValue(attribute, out var workers)) return false;
+            bool removed = workers.Remove(worker);
+            if (workers.Count == 0)
             {
                 _workers.Remove(attribute);
             }
@@ -50,7 +62,8 @@ namespace FarEmerald.PlayForge
         /// </summary>
         public void RunWorkers(WorkerContext context)
         {
-            var attribute = context.Change.Value.Carrier?.GetAttribute();
+            // The attribute changed, not its carrier's: an effect's spec carries every impact it makes (GAS-78)
+            var attribute = context.Change.Attribute ?? context.Change.Value.Carrier?.GetAttribute();
             if (attribute is null) return;
             
             if (!_workers.ContainsKey(attribute)) return;
@@ -119,6 +132,7 @@ namespace FarEmerald.PlayForge
         public void Clear()
         {
             _workers.Clear();
+            _given.Clear();
         }
 
     }

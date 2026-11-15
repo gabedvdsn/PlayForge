@@ -3,21 +3,16 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
+    /// <summary>
+    /// A threshold on an attribute's ratio, its Current to its Base, as below half its health: the ratio against
+    /// Threshold's Current, whatever Target says, as a ratio has no other side. Its Base target compared Base to Base,
+    /// which is always one; and with no Base there's no ratio, so no threshold is met (GAS-84, Decision 86).
+    /// </summary>
     public abstract class TargetAttributeRatioThresholdEffectWorker : TargetAttributeThresholdEffectWorker
     {
-        protected override bool MeetsThreshold(AttributeValue attributeValue, Func<float, float, bool> policyFunc)
-        {
-            return Target switch
-            {
+        protected override bool CanCompare(AttributeValue attributeValue) => !Mathf.Approximately(attributeValue.BaseValue, 0f);
 
-                EAttributeTarget.Current => policyFunc(attributeValue.CurrentValue / attributeValue.BaseValue, Threshold.CurrentValue),
-                EAttributeTarget.Base => policyFunc(attributeValue.BaseValue / attributeValue.BaseValue, Threshold.CurrentValue),
-                EAttributeTarget.CurrentAndBase => policyFunc(attributeValue.CurrentValue / attributeValue.BaseValue, Threshold.CurrentValue) &&
-                                                      policyFunc(attributeValue.BaseValue / attributeValue.BaseValue, Threshold.CurrentValue),
-                _ => throw new ArgumentOutOfRangeException()
-            };
-        }
-        
-        
+        protected override bool MeetsThreshold(AttributeValue attributeValue, Func<float, float, bool> policyFunc) =>
+            policyFunc(attributeValue.CurrentValue / attributeValue.BaseValue, Threshold.CurrentValue);
     }
 }
