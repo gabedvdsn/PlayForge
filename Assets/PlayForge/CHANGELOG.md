@@ -859,6 +859,8 @@ tracks each fix below by its ID.
   Asking whether its sequence was paused took 24 bytes a frame.
 
 ### Fixed
+- The Demo and Additional Content samples import into a project without the Test Framework: their tests compile only
+  where it is, as the test kit's do (SP-29).
 - An effect's Additional Impact runs its own attribute's workers, and its Base change rescales its own attribute: both
   were found by the effect's first impact's attribute (GAS-78).
 - A Spread each tick spreads once a tick, not every frame of a periodic effect (GAS-79).

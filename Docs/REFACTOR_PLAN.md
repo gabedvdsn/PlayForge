@@ -1205,6 +1205,7 @@ reads the old demos' fullest assets, so it moves to the new demo's as the old go
 | SP-26 | L | 7 | The Demos and Swarm Defender, which the Demo replaces, and what only they used: `Assets/demo_uss.uss`, `Assets/UI Toolkit` and the project's root namespace `…SwarmDefenderSample`. Done: gone; the synced sequence examples, PlayForge's alone, moved to Code Examples; Proving Grounds' smoke suite sweeps the Demo's assets, and its gates import the Demo | `Assets/PlayForge/Samples~`, `package.json` | verified |
 | SP-27 | L | — | Proving Grounds' CI, red since 2026-11-07, in part: on CI's Linux editor the Demo sweep found an ability's nested Effects list with no rows drawn yet, a fixed count of frames being too few there. Fixed: the sweep opens and waits until every list draws its rows, up to five seconds. CI confirms it | Proving Grounds' `EditorSmokeTests.cs` | fixed |
 | SP-28 | M | — | Proving Grounds' CI, red since 2026-11-07, in part: in either shuffled PlayMode order every allocation test failed at 1,216 bytes a frame, from the first Demo test on. A profile names it: Unity's `PreUpdate.InputForUIUpdate`, the input UI Toolkit's runtime panels read, which the Demo's HUD started and which polled on, allocating, after the panel went. Fixed: the Demo's tests open their HUD's panel again and dispose it, which lets the provider go, through the panel settings' own members, as Unity has no public way; in the order that found it, every allocation test passes | the Demo's `DemoTests.cs` | verified |
+| SP-29 | H | — | Found by the release checklist's clean import (`PUBLISHING.md`): imported into a project without the Test Framework, the Demo's and Additional Content's tests didn't compile, 57 errors, as Unity defines `UNITY_INCLUDE_TESTS` for every assembly under Assets; a buyer who imported either sample without it got a project that wouldn't build. Fixed: as the test kit does, each compiles only where `com.unity.test-framework` is, through a version define, `UNITY_TESTS_FRAMEWORK` | the two samples' test assembly definitions | verified |
 
 ### Missing features (Phase 5)
 
@@ -1484,6 +1485,15 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-14, **The release checks, first run: SP-29.** With CI and the defects done, the checks of `PUBLISHING.md`'s
+  dress rehearsal that change nothing ran while the user was away: Proving Grounds' `Tools/clean-import.py --samples`,
+  a fresh Unity 6 project with the package, UniTask, the Input System and all four samples, and a Windows player built
+  from it. The clean import found SP-29: the samples' tests compiled where the project has no Test Framework, and
+  failed, 57 errors. Guarded as the test kit is, they compile only where it is.
+  - Red, then green: the clean import with the samples had 57 compile errors, all in the two samples' tests; after, 0 compile errors, 0 warnings, 0 missing scripts, references or types, 0 exceptions or asset warnings. The samples' tests in Proving Grounds, which has the Test Framework, 20 of 20.
+  - The Windows player built from that project with `BuildVerification.BuildWindowsPlayer`: succeeded, 0 errors, 0 warnings, 86 MB in 24 s.
+  - Left of the dress rehearsal: the export as a `.unitypackage` from the packaging branch (UniTask embedded, the samples copied out of `Samples~`), its import, the golden tests and The Forge and the Debugger opened there, each sample played by hand.
 
 - 2026-11-14, **CI and the map's defects.** The user's choice, CI and defects before release preparation. CI compiles
   again since the user's Proving Grounds edits went in (PG 2284ea5); what was left of its red: ED-86, Linux's file names
