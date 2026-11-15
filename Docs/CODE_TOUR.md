@@ -74,7 +74,7 @@ The first of the foundations (Decision 30). `ProcessControl.Register(process)` s
 why ProcessControl refused it. Left out, the handler follows the packet's run-time type, so an ability's packet hands
 its process to its source however it's typed; through the 28 overloads, an ability's packet passed as a plainer one
 put its process under GameRoot, so it didn't end with its entity, and `TaskSequence.RegisterAndRun` did that with
-every ability's packet. The overloads are `[Obsolete]` wrappers of the builder until the first Asset Store submission.
+every ability's packet. The overloads were `[Obsolete]` wrappers of the builder until FN-21 removed them.
 `ProcessRelay.Run` starts a process that waits.
 
 - **IDs:** FEAT-15, commit `6586536`; Decision 30.
@@ -82,10 +82,10 @@ every ability's packet. The overloads are `[Obsolete]` wrappers of the builder u
   - `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessRegistration.cs:112`
     `ProcessRegistration.Run`, and `:157` `DefaultHandler`, by the packet's run-time type; `:4`, the refusals.
   - `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessControl.cs:277`, the entry points,
-    `:294`, the overloads' one message, and `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessWorld.cs:661` `RegisterMono` and `:682` `RegisterRuntime`, which say why.
+    and `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessWorld.cs:661` `RegisterMono` and `:682` `RegisterRuntime`, which say why.
   - `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessRelay.cs:97` `ProcessRelay.Run`.
 - **Watch for:** nothing compiles `Samples~`, so the samples' calls were built against the package's source in a
-  throwaway project. Proving Grounds' tests still call the overloads, so the gates cover the wrappers.
+  throwaway project. Proving Grounds' tests register through the builder alone since FN-21.
 - **Tests:** the six `FEAT_15_*` tests in PlayMode's `RegisterBuilderTests`, among them
   `FEAT_15_The_handler_follows_the_packets_run_time_type` on each hub.
 
@@ -1503,12 +1503,13 @@ assets go and how their files are named, each type's defaults and the Cost and C
 `ProjectSettings/PlayForgeSettings.asset`, a `ScriptableSingleton` that travels with the project, and Project Settings →
 PlayForge edits them, bound, so an edit undoes. Each user's view toggles and the log level stay in EditorPrefs, on
 Preferences → PlayForge. Every setting was an EditorPref, shared by every project on the machine; a project takes its
-values from there once. The Forge's Settings tab and `TemplateRegistry` are gone.
+values from there once. The Forge's Settings tab and `TemplateRegistry` are gone. TW-30 moved the settings onto
+the Forge Project, and FN-21 removed the file, the singleton and both imports.
 
 - **IDs:** ED-21, commit `90a711b`.
 - **Read:**
-  - `Assets/PlayForge/Editor/Settings/PlayForgeSettings.cs:96` `Ready`, the first use's migration, `:279`
-    `TakeMachineSettings`, and `:333` `Serialized`, which makes the singleton editable for the page.
+  - `Assets/PlayForge/Editor/Settings/PlayForgeSettings.cs`, a static class over the Forge Project's settings since
+    FN-21, which took out `Ready`, the first use's migration, and `TakeMachineSettings`.
   - `Assets/PlayForge/Editor/Settings/PlayForgeSettingsPages.cs:53` `BuildProjectPage` and `:220`
     `BuildPreferencesPage`.
   - `Assets/PlayForge/Editor/Settings/PlayForgePreferences.cs:68` `UseDefaults`.
@@ -3013,8 +3014,8 @@ Golden Tests left the menu; the Test Runner runs the scenarios (SP-18).
 - **ED-22.** `TemplateRegistry` kept one EditorPrefs entry for every project on the machine, and `Save` drops the
   templates whose assets the current project lacks, so saving in one project wiped every other's. Each project now
   has its own key, from `PlayerSettings.productGUID`. The first load migrates from the shared key and leaves it alone.
-  ED-21 moved the templates into the project's settings, which take a project's EditorPrefs entry once:
-  `Assets/PlayForge/Editor/Settings/PlayForgeSettings.cs:279` `TakeMachineSettings`.
+  ED-21 moved the templates into the project's settings, which took a project's EditorPrefs entry once, until FN-21
+  removed that import.
 
 ### Inspector fixes
 
@@ -3167,9 +3168,9 @@ fills, so a read allocates nothing. A kind of a project's own is one class, `Num
     which reads any context's magnitudes.
   - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Drawers/Scaler/MagnitudeField.cs` `MagnitudeField.Build`:
     the kind menu by category (`KindPopup`), the summary line and percent numbers (`NumberField`).
-  - `Assets/PlayForge/Editor/Problems/ForgeRules.cs` `NumberContextRule`, and `Assets/PlayForge/Editor/Tools/ForgeUpgrade.cs`.
-- **New:** everything above. The old names stay a version as obsolete subclasses
-  (`Assets/PlayForge/Runtime/PlayForge/Utils/ScalerMagnitudeOperation.cs`).
+  - `Assets/PlayForge/Editor/Problems/ForgeRules.cs` `NumberContextRule`; `ForgeUpgrade.cs`, the upgrade menu, went
+    with FN-21.
+- **New:** everything above. The old names stayed as obsolete subclasses until FN-21 removed them.
 
 ### Kinds that read the game, and numbers that ask workers (phase 2)
 
@@ -3210,16 +3211,17 @@ its own numbers with itself as their owner. A kind inside a plain scaler reads t
 - **Read:**
   - `Assets/PlayForge/Runtime/PlayForge/Numbers/Conditions/GameplayCondition.cs`: `GameplayCondition.Holds`, its
     `[GameplayCondition]`, and `NumberComparison`; the built-in conditions beside it.
-  - `Assets/PlayForge/Runtime/PlayForge/GameplayEffect/Modifier/Default/Authored/ConditionalScaler.cs`: `Evaluate`,
-    and `OnAfterDeserialize`, which carries an old asset's numbered condition and branch scalers over.
-  - `ClampedScaler.cs`, `RandomizedScaler.cs`, `SetByCallerScaler.cs` and `ThresholdScaler.cs` beside it, each with
-    its legacy fields; `Assets/PlayForge/Runtime/PlayForge/Numbers/LegacyNumber.cs` `TakeTable`.
+  - `Assets/PlayForge/Runtime/PlayForge/GameplayEffect/Modifier/Default/Authored/ConditionalScaler.cs`: `Evaluate`.
+  - `ClampedScaler.cs`, `RandomizedScaler.cs`, `SetByCallerScaler.cs` and `ThresholdScaler.cs` beside it. Their legacy
+    fields, the Conditional's `OnAfterDeserialize`, which carried an old asset's numbered condition and branch scalers
+    over, and `LegacyNumber.TakeTable` went with FN-21.
   - `Assets/PlayForge/Runtime/PlayForge/Numbers/NumberContext.cs` `ReadScaler` and `Of(IAttributeImpactCarrier)`: the
     reading stack a kind inside a plain scaler reads (NUM-16).
   - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Drawers/Scaler/ConditionDrawer.cs`, the condition's field,
     and `NumberFields.cs` `OwnerNumber`, `ProvidesOf(SerializedProperty)` and `ScalersIn(value, Walk)`, which give a
     scaler's own numbers the scaler as their owner.
-- **New:** `GameplayCondition` and its nine conditions, `ConditionDrawer`, `LegacyNumber.TakeTable`, and
+- **New:** `GameplayCondition` and its nine conditions, `ConditionDrawer`, `LegacyNumber.TakeTable` (gone with FN-21),
+  and
   `ScalableFloat.Initialize`. **Gone:** `EScalerCondition`, and the Conditional's and the Clamped's scaler slots.
 
 ## Tests

@@ -7,8 +7,9 @@ completed groundwork ☑.
 
 - ☑ The samples live in `Samples~` and are listed in `package.json`, so Package Manager imports them on request:
   **Battle**, a battle that plays itself; **Demo**, a hero arena of five heroes, fourteen items, an AI hero and a
-  training dummy; and **Code Examples**.
-- ☑ A clean import into a fresh project shows zero warnings and zero missing types, and importing both samples into
+  training dummy; **Additional Content**, recipes for common rules made of PlayForge's own assets, with hit feedback
+  and a sparring scene; and **Code Examples**.
+- ☑ A clean import into a fresh project shows zero warnings and zero missing types, and importing the samples into
   it shows zero missing scripts, references and types. Proving Grounds' `Tools/clean-import.py` checks both, the
   samples with `--samples`.
 - ☑ **Demo** needs nothing beyond PlayForge: it reads the Input System where the project has it, and the Input

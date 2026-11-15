@@ -414,7 +414,7 @@ namespace FarEmerald.PlayForge.Extended.Examples
     ///
     /// Usage:
     ///   var demo = new SyncDemo_RuntimeChoreography(myTransform);
-    ///   ProcessControl.Instance.Register(demo, ProcessDataPacket.RootDefault(), out var relay);
+    ///   ProcessControl.Register(demo).Run(out var relay);
     /// </summary>
     public class SyncDemo_RuntimeChoreography : LazyRuntimeProcess
     {

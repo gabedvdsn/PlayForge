@@ -289,30 +289,6 @@ namespace FarEmerald.PlayForge
 
         #region Mono Process
 
-        // The overloads' one message: each is a wrapper of the builder, and they go before the first Asset Store
-        // submission (FEAT-15, Decision 30)
-        private const string UseTheBuilder = "Use ProcessControl.Register(process), then HandledBy, With and Run. " +
-                                             "These overloads go before the first Asset Store submission (FEAT-15).";
-
-        [Obsolete(UseTheBuilder)]
-        public static bool Register(AbstractMonoProcess process, out ProcessRelay relay) => Register(process).Run(out relay);
-
-        [Obsolete(UseTheBuilder)]
-        public static bool Register(AbstractMonoProcess process, AbilityDataPacket data, out ProcessRelay relay) =>
-            Register(process).With(data).Run(out relay);
-
-        [Obsolete(UseTheBuilder)]
-        public static bool Register(AbstractMonoProcess process, ProcessDataPacket data, out ProcessRelay relay) =>
-            Register(process).With(data).Run(out relay);
-
-        [Obsolete(UseTheBuilder)]
-        public static bool Register(AbstractMonoProcess process, IGameplayProcessHandler handler, out ProcessRelay relay) =>
-            Register(process).HandledBy(handler).Run(out relay);
-
-        [Obsolete(UseTheBuilder)]
-        public static bool Register(AbstractMonoProcess process, IGameplayProcessHandler handler, ProcessDataPacket data, out ProcessRelay relay) =>
-            Register(process).HandledBy(handler).With(data).Run(out relay);
-
         // A MonoBehaviour process's registration, in this ProcessControl's world
         internal ProcessRegistrationResult RegisterMono(AbstractMonoProcess process, IGameplayProcessHandler handler, ProcessDataPacket data) =>
             World.RegisterMono(process, handler, data);
@@ -321,70 +297,9 @@ namespace FarEmerald.PlayForge
 
         #region Runtime Process
 
-        [Obsolete(UseTheBuilder)]
-        public static bool Register(AbstractRuntimeProcess process, out ProcessRelay relay) => Register(process).Run(out relay);
-
-        [Obsolete(UseTheBuilder)]
-        public static bool Register(AbstractRuntimeProcess process, AbilityDataPacket data, out ProcessRelay relay) =>
-            Register(process).With(data).Run(out relay);
-
-        [Obsolete(UseTheBuilder)]
-        public static bool Register(AbstractRuntimeProcess process, IGameplayProcessHandler handler, out ProcessRelay relay) =>
-            Register(process).HandledBy(handler).Run(out relay);
-
-        [Obsolete(UseTheBuilder)]
-        public static bool Register(AbstractRuntimeProcess process, ProcessDataPacket data, out ProcessRelay relay) =>
-            Register(process).With(data).Run(out relay);
-
-        [Obsolete(UseTheBuilder)]
-        public static bool Register(AbstractRuntimeProcess process, IGameplayProcessHandler handler, ProcessDataPacket data, out ProcessRelay relay) =>
-            Register(process).HandledBy(handler).With(data).Run(out relay);
-
         // A runtime process's registration, a task sequence's among them, in this ProcessControl's world
         internal ProcessRegistrationResult RegisterRuntime(AbstractRuntimeProcess process, IGameplayProcessHandler handler, ProcessDataPacket data) =>
             World.RegisterRuntime(process, handler, data);
-
-        #endregion
-
-        #region Task Sequences (Async)
-
-        [Obsolete(UseTheBuilder)]
-        public static bool Register(TaskSequence sequence, out ProcessRelay relay) => Register(sequence).Run(out relay);
-
-        [Obsolete(UseTheBuilder)]
-        public static bool Register(TaskSequence sequence, AbilityDataPacket data, out ProcessRelay relay) =>
-            Register(sequence).With(data).Run(out relay);
-
-        [Obsolete(UseTheBuilder)]
-        public static bool Register(TaskSequence sequence, IGameplayProcessHandler handler, out ProcessRelay relay) =>
-            Register(sequence).HandledBy(handler).Run(out relay);
-
-        [Obsolete(UseTheBuilder)]
-        public static bool Register(TaskSequence sequence, SequenceDataPacket data, out ProcessRelay relay) =>
-            Register(sequence).With(data).Run(out relay);
-
-        [Obsolete(UseTheBuilder)]
-        public static bool Register(TaskSequence sequence, IGameplayProcessHandler handler, SequenceDataPacket data, out ProcessRelay relay) =>
-            Register(sequence).HandledBy(handler).With(data).Run(out relay);
-
-        [Obsolete(UseTheBuilder)]
-        public static bool Register(TaskSequenceChain chain, out ProcessRelay relay) => Register(chain).Run(out relay);
-
-        [Obsolete(UseTheBuilder)]
-        public static bool Register(TaskSequenceChain chain, AbilityDataPacket data, out ProcessRelay relay) =>
-            Register(chain).With(data).Run(out relay);
-
-        [Obsolete(UseTheBuilder)]
-        public static bool Register(TaskSequenceChain chain, IGameplayProcessHandler handler, out ProcessRelay relay) =>
-            Register(chain).HandledBy(handler).Run(out relay);
-
-        [Obsolete(UseTheBuilder)]
-        public static bool Register(TaskSequenceChain chain, SequenceDataPacket data, out ProcessRelay relay) =>
-            Register(chain).With(data).Run(out relay);
-
-        [Obsolete(UseTheBuilder)]
-        public static bool Register(TaskSequenceChain chain, IGameplayProcessHandler handler, SequenceDataPacket data, out ProcessRelay relay) =>
-            Register(chain).HandledBy(handler).With(data).Run(out relay);
 
         #endregion
 
@@ -536,44 +451,11 @@ namespace FarEmerald.PlayForge
         public bool TryGetPCB(int cacheIndex, out ProcessControlBlock pcb) => World.TryGetPCB(cacheIndex, out pcb);
 
         // ───────────────────────────────────────────────────────────────────────
-        // GAS-SPECIFIC REGISTRATION HELPERS
+        // GAS-SPECIFIC QUERIES
         //
-        // These convenience overloads make the owning GAS explicit at the call
-        // site. Any process registered with an IGameplayAbilitySystem handler
-        // (or whose data packet resolves to one) is auto-tracked in _gasProcesses.
+        // A process registered with an IGameplayAbilitySystem handler, or whose
+        // data packet resolves to one, is tracked under that GAS.
         // ───────────────────────────────────────────────────────────────────────
-
-        [Obsolete(UseTheBuilder)]
-        public static bool Register(AbstractRuntimeProcess process, IGameplayAbilitySystem gas, out ProcessRelay relay) =>
-            Register(process).HandledBy(gas).Run(out relay);
-
-        [Obsolete(UseTheBuilder)]
-        public static bool Register(AbstractRuntimeProcess process, IGameplayAbilitySystem gas, ProcessDataPacket data, out ProcessRelay relay) =>
-            Register(process).HandledBy(gas).With(data).Run(out relay);
-
-        [Obsolete(UseTheBuilder)]
-        public static bool Register(AbstractMonoProcess process, IGameplayAbilitySystem gas, out ProcessRelay relay) =>
-            Register(process).HandledBy(gas).Run(out relay);
-
-        [Obsolete(UseTheBuilder)]
-        public static bool Register(AbstractMonoProcess process, IGameplayAbilitySystem gas, ProcessDataPacket data, out ProcessRelay relay) =>
-            Register(process).HandledBy(gas).With(data).Run(out relay);
-
-        [Obsolete(UseTheBuilder)]
-        public static bool Register(TaskSequence sequence, IGameplayAbilitySystem gas, out ProcessRelay relay) =>
-            Register(sequence).HandledBy(gas).Run(out relay);
-
-        [Obsolete(UseTheBuilder)]
-        public static bool Register(TaskSequence sequence, IGameplayAbilitySystem gas, SequenceDataPacket data, out ProcessRelay relay) =>
-            Register(sequence).HandledBy(gas).With(data).Run(out relay);
-
-        [Obsolete(UseTheBuilder)]
-        public static bool Register(TaskSequenceChain chain, IGameplayAbilitySystem gas, out ProcessRelay relay) =>
-            Register(chain).HandledBy(gas).Run(out relay);
-
-        [Obsolete(UseTheBuilder)]
-        public static bool Register(TaskSequenceChain chain, IGameplayAbilitySystem gas, SequenceDataPacket data, out ProcessRelay relay) =>
-            Register(chain).HandledBy(gas).With(data).Run(out relay);
 
         /// <summary>
         /// Returns the cache indices of all active processes owned by the given GAS.

@@ -95,8 +95,7 @@ as ProjectileSpeed), and where it starts: its own value, a number or a scaler re
 the caster's attribute, or the caster's where it has one. The data that spawns it can set one under its role, and
 its code reads and sets them with `TryGetRole`, `SetRole`, `TryGetAttribute` and `SetAttribute`.
 
-A process that requires control waits after it registers; `relay.Run()` starts it. The `Register` overloads that take
-an `out` relay still work, marked obsolete, and go before the first Asset Store release.
+A process that requires control waits after it registers; `relay.Run()` starts it.
 
 ### Time and random numbers
 

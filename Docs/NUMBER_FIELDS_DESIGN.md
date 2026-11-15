@@ -60,7 +60,7 @@ There are precedents for this:
 - `ScalerMagnitudeOperation` becomes the number type, `ScalableFloat`, and `ScalerIntegerMagnitudeOperation` becomes
   `ScalableInt`. They keep their saved field names, `Magnitude`, `RealMagnitude`, `Scaler` and `Rounding`, so every
   magnitude saved today loads unchanged. The old names stay one version as obsolete subclasses, so code that names
-  them still compiles.
+  them still compiles. (They went with the legacy code, FN-21.)
 - The kinds are presets over what's already there, not a second hierarchy:
   - Constant is "Number Only".
   - By Level is a Simple scaler.

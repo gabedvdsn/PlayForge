@@ -1113,8 +1113,9 @@ tracks each fix below by its ID.
   **Move to Components** menus; every `FormerlySerializedAs`; the ability proxy's legacy execution, which nothing
   reached, its injection's second path and `IAbilityProxyStagePolicy.AwaitStageActivation`; and what its comments called
   legacy: the GAS callbacks' `OnAttributeReduced` and `OnAttributeIncreased`, the Received events being theirs, an
-  attribute value's `RetainedGroups` and `CommittedOneShotDelta`, and a handful of unused aliases. ProcessControl's
-  obsolete Register overloads stay a while.
+  attribute value's `RetainedGroups` and `CommittedOneShotDelta`, and a handful of unused aliases; and
+  ProcessControl's 28 obsolete `Register` overloads that took an `out` relay, so a process registers through the
+  builder alone.
 - An effect's own **Lifesteal**, in Impact, and `EffectLifesteal`: an effect's hits heal its caster by the caster's
   Lifesteal alone, which an effect raises while it should. The Additional Content's Vampiric Strike recipe is
   **Vampirism**, an effect of +0.5 Lifesteal, with the recipes' Lifesteal attribute (FN-22).
