@@ -14,7 +14,7 @@ design is `Docs/CREATOR_LAB_DESIGN.md` (Decision 44); the tracker rows are LAB-1
 | 2. The lab's shell | LAB-1 to LAB-8 | Done: PlayForge `f7afb28`, Proving Grounds `ed3ca46` |
 | 3. Battle | LAB-9, LAB-10 | Done: the commits after those, "LAB-9, LAB-10" |
 | 4. The author's unit | LAB-11 | Done on 2026-11-13, as drafted (below) |
-| 5. Showing its working | LAB-12 to LAB-17 | **Open** |
+| 5. Showing its working | LAB-12 to LAB-17 | Done on 2026-11-14 (Decision 88), with GAS-87 |
 | 6. Forge Projects in the library | LAB-18 | Done on 2026-11-13 |
 
 Every test of the lab passes: `CreatorLabTests` (13, PlayMode), `CreatorLabEditorTests` (2, EditMode), and the Demo's
@@ -124,7 +124,17 @@ lab's, with R. The draft:
   `ForgeInput.Use`: a right-click on the ground moves the unit; one on a foe sets it on the foe; Q casts its first
   ability; a project's driver, a `LabDriver` subclass that records its orders, takes them.
 
-### LAB-12 to LAB-17: showing its working
+### LAB-12 to LAB-17: showing its working (done)
+
+Built on 2026-11-14 (Decision 88). The core tells what was missing, only to whoever listens: `OnEffectRefused` with an
+`EEffectRefusal`, `OnEffectWorkerRan` (hook, side, actions queued), `OnImpactWorkerRan` and `OnAttributeChangeStep`
+(`GAS/Core/WorkerRuns.cs`). `EffectJournal` (`GAS/Core/EffectJournal.cs`) keeps an effect's life on the entities it's
+given, and a combat log entry its change's steps (`Made`, `ChangeSteps`, `StepsText`). The lab's `LabShowing`
+(`Runtime/Lab/LabShowing.cs`) holds its journal over every unit, its stops (`LabStop`, `StepTick`), its watches
+(`LabWatch`) and its log of ForgeLog's messages, which gained systems (`ForgeLog.ESystem`, `SetLevel`, `Logged`);
+`LabBottomPanel.cs` draws the bottom panel's five pages. The Debugger's `TimelineRecorder` keeps a journal of the
+entities it lists and an effect's refusals as ticks. Tests: Proving Grounds' `EffectJournalTests` (PlayMode),
+`LabShowingTests` (PlayMode) and `RuntimeDebuggerTests`' LAB-17 cases (EditMode). The note, as it was:
 
 The journals record only while something listens. `GameplayAbilitySystemCallbacks` already raises effect applied,
 ticked and removed, impacts dealt and received, actions queued, executed and invalidated, tag workers, death and

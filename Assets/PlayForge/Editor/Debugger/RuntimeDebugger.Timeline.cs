@@ -226,7 +226,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
         {
             if (track.Kind == TimelineKind.Effect)
             {
-                int landed = track.Spans.Count;
+                // A refusal is no application (LAB-17)
+                int landed = CountOf(track);
                 return $"Effect · {track.EntityName} · {CountOf(landed, "application", "applications")}";
             }
             int runs = CountOf(track);
@@ -379,13 +380,28 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 ("Length", "pf-debugger__col-60")));
             var rows = new VisualElement { name = "ApplicationRows" };
             section.Content.Add(rows);
+            // Applications and refusals each numbered by themselves (LAB-17)
+            int applications = CountOf(track), refusals = track.Spans.Count - applications;
             // The latest first (ED-46)
             for (int i = track.Spans.Count - 1; i >= 0; i--)
             {
                 var span = track.Spans[i];
-                var row = TableRow($"Application {i + 1}", rows.childCount, ("Index", "pf-debugger__col-grow"), ("Start", "pf-debugger__col-60"),
+                if (span.Refused)
+                {
+                    var refused = TableRow($"Refusal {refusals}", rows.childCount, ("Index", "pf-debugger__col-grow"), ("Start", "pf-debugger__col-60"),
+                        ("End", "pf-debugger__col-60"), ("Length", "pf-debugger__col-60"));
+                    refused.Q<Label>("Index").text = $"Refused: {span.Note.ToLowerInvariant()}";
+                    refused.Q<Label>("Start").text = Seconds(span.Start);
+                    refused.Q<Label>("End").text = "—";
+                    refused.Q<Label>("Length").text = "—";
+                    rows.Add(refused);
+                    refusals--;
+                    continue;
+                }
+                int nth = applications--;
+                var row = TableRow($"Application {nth}", rows.childCount, ("Index", "pf-debugger__col-grow"), ("Start", "pf-debugger__col-60"),
                     ("End", "pf-debugger__col-60"), ("Length", "pf-debugger__col-60"));
-                row.Q<Label>("Index").text = span.Instant ? $"{i + 1}, instant" : (i + 1).ToString();
+                row.Q<Label>("Index").text = span.Instant ? $"{nth}, instant" : nth.ToString();
                 row.Q<Label>("Start").text = Seconds(span.Start);
                 var end = row.Q<Label>("End");
                 var length = row.Q<Label>("Length");
@@ -400,9 +416,67 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 rows.Add(row);
             }
             if (track.Spans.Count == 0) rows.Add(Note("None"));
-            section.Summary.text = track.Spans.Count.ToString();
+            section.Summary.text = CountOf(track).ToString();
             timelineDetail.Add(section);
+            timelineDetail.Add(JournalSection(track));
         }
+
+        // An effect's journal on the track's entity, newest first: a click on an entry shows its parts (LAB-17)
+        private VisualElement JournalSection(TimelineTrack track)
+        {
+            var section = Section("EffectJournal", "Journal");
+            section.Content.Add(TableHead(("When", "pf-debugger__col-64"), ("Entry", "pf-debugger__col-grow")));
+            var rows = new VisualElement { name = "JournalRows" };
+            section.Content.Add(rows);
+            var parts = new Label { name = "JournalParts" };
+            parts.AddToClassList("pf-note");
+            section.Content.Add(parts);
+            var effect = track.Asset as GameplayEffect;
+
+            int shownVersion = -1;
+            void Build()
+            {
+                if (recorder == null || recorder.Journal.Version == shownVersion) return;
+                shownVersion = recorder.Journal.Version;
+                rows.Clear();
+                parts.text = "";
+                var entries = recorder.Journal.Entries;
+                int shown = 0;
+                for (int i = entries.Count - 1; i >= 0 && shown < TimelineRecorder.MostSpans; i--)
+                {
+                    var entry = entries[i];
+                    // Its own, and its hits' runs on their dealer's side
+                    if (entry.Effect != effect) continue;
+                    if (!ReferenceEquals(entry.Entity, track.Entity) && !ReferenceEquals(entry.Spec?.Target, track.Entity)) continue;
+                    var row = TableRow($"JournalEntry {shown}", shown, ("When", "pf-debugger__col-64"), ("Entry", "pf-debugger__col-grow"));
+                    row.Q<Label>("When").text = Seconds(entry.Time);
+                    row.Q<Label>("Entry").text = entry.ToString();
+                    row.tooltip = entry.ToString();
+                    Selectable(row, () =>
+                    {
+                        ShowSelected(rows, row);
+                        parts.text = PartsOf(entry);
+                    });
+                    rows.Add(row);
+                    shown++;
+                }
+                section.Summary.text = shown.ToString();
+                if (shown == 0) rows.Add(Note(recorder.Recording ? "None yet" : "Not recording"));
+            }
+            timelineUpdates.Add(Build);
+            Build();
+            return section;
+        }
+
+        // What an entry holds beyond its line: its number's parts, its hit's breakdown, or what its worker queued
+        private static string PartsOf(EffectJournalEntry entry) => entry.Kind switch
+        {
+            EEffectJournalKind.Applied => entry.Trace != null ? entry.Trace.ToString() : "It read no number.",
+            EEffectJournalKind.Impact => string.IsNullOrEmpty(entry.Breakdown) ? "No pipeline ran for it." : entry.Breakdown,
+            EEffectJournalKind.Worker => entry.Actions.Count == 0 ? "It queued nothing."
+                : string.Join("\n", entry.Actions.Select(action => $"{action.Description}: {action.State.ToString().ToLowerInvariant()}")),
+            _ => entry.ToString(),
+        };
     }
 
     /// <summary>

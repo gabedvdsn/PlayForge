@@ -23,8 +23,9 @@ The first release.
 - **Saving and loading** an entity's state, a **combat log** for each entity, and numbers and item stats to and from
   **spreadsheets**.
 - **ProcessControl**, which runs every process from Unity's player loop, in worlds of their own.
-- **The Forge**, an editor for every asset of a Forge Project; **the Debugger**, for a game's live entities; and **the
-  Creator Lab**, a scene to try assets on units, test dummies and bots.
+- **The Forge**, an editor for every asset of a Forge Project; **the Debugger**, for a game's live entities, with each
+  effect's journal and each hit's steps; and **the Creator Lab**, a scene to try assets on units, test dummies and bots,
+  with stops, stepping, watches and logs.
 - **Samples**: Battle, Demo, Additional Content and Code Examples; and a **test kit** for a game's own tests.
 
 Requires Unity 6000.0 or later, and UniTask 2.5.11 (MIT, Cysharp), which the Asset Store package includes; see

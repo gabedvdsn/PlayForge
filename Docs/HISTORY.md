@@ -10,6 +10,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## Toward 1.0.0, since 0.1.0
 
 ### Added
+- The Debugger's journals (LAB-17): the Timeline keeps an effect journal of the entities it lists, and an effect's
+  detail lists it, newest first; an effect refused is its track's tick, saying why. The Entities view's combat log
+  shows a hit's steps as it's clicked.
 - The Creator Lab's bottom panel shows its working (LAB-12 to LAB-16): its effect journal over every unit, the selected
   unit's combat log with each hit's steps, its stops, which pause its world as an effect lands or is refused, a worker
   runs, an attribute crosses a value, a tag comes or goes or an ability is refused, with Step Frame and Step Tick, its

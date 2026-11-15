@@ -178,9 +178,12 @@ string perLevel = impact.FormatTotal();           // "20/30/40/50"
   you select in the scene. **Processes** lists every process with its state and how long its steps take, and
   pauses, resumes or terminates the one selected. **Tags** shows every tag the entities hold, as a tree, and who
   holds the one selected. **Timeline** records, as the game plays, each run of an ability, stage by stage, each
-  refused activation, and each effect's time on the shelf, and draws them over the last seconds, a track for each
-  entity's ability or effect. Select a track to see an ability's stages and their tasks, with when the selected run
-  reached each, beside its runs, or an effect's applications. Record pauses it, and Clear forgets it. Docked in a
+  refused activation, each effect's time on the shelf and each effect refused, and draws them over the last seconds, a
+  track for each entity's ability or effect. Select a track to see an ability's stages and their tasks, with when the
+  selected run reached each, beside its runs, or an effect's applications and refusals, with its journal under them:
+  each landing, tick, hit and removal, and each worker that ran, by its hook and side, with what it queued (LAB-17). A
+  click on a journal entry shows its parts, and a click on a hit in the combat log its steps. Record pauses it, and
+  Clear forgets it. Docked in a
   narrow column, each view's list sits above its detail. The window menu sets how often it reads the game.
 - **Asset fields** — every reference to a PlayForge asset is Unity's object field. **Open** beside it shows the asset
   in a window of its own; **New**, beside an empty one, makes the asset where Project Settings → PlayForge puts its type, named

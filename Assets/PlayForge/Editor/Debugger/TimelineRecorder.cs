@@ -52,11 +52,18 @@ namespace FarEmerald.PlayForge.Extended.Editor
     /// The Debugger's recorder (FEAT-12, Decision 30): it hears the entities it's given, and keeps each ability's runs,
     /// stage by stage, its refusals, and each effect's time on the shelf, by the game's time, for the Timeline view. The
     /// Debugger gives it the entities it lists as it samples the game, in Play mode, so it records only there. It keeps the
-    /// last <see cref="MostSpans"/> of each track.
+    /// last <see cref="MostSpans"/> of each track. It keeps an effect journal of the same entities too, and an effect's
+    /// refusals as its track's ticks (LAB-17).
     /// </summary>
     internal sealed class TimelineRecorder : IDisposable
     {
         public const int MostSpans = 100;
+
+        /// <summary>How many journal entries it keeps, its last.</summary>
+        public const int MostJournalled = 1000;
+
+        /// <summary>The effect journal of the entities it hears, while it records (LAB-17).</summary>
+        public readonly EffectJournal Journal = new(MostJournalled);
 
         /// <summary>The tracks, in the order their first span came.</summary>
         public readonly List<TimelineTrack> Tracks = new();
@@ -84,6 +91,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             public AbilitySystemCallbacks.AbilityRefusedDelegate Refused;
             public GameplayAbilitySystemCallbacks.EffectDelegate Applied;
             public GameplayAbilitySystemCallbacks.EffectRemovedDelegate Removed;
+            public GameplayAbilitySystemCallbacks.EffectRefusedDelegate EffectRefused;
         }
 
         /// <summary>Hears these entities and no others: each new one from now on, and each gone no more.</summary>
@@ -99,6 +107,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 if (!listed) gone.Add(gas);
             }
             foreach (var gas in gone) Forget(gas);
+            // Its journal hears them while it records, and none while it doesn't
+            Journal.Follow(Recording ? entities : Array.Empty<IGameplayAbilitySystem>());
         }
 
         private void Hear(IGameplayAbilitySystem gas)
@@ -111,6 +121,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             hearing.Refused = refusal => Refused(gas, refusal);
             hearing.Applied = spec => Applied(gas, spec);
             hearing.Removed = effect => Removed(gas, effect);
+            hearing.EffectRefused = (spec, why) => EffectRefused(gas, spec, why);
             if (hearing.Abilities != null)
             {
                 hearing.Abilities.OnAbilityActivate += hearing.Activated;
@@ -123,6 +134,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             {
                 hearing.Entity.OnEffectApplied += hearing.Applied;
                 hearing.Entity.OnEffectRemoved += hearing.Removed;
+                hearing.Entity.OnEffectRefused += hearing.EffectRefused;
             }
             heard[gas] = hearing;
         }
@@ -143,6 +155,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             {
                 hearing.Entity.OnEffectApplied -= hearing.Applied;
                 hearing.Entity.OnEffectRemoved -= hearing.Removed;
+                hearing.Entity.OnEffectRefused -= hearing.EffectRefused;
             }
         }
 
@@ -152,6 +165,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             Tracks.Clear();
             tracks.Clear();
             runs.Clear();
+            Journal.Clear();
             Version++;
         }
 
@@ -160,6 +174,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             gone.Clear();
             gone.AddRange(heard.Keys);
             foreach (var gas in gone) Forget(gas);
+            Journal.Dispose();
         }
 
         private TimelineTrack TrackOf(IGameplayAbilitySystem gas, ScriptableObject asset, TimelineKind kind)
@@ -234,6 +249,17 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 ? refusal.Rule
                 : UnityEditor.ObjectNames.NicifyVariableName(refusal.Reason.ToString());
             Add(TrackOf(gas, refusal.Ability, TimelineKind.Ability), new TimelineSpan { Start = now, End = now, Refused = true, Note = reason });
+        }
+
+        // An effect refused, as its track's tick, saying why (LAB-17)
+        private void EffectRefused(IGameplayAbilitySystem gas, GameplayEffectSpec spec, EEffectRefusal refusal)
+        {
+            if (!Recording || spec?.Base == null) return;
+            float now = Now;
+            Add(TrackOf(gas, spec.Base, TimelineKind.Effect), new TimelineSpan
+            {
+                Start = now, End = now, Refused = true, Note = UnityEditor.ObjectNames.NicifyVariableName(refusal.ToString()),
+            });
         }
 
         private void Applied(IGameplayAbilitySystem gas, GameplayEffectSpec spec)

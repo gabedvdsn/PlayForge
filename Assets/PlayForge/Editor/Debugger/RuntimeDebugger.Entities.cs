@@ -184,7 +184,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         }
 
         // The entity's combat log, newest first, as its project writes it; a click on an entry shows its hit's run through
-        // its pipeline (TW-22)
+        // its pipeline (TW-22), and its steps (LAB-17)
         private VisualElement CombatLogSection(IGameplayAbilitySystem gas)
         {
             var section = Section("CombatLog", "Combat Log");
@@ -222,8 +222,12 @@ namespace FarEmerald.PlayForge.Extended.Editor
                     Selectable(row, () =>
                     {
                         ShowSelected(rows, row);
+                        // Its run through its pipeline, then its steps, as made and as it landed (LAB-13, LAB-17)
                         var breakdown = entry.BreakdownText;
-                        run.text = string.IsNullOrEmpty(breakdown) ? "No pipeline ran for it." : breakdown;
+                        var steps = entry.Kind == ECombatLogKind.Event ? "" : entry.StepsText;
+                        run.text = string.IsNullOrEmpty(breakdown)
+                            ? string.IsNullOrEmpty(steps) ? "No pipeline ran for it." : steps
+                            : string.IsNullOrEmpty(steps) ? breakdown : $"{breakdown}\n{steps}";
                     });
                     rows.Add(row);
                 }
