@@ -104,10 +104,10 @@ namespace FarEmerald.PlayForge.Extended.Editor
             BuildTagsSection(parent);
             BuildDurationSection(parent);
             BuildImpactSection(parent);
-            BuildLevelsSection(parent);
-            BuildCuesSection(parent);
+            // BuildLevelsSection(parent);
             BuildRequirementsSection(parent);
             BuildComponentsSection(parent);
+            BuildCuesSection(parent);
             BuildWorkersSection(parent);
             BuildLocalDataSection(parent);
             BuildUsedBySection(parent);

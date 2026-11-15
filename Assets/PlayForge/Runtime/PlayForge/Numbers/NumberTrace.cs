@@ -5,9 +5,9 @@ using System.Text;
 namespace FarEmerald.PlayForge
 {
     /// <summary>
-    /// A number's read, explained (FEAT-32): a tree of its parts, each with what it read and what it gave. Monkey King's
-    /// charged hit reads −180 because its Group adds his Attack Damage, 100, to a Conditional that gives 80, as his Jingu
-    /// Charges, 4, are above 0. A part whose context lacks what it reads says what it needs, "the target", and gives its
+    /// A number's read, explained (FEAT-32): a tree of its parts, each with what it read and what it gave. A charged hit
+    /// reads −180 because its Group adds its caster's Attack Damage, 100, to a Conditional that gives 80, as the caster's
+    /// Combo Charges, 4, are above 0. A part whose context lacks what it reads says what it needs, "the target", and gives its
     /// fallback, so a read in the editor with no entities says where it would change in play.
     /// <para>
     /// Each part reads as the number does, through the same context, so the parts and the read agree. A read that rolls,
