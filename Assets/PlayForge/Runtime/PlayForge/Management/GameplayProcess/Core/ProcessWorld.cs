@@ -565,7 +565,7 @@ namespace FarEmerald.PlayForge
             _hidesOnDestroy[type] = hides;
             if (hides)
             {
-                ForgeLog.Warning($"{type.Name} declares its own OnDestroy, which hides {nameof(AbstractMonoProcess)}'s, so " +
+                ForgeLog.Warning(ForgeLog.ESystem.Processes, $"{type.Name} declares its own OnDestroy, which hides {nameof(AbstractMonoProcess)}'s, so " +
                                  "Unity never says when its object goes. ProcessControl watches its processes instead; " +
                                  $"override {nameof(AbstractMonoProcess.WhenDestroy)} to act on it.", mono);
             }

@@ -86,7 +86,7 @@ namespace FarEmerald.PlayForge
                 }
                 else
                 {
-                    ForgeLog.Error($"{GetName()}: couldn't register GameRoot (ProcessControl is {ProcessControl.Instance.State}), " +
+                    ForgeLog.Error(ForgeLog.ESystem.Processes, $"{GetName()}: couldn't register GameRoot (ProcessControl is {ProcessControl.Instance.State}), " +
                                    "so the Register overloads that default to it won't work.", this);
                 }
             }

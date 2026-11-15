@@ -784,7 +784,10 @@ namespace FarEmerald.PlayForge
 
             // Before the packet, which reads the entity: an ended entity's system is off, and a Mono entity may be
             // destroyed by then (GAS-52)
-            if (!Enabled) return Refuse(out refusal, null, req.Index, EActivationRefusal.Disabled);
+            // Named for the ability its slot holds, where it holds one, so a stop or a track on the ability hears it (GAS-87)
+            if (!Enabled)
+                return Refuse(out refusal, AbilityCache.TryGetValue(req.Index, out var held) ? held.Spec?.Base : null, req.Index,
+                    EActivationRefusal.Disabled);
             if (!AbilityCache.TryGetValue(req.Index, out var container)) return Refuse(out refusal, null, req.Index, EActivationRefusal.NotKnown);
             var ability = container.Spec.Base;
             var data = AbilityDataPacket.GenerateFrom(container.Spec,

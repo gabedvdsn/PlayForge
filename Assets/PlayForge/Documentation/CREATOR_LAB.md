@@ -33,7 +33,7 @@ Each panel collapses to a tab at its edge with its − button.
   effects with their stacks and time left, abilities with their levels and cooldowns, and items. There, − and + change
   an ability's level, × takes an ability or an item, and **Remove** takes the unit out.
 - **Lab** (right): the mode, the test dummies, the camera and the lab's time.
-- **Log** (bottom): collapsed; its journals come with phase 5.
+- **Log** (bottom): collapsed until you open it, a page for each way the lab shows its working; see below.
 
 ## Dropping assets
 
@@ -104,6 +104,28 @@ stands still or runs faster without touching Unity's. **Pause** stops it, **Step
 second) while it's paused, and **Speed** runs it from a quarter to four times as fast. The camera and the panels go on
 while it's paused.
 
+## Showing its working
+
+The bottom panel's pages show what happens as the lab plays (LAB-12 to LAB-16). Each records only while the lab runs.
+
+- **Journal**: the lab's effect journal over every unit: each effect landing, with its number traced, refused and why,
+  ticking, hitting, coming off, and each worker that ran, by its hook and its side, with the actions it queued and
+  whether they ran; newest first, on the selected unit or, with **Selected unit** off, on any. Click an entry to see
+  its parts: a number's, a hit's breakdown, or a worker's actions.
+- **Combat**: the selected unit's combat log, newest first, each hit with its steps under it, "-30 as made → Math -30 →
+  -15 (inline) → landed -15". The project's combat log writes it (Project Settings → PlayForge → Combat Log).
+- **Stops**: a list of what pauses the lab's world: an effect lands, is refused or has a worker run, an attribute
+  crosses a value, a tag comes or goes, an ability is refused, each on the selected unit or any, and naming an effect,
+  an ability, a tag or an attribute where it asks for one (**Any** for an effect or an ability takes any). As one
+  fires, the world pauses and the page says which and what fired it. **Go** plays on, **Step Frame** goes one frame,
+  and **Step Tick** goes on until an effect ticks on the selected unit, or on any, up to ten seconds, or a stop fires.
+- **Watches**: pin a number on the selected unit, an attribute's current or base value, a tag's count, an effect's
+  stacks or time left, or a Scaler asset read on it, and see each as a line over the last minute of the lab's time,
+  in its own color and scaled to its own range, with its value now.
+- **Log**: PlayForge's messages as `ForgeLog` lets them through, by system, newest first, those about the selected
+  unit where **Selected unit** is on. **System** and **Level** give a system a level of its own, which the Console
+  keeps too; **As all** gives it back to the Logging preference's.
+
 ## The lab's rules
 
 The lab needs to know a few things about a project: which attribute is a unit's health, which it walks at, which tags
@@ -134,5 +156,9 @@ plays where no editor gives it a library. A library offers projects to switch be
 camera by `Follow`; the lab's controls are its `Controls`, a `LabControls`, whose `Driver` comes before its rules'. A
 game's own player can be a `LabControls` too, as the Demo's is: its unit set on it, or its `ControlledUnit()`
 overridden.
+
+What it shows of its working is its `Showing`, a `LabShowing`: its `Journal`, an `EffectJournal` over every unit; its
+`Stops`, added with `Add(stop)`, and `StoppedBy` and `StoppedFor` as one fires, `Resume()` to let it go and `StepTick()`;
+its `Watches`, pinned with `Pin(watch)`; and its `Log` of ForgeLog's messages.
 
 A build can leave the lab out by defining `PLAYFORGE_NO_LAB`. The Demo uses the lab's units, so it goes too.

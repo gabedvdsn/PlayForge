@@ -513,7 +513,7 @@ namespace FarEmerald.PlayForge
             if (stage.OnTimeout != null || stage.OnMaxDuration != null) WarnLeftOut(owner, "its timeout handlers");
             if (stage.Tasks.Exists(task => task is DelegateSequenceTask))
             {
-                ForgeLog.Warning($"{owner}: its async-only tasks do nothing in a synchronous sequence, and finish at once.");
+                ForgeLog.Warning(ForgeLog.ESystem.Abilities, $"{owner}: its async-only tasks do nothing in a synchronous sequence, and finish at once.");
             }
 
             var policy = ESyncStagePolicy.WhenAll;
@@ -534,7 +534,7 @@ namespace FarEmerald.PlayForge
                 case WhenAllStagePolicy:
                     break;
                 default:
-                    ForgeLog.Warning($"{owner}: a synchronous sequence can't run its {stage.Policy.GetType().Name}, so it waits for all its tasks.");
+                    ForgeLog.Warning(ForgeLog.ESystem.Abilities, $"{owner}: a synchronous sequence can't run its {stage.Policy.GetType().Name}, so it waits for all its tasks.");
                     break;
             }
 
@@ -566,12 +566,12 @@ namespace FarEmerald.PlayForge
 
         private static void WarnLeftOut(string owner, string feature)
         {
-            ForgeLog.Warning($"{owner}: left out {feature}, which a synchronous sequence can't run.");
+            ForgeLog.Warning(ForgeLog.ESystem.Abilities, $"{owner}: left out {feature}, which a synchronous sequence can't run.");
         }
 
         private static void WarnTimer(string owner, ISequenceInjection injection)
         {
-            ForgeLog.Warning($"{owner}: a timer that applies {injection?.GetType().Name ?? "nothing"} just ends its stage in a synchronous sequence.");
+            ForgeLog.Warning(ForgeLog.ESystem.Abilities, $"{owner}: a timer that applies {injection?.GetType().Name ?? "nothing"} just ends its stage in a synchronous sequence.");
         }
 
         private static bool StageHasConditionsRecursive(SequenceStage stage)

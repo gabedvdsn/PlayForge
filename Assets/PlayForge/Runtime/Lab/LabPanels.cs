@@ -44,6 +44,7 @@ namespace FarEmerald.PlayForge.Lab
         private Button pause;
         private readonly Dictionary<LabUnit, (VisualElement root, VisualElement fill, Label line)> bars = new();
         private readonly List<ScriptableObject> entityChoices = new();
+        private LabBottomPanel bottom;
         private float nextRedraw;
         private bool dirty = true;
 
@@ -119,7 +120,8 @@ namespace FarEmerald.PlayForge.Lab
             BuildMode();
             selectedBody = new ScrollView { name = "SelectedBody" };
             Content(selected).Add(selectedBody);
-            Content(log).Add(new Label("The journals come in phase 5 (LAB-12 to LAB-16).") { name = "LogEmpty" });
+            // How it shows its working: the journal, the combat log, the stops, the watches and the log (LAB-12 to LAB-16)
+            if (lab != null) bottom = new LabBottomPanel(lab, Content(log));
 
             ghost = new Label { name = "Ghost", pickingMode = PickingMode.Ignore };
             ghost.AddToClassList("lab-ghost");
@@ -177,6 +179,22 @@ namespace FarEmerald.PlayForge.Lab
 
         /// <summary>A panel by its name: Library, Selected, Mode or Log.</summary>
         public VisualElement PanelNamed(string panelName) => Root?.Q(name: panelName);
+
+        /// <summary>Opens the bottom panel on a page, Journal, Combat, Stops, Watches or Log, drawn as it is now.</summary>
+        public void ShowLog(string page)
+        {
+            Collapse(log, false);
+            bottom?.Show(page);
+        }
+
+        /// <summary>Draws the bottom panel's page again from what the lab holds.</summary>
+        public void RefreshLog() => bottom?.Refresh();
+
+        // The bottom panel's page, drawn again while it's open
+        private void DrawLog()
+        {
+            if (bottom != null && log != null && !log.ClassListContains("lab-panel--collapsed")) bottom.Refresh();
+        }
 
         private void BuildLibrary()
         {
@@ -496,6 +514,7 @@ namespace FarEmerald.PlayForge.Lab
                 DrawSelected();
                 DrawBattleLine();
                 DrawControlLine();
+                DrawLog();
                 FollowProject();
             }
             DrawBars();
@@ -513,6 +532,7 @@ namespace FarEmerald.PlayForge.Lab
             if (battleSection != null) battleSection.style.display = lab.Mode == LabMode.Battle ? DisplayStyle.Flex : DisplayStyle.None;
             DrawBattleLine();
             DrawControlLine();
+            DrawLog();
             if (lab.View)
             {
                 distance?.SetValueWithoutNotify(lab.View.Distance);

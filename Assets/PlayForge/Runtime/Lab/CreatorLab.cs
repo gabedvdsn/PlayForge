@@ -103,6 +103,12 @@ namespace FarEmerald.PlayForge.Lab
         /// <summary>Whether its time stands still.</summary>
         public bool Paused { get; set; }
 
+        /// <summary>
+        /// What it shows of its working (LAB-12 to LAB-16): its effect journal over every unit, its stops and its watches,
+        /// and ForgeLog's messages, which its bottom panel shows.
+        /// </summary>
+        public LabShowing Showing { get; private set; }
+
         /// <summary>The lab's time, in seconds, since it began.</summary>
         public float Elapsed { get; private set; }
 
@@ -155,6 +161,9 @@ namespace FarEmerald.PlayForge.Lab
             ActiveRules = Rules ? Rules : Own(LabRules.MakeDefault(Library));
             if (Rules) Rules.FindIn(Library);
             World = new ProcessWorld();
+            Showing = new LabShowing(this);
+            // Its journal hears each unit from the moment it's put down
+            Changed += Showing.Follow;
             BuildSpace();
             Caster = MakeCaster();
             Controls = gameObject.AddComponent<LabControls>();
@@ -163,6 +172,11 @@ namespace FarEmerald.PlayForge.Lab
 
         private void OnDestroy()
         {
+            if (Showing != null)
+            {
+                Changed -= Showing.Follow;
+                Showing.Dispose();
+            }
             foreach (var unit in units)
                 if (unit) unit.Remove();
             units.Clear();
@@ -306,6 +320,7 @@ namespace FarEmerald.PlayForge.Lab
         public void Step(float deltaTime)
         {
             if (deltaTime <= 0f) return;
+            Showing?.Follow();
             Elapsed += deltaTime;
             World.Step(deltaTime);
             for (int i = units.Count - 1; i >= 0; i--)
@@ -322,6 +337,8 @@ namespace FarEmerald.PlayForge.Lab
             }
             if (Caster) Caster.Step(deltaTime);
             if (Fighting) Judge();
+            // Its stops' crossings and tags, and its watches' values, as they are after the step (LAB-14, LAB-15)
+            Showing?.Stepped(deltaTime);
         }
 
         // A battle is over as no more than one side has a bot standing

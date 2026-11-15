@@ -146,9 +146,9 @@ namespace FarEmerald.PlayForge
             {
                 if (reportedCycles.Add(spec.Base))
                 {
-                    ForgeLog.Warning($"{spec.Base.GetName()} was applied again inside its own application, so that " +
-                                     "application is refused. An effect that contains itself, directly or through " +
-                                     "other effects, would recurse until the stack overflowed.", spec.Base);
+                    ForgeLog.Warning(ForgeLog.ESystem.Effects, $"{spec.Base.GetName()} was applied again inside its own " +
+                                     "application, so that application is refused. An effect that contains itself, directly " +
+                                     "or through other effects, would recurse until the stack overflowed.", spec.Base, Self);
                 }
                 return Refused(spec, EEffectRefusal.Cycle);
             }

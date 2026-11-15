@@ -36,6 +36,14 @@
 .lab-search { margin-top: 4px; margin-bottom: 4px; }
 .lab-list { flex-grow: 1; flex-shrink: 1; }
 
+.lab-tabs { margin-bottom: 4px; }
+.lab-tab { margin: 0 2px 0 0; padding: 1px 8px; }
+.lab-tab--shown { -unity-font-style: bold; }
+.lab-page { flex-grow: 1; flex-shrink: 1; }
+.lab-entry:hover { background-color: rgba(255, 255, 255, 0.06); }
+.lab-swatch { width: 10px; height: 10px; margin-right: 6px; flex-shrink: 0; }
+.lab-chart { height: 90px; flex-shrink: 0; margin: 4px 0; background-color: rgba(0, 0, 0, 0.25); }
+
 .lab-asset { flex-direction: row; align-items: center; padding: 2px 4px; }
 .lab-asset:hover { background-color: rgba(255, 255, 255, 0.06); }
 .lab-asset__icon { width: 10px; height: 10px; margin-right: 6px; border-radius: 2px; flex-shrink: 0; }

@@ -157,7 +157,7 @@ namespace FarEmerald.PlayForge.Lab
             var registering = ProcessControl.Register(unit.Gas).With(data);
             if (spec.World != null) registering = registering.In(spec.World);
             if (!registering.Run(out unit.relay))
-                ForgeLog.Error($"Creator Lab: ProcessControl refused {unit.Name}.");
+                ForgeLog.Error(ForgeLog.ESystem.Lab, $"Creator Lab: ProcessControl refused {unit.Name}.");
             return unit;
         }
 

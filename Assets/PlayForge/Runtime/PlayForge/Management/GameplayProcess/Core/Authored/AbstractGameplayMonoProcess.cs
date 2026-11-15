@@ -123,7 +123,7 @@ namespace FarEmerald.PlayForge
             if (attribute.StartsFrom != EProcessAttributeStart.Own && TryGetOrigins(attribute.Attribute, out var origins)) return origins;
             if (attribute.StartsFrom == EProcessAttributeStart.Origin)
             {
-                ForgeLog.Warning($"{name}: its origin has no {attribute.Attribute?.GetName() ?? "attribute"} to start {RoleName(attribute)} as, so it starts at 0.", this);
+                ForgeLog.Warning(ForgeLog.ESystem.Processes, $"{name}: its origin has no {attribute.Attribute?.GetName() ?? "attribute"} to start {RoleName(attribute)} as, so it starts at 0.", this);
                 return 0f;
             }
 

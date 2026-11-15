@@ -74,7 +74,7 @@ namespace FarEmerald.PlayForge
             var core = CoreOf(gas);
             if (core?.Identity == null)
             {
-                ForgeLog.Warning("Only a GAS hub built from an entity can be saved.");
+                ForgeLog.Warning(ForgeLog.ESystem.Saves, "Only a GAS hub built from an entity can be saved.");
                 return null;
             }
 
@@ -274,19 +274,19 @@ namespace FarEmerald.PlayForge
         {
             if (core?.Identity == null)
             {
-                ForgeLog.Warning("A save loads only onto a GAS hub built from an entity.");
+                ForgeLog.Warning(ForgeLog.ESystem.Saves, "A save loads only onto a GAS hub built from an entity.");
                 return false;
             }
             if (snapshot.Version > Version)
             {
-                ForgeLog.Warning($"The save's format is version {snapshot.Version}, and this PlayForge reads up to {Version}.");
+                ForgeLog.Warning(ForgeLog.ESystem.Saves, $"The save's format is version {snapshot.Version}, and this PlayForge reads up to {Version}.");
                 return false;
             }
 
             // From inside the entity's step, as one of its callbacks, the load would empty the lists the step is walking
             if (core.Stepping)
             {
-                ForgeLog.Warning("A save loads between the entity's steps, not inside one, so it isn't loaded. Load it " +
+                ForgeLog.Warning(ForgeLog.ESystem.Saves, "A save loads between the entity's steps, not inside one, so it isn't loaded. Load it " +
                                  "outside the entity's callbacks, or on the next frame.");
                 return false;
             }
@@ -479,7 +479,7 @@ namespace FarEmerald.PlayForge
             var source = CoreOf(from);
             if (source?.Identity == null)
             {
-                ForgeLog.Warning("Only a GAS hub built from an entity can be copied.");
+                ForgeLog.Warning(ForgeLog.ESystem.Saves, "Only a GAS hub built from an entity can be copied.");
                 return false;
             }
 
@@ -567,7 +567,7 @@ namespace FarEmerald.PlayForge
                 if (assets.TryGetId(asset, out id)) return true;
                 if (asset != null && warned.Add(asset))
                 {
-                    ForgeLog.Warning($"{asset.name} isn't in {assets.Label}, so the save leaves it out. " +
+                    ForgeLog.Warning(ForgeLog.ESystem.Saves, $"{asset.name} isn't in {assets.Label}, so the save leaves it out. " +
                                      "Add Every PlayForge Asset, in the catalog's menu, names it.", asset);
                 }
                 return false;
@@ -589,7 +589,7 @@ namespace FarEmerald.PlayForge
                 if (assets.TryFind(id, out asset)) return true;
                 if (!string.IsNullOrEmpty(id) && warned.Add(id))
                 {
-                    ForgeLog.Warning($"The save names {id}, which {assets.Label} has no {typeof(T).Name} for, " +
+                    ForgeLog.Warning(ForgeLog.ESystem.Saves, $"The save names {id}, which {assets.Label} has no {typeof(T).Name} for, " +
                                      "so the load leaves it out.", assets.Context);
                 }
                 return false;

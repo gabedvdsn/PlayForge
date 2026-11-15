@@ -228,9 +228,14 @@ string perLevel = impact.FormatTotal();           // "20/30/40/50"
 ## Logging
 
 Framework diagnostics route through `ForgeLog`, controlled in **Preferences → PlayForge →
-Logging** (Verbose / Info / Warning / Error / None).In builds, set
+Logging** (Verbose / Info / Warning / Error / None). In builds, set
 `ForgeLog.MinimumLevel` from code. `ProcessControl` has its own inspector toggles for
 process lifecycle logs.
+
+Each message is of a system, effects, abilities, numbers, processes, saves, input and the rest (`ForgeLog.ESystem`), and
+a system can take a level of its own, `ForgeLog.SetLevel(ForgeLog.ESystem.Effects, ForgeLog.ELevel.Verbose)`, or give it
+back with null. `ForgeLog.Logged` hears each message let through, with its system and the entity it's about where it
+names one, as the Creator Lab's Log page does (LAB-16).
 
 ## Profiling
 

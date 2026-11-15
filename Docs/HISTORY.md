@@ -10,6 +10,13 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## Toward 1.0.0, since 0.1.0
 
 ### Added
+- The Creator Lab's bottom panel shows its working (LAB-12 to LAB-16): its effect journal over every unit, the selected
+  unit's combat log with each hit's steps, its stops, which pause its world as an effect lands or is refused, a worker
+  runs, an attribute crosses a value, a tag comes or goes or an ability is refused, with Step Frame and Step Tick, its
+  watches drawn over the last minute of its time, and ForgeLog's messages by system. `CreatorLab.Showing`, a
+  `LabShowing`, holds it all for code.
+- ForgeLog's systems (LAB-16): each message of a system, `ForgeLog.ESystem`, and about an entity where it names one; a
+  system takes a level of its own, `SetLevel`; `Logged` hears each message let through.
 - An effect's journal (LAB-12): `EffectJournal` listens to the entities it's given and keeps each application, with its
   first impact's number traced as it landed, each refusal and why, each tick, impact and removal, and each worker that
   ran, by hook and side, with the actions it queued and whether they ran. Callbacks tell `OnEffectRefused` with an
@@ -870,6 +877,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   Asking whether its sequence was paused took 24 bytes a frame.
 
 ### Fixed
+- A refusal by an ability system that was off named no ability, though the slot asked for held one (GAS-87).
 - From the Asset Store, under Assets, the golden tests compiled in a project with no Test Framework, as Unity defines
   `UNITY_INCLUDE_TESTS` for every assembly there, and failed with 4 errors. They compile only where the Test Framework
   is, as the samples' tests and the test kit do (SP-32).

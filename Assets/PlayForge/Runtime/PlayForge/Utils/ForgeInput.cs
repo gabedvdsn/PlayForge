@@ -83,7 +83,7 @@ namespace FarEmerald.PlayForge
             var aim = camera != null ? camera : Camera.main;
             if (aim == null)
             {
-                ForgeLog.Warning("Click targeting found no camera to aim through. Tag one MainCamera, or give the input a camera.");
+                ForgeLog.Warning(ForgeLog.ESystem.Input, "Click targeting found no camera to aim through. Tag one MainCamera, or give the input a camera.");
                 ray = default;
                 return false;
             }

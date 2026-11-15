@@ -235,7 +235,7 @@ namespace FarEmerald.PlayForge
             var relay = registration.Relay;
             if (!registration)
             {
-                ForgeLog.Warning($"ProcessControl refused an ability's sequence ({registration.Refusal}), so the ability " +
+                ForgeLog.Warning(ForgeLog.ESystem.Abilities, $"ProcessControl refused an ability's sequence ({registration.Refusal}), so the ability " +
                                  "ends without running.");
                 throw new OperationCanceledException();
             }

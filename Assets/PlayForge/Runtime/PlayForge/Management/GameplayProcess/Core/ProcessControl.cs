@@ -158,7 +158,7 @@ namespace FarEmerald.PlayForge
         {
             if (Instance != this)
             {
-                ForgeLog.Warning($"{name} was never bootstrapped, so it steps nothing. A Bootstrapper makes the " +
+                ForgeLog.Warning(ForgeLog.ESystem.Processes, $"{name} was never bootstrapped, so it steps nothing. A Bootstrapper makes the " +
                                  "ProcessControl it uses, so this one can go.", this);
             }
         }
