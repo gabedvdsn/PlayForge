@@ -177,7 +177,7 @@ namespace FarEmerald.PlayForge
             var source = data.EffectOrigin.GetSource()?.GetTargetingPacket();
             if (source is null) return false;
 
-            return Vector3.Distance(source.position, target.position) <= value.floatValue;
+            return Vector3.Distance(source.position, target.position) <= value.floatValue.Evaluate(NumberContext.Of(data));
         }
         public override string GetName()
         {

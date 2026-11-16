@@ -63,8 +63,9 @@ namespace FarEmerald.PlayForge.Samples.Demo
                     if (!data.GetTargetingPacket(Tags.TARGET, out var point, autoInterrupt: false) || point == null) return;
                     if (!spec.Base.TryGetLocalData(VolleyArrow, out var arrowData) || arrowData.monoBehaviourValue is not AbstractMonoProcess arrow) return;
 
-                    float radius = spec.Base.TryGetLocalData(VolleyRadius, out var r) ? r.floatValue : 3f;
-                    int most = spec.Base.TryGetLocalData(VolleyArrows, out var n) ? Mathf.Max(1, n.intValue) : 5;
+                    // Numbers that can scale, read at the Ranger's level of the ability, in this activation
+                    float radius = spec.Base.TryGetLocalData(VolleyRadius, out var r) ? spec.Read(r.floatValue, data) : 3f;
+                    int most = spec.Base.TryGetLocalData(VolleyArrows, out var n) ? Mathf.Max(1, n.intValue?.Evaluate(NumberContext.Of(data)) ?? 0) : 5;
                     int loosed = 0;
                     foreach (var target in DemoTeams.Around(point.position, radius, ~0))
                     {

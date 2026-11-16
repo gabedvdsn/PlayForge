@@ -19,8 +19,17 @@ MonoBehaviour:
     Type: 3
     stringValue: FoeLow
     boolValue: 0
-    intValue: 0
-    floatValue: 0
+    intValue:
+      Magnitude: 0
+      RealMagnitude: 2
+      Scaler:
+        rid: -2
+      Rounding: 0
+    floatValue:
+      Magnitude: 0
+      RealMagnitude: 2
+      Scaler:
+        rid: -2
     objectValue: {fileID: 0}
     monoBehaviourValue: {fileID: 0}
     scriptableObjectValue: {fileID: 0}
@@ -37,8 +46,17 @@ MonoBehaviour:
     Type: 5
     stringValue: 
     boolValue: 0
-    intValue: 0
-    floatValue: 3
+    intValue:
+      Magnitude: 0
+      RealMagnitude: 2
+      Scaler:
+        rid: -2
+      Rounding: 0
+    floatValue:
+      Magnitude: 3
+      RealMagnitude: 2
+      Scaler:
+        rid: -2
     objectValue: {fileID: 0}
     monoBehaviourValue: {fileID: 0}
     scriptableObjectValue: {fileID: 0}

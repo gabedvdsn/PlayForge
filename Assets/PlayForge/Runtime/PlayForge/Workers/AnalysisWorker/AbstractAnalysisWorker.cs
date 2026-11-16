@@ -255,8 +255,8 @@ namespace FarEmerald.PlayForge
         private bool TryGetSide(ILocalDataUser system, out bool above)
         {
             above = false;
-            if (!system.TryGetLocalData(SideKey, out var data) || data.intValue == 0) return false;
-            above = data.intValue == 2;
+            if (!system.TryGetLocalData(SideKey, out var data) || data.intValue.Evaluate(NumberContext.Of(system as IGameplayAbilitySystem)) == 0) return false;
+            above = data.intValue.Evaluate(NumberContext.Of(system as IGameplayAbilitySystem)) == 2;
             return true;
         }
 

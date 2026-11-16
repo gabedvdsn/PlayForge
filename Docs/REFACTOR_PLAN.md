@@ -1501,6 +1501,7 @@ commit's follow-up, first; then EP-1 and EP-2, EP-4, EP-7, EP-8, EP-9, EP-5, EP-
 | EP-13 | The user, as the pass went on: no file prefix or suffix for new assets, on the settings page or anywhere a file is named. Done: a type's New Assets settings hold its folder alone (`NewAssetSettings`); a new asset's file, a template's copy and a renamed asset's are its name alone (`ForgeAssetCreation`, `ForgeRenames`, The Forge's New dialog); the page's table is Type and Folder, and **Use Default Folders** puts the folders back | Refactor | verified |
 | EP-14 | The user, as the pass went on: no combined tag contexts, as "AssetTag+ContextTag", which confused. A tag used in a field of several contexts is used in each, alone. Done: the tag registry files a use under each of a field's contexts, as it does a code tag's declared for several and a Tag Library entry's, and no set of them is a context of its own; so each context's fields offer the tag, and The Forge's tag detail says it's for each. It reverses TAG-4's keeping of such a field's picks to its own set | Refactor | verified |
 | EP-15 | The user, after EP-6's answer: a Forge Project's asset catalog keeps itself current, so a save finds every asset with no Add Its Assets to run. Done: `ForgeCatalogKeeper`, an asset postprocessor, names each PlayForge asset made, copied or moved into a project's folder by its GUID as it lands, in the innermost project whose folder holds it, and lets go of a deleted file's entries, matched by the file's GUID (`AssetPathToGUIDOptions.IncludeRecentlyDeletedAssets`), so an entry whose asset hasn't loaded yet, as on a fresh import, is never taken for one deleted; an asset moved out stays named, so a save made before still finds it. A project catches up on its own assets as it's imported, as a new one or a sample's is, and once each editor session, as one kept before is (`CatchUp`). `ForgeProject.KeepCatalogCurrent`, on by default, turns it off; `ForgeAssetCatalog.AddByGuid` and `RemoveFile` are what it calls, and Add Its Assets names through `AddByGuid` too. A project's inspector says what its catalog names in one line, as "Names 166 assets for saves, kept current", where it drew each entry, a list as long as the project (`ForgeProjectEditor.CatalogLine`) | Feature | verified |
+| EP-16 | The user, as the pass went on: Local Data's Int and Float are numbers that can scale, a `ScalableInt` and a `ScalableFloat`. Done: a Local Data number reads in its reader's context, its own in the number's and an entity's at that entity's own level (`NumberContext.TryGetLocalData`), and each reader follows: the analysis worker's side, the range validation, the Lab bot's reach at the unit's level of the ability, a Lab unit's own and the Demo's Volley. One that reads its own key through a Local Data kind stops at the kind's Default, 16 reads deep, where it overflowed the stack. A wrapper made in code holds 0 in each, where it held null, and the Local Data row draws them with PlayForge's number field, where an Integer or Float field couldn't bind. The Demo's Local Data numbers, saved as plain values, which loaded as 0, are written in the new form, 100 in 24 assets, and the Dota lab's Mana Void with them | Refactor | verified |
 
 ## Test project: PlayForge Proving Grounds
 
@@ -1537,6 +1538,15 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-16, **EP-16: Local Data's numbers can scale.** The user's change, which they asked to have fixed and then
+  committed: an entry's Int and Float are a ScalableInt and a ScalableFloat, read in their reader's context; a wrapper
+  made in code holds 0, the Local Data row draws them, and the samples' numbers saved as plain values are converted.
+  - Red, on a frozen snapshot of the change with HEAD's Demo assets: the Demo's numbers test found the Volley's reach 0,
+    where 9 was saved; the code's tests don't compile on HEAD, where Local Data's numbers were plain.
+  - Gates, on the whole working tree with EP-15: EditMode 1011 of 1011; PlayMode 1992 of 2000, 8 skipped, a first run
+    finding GAS-S1 comparing the entry's number with 7 as a plain value, which compares its Magnitude now; golden 25 of
+    25.
 
 - 2026-11-16, **EP-15: a Forge Project's catalog keeps itself current.** The user's yes to the offer that closed EP-6:
   each PlayForge asset made, copied or moved into a project's folder is named for saves as it lands, a deleted one's

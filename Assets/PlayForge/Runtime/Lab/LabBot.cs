@@ -131,7 +131,7 @@ namespace FarEmerald.PlayForge.Lab
                 ? whenData.stringValue : "InRange";
             // Its reach: its Cast Range where it has one (FN-14), else its Local Data's, 0 for anywhere
             float reach = ForgeCastRange.TryRead(unit.Gas, ability, out float cast) ? cast
-                : rules != null && rules.ReachKey.IsValid && ability.TryGetLocalData(rules.ReachKey, out var reachData) ? reachData.floatValue : 0f;
+                : rules != null && rules.ReachKey.IsValid && ability.TryGetLocalData(rules.ReachKey, out var reachData) ? Read(ability, reachData.floatValue) : 0f;
             bool inReach = reach <= 0f || unit.DistanceTo(foe) <= reach;
             away = when == "Low";
             return when switch
@@ -142,6 +142,17 @@ namespace FarEmerald.PlayForge.Lab
                 "FoeLow" => inReach && foe.HealthShare < 0.5f,
                 _ => inReach,
             };
+        }
+
+        // A number of an ability's Local Data, which can scale: at the unit's level of the ability, as its Cast Range reads,
+        // where it knows it; else at the unit's own level
+        private float Read(Ability ability, ScalableFloat number)
+        {
+            if (number == null) return 0f;
+            if (unit.Gas != null && unit.Gas.GetAbilitySystem() is { } abilities && abilities.TryGetAbilityContainer(ability, out var container)
+                && container?.Spec != null)
+                return container.Spec.Read(number);
+            return number.Evaluate(NumberContext.Of((IGameplayAbilitySystem)unit.Gas));
         }
     }
 }

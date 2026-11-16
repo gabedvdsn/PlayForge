@@ -94,8 +94,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
             {
                 EDataWrapperType.String => CreateStringField(stringProp),
                 EDataWrapperType.Bool => CreateBoolField(boolProp),
-                EDataWrapperType.Int => CreateIntField(intProp),
-                EDataWrapperType.Float => CreateFloatField(floatProp),
+                // Numbers that can scale, drawn by their own drawer: an Integer or Float field bound to one couldn't bind
+                EDataWrapperType.Int => CreatePropertyField(intProp),
+                EDataWrapperType.Float => CreatePropertyField(floatProp),
                 EDataWrapperType.Tag => CreatePropertyField(tagProp),
                 EDataWrapperType.Attribute => CreatePropertyField(attributeProp),
                 EDataWrapperType.Effect => CreatePropertyField(effectProp),
@@ -122,20 +123,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
         private VisualElement CreateBoolField(SerializedProperty prop)
         {
             var field = new Toggle { bindingPath = prop.propertyPath };
-            field.BindProperty(prop);
-            return field;
-        }
-
-        private VisualElement CreateIntField(SerializedProperty prop)
-        {
-            var field = new IntegerField { bindingPath = prop.propertyPath };
-            field.BindProperty(prop);
-            return field;
-        }
-
-        private VisualElement CreateFloatField(SerializedProperty prop)
-        {
-            var field = new FloatField { bindingPath = prop.propertyPath };
             field.BindProperty(prop);
             return field;
         }

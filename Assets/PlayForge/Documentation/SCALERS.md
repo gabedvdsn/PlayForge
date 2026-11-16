@@ -91,7 +91,8 @@ Kinds that read the game, each with a summary that says what it reads:
 - **Local Data** reads the number under a **Key** in Local Data: **Its Own**, what the number belongs to, as its
   ability's or its item's asset, or the **Caster**'s or the **Target**'s as the entity holds it. Where there's no
   number under the key it reads its **Default**. A hero's attack range kept in its Local Data is one field read by
-  every ability.
+  every ability. The entry's number can scale too (EP-16), read where the kind reads it: Its Own in the number's
+  context, the Caster's or the Target's at that entity's own level. One that reads its own key stops at the Default.
 - **Relative to a Field** reads another number field of the same object, picked from a menu of them, and the field's
   number joins it as Combine says: a Clamped scaler's Max can be 2 × its Min, and a stack bound's Max its Min + 3. The
   other field is read in the same context, so a relative Max follows a Min that scales by level. A field offers this

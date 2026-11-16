@@ -268,9 +268,11 @@ namespace FarEmerald.PlayForge.Lab
         /// <summary>Whether it has any of the tags.</summary>
         public bool HasAny(IReadOnlyList<Tag> tags) => Gas != null && Gas.GetTagCache().HasAny(tags);
 
-        /// <summary>A float its entity's Local Data holds, or the fallback.</summary>
+        /// <summary>A float its entity's Local Data holds, a number that can scale, read at its own level, or the fallback.</summary>
         public float LocalFloat(Tag key, float fallback) =>
-            Gas != null && key.IsValid && Gas.TryGetLocalData(key, out var data) ? data.floatValue : fallback;
+            Gas != null && key.IsValid && Gas.TryGetLocalData(key, out var data) && data.floatValue != null
+                ? data.floatValue.Evaluate(NumberContext.Of((IGameplayAbilitySystem)Gas))
+                : fallback;
 
         /// <summary>
         /// How near it must stand to attack: its attack's Cast Range where it has one (FN-14), else its Local Data's or its

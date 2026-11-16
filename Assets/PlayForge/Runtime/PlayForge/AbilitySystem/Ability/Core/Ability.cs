@@ -316,8 +316,9 @@ namespace FarEmerald.PlayForge
 
         public string stringValue;
         public bool boolValue;
-        public int intValue;
-        public float floatValue;
+        // Each a number that can scale, 0 to start, so a wrapper made in code holds one, not null
+        public ScalableInt intValue = 0;
+        public ScalableFloat floatValue = 0f;
         public Object objectValue;
         public MonoBehaviour monoBehaviourValue;
         public ScriptableObject scriptableObjectValue;

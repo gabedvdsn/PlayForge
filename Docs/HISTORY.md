@@ -521,6 +521,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   page, through one table of links in the editor.
 
 ### Changed
+- A Local Data entry's Int and Float are numbers that can scale, a `ScalableInt` and a `ScalableFloat`, read in their
+  reader's context: a Local Data kind's Its Own in the number's, the Caster's or the Target's at that entity's own level
+  (EP-16). An asset saved before holds plain values, which load as 0; the samples' are written in the new form.
 - Project Settings → PlayForge opens on two sentences of what PlayForge is and what a Forge Project holds, where a long
   note of roles and rules was; its parts have room, its foldout arrows keep one column, and New Assets shows each
   type's folder within the project's (EP-3).

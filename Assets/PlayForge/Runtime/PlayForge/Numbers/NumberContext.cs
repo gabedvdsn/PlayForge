@@ -332,27 +332,47 @@ namespace FarEmerald.PlayForge
             return OwningEntity is { } entity && entity.TryGetLocalData(key, out data) && data != null;
         }
 
-        /// <summary>The number in the Local Data entry under a key, of what the number belongs to: a float or a whole number.</summary>
-        public bool TryGetLocalData(Tag key, out float value) => NumberOf(TryGetLocalData(key, out DataWrapper data) ? data : null, out value);
+        /// <summary>
+        /// The number in the Local Data entry under a key, of what the number belongs to: a float or a whole number, each a
+        /// number that can scale, read in this context.
+        /// </summary>
+        public bool TryGetLocalData(Tag key, out float value) => NumberOf(TryGetLocalData(key, out DataWrapper data) ? data : null, this, out value);
 
-        /// <summary>The number in an entity's Local Data under a key, the caster's or the target's, as it holds it at runtime.</summary>
+        /// <summary>
+        /// The number in an entity's Local Data under a key, the caster's or the target's, as it holds it at runtime, read as
+        /// the entity has it on its own: at its own level, with its Local Data.
+        /// </summary>
         public bool TryGetLocalData(NumberSide side, Tag key, out float value)
         {
             DataWrapper data = null;
-            bool found = EntityOn(side) is ILocalDataUser entity && entity.TryGetLocalData(key, out data);
-            return NumberOf(found ? data : null, out value);
+            var holder = EntityOn(side);
+            bool found = holder is ILocalDataUser entity && entity.TryGetLocalData(key, out data);
+            return NumberOf(found ? data : null, Of(holder as ISource), out value);
         }
 
-        // An entry's number: a float's, or a whole number's; any other entry holds none
-        private static bool NumberOf(DataWrapper data, out float value)
+        // How deep Local Data numbers are read inside one another, as one whose scaler reads Local Data is; one that reads
+        // itself, or a ring of them, holds no number past this, where it overflowed the stack
+        private const int LocalDataDepth = 16;
+        [ThreadStatic] private static int localDataReads;
+
+        // An entry's number, read in a context: a float's, or a whole number's; any other entry holds none
+        private static bool NumberOf(DataWrapper data, in NumberContext context, out float value)
         {
             value = 0f;
-            if (data == null) return false;
-            switch (data.Type)
+            if (data == null || localDataReads >= LocalDataDepth) return false;
+            localDataReads++;
+            try
             {
-                case EDataWrapperType.Float: value = data.floatValue; return true;
-                case EDataWrapperType.Int: value = data.intValue; return true;
-                default: return false;
+                switch (data.Type)
+                {
+                    case EDataWrapperType.Float: value = data.floatValue?.Evaluate(context) ?? 0f; return true;
+                    case EDataWrapperType.Int: value = data.intValue?.Evaluate(context) ?? 0; return true;
+                    default: return false;
+                }
+            }
+            finally
+            {
+                localDataReads--;
             }
         }
 
