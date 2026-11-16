@@ -58,7 +58,3 @@ An entity of a runtime hub, which no component sits on, is shown through a compo
 melee attack and bolt, land its slow on each other and its shield on themselves, and mend before they fall. The
 starter set's Bolt flashes its target blue and shakes the camera; its Slow and Shield float their words. Its `Sparring`
 component is the dummies' own.
-
-The recipes, the formulas, the starter set and the Sparring scene are made by Proving Grounds' books, which play each
-one as a test; its `RecipeExport` saves them here in place, so a rebuild keeps their GUIDs. The sample's own tests,
-in `Scripts/Tests`, play its feedback and its scene.

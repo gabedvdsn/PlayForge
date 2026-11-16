@@ -1211,6 +1211,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   or turning `Enabled` off. Once the first had ended, it threw, and the rest ran on.
 
 ### Removed
+- The samples' tests (EP-24): the Demo and Additional Content ship no tests. PlayForge's testing is its golden tests and
+  its test kit.
 - `Runtime/Prefabs`: the Bootstrapper, GameRoot and ProcessControl prefabs and the Game Root entity. Code makes them
   in a project's own folders, so none ships (EP-11).
 - `ForgeCategory`, and the Category of `[NumberKind]` and `[GameplayCondition]`: `[ForgeMenu]` files every family's kinds

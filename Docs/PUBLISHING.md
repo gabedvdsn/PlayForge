@@ -11,8 +11,9 @@ completed groundwork ☑.
   and a sparring scene; and **Code Examples**.
 - ☑ A clean import into a fresh project shows zero warnings and zero missing types, and importing the samples into
   it shows zero missing scripts, references and types. Proving Grounds' `Tools/clean-import.py` checks both, the
-  samples with `--samples`. A fresh project has no Test Framework, so the samples' tests compile only where it is
-  (SP-29, found by this check on 2026-11-14).
+  samples with `--samples`. The samples ship no tests (EP-24): theirs live in Proving Grounds'
+  `Assets/ProvingGrounds/SampleTests~`, which its gates and CI copy in beside each sample they import. Until then
+  they compiled only where the project has the Test Framework (SP-29, found by this check on 2026-11-14).
 - ☑ **Demo** needs nothing beyond PlayForge: it reads the Input System where the project has it, and the Input
   Manager otherwise, so it compiles and plays in any project (Phase 7).
 - ☐ A polished, self-contained demo scene. The Demo (Phase 7, Decision 37) is self-contained, renders in the

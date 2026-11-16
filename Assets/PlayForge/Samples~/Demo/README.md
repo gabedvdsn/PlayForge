@@ -67,8 +67,3 @@ Every hero also has Second Wind, a passive that gives it Regeneration as it come
 
 The icons are drawn in code. **Window → PlayForge → Demo → Make Placeholder Icons** draws them again, into `Textures`. To use
 your own art, replace a PNG there: the assets point at the texture, so nothing else changes.
-
-## Tests
-
-`Scripts/Tests` plays the scene: every hero's abilities cast, the damage formulas hold, items and levels change what
-they should, Burning bursts at six, and the AI fights back. Run them from the Test Runner's PlayMode tab.

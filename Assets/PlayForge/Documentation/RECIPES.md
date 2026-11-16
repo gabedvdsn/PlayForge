@@ -1,9 +1,8 @@
 # PlayForge — Recipes
 
 Ten common rules, each built from PlayForge's own assets and fields, with no code. Each is in the **Additional
-Content** sample (Package Manager → PlayForge → Samples), under `Recipes`, a folder each, and Proving Grounds plays each
-as a test, built from the same recipe book as the sample's assets, so this page and the assets stay true. Each reads
-the sample's **Health** attribute, in `Recipes/Attributes`; point its fields at your own. [WORKERS.md](WORKERS.md) maps
+Content** sample (Package Manager → PlayForge → Samples), under `Recipes`, a folder each. Each reads the sample's
+**Health** attribute, in `Recipes/Attributes`; point its fields at your own. [WORKERS.md](WORKERS.md) maps
 the workers some of them use.
 
 ## A curse that bursts

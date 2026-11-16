@@ -3120,8 +3120,8 @@ shape is made as the scene plays. `git show e91fe34:<path>` shows the old files.
   - `Assets/PlayForge/Samples~/Demo/README.md`, which maps each feature to the assets that show it.
   - `Assets/PlayForge/Samples~/Demo/Scripts/Forge`, the demo's own workers, tasks, sequences, cue and process.
   - `Assets/PlayForge/Samples~/Demo/Scripts/Game/DemoUnit.cs` `DemoUnit.Create`, how a hero is put in.
-  - `Assets/PlayForge/Samples~/Demo/Scripts/Tests/DemoTests.cs`, the scene played: every ability cast, the damage
-    formulas, items, levels, Burning's overflow, the AI.
+  - Proving Grounds' `Assets/ProvingGrounds/SampleTests~/Demo/DemoTests.cs`, copied in beside the Demo for a run
+    (EP-24): the scene played, every ability cast, the damage formulas, items, levels, Burning's overflow, the AI.
 - **New:** the Demo sample. The synced sequence examples moved from the Demos to Code Examples. Proving Grounds'
   smoke suite sweeps the Demo's assets.
 
