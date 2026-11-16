@@ -57,6 +57,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 kind.AddToClassList("pf-magnitude__kind-labelled");
                 // The menu files a condition under its category, as the kind menu does: "Logic/All Of"
                 kind.formatListItemCallback = ConditionKinds.MenuPath;
+                // PlayForge's dropdown, its conditions under their categories (EP-1)
+                ForgePopupDropdown.Use(kind, "Condition");
                 kind.showMixedValue = mixedKinds;
                 row.Add(kind);
                 root.Add(row);

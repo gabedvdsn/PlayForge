@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEditor;
+using UnityEngine;
 
 namespace FarEmerald.PlayForge.Extended.Editor
 {
@@ -35,6 +36,44 @@ namespace FarEmerald.PlayForge.Extended.Editor
             }
         }
 
+        /// <summary>One whole-number preference, kept within its least and its most: its key, label, tooltip and default.</summary>
+        internal sealed class Number
+        {
+            public readonly string Key;
+            public readonly string Label;
+            public readonly string Tooltip;
+            public readonly int Default;
+            public readonly int Min;
+            public readonly int Max;
+
+            public Number(string key, string label, string tooltip, int defaultValue, int min, int max)
+            {
+                Key = key;
+                Label = label;
+                Tooltip = tooltip;
+                Default = defaultValue;
+                Min = min;
+                Max = max;
+            }
+
+            public int Value
+            {
+                get => Mathf.Clamp(EditorPrefs.GetInt(Prefix + Key, Default), Min, Max);
+                set => EditorPrefs.SetInt(Prefix + Key, Mathf.Clamp(value, Min, Max));
+            }
+        }
+
+        /// <summary>The widest a PlayForge dropdown grows, a picker's or a field's menu (EP-1).</summary>
+        internal static readonly Number MenuWidth = new("MenuWidth", "Menu Width",
+            "The widest a PlayForge dropdown grows, a picker's or a field's menu, in points", 360, 220, 1200);
+
+        /// <summary>The tallest a PlayForge dropdown grows; a longer list scrolls (EP-1).</summary>
+        internal static readonly Number MenuHeight = new("MenuHeight", "Menu Height",
+            "The tallest a PlayForge dropdown grows, in points; a longer list scrolls", 420, 160, 1600);
+
+        /// <summary>The menus' numbers, in the order the page shows them.</summary>
+        internal static readonly Number[] MenuNumbers = { MenuWidth, MenuHeight };
+
         internal static readonly Switch ShowFullTagPath = new("ShowFullTagPath", "Show Full Tag Paths",
             "Show a tag's whole path in strong text, rather than its parents in secondary text before its leaf", false);
         internal static readonly Switch GroupTagsByRoot = new("GroupTagsByRoot", "Group Tags by Root",
@@ -53,6 +92,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         {
             foreach (var each in ForgeSwitches) yield return Prefix + each.Key;
             foreach (var each in TagSwitches) yield return Prefix + each.Key;
+            foreach (var each in MenuNumbers) yield return Prefix + each.Key;
             foreach (var table in ForgeColumnWidths.Tables)
             {
                 yield return ForgeColumnWidths.KeyOf(table);

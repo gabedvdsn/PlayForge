@@ -37,7 +37,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         {
             label = "PlayForge",
             activateHandler = (_, root) => BuildPreferencesPage(root),
-            keywords = new HashSet<string> { "PlayForge", "The Forge", "Tag", "Path", "Root", "Log", "Level" },
+            keywords = new HashSet<string> { "PlayForge", "The Forge", "Tag", "Path", "Root", "Log", "Level", "Menu", "Width", "Height" },
         };
 
         /// <summary>Opens Project Settings → PlayForge.</summary>
@@ -382,7 +382,10 @@ namespace FarEmerald.PlayForge.Extended.Editor
         // Preferences → PlayForge
         // ═══════════════════════════════════════════════════════════════════════════
 
-        /// <summary>Builds the user's page in a root: the tag fields' display, The Forge's view toggles and the log level.</summary>
+        /// <summary>
+        /// Builds the user's page in a root: the tag fields' display, The Forge's view toggles, the menus' size and the log
+        /// level.
+        /// </summary>
         internal static VisualElement BuildPreferencesPage(VisualElement root)
         {
             var page = Page(root, "PlayForge");
@@ -396,6 +399,11 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 Heading(page, "The Forge");
                 foreach (var each in PlayForgePreferences.ForgeSwitches) switches.Add((each, Switch(page, each)));
             }
+
+            // The most a PlayForge dropdown grows to, a picker's or a field's menu (EP-1)
+            Heading(page, "Menus");
+            var numbers = new List<(PlayForgePreferences.Number preference, IntegerField field)>();
+            foreach (var each in PlayForgePreferences.MenuNumbers) numbers.Add((each, NumberField(page, each)));
 
             Heading(page, "Logging");
             var level = new EnumField("Minimum Log Level", ForgeLogSettingsBridge.CurrentLevel)
@@ -414,6 +422,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             {
                 PlayForgePreferences.UseDefaults();
                 foreach (var (preference, toggle) in switches) toggle.SetValueWithoutNotify(preference.Value);
+                foreach (var (preference, field) in numbers) field.SetValueWithoutNotify(preference.Value);
                 level.SetValueWithoutNotify(ForgeLogSettingsBridge.CurrentLevel);
             })
             {
@@ -423,6 +432,21 @@ namespace FarEmerald.PlayForge.Extended.Editor
             });
             page.Add(buttons);
             return page;
+        }
+
+        // A whole number, kept within its least and its most as it's typed
+        private static IntegerField NumberField(VisualElement page, PlayForgePreferences.Number preference)
+        {
+            var field = new IntegerField(preference.Label) { name = preference.Key, tooltip = preference.Tooltip, isDelayed = true };
+            field.AddToClassList(IntegerField.alignedFieldUssClassName);
+            field.SetValueWithoutNotify(preference.Value);
+            field.RegisterValueChangedCallback(change =>
+            {
+                preference.Value = change.newValue;
+                field.SetValueWithoutNotify(preference.Value);
+            });
+            page.Add(field);
+            return field;
         }
 
         private static Toggle Switch(VisualElement page, PlayForgePreferences.Switch preference)

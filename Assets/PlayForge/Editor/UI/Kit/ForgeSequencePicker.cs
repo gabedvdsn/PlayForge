@@ -1,70 +1,45 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEditor;
-using UnityEditor.IMGUI.Controls;
 using UnityEngine;
 
 namespace FarEmerald.PlayForge.Extended.Editor
 {
     /// <summary>
-    /// The picker a sequence reference opens (FN-24): Unity's searchable dropdown, as a kind field's, of the project's
-    /// sequences by their names, None first. Where more than one class holds sequences, each class's are a submenu under
-    /// its name; its search finds any sequence whatever its class. It was Unity's popup, one long list.
+    /// The picker a sequence reference opens (FN-24, EP-1): PlayForge's dropdown of the project's sequences by their names,
+    /// None first and the one referenced checked. Where more than one class holds sequences, each class's are a submenu
+    /// under its name; its search finds any sequence whatever its class, and its Context says the method a sequence is. It
+    /// was Unity's searchable dropdown, and before that Unity's popup, one long list.
     /// </summary>
-    internal sealed class ForgeSequencePicker : AdvancedDropdown
+    internal sealed class ForgeSequencePicker
     {
-        private const int NoneId = -1;
-
-        private readonly IReadOnlyList<TaskSequenceReferenceDrawer.Entry> entries;
-        private readonly Action<TaskSequenceReferenceDrawer.Entry?> picked;
+        /// <summary>The dropdown it shows, which a test reads.</summary>
+        public ForgeDropdown Dropdown { get; }
 
         /// <param name="entries">The sequences to offer, in the order to list them.</param>
         /// <param name="picked">What a pick does: a sequence, or null for None.</param>
-        public ForgeSequencePicker(IReadOnlyList<TaskSequenceReferenceDrawer.Entry> entries, Action<TaskSequenceReferenceDrawer.Entry?> picked)
-            : base(new AdvancedDropdownState())
+        /// <param name="current">The name of the sequence referenced, which it checks; null for none.</param>
+        public ForgeSequencePicker(IReadOnlyList<TaskSequenceReferenceDrawer.Entry> entries, Action<TaskSequenceReferenceDrawer.Entry?> picked, string current = null)
         {
-            this.entries = entries ?? Array.Empty<TaskSequenceReferenceDrawer.Entry>();
-            this.picked = picked;
-            minimumSize = new Vector2(240f, 280f);
-        }
-
-        protected override AdvancedDropdownItem BuildRoot()
-        {
-            var root = new AdvancedDropdownItem("Sequence");
-            root.AddChild(new AdvancedDropdownItem(TaskSequenceReferenceDrawer.None) { id = NoneId });
-            root.AddSeparator();
+            entries ??= Array.Empty<TaskSequenceReferenceDrawer.Entry>();
+            Dropdown = new ForgeDropdown("Sequence") { Empty = "No sequences in the project" };
+            Dropdown.AddFixed(TaskSequenceReferenceDrawer.None, () => picked?.Invoke(null)).Checked = string.IsNullOrEmpty(current);
 
             // A submenu for each class that holds sequences, where there's more than one, in name order
-            var classes = new SortedDictionary<string, AdvancedDropdownItem>(StringComparer.OrdinalIgnoreCase);
-            for (int i = 0; i < entries.Count; i++)
+            bool grouped = entries.Select(entry => ClassName(entry.Method.DeclaringType)).Distinct().Count() > 1;
+            foreach (var entry in entries)
             {
-                var name = ClassName(entries[i].Method.DeclaringType);
-                if (!classes.ContainsKey(name)) classes[name] = null;
+                var each = entry;
+                var owner = entry.Method.DeclaringType;
+                Dropdown.Add(grouped ? ClassName(owner) : "", entry.Name, () => picked?.Invoke(each),
+                    $"{owner?.Name ?? "?"}.{entry.Method.Name}, in code", isChecked: entry.Name == current);
             }
-            bool grouped = classes.Count > 1;
-            for (int i = 0; i < entries.Count; i++)
-            {
-                var item = new AdvancedDropdownItem(entries[i].Name) { id = i };
-                if (!grouped)
-                {
-                    root.AddChild(item);
-                    continue;
-                }
-                var name = ClassName(entries[i].Method.DeclaringType);
-                var group = classes[name] ??= new AdvancedDropdownItem(name);
-                group.AddChild(item);
-            }
-            if (grouped) foreach (var group in classes.Values) if (group != null) root.AddChild(group);
-            if (entries.Count == 0) root.AddChild(new AdvancedDropdownItem("No sequences in the project") { enabled = false });
-            return root;
         }
+
+        /// <summary>Shows it under a rect of the field's panel.</summary>
+        public void Show(Rect worldBound) => Dropdown.Show(worldBound);
 
         private static string ClassName(Type type) => type == null ? "Other" : ObjectNames.NicifyVariableName(type.Name);
-
-        protected override void ItemSelected(AdvancedDropdownItem item)
-        {
-            if (item.id == NoneId) picked?.Invoke(null);
-            else if (item.id >= 0 && item.id < entries.Count) picked?.Invoke(entries[item.id]);
-        }
     }
 }

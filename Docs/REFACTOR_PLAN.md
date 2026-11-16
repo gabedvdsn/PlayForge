@@ -1486,7 +1486,7 @@ commit's follow-up, first; then EP-1 and EP-2, EP-4, EP-7, EP-8, EP-9, EP-5, EP-
 
 | ID | Note | Kind | Status |
 |---|---|---|---|
-| EP-1 | Selection menus: PlayForge's own dropdown in place of Unity's, for every picker (kinds, tags, assets, sequences): searchable, its items in submenus, no wider or taller than a size the user sets in Preferences, and with a Context section at its bottom that says more of the item under the pointer, as a tag's contexts | UI | open |
+| EP-1 | Selection menus: PlayForge's own dropdown in place of Unity's, for every picker (kinds, tags, assets, sequences): searchable, its items in submenus, no wider or taller than a size the user sets in Preferences, and with a Context section at its bottom that says more of the item under the pointer, as a tag's contexts. Done: `ForgeDropdown` (`UI/Kit/ForgeDropdown.cs`), a window of its own under the field: a header with the open menu's name and Back, a search field that finds a choice in any submenu, the choices in the submenus their paths name, the field's value checked, a choice that can't be picked greyed but highlighted, and a Context section where any choice says more; the keys move, open, pick, go back and close. **Menu Width** and **Menu Height**, in Preferences → PlayForge → Menus, bound it, and a longer list scrolls. Every picker shows it: a kind field's, a tag field's (its Context the contexts a tag is for), an asset field's and a template's (assets in more than one folder in a submenu each, their Context an asset's description and file), a sequence reference's, and an effect field's pick of an unlinked effect; a field's menu, as a number field's and a tag's Declared For, and the kind popups of a number field, a scaler and a condition, which stay Unity's popups to bind, open it too. It was Unity's searchable dropdown, and the operating system's menu, which ran the screen's height | UI | verified |
 | EP-2 | Categories for every dropdown's options: a new attribute, `[ForgeMenu("Path")]`, files a kind under submenus, a slash nesting them, with a description the menu's Context shows; `ForgeCategory` gives way to it, and every family PlayForge ships is filed: tasks, workers, components, cues, conditions, scalers and the rest | UI | open |
 | EP-3 | Project Settings → PlayForge: a short description of PlayForge and Forge Projects in place of the dense note at its top; more space between its parts; each row's foldout arrows in line with the others'; and the New Assets folders shown within the active project's folder (with EP-10) | UI | open |
 | EP-4 | Drawers out of line with the rows around them: an effect's Tags → Purges, an ability's Activation → Targeting | UI | open |
@@ -1536,6 +1536,15 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-15, **EP-1: PlayForge's dropdown, every picker's.** Searchable, its choices in submenus, the field's value
+  checked, a Context section where its choices say more, as a tag's contexts and an asset's file, and no bigger than
+  Preferences' Menu Width and Menu Height. Unity's AdvancedDropdown is gone from the package.
+  - Red, on a frozen snapshot: EP-1's tests, 10, and the kind and sequence pickers' FN-24 tests, each failing on a type
+    or a constructor the package didn't have yet.
+  - Gates, on a frozen snapshot of the package with the Demo imported, editor code alone changing: EditMode 971 of 973,
+    the smoke suite finding the dropdown's window one it didn't open, which it opens now in each theme, then the smoke
+    suite again 552 of 552; golden 25 of 25.
 
 - 2026-11-15, **EP-13 and EP-14: no file prefix or suffix, and no combined tag contexts.** The user's two notes as the
   editor pass went on. A new asset's file is its name alone, and the settings page shows a type's folder alone; a tag

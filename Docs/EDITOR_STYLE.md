@@ -117,12 +117,17 @@ The only other colors:
   beside it (Q15). Template import, the link filter and create-linked go in its right-click menu (Q18).
 - **Tag fields** are Unity's fields, their label in the label column, and show a tag's parents in secondary text
   and its leaf in strong text, unless the full-path setting is on. A tag reads by its display name everywhere: a
-  unique tag's name is padded with a generated suffix. Pressing one opens Unity's searchable dropdown of the tags
-  its context offers, with None and New Tag…; its right-click menu clears it, makes a new tag, makes its tag a
+  unique tag's name is padded with a generated suffix. Pressing one opens PlayForge's dropdown of the tags its
+  context offers, with None and New Tag…, its Context the contexts a tag is for; its right-click menu clears it, makes a new tag, makes its tag a
   child of another, or copies its path.
 - **Lists** are Unity's reorderable lists: a header with the count, drag handles, and the + and − footer.
+- **Dropdowns** are PlayForge's own (EP-1), as Unity's searchable dropdown looks: a header with the open menu's name
+  and Back, the search field, the choices in their submenus, the field's value with a check, the highlighted choice in
+  the selection's blue with white text, a choice that can't be picked in secondary text, and, where any choice says
+  more, a Context section at its foot under a line. It's no wider than Menu Width nor taller than Menu Height, in
+  Preferences, and a longer list scrolls. A popup that binds stays Unity's popup, and opens it.
 - **Kind fields**, which hold an object of one of a type's kinds, read as tag fields do: the kind's name in the
-  box, which opens Unity's searchable dropdown of the kinds, with None where the field may be empty. The kind's
+  box, which opens PlayForge's dropdown of the kinds, with None where the field may be empty. The kind's
   own fields indent under it. A kind that folds shows one line of its values, as "Strength 2 · Duration 0.5".
 - **Requirements** are one table: rows for applying, while on and removal, and columns for "Requires" and "Must not
   have". A toggle switches it between the target and the source. Each cell is a button that opens the tag picker,

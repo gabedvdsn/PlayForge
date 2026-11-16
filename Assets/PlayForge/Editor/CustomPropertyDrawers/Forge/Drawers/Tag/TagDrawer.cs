@@ -85,14 +85,16 @@ namespace FarEmerald.PlayForge.Extended.Editor
         private bool GroupByRoot() => TagDisplaySettings.GroupByRoot;
 
         // Opens the picker under the field's box, over the tags the field's context offers
-        private void OpenPicker(SerializedProperty property, Settings settings, VisualElement under, string title, Action<Tag> picked)
+        private void OpenPicker(SerializedProperty property, Settings settings, VisualElement under, string title, Action<Tag> picked, bool checkHeld = true)
         {
             // The tags the active Forge Project uses alone, where another project uses them alone (FEAT-34)
             var offers = ForgeProjects.OffersTag();
             var tags = ForgeTagRegistry.GetTagsForContext(settings.Contexts, settings.IncludeUniversal).Where(offers).ToList();
             var start = StartOf(TagOf(property));
+            // The field's tag checked, where the picker picks the field's own (EP-1)
+            var held = checkHeld && !property.hasMultipleDifferentValues ? TagOf(property) : default;
             new ForgeTagPicker(tags, settings.AllowCreate, GroupByRoot(), title, picked,
-                () => ForgeNewTagWindow.ShowFor(start, settings.Contexts, made => Pick(property, made, settings.Contexts))).Show(under.worldBound);
+                () => ForgeNewTagWindow.ShowFor(start, settings.Contexts, made => Pick(property, made, settings.Contexts)), held).Show(under.worldBound);
         }
 
         // A new tag's path starts with the field's tag's parents
@@ -114,7 +116,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             {
                 menu.menu.AppendAction("New Tag…", _ => ForgeNewTagWindow.ShowFor(StartOf(tag), settings.Contexts, made => Pick(property, made, settings.Contexts)));
                 // Its leaf under a tag the picker chooses, as Burn under Status.Debuff makes Status.Debuff.Burn
-                menu.menu.AppendAction("Make It a Child Of…", _ => OpenPicker(property, settings, field.Box, "Make It a Child Of", parent =>
+                menu.menu.AppendAction("Make It a Child Of…", _ => OpenPicker(property, settings, field.Box, "Make It a Child Of", checkHeld: false, picked: parent =>
                 {
                     if (!parent.IsValid) return;
                     var leaf = TagDisplaySettings.PathOf(tag);

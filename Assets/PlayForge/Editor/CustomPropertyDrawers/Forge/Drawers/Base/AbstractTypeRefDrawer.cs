@@ -146,11 +146,13 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 var prop = Fresh();
                 if (prop == null) return;
                 var title = string.IsNullOrEmpty(field.label) ? KindTitle() : field.label;
+                // The kind it holds checked; none where the selection's kinds differ (EP-1)
+                var held = EachAsset.Differ(prop, each => each.managedReferenceFullTypename) ? ForgeTypePicker.Mixed : GetCurrentValue(prop);
                 new ForgeTypePicker(KindsFor(prop), AcceptClear(prop), title, type =>
                 {
                     var now = Fresh();
                     if (now != null) SetValue(now, type);
-                }).Show(opened.Box.worldBound);
+                }, held).Show(opened.Box.worldBound);
             };
             // The asset is followed, not the property: a list's element removed before Unity takes up a property's
             // tracking threw as it did (ED-64)

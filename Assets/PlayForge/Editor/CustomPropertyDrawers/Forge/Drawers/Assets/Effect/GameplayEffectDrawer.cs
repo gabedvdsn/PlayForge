@@ -4,7 +4,6 @@ using System.Linq;
 using FarEmerald.PlayForge;
 using FarEmerald.PlayForge.Extended;
 using UnityEditor;
-using UnityEditor.IMGUI.Controls;
 using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -158,7 +157,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                     menu.AppendAction($"No {display} Template Is Set in Project Settings", _ => { }, DropdownMenuAction.Status.Disabled);
                 menu.AppendSeparator();
             }
-            menu.AppendAction("Pick an Unlinked Effect...", _ => UnlinkedEffectPicker.Show(field));
+            menu.AppendAction("Pick an Unlinked Effect...", _ => PickUnlinked(field));
             if (holder != null)
                 menu.AppendAction("New Linked Effect...", _ => NewLinked(field, holder));
         }
@@ -193,44 +192,19 @@ namespace FarEmerald.PlayForge.Extended.Editor
             });
 
         // The effects nothing links, to pick from: the link filter that sat beside the field, in its right-click menu
-        // (ED-38)
-        private sealed class UnlinkedEffectPicker : AdvancedDropdown
+        // (ED-38), in PlayForge's dropdown, by their folders, each saying its file (EP-1). It was Unity's dropdown
+        private static void PickUnlinked(ObjectField field)
         {
-            private readonly ObjectField field;
-            private readonly List<GameplayEffect> effects;
-
-            private UnlinkedEffectPicker(ObjectField field, List<GameplayEffect> effects) : base(new AdvancedDropdownState())
-            {
-                this.field = field;
-                this.effects = effects;
-                minimumSize = new Vector2(240, 280);
-            }
-
-            public static void Show(ObjectField field)
-            {
-                // The active Forge Project's alone (FEAT-34)
-                var inProject = ForgeProjects.InActive();
-                var effects = AssetDatabase.FindAssets($"t:{nameof(GameplayEffect)}")
-                    .Select(AssetDatabase.GUIDToAssetPath)
-                    .Select(AssetDatabase.LoadAssetAtPath<GameplayEffect>)
-                    .Where(effect => effect != null && !effect.IsLinked && inProject(effect))
-                    .OrderBy(effect => NameOf(effect), StringComparer.OrdinalIgnoreCase)
-                    .ToList();
-                new UnlinkedEffectPicker(field, effects).Show(field.worldBound);
-            }
-
-            protected override AdvancedDropdownItem BuildRoot()
-            {
-                var root = new AdvancedDropdownItem("Unlinked Effects");
-                for (int i = 0; i < effects.Count; i++) root.AddChild(new AdvancedDropdownItem(NameOf(effects[i])) { id = i });
-                if (effects.Count == 0) root.AddChild(new AdvancedDropdownItem("None") { enabled = false });
-                return root;
-            }
-
-            protected override void ItemSelected(AdvancedDropdownItem item)
-            {
-                if (item.id >= 0 && item.id < effects.Count) field.value = effects[item.id];
-            }
+            // The active Forge Project's alone (FEAT-34)
+            var inProject = ForgeProjects.InActive();
+            var effects = AssetDatabase.FindAssets($"t:{nameof(GameplayEffect)}")
+                .Select(AssetDatabase.GUIDToAssetPath)
+                .Select(AssetDatabase.LoadAssetAtPath<GameplayEffect>)
+                .Where(effect => effect != null && !effect.IsLinked && inProject(effect))
+                .OrderBy(effect => NameOf(effect), StringComparer.OrdinalIgnoreCase)
+                .Select(effect => ((Object)effect, NameOf(effect)))
+                .ToList();
+            new ForgeAssetPicker(effects, "Unlinked Effects", "No effect is unlinked", picked => field.value = picked, field.value).Show(field.worldBound);
         }
     }
 }

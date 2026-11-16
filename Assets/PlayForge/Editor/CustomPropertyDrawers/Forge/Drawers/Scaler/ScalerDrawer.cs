@@ -62,6 +62,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 kind.AddToClassList("pf-magnitude__kind-labelled");
                 kind.showMixedValue = mixedKinds;
                 NumberFields.FileByCategory(kind, kinds, shownType);
+                // PlayForge's dropdown, its kinds under their categories (EP-1)
+                ForgePopupDropdown.Use(kind, "Kind");
                 row.Add(kind);
                 range = new Label { name = "Range" };
                 range.AddToClassList("pf-magnitude__range");

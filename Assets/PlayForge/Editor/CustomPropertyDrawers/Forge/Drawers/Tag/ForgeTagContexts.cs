@@ -61,6 +61,31 @@ namespace FarEmerald.PlayForge.Extended.Editor
             return All().Contains(name, StringComparer.OrdinalIgnoreCase) ? $"There is a context {name} already." : null;
         }
 
+        /// <summary>
+        /// The contexts a tag is for, each alone, in the order of <paramref name="order"/>, <see cref="All"/>'s by default:
+        /// those its uses are in, its Tag Library's declaration and its code's exposure among them, which the registry reads
+        /// as uses (EP-1, EP-14). A tag picker's Context says them.
+        /// </summary>
+        public static List<string> ContextsOf(Tag tag, IReadOnlyList<string> order = null)
+        {
+            if (!tag.IsValid) return new List<string>();
+            var record = ForgeTagRegistry.GetTagUsage(tag);
+            if (record == null) return new List<string>();
+            order ??= All();
+            return record.UsageByContext.Values.SelectMany(usage => usage.Context.ContextStrings)
+                .Where(context => !string.IsNullOrWhiteSpace(context))
+                .Distinct()
+                .OrderBy(context =>
+                {
+                    int at = -1;
+                    for (int i = 0; i < order.Count; i++)
+                        if (order[i] == context) { at = i; break; }
+                    return at < 0 ? int.MaxValue : at;
+                })
+                .ThenBy(context => context, StringComparer.OrdinalIgnoreCase)
+                .ToList();
+        }
+
         /// <summary>The contexts a tag is declared for, in the Tag Library that names it; none where none does.</summary>
         public static List<string> DeclaredOf(Tag tag)
         {

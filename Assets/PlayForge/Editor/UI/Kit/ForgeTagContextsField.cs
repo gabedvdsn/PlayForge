@@ -76,7 +76,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         private void Open()
         {
             if (!enabledInHierarchy) return;
-            var menu = new ForgeFieldMenu();
+            var menu = new ForgeFieldMenu(string.IsNullOrEmpty(label) ? "Contexts" : label);
             foreach (var context in ForgeTagContexts.All().Concat(chosen).Distinct())
             {
                 var each = context;

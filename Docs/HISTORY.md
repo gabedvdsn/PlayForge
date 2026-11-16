@@ -10,6 +10,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## Toward 1.0.0, since 0.1.0
 
 ### Added
+- PlayForge's own dropdown, every picker's and every field menu's (EP-1): searchable, its choices in submenus, the
+  field's value checked, and a Context section where its choices say more, as the contexts a tag is for, or an asset's
+  description and file. Preferences → PlayForge → Menus sets the most it grows to, Menu Width and Menu Height. It was
+  Unity's searchable dropdown, and the operating system's menu for a field's menu and a kind popup.
 - The Debugger's journals (LAB-17): the Timeline keeps an effect journal of the entities it lists, and an effect's
   detail lists it, newest first; an effect refused is its track's tick, saying why. The Entities view's combat log
   shows a hit's steps as it's clicked.

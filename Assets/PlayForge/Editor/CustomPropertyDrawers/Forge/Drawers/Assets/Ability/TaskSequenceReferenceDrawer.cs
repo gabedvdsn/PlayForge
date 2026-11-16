@@ -116,13 +116,16 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
             field.Opened += opened =>
             {
+                // The sequence referenced checked; none where the selection's differ (EP-1)
+                var held = Fresh();
+                var current = held == null || held.hasMultipleDifferentValues ? "\u0001" : NameOf(held);
                 new ForgeSequencePicker(entries, picked =>
                 {
                     var reference = Fresh();
                     if (reference == null) return;
                     Pick(reference, picked?.Method);
                     Show();
-                }).Show(opened.Box.worldBound);
+                }, current == None ? null : current).Show(opened.Box.worldBound);
             };
 
             root.TrackSerializedObjectValue(serialized, _ => Show());

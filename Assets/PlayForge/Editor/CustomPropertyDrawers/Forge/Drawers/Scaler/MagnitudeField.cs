@@ -152,6 +152,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 popup.name = "Kind";
                 popup.tooltip = "The field's kind: Constant, or another";
                 NumberFields.FileByCategory(popup, kinds, shownType);
+                // PlayForge's dropdown, its kinds under their categories (EP-1)
+                ForgePopupDropdown.Use(popup, "Kind");
                 return popup;
             }
 
@@ -513,7 +515,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             bool mixedKinds = EachAsset.Differ(scalerProp, ScalerFields.KindOf);
             var scaler = mixedKinds ? null : scalerProp.managedReferenceValue as AbstractScaler;
             bool ownValues = scaler != null && !ScalerFields.IsShared(scaler.GetType()) && (scaler.Parts & EScalerParts.LevelValues) != 0;
-            var menu = new ForgeFieldMenu();
+            var menu = new ForgeFieldMenu(string.IsNullOrEmpty(label) ? "Number" : label);
 
             // Saving keeps one field's values, so it waits for one selected asset (ED-12)
             if (ownValues && !operation.serializedObject.isEditingMultipleObjects)

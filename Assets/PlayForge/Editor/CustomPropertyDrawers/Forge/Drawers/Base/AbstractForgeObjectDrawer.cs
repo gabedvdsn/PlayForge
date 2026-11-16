@@ -76,14 +76,14 @@ namespace FarEmerald.PlayForge.Extended.Editor
         }
 
         /// <summary>
-        /// Shows the picker of the active Forge Project's assets of the field's type, None first, as Unity's searchable
-        /// dropdown, under the field (FEAT-34).
+        /// Shows the picker of the active Forge Project's assets of the field's type, None first and the one it holds checked,
+        /// in PlayForge's dropdown, under the field (FEAT-34, EP-1).
         /// </summary>
         internal static void ShowProjectPicker(ObjectField field)
         {
             var assets = new List<(Object Asset, string Name)> { (null, "None") };
             assets.AddRange(ProjectAssets().Select(asset => (asset, NameOf(asset))));
-            new ForgeAssetPicker(assets, ForgeAssetTypes.NameOf(typeof(T)), "None", picked => field.value = picked).Show(field.worldBound);
+            new ForgeAssetPicker(assets, ForgeAssetTypes.NameOf(typeof(T)), "None", picked => field.value = picked, field.value).Show(field.worldBound);
         }
 
         /// <summary>The active Forge Project's assets of the field's type, by name, as its picker offers them (FEAT-34).</summary>

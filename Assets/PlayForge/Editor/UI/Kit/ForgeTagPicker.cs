@@ -2,31 +2,25 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
-using UnityEditor.IMGUI.Controls;
 using UnityEngine;
 
 namespace FarEmerald.PlayForge.Extended.Editor
 {
     /// <summary>
-    /// The tag picker a tag field opens (ED-55): Unity's searchable dropdown, as Add Component's, of the tags the field's
-    /// context offers, by their display names, each under its root while Group Tags by Root is on and its root has more
-    /// than one; None first, then New Tag… where the field may make one. Its search finds a tag by any part of its path.
-    /// It was a list drawn under the field in tinted boxes in code, with a button that showed only on hover.
+    /// The tag picker a tag field opens (ED-55, EP-1): PlayForge's dropdown of the tags the field's context offers, by their
+    /// display names, each under its root while Group Tags by Root is on and its root has more than one; None first, then
+    /// New Tag… where the field may make one, and the field's tag checked. Its search finds a tag by any part of its path,
+    /// and its Context says the contexts a tag is for: those it's used in, declared for, or exposed for in code (the user's
+    /// note, EP-1). It was Unity's searchable dropdown, and before that a list drawn under the field in tinted boxes in
+    /// code, with a button that showed only on hover.
     /// </summary>
-    internal sealed class ForgeTagPicker : AdvancedDropdown
+    internal sealed class ForgeTagPicker
     {
         private const string NoneItem = "None";
         private const string NewItem = "New Tag…";
-        private const int NoneId = -1;
-        private const int NewId = -2;
 
-        private readonly IReadOnlyList<Tag> tags;
-        private readonly bool allowNew;
-        private readonly bool group;
-        private readonly string title;
-        private readonly Action<Tag> picked;
-        private readonly Action makeNew;
-        private readonly Dictionary<int, Tag> byId = new();
+        /// <summary>The dropdown it shows, which a test reads.</summary>
+        public ForgeDropdown Dropdown { get; }
 
         /// <param name="tags">The tags to offer.</param>
         /// <param name="allowNew">Whether New Tag… is offered.</param>
@@ -34,58 +28,36 @@ namespace FarEmerald.PlayForge.Extended.Editor
         /// <param name="title">The dropdown's heading, as "Tags".</param>
         /// <param name="picked">What a pick does: a tag, or the default tag for None.</param>
         /// <param name="makeNew">What New Tag… does.</param>
-        public ForgeTagPicker(IReadOnlyList<Tag> tags, bool allowNew, bool group, string title, Action<Tag> picked, Action makeNew)
-            : base(new AdvancedDropdownState())
+        /// <param name="current">The field's tag, which it checks.</param>
+        public ForgeTagPicker(IReadOnlyList<Tag> tags, bool allowNew, bool group, string title, Action<Tag> picked, Action makeNew, Tag current = default)
         {
-            this.tags = tags ?? Array.Empty<Tag>();
-            this.allowNew = allowNew;
-            this.group = group;
-            this.title = string.IsNullOrEmpty(title) ? "Tags" : title;
-            this.picked = picked;
-            this.makeNew = makeNew;
-            minimumSize = new Vector2(260f, 320f);
-        }
+            // In the rows' own order, a root's folder where its first tag is, as the picker always listed them
+            Dropdown = new ForgeDropdown(string.IsNullOrEmpty(title) ? "Tags" : title) { Empty = "No tags for this field", MenusFirst = false };
+            Dropdown.AddFixed(NoneItem, () => picked?.Invoke(default)).Checked = !current.IsValid;
+            if (allowNew) Dropdown.AddFixed(NewItem, makeNew, "Make a tag, and use it here");
 
-        protected override AdvancedDropdownItem BuildRoot()
-        {
-            byId.Clear();
-            var root = new AdvancedDropdownItem(title);
-            root.AddChild(new AdvancedDropdownItem(NoneItem) { id = NoneId });
-            if (allowNew) root.AddChild(new AdvancedDropdownItem(NewItem) { id = NewId });
-            root.AddSeparator();
-
-            var folders = new Dictionary<string, AdvancedDropdownItem>();
-            int next = 0;
-            foreach (var row in RowsOf(tags, group, out var rowTags))
+            // The contexts in the menus' order, read once for every tag's
+            var order = ForgeTagContexts.All();
+            var rows = RowsOf(tags, group, out var rowTags);
+            for (int i = 0; i < rows.Count; i++)
             {
-                var tag = rowTags[next];
-                int slash = row.IndexOf('/');
-                var item = new AdvancedDropdownItem(slash >= 0 ? row.Substring(slash + 1) : row) { id = next };
-                byId[next] = tag;
-                next++;
-                if (slash < 0)
-                {
-                    root.AddChild(item);
-                    continue;
-                }
-                var folderName = row.Substring(0, slash);
-                if (!folders.TryGetValue(folderName, out var folder))
-                {
-                    folder = new AdvancedDropdownItem(folderName);
-                    folders[folderName] = folder;
-                    root.AddChild(folder);
-                }
-                folder.AddChild(item);
+                var tag = rowTags[i];
+                int slash = rows[i].IndexOf('/');
+                var path = slash >= 0 ? rows[i].Substring(0, slash) : "";
+                var name = slash >= 0 ? rows[i].Substring(slash + 1) : rows[i];
+                var item = Dropdown.Add(path, name, () => picked?.Invoke(tag), ContextOf(tag, order), isChecked: current.IsValid && tag.Name == current.Name);
+                item.SearchText = TagDisplaySettings.PathOf(tag);
             }
-            if (next == 0) root.AddChild(new AdvancedDropdownItem("No tags for this field") { enabled = false });
-            return root;
         }
 
-        protected override void ItemSelected(AdvancedDropdownItem item)
+        /// <summary>Shows it under a rect of the field's panel.</summary>
+        public void Show(Rect worldBound) => Dropdown.Show(worldBound);
+
+        /// <summary>What the picker says of a tag: the contexts it's for, used, declared or exposed in code (EP-1).</summary>
+        internal static string ContextOf(Tag tag, IReadOnlyList<string> order = null)
         {
-            if (item.id == NoneId) picked?.Invoke(default);
-            else if (item.id == NewId) makeNew?.Invoke();
-            else if (byId.TryGetValue(item.id, out var tag)) picked?.Invoke(tag);
+            var contexts = ForgeTagContexts.ContextsOf(tag, order);
+            return contexts.Count == 0 ? "For no context yet: no field uses it, and it's declared for none" : $"For {string.Join(", ", contexts)}";
         }
 
         /// <summary>
