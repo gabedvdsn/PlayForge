@@ -24,9 +24,14 @@
       "path": "Samples~/Demo"
     },
     {
-      "displayName": "Code Examples",
-      "description": "Annotated examples of task sequences, synced sequences and group processes, as code to read, in an assembly of their own. They need nothing beyond PlayForge.",
-      "path": "Samples~/Code Examples"
+      "displayName": "Task Sequence Examples",
+      "description": "Task sequences, every part of them, as code to read and run: each feature a step at a time, gameplay mechanics built from them, every task of both task libraries, synced sequences as scene components, and a component that runs any example from a scene. Their own assembly; they need nothing beyond PlayForge.",
+      "path": "Samples~/Task Sequence Examples"
+    },
+    {
+      "displayName": "Process Group Examples",
+      "description": "Process groups, each use from a key in a scene: a group made first to cap its members and one its first member makes, a cap that ends the oldest or refuses one more, a data packet the members share, pausing, ending and listing them all at once, a member detached, and how long a group lasts. Its README says what a group is; it needs nothing beyond PlayForge.",
+      "path": "Samples~/Process Group Examples"
     },
     {
       "displayName": "Additional Content",

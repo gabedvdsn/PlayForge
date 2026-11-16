@@ -26,7 +26,7 @@ The first release.
 - **The Forge**, an editor for every asset of a Forge Project; **the Debugger**, for a game's live entities, with each
   effect's journal and each hit's steps; and **the Creator Lab**, a scene to try assets on units, test dummies and bots,
   with stops, stepping, watches and logs.
-- **Samples**: Battle, Demo, Additional Content and Code Examples; and a **test kit** for a game's own tests.
+- **Samples**: Battle, Demo, Additional Content, Task Sequence Examples and Process Group Examples; and a **test kit** for a game's own tests.
 
 Requires Unity 6000.0 or later, and UniTask 2.5.11 (MIT, Cysharp), which the Asset Store package includes; see
 `Third-Party Notices.txt`.

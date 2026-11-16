@@ -33,10 +33,16 @@ namespace FarEmerald.PlayForge
             _methodName = method.Name;
         }
         
-        public IActiveSequence GetActiveSequence()
+        /// <summary>
+        /// The sequence the method makes: a sequence or a chain as it returns one, and a sequence of the definition it
+        /// returns, which the sequence dropdown offers too and which found no sequence before.
+        /// </summary>
+        public IActiveSequence GetActiveSequence() => Invoke() switch
         {
-            return Invoke() as IActiveSequence;
-        }
+            IActiveSequence sequence => sequence,
+            TaskSequenceDefinition definition => new TaskSequence(definition),
+            _ => null
+        };
         
         public bool IsChain() => GetMethod()?.ReturnType == typeof(TaskSequenceChain);
         

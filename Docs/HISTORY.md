@@ -10,6 +10,11 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## Toward 1.0.0, since 0.1.0
 
 ### Added
+- **Task Sequence Examples** (EP-29), in place of Code Examples: the task sequences a feature at a time, gameplay
+  mechanics, every task of both libraries with a showcase, synced components on a shared base, and a runner that plays
+  any example from a scene, all through ForgeLog, ForgeInput, ForgeRandom and ForgeTime.
+- **Process Group Examples** (EP-30): each use of a process group from a key in a scene, with a README that says what a
+  group is and what it adds.
 - Task sequences wait on the player (EP-28): `WaitForKey`, `WaitForAnyKey`, which returns the key, and `WaitForPointer`,
   in both libraries, read through `ForgeInput`, a press while the sequence is paused not heard; and the async library's
   `WaitUntil` and `WaitWhile`, which hold while it's paused.
@@ -539,6 +544,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   page, through one table of links in the editor.
 
 ### Changed
+- An ability's **Sequence** task runs a chain as a process, as it runs a sequence (EP-31), so the chain's conditions and
+  its sequences' are asked each frame.
 - All the runtime says goes through `ForgeLog` (EP-27), so its level and `ForgeLog.Logged` reach it: ProcessControl's
   logs, a sequence's and a chain's, the action queue's and the tags' among them, each "[PlayForge]" in the console. An
   exception keeps its stack; a message made only when asked, as a toggle's or a debug tool's, is Info.
@@ -966,6 +973,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   Asking whether its sequence was paused took 24 bytes a frame.
 
 ### Fixed
+- A synced task in an async sequence holds while the sequence is paused (EP-31); a `SyncDelay` counted on.
+- A sequence dropdown's method that returns a `TaskSequenceDefinition` runs (EP-31); the Sequence task did nothing.
+- `data.SetStageTimeout` with no injection skips the stage when its time is up, as `WithTimeout` does (EP-31).
 - A stage repeated by its policy, as `WithRepeatAndDelay` sets it, raises its `OnRepeat` and counts its runs, which
   `GetRepeatCount` reads (EP-28).
 - The task library's garbled characters, as "â€”" for "—" in its comments, read right (EP-28).
@@ -1244,6 +1254,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   or turning `Enabled` off. Once the first had ended, it threw, and the rest ran on.
 
 ### Removed
+- Code Examples (EP-29): its task sequences are Task Sequence Examples, and its group processes Process Group Examples.
 - The task sequence framework's README in the runtime's folder (EP-28): it's PROCESSES.md and TASK_SEQUENCES.md.
 - Types nothing used (EP-25): `ManagementInitDeferment`, `ValidationRuleset`, `EntitySpec`, `EffectContainerFactory`
   and `EAttributeModificationMethod`, and two files of commented-out code.

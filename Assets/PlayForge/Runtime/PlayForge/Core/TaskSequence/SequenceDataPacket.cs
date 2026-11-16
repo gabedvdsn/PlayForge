@@ -216,14 +216,15 @@ namespace FarEmerald.PlayForge
         // ═══════════════════════════════════════════════════════════════════════════
         
         /// <summary>
-        /// Sets a timeout on the current stage (if not already set).
+        /// Sets a timeout on the current stage (if not already set). When its time is up it injects what it's given, a
+        /// skip of the stage where it's given nothing, as a stage's WithTimeout does.
         /// </summary>
         public bool SetStageTimeout(float seconds, ISequenceInjection onTimeout = null)
         {
             return Runtime.RequestStartStageTimeout(new SequenceTimeout()
             {
                 Seconds = seconds,
-                Injection = onTimeout
+                Injection = onTimeout ?? SkipStageInjection.Instance
             });
         }
         

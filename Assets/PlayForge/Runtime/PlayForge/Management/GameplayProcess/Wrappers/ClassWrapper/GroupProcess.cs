@@ -63,8 +63,8 @@ namespace FarEmerald.PlayForge
         public bool TerminateWhenEmpty { get; set; } = true;
 
         /// <summary>
-        /// When true (default), member processes that haven't explicitly opted out
-        /// will be terminated when the group is terminated.
+        /// When true (default), every member is terminated when the group is terminated. A member
+        /// detached before, with <see cref="DetachMember"/>, is no member, so it stays.
         /// </summary>
         public bool TerminateMembersOnGroupTerminate { get; set; } = true;
 

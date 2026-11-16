@@ -42,7 +42,8 @@ cast.RegisterAndRun(SequenceDataPacket.SceneRoot());
 
 `Build` gives the definition, which a `TaskSequence` runs and a synced runner is built from; `BuildSequence` gives the
 sequence itself, and `BuildSyncRunner` a synced runner (below). A static method marked `[TaskSequenceMethod]` that
-returns a sequence or a chain appears in an ability's sequence dropdown, and in a `TaskSequenceReference` field.
+returns a sequence, a chain or a definition appears in an ability's sequence dropdown, and in a `TaskSequenceReference`
+field; an ability runs a chain as a process too, which asks its conditions each frame.
 
 A task reads and writes the run's **data packet**, a `SequenceDataPacket`: what started the run put its caster, targets
 and values there, and a task can leave values for the stages after it (`SetPrimary`, `GetPrimary`).
@@ -80,13 +81,19 @@ data.JumpToStage("Impact");     // or by index
 data.RestartSequence();
 data.BreakStageRepeat();
 data.Interrupt();               // end the run
-data.SetStageTimeout(2f);       // this stage gets two seconds
+data.SetStageTimeout(2f);       // this stage gets two seconds, then it's skipped
 ```
 
 From outside, through the sequence or its runtime: `Inject(injection)`, `Interrupt()`, `SkipCurrentStage()`.
 
 By a condition, checked each frame: `InterruptWhen`, `SkipStageWhen` on the sequence, `SkipWhen` and `StopRepeatWhen` on
 a stage, and `InjectWhen` for any injection. A condition fires once or every time it holds.
+
+A stage's condition is asked each frame by the process, so where a repeating stage's round ends, the next may have
+begun before `StopRepeatWhen` hears its predicate hold: a break from a task or from `OnRepeat` stops at the round
+exactly. `SkipAndMaintain` keeps the stage current as it's called running on; called again later, it keeps that later
+one. `InjectStageLocal(injection, stage)` asks the given stage's permissions, and the injection acts on the current
+stage.
 
 What may change a run is the sequence's to say: `AllowInjections(types)`, `AllowOnlyInterrupt()` and
 `DisallowInjections()`, on the sequence or a stage. A **critical** stage (`WithCriticalFlag(true)`) refuses every
@@ -141,6 +148,10 @@ runner = TaskSequenceBuilder.Create("Regenerate")
 // In the process's WhenUpdate
 runner.Step(data, ForgeTime.DeltaTime);
 ```
+
+A synced task works in an async sequence too, stepped once a frame and held while the sequence is paused. Its first
+step comes in the frame its stage starts, so `SyncSequenceTaskLibrary.Yield` waits no frame there; the async `Yield`
+does.
 
 A synced runner runs stages, their tasks, the three policies, repeats with or without a count, critical stages and a
 stage's longest run. A sub-stage, a branch, a condition, the sequence's own timeout or longest run, or an async task it

@@ -1,0 +1,17 @@
+{
+    "name": "FarEmerald.PlayForge.Samples.TaskSequences",
+    "rootNamespace": "FarEmerald.PlayForge.Samples.TaskSequences",
+    "references": [
+        "FarEmerald.PlayForge",
+        "UniTask"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

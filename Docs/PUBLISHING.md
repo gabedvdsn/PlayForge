@@ -8,7 +8,7 @@ completed groundwork ☑.
 - ☑ The samples live in `Samples~` and are listed in `package.json`, so Package Manager imports them on request:
   **Battle**, a battle that plays itself; **Demo**, a hero arena of five heroes, fourteen items, an AI hero and a
   training dummy; **Additional Content**, recipes for common rules made of PlayForge's own assets, with hit feedback
-  and a sparring scene; and **Code Examples**.
+  and a sparring scene; **Task Sequence Examples**; and **Process Group Examples**.
 - ☑ A clean import into a fresh project shows zero warnings and zero missing types, and importing the samples into
   it shows zero missing scripts, references and types. Proving Grounds' `Tools/clean-import.py` checks both, the
   samples with `--samples`. The samples ship no tests (EP-24): theirs live in Proving Grounds'
@@ -55,7 +55,8 @@ reserved all rights, is gone; the Demo has an outline of its own.
 ## ☑ 4. Code readiness (keep it true)
 
 - ☑ Assembly definitions: `FarEmerald.PlayForge` (runtime), `.Editor` and `.Tests` (both editor-only). The samples
-  have `FarEmerald.PlayForge.Samples` and `FarEmerald.PlayForge.Examples`.
+  have `FarEmerald.PlayForge.Samples`, `FarEmerald.PlayForge.Samples.TaskSequences` and
+  `FarEmerald.PlayForge.Samples.ProcessGroups`.
 - ☑ Zero unguarded `UnityEditor` references in Runtime; editor tools live in `Editor/`.
 - ☑ Runtime log noise gated: `ForgeLog`, set in Preferences → PlayForge → Logging.
 - ☑ Golden tests (the Test Runner's EditMode tab, `FarEmerald.PlayForge.Tests.Golden`): 25 scenarios, all green.

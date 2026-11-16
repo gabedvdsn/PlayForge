@@ -16,7 +16,7 @@ task pipelines, and tags glue everything together for requirements, filtering an
   git dependency, so the project's manifest has to name it.
 - The samples are in `PlayForge/Samples` from the Asset Store, and import from Package Manager's Samples tab where
   PlayForge is a package. **Battle**, a battle that plays itself, needs nothing more. **Demo**, a hero arena to pick heroes, give items and fight, needs nothing more either: it reads the Input
-  System where the project has it, and the Input Manager otherwise. **Code Examples** needs nothing more.
+  System where the project has it, and the Input Manager otherwise. **Task Sequence Examples** and **Process Group Examples** need nothing more.
 - The samples render in the **Built-in Render Pipeline** or **URP**. HDRP isn't supported.
 
 ## The pieces in one paragraph

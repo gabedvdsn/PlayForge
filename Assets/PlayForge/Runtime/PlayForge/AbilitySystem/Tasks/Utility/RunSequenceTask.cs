@@ -100,7 +100,30 @@ namespace FarEmerald.PlayForge
                 return;
             }
 
-            // Non-TaskSequence path (e.g. chain): await the full run directly.
+            // A chain runs as a process too, in the caster's world, as a sequence does: its process asks the chain's
+            // conditions and its sequences' each frame, where awaiting it in place asked none of them
+            if (seq is TaskSequenceChain chain)
+            {
+                var chainRegistration = ProcessControl.Register(chain).With(data).In(ProcessWorld.Of(data.EffectOrigin?.GetSource())).Run();
+                if (!chainRegistration)
+                {
+                    ForgeLog.Warning(ForgeLog.ESystem.Abilities, $"[RunSequenceTask] ProcessControl refused the inner chain ({chainRegistration.Refusal}).");
+                    return;
+                }
+
+                try
+                {
+                    await chainRegistration.Relay.WhenTerminated(token);
+                }
+                catch (System.OperationCanceledException)
+                {
+                    chainRegistration.Relay.TerminateImmediate();
+                    throw;
+                }
+                return;
+            }
+
+            // Any other kind of sequence: awaited in place
             var fullSeqData = new SequenceDataPacket(data);
             await seq.Run(fullSeqData, token);
         }

@@ -1,6 +1,6 @@
 {
-    "name": "FarEmerald.PlayForge.Examples",
-    "rootNamespace": "FarEmerald.PlayForge.Examples",
+    "name": "FarEmerald.PlayForge.Samples.ProcessGroups",
+    "rootNamespace": "FarEmerald.PlayForge.Samples.ProcessGroups",
     "references": [
         "FarEmerald.PlayForge",
         "UniTask"

@@ -65,12 +65,12 @@ namespace FarEmerald.PlayForge
         public virtual void Prepare(SequenceDataPacket data) { }
 
         /// <summary>
-        /// Bridge: loops Step with per-frame yields for async execution.
-        /// Override if you need custom async behavior.
+        /// Bridge: loops Step with per-frame yields for async execution, not stepping while its sequence is paused, so the
+        /// task holds with its run. Override if you need custom async behavior.
         /// </summary>
         public virtual async UniTask Execute(SequenceDataPacket data, CancellationToken token)
         {
-            while (!Step(data, ForgeTime.DeltaTimeFor(data)))
+            while (TaskSequenceRuntime.IsPausedRun(token) || !Step(data, ForgeTime.DeltaTimeFor(data)))
             {
                 await ForgeTick.Next(token);
             }
