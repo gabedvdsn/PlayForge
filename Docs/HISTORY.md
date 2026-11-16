@@ -503,6 +503,11 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   page, through one table of links in the editor.
 
 ### Changed
+- Lifesteal (the user's edit, FN-27): the Lifesteal worker heals its **Heals** attribute for its **Receives** attribute's
+  losses, each the Health role's where it names none, by the **Share** attribute it names; the Lifesteal role is gone,
+  so a project names the worker's Share. The Passive preset, which was Passive (Triggered), activates as its entity
+  starts and gives its holder its effects. Eleven core tags read with spaces, as Projectile Speed, and their names
+  changed with them; the Demo's projectiles store Projectile Speed by its new one. Load Attributes takes attributes.
 - Every authored number is Scalable (FN-19, Decision 83), read at the level of what holds it: an ability's Buffer
   Window; an attribute's Decay Per Second and an attribute set's Snap Interval; an effect's Stack Bounds Min and Max,
   its Starting Stacks and a Stacks change's Most Stacks and Stacks Per Landing; the Camera Shake, Prefab and Sound cues'
@@ -880,6 +885,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   Asking whether its sequence was paused took 24 bytes a frame.
 
 ### Fixed
+- The Lifesteal worker heard no hit where its Receives was another attribute than its Heals: it joined its cache under
+  the attribute it heals, not the one whose losses count (FN-27).
 - A refusal by an ability system that was off named no ability, though the slot asked for held one (GAS-87).
 - From the Asset Store, under Assets, the golden tests compiled in a project with no Test Framework, as Unity defines
   `UNITY_INCLUDE_TESTS` for every assembly there, and failed with 4 errors. They compile only where the Test Framework

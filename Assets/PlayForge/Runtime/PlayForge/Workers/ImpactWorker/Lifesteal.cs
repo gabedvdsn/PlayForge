@@ -7,9 +7,10 @@ namespace FarEmerald.PlayForge
 {
     /// <summary>
     /// The Lifesteal worker (FN-15, Decision 78): it heals its holder a share of each workable loss it deals another, the
-    /// value of its holder's Lifesteal, the attribute playing the project's Lifesteal role or the one it names, which an
-    /// effect on the holder raises while it should. An effect has no lifesteal of its own (FN-22). Only hits of the impact
-    /// types it names count, as attacks, so a second worker on another attribute makes a spell vamp.
+    /// value of its holder's Share, the attribute it names, which an effect on the holder raises while it should. The
+    /// losses that count are to its Receives attribute, and it heals its Heals attribute, each the Health role's where it
+    /// names none (FN-27). An effect has no lifesteal of its own (FN-22). Only hits of the impact types it names count, as
+    /// attacks, so a second worker on another attribute makes a spell vamp.
     /// A project gives it to every entity through its Forge Project's Workers, and an entity can hold one of its own;
     /// one that holds two heals a hit once. It allocates nothing, healing or not.
     /// </summary>
@@ -39,12 +40,13 @@ namespace FarEmerald.PlayForge
         [NonSerialized] private Stack<ModifyAttributeAction> spareActions;
         [NonSerialized] private IRootAction[] oneAction;
 
-        /// <summary>The attribute whose value is its share: its own, or else the Lifesteal role's, or null for none.</summary>
+        /// <summary>The attribute whose value is its share, the one it names; null for none, and it heals nothing.</summary>
         public Attribute ShareAttribute => Share;
 
+        /// <summary>The attribute whose losses count: its own, or else the Health role's, or null for none (FN-27).</summary>
         public Attribute ReceivesAttribute => Receives ? Receives : ForgeRoles.AttributeFor(Tags.ROLE_HEALTH);
-        
-        /// <summary>The attribute whose losses count and it heals: its own, or else the Health role's, or null for none.</summary>
+
+        /// <summary>The attribute it heals: its own, or else the Health role's, or null for none.</summary>
         public Attribute HealsAttribute => Heals ? Heals : ForgeRoles.AttributeFor(Tags.ROLE_HEALTH);
 
         public override bool PreValidateWorkFor(ImpactData impactData) =>
@@ -91,15 +93,16 @@ namespace FarEmerald.PlayForge
                 : 0f;
         }
 
-        // Under the attribute whose losses count as it joins; it leaves the one that counts as it leaves
+        // Under the attribute whose losses count, which its cache runs it for, as it joins; it leaves the one that counts as
+        // it leaves. It joined under the one it heals, so with a Receives other than its Heals it heard no hit (FN-27)
         public override void SubscribeToCache(ImpactWorkerCache cache)
         {
-            if (HealsAttribute is { } heals) cache.ProvideWorker(heals, this);
+            if (ReceivesAttribute is { } receives) cache.ProvideWorker(receives, this);
         }
 
         public override void UnsubscribeFromCache(ImpactWorkerCache cache)
         {
-            if (HealsAttribute is { } heals) cache.RemoveWorker(heals, this);
+            if (ReceivesAttribute is { } receives) cache.RemoveWorker(receives, this);
         }
     }
 

@@ -9,7 +9,8 @@ system and for whom, and what its context holds (TW-23). [RECIPES.md](RECIPES.md
 - **An attribute set's Worker Group**: the entity built from the set holds its workers as it lives.
 - **An entity's Worker Group** (its Entity asset): the same, as the entity's own.
 - **Its project's Workers**: every entity in a Forge Project holds the workers its settings list, under **Workers** in
-  Project Settings → PlayForge, after its own, as it registers (FN-15). A project starts with the Lifesteal worker.
+  Project Settings → PlayForge, after its own, as it registers (FN-15). A project starts with the Lifesteal worker,
+  whose Share is yours to name.
 - **An item's, an ability's or an effect's Worker Group**: the entity holds them while the item is equipped, the ability
   known, or the effect lasts on it (TW-13). Two of an effect lasting give its group once.
 - **An effect's Workers**: effect workers, which run for that effect's own events.
@@ -18,9 +19,10 @@ system and for whom, and what its context holds (TW-23). [RECIPES.md](RECIPES.md
 ## Lifesteal
 
 The **Lifesteal** worker, an impact worker, heals its holder a share of each workable loss it deals another (FN-15): the
-value of its holder's attribute in the project's **Lifesteal** role, or of the **Share** attribute it names, as 0.15 for
-15%, to the attribute its **Heals** names, or else the Health role's; an effect raises it while it should, as an effect
-has no lifesteal of its own (FN-22). Only hits of the **Impact Types** it names count, as attacks; with none, any; so a second worker on another attribute, of spells' types,
+value of its holder's **Share**, the attribute it names, as 0.15 for 15%; with none it heals nothing. The losses that
+count are to its **Receives** attribute, and it heals its **Heals** attribute, each the Health role's where it names
+none, so a mana burn can heal Health (FN-27). An effect raises the share while it should, as an effect has no lifesteal
+of its own (FN-22). Only hits of the **Impact Types** it names count, as attacks; with none, any; so a second worker on another attribute, of spells' types,
 makes a spell vamp. A worker that runs once for a hit, as this one, runs once however many of it its holder has, its
 project's and its own: the first of the kind to take the hit. It allocates nothing, healing or not.
 

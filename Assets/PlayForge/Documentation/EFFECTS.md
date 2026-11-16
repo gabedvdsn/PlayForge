@@ -441,7 +441,7 @@ sets nothing off. With **Own Proc Coefficient** off, its ability's stands, or el
 (FN-23).
 
 An effect has no lifesteal of its own (FN-22): what its hits heal its caster is the caster's **Lifesteal**, the attribute
-playing the project's Lifesteal role, which the Lifesteal worker heals by, the one the project gives every entity or the
+the Lifesteal worker names as its Share, which the worker heals by, the one the project gives every entity or the
 caster's own ([WORKERS.md](WORKERS.md#lifesteal)). For hits that steal more, an effect raises its caster's Lifesteal
 while they should: a lasting effect of +0.3 Lifesteal whose **Removal** condition takes it off, as a charged attack's buff
 comes off as its last charge is spent. The heal is a gain like any other, so Healing Received scales it, and damage a

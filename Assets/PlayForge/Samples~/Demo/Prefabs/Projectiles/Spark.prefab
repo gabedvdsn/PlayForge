@@ -106,8 +106,8 @@ MonoBehaviour:
   Attributes:
   - Attribute: {fileID: 11400000, guid: 92b8881ec3e65f84bba7186f9cb0c252, type: 2}
     Role:
-      Name: ProjectileSpeedTDOqnRj7a_7x7WNN99NhMMccYmVZPKzFTDOqnRj7a_7x7WNN9
-      DisplayName: ProjectileSpeed
+      Name: Projectile SpeedWo7pgx6QjuV1X9OKIn0cedoucG3k_ntrWo7pgx6QjuV1X9OK
+      DisplayName: Projectile Speed
     StartsFrom: 0
     Value:
       Magnitude: 18

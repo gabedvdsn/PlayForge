@@ -362,8 +362,8 @@ Each entry is a rule of its own or names a shared Effect Modifier asset ([EFFECT
 
 ### Lifesteal
 
-An ability gives its holder lifesteal by an effect that raises the holder's **Lifesteal**, the attribute playing the project's
-Lifesteal role, as a passive applies it to its caster, which the Lifesteal worker heals by ([WORKERS.md](WORKERS.md#lifesteal)): a vampiric mask's
+An ability gives its holder lifesteal by an effect that raises the holder's **Lifesteal**, the attribute the project's
+Lifesteal worker names as its Share, as a passive applies it to its caster, which the Lifesteal worker heals by ([WORKERS.md](WORKERS.md#lifesteal)): a vampiric mask's
 Infinite effect of +0.15 Lifesteal heals its wearer 15% of each blow it deals. Its Lifesteal list is gone (FN-15).
 ## Local Data
 

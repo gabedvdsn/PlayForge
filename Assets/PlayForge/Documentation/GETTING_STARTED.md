@@ -144,7 +144,8 @@ string perLevel = impact.FormatTotal();           // "20/30/40/50"
   Control Rules, then Tags, the search and the problem count. Create makes an asset of a type: Blank, or from a preset under it (TW-24), each ready to fill in: a
   **Damage**, **Damage over Time**, **Buff**, **Debuff**, **Stun** (granting the tag of the project's crowd control rule
   that stops every ability) or **Aura** effect; an **On-Hit** or **Active** item (the Active one with an ability of its
-  own, its cost and cooldown copies of the project's Cost and Cooldown effects); a **Passive (Triggered)** ability; or a
+  own, its cost and cooldown copies of the project's Cost and Cooldown effects); a **Passive** ability, which activates
+  as its entity starts and gives its holder its effects; or a
   **Hero**, with an attribute set of the attributes playing the project's roles, Health first. The project's own
   **Templates** follow, each a new asset's copy. A new asset goes into the active project, in its type's folder within the project's; the first one
   made makes the default project, at the project's root. With projects and none chosen, the active one is the

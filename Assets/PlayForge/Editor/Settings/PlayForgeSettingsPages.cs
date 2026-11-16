@@ -293,9 +293,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
                              "effects land on those it takes, by the tags they carry, and what each entity's combat log " +
                              "writes and keeps, and the workers every entity has. PlayForge reads its " +
                              "own roles: Health, what an entity dies of at 0 and what On Hit counts where an entry names none; " +
-                             "Luck, read on every chance's caster; Movement Speed, what the Creator Lab's units walk at; " +
-                             "Lifesteal, the share of each loss an entity deals that the Lifesteal worker heals it. Your " +
-                             "code reads its own by their tags."));
+                             "Luck, read on every chance's caster; Movement Speed, what the Creator Lab's units walk at. " +
+                             "Your code reads its own by their tags."));
 
             var held = new ObjectField("Project") { name = "ForgeProjectAsset", objectType = typeof(ForgeProject), tooltip = "The Forge Project whose settings these are" };
             held.SetValueWithoutNotify(project);
@@ -335,7 +334,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 name = "FillRolesByName",
                 text = "Fill Roles by Name",
                 tooltip = "Fill each of PlayForge's roles no attribute plays yet with the project's attribute of its name: Health, " +
-                          "Luck, Movement Speed or Move Speed, and Lifesteal",
+                          "Luck, and Movement Speed or Move Speed",
             });
             section.Add(buttons);
 

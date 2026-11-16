@@ -786,6 +786,13 @@ from. It lives outside `Assets/` so it never ships in the package.
   a list in the bottom panel**: an effect lands or is refused, a worker runs, an attribute crosses a value, a tag comes or
   goes, an ability is refused, each on the selected unit or any; the lab's world pauses as one fires, says which, and
   Step Frame or Step Tick goes on.
+- Decision 89, 2026-11-15: the editor pass's open points (EP), the user's answers in an interview, each the
+  recommendation. **Forge Projects live in `Assets/PlayForge`**, a project setting, and **the Asset Store export installs
+  the code at `Assets/Plugins/PlayForge`**, so a reinstall or a deleted code folder never touches a buyer's projects
+  (EP-10, EP-12). **The generated prefabs' folder is Bootstrap**, `Assets/PlayForge/Bootstrap` (EP-11). **The
+  Bootstrapper names the Forge Project a scene plays**, the first made by default, and the GameRoot takes on that
+  project's Game Root entity and settings as it starts; one shared set of prefabs (EP-11). **PlayForge's icon is an
+  anvil**, for the asset types with no icon of their own (EP-9).
 
 **Open. Ask the user; do not assume:**
 1. ~~**Uncommitted changes**~~: decided, see above.
@@ -1455,6 +1462,7 @@ them, worked in its order.
 | FN-24 | A pass over the ability tasks: those a framework should have (Decision 83: waits for an event, a tag gained or lost and an attribute crossing a value; sending an event, tags while a stage runs and cancelling abilities by tag; Dash, Blink and Area Effect, and Consume Item and Apply To Caster, from the Demo), the others refactored, Run Sequence's picker searchable as the framework's others are, Scalable numbers where they belong, and the task picker grouped by category, which each task names. Done: `[ForgeCategory]` and the kind picker's submenus, every PlayForge task naming one but Composite (FN-24a); Run Sequence's searchable dropdown, `TaskSequenceReferenceDrawer.Pick` (FN-24b); the tasks' numbers Scalable, names and units kept, 37 saved values re-authored, Channel's dead cast bar gone (FN-24c); Wait For Event, Tag and Attribute, Send Event, Grant Tags and Cancel Abilities, the ability system counting the events waits wait for as listened for, `AbilitySpecContainer.Cancel()` (FN-24d); the Demo's five tasks in the framework, with `IForgeMover`, which the lab's units are, and `ConsumeItem` with Item Consumed, which the Demo's units listen to, its six abilities re-authored (FN-24e) (`ForgeCategoryAttribute.cs`, `ForgeTypePicker.cs`, `ForgeSequencePicker.cs`, `WaitTasks.cs`, `EventTasks.cs`, `GameplayTasks.cs`) | Feature | verified |
 | FN-26 | An effect's side change is an effect component (the user, after the notes). Done: Side Change, one at most, holds what the field held, Source, Sides (shown under Named, by `[ShownWhen]`), Priority (Scalable, read as it lands) and Interrupts, the component on the effect in place of the switch; the shelf lends it as it did, reading the component; `GameplayEffect.SideChange` reads it; the `SideChange` class and its drawer go. No asset changed sides, so none is re-authored, and the other assets' empty Side Change blocks go as each is next saved (`EffectComponents.cs`, `EffectSystemComponent.cs`, `SideChanges.cs`, `EffectEditor.cs`) | Refactor | verified |
 | FN-25 | An effect's texture from its origin, the ability, item or entity that applied it: Inherit From Origin and a tag, Primary to start, its own where the origin has none (Decision 83: one option per effect). Done: an effect's Definition has Inherit From Origin and Origin Texture, shown under it alone; `GameplayEffectSpec.GetIcon()` gives the origin's texture under exactly that tag, its own where the origin has none, through `IHasTextures`, which abilities, items, effects, entity identities and both hubs give; the Demo's bar and the Additional Content's status bar show a spec's icon (`GameplayEffect.cs`, `GameplayEffectSpec.cs`, `IHasReadableDefinition.cs`, `ForgeHelper.cs`, `EffectEditor.cs`) | Feature | verified |
+| FN-27 | The user's edit of 2026-11-15 (f71e1af): the Lifesteal worker heals its Heals attribute for its Receives attribute's losses, the Health role's where it names none, and its Share is its own attribute, the Lifesteal role gone. Found on the way: the worker joined its cache under Heals, so with a Receives other than Heals it heard no hit; Proving Grounds' tests and the docs still named the Lifesteal role, the Passive (Triggered) preset and the tags' old names, and the Demo's five projectiles stored Projectile Speed by its old name, which no role matched. Done: the worker joins its cache under Receives, the attribute whose losses count; the Demo's projectiles store Projectile Speed by its name, and a test scans every sample's assets for a core tag stored by an old one; the tests name the worker's Share, the Passive preset's test reads it as it is, the core tags' pinned names follow; the docs name the Share | Bug | verified |
 
 ### The tag review (TAG)
 
@@ -1470,6 +1478,26 @@ The fixes the tag review found (FN-10, `Docs/TAG_REVIEW.md`), as Decision 71 dec
 | TAG-6 | The contexts pruned and renamed: the 18 no field names go, the overlaps merge, the unclear names change, with a pass over the Tag Libraries' declarations (§1). Done: 18 contexts, one per kind of tag, each constant its value without its spaces (Decision 74): eight renamed, seven merged, ten dropped, and Data split into Data Key, Local Data Key, Worker Key and Set By Caller Key, each field that named Data taking its kind, `Tags.cs`'s keys Data Key but `PROJECTILE_SPEED`, a process role. An old name reads as its new one (`ForgeContext.Renamed`, `Current`), in a field's attribute and a library as it's read, and a pass moves each library's as the editor loads; no context of the project's own takes an old name. The registry's guess of an unmarked field's contexts, from its name and its asset's type, goes, so its tags are filed under none, as its pick is (`ForgeContext.cs`, `ForgeAttributes.cs`, `ForgeTagContexts.cs`, `ForgeTagRegistry.cs`, `Tags.cs`, and each field's file) | verified |
 | TAG-7 | Every PlayForge asset type scanned, and the fields the walk skips, through a SerializedObject walk as ForgeLint's (§2.4). Done: the registry reads the asset types by name, the validator's, the Forge Project and the lab's rules among them, and the object a `[SerializeReference]` field holds under an interface or a base not marked serializable, each object once; prefabs it still doesn't read (`ForgeTagRegistry.cs`) | verified |
 | TAG-8 | `Tags.cs` made sound: contexts for the five with none, the unused Data keys pruned or hidden, the docs fixed, long paths refused, and a test that pins the padded names and each tag's context (§3). Done: the five carry `[ForgeTagExposed]` (TAG-5); `Tags.cs` is grouped by kind of tag, the 24 keys no PlayForge code reads kept, as ready-made keys for a project's coded behaviours, in a section of their own (Decision 75); six properties take their texts' names, `BONUS`, `TRANSFORM`, `EVENT_SUBJECT`, `EVENT_IMPACT`, `ALWAYS_ALLOW` and `NEVER_ALLOW`; a unique tag is remembered by its prefix, its text and its length apart, where text and prefix run together made another split of the same letters the same tag and a tag asked for at another length came back at the first's; New Tag refuses a path of 64 characters or more, which would be cut; and a test pins each core tag's name, text and contexts (`Tags.cs`, `Tags.Direct.cs`, `TagRegistry.cs`, `ForgeNewTagWindow.cs`, and each use of the six) | verified |
+
+### The editor pass (EP)
+
+The user's editor pass of 2026-11-15, as they gave it, with Decision 89's answers. Worked in this order: FN-27, their
+commit's follow-up, first; then EP-1 and EP-2, EP-4, EP-7, EP-8, EP-9, EP-5, EP-10 to EP-12, EP-3, and EP-6's answer.
+
+| ID | Note | Kind | Status |
+|---|---|---|---|
+| EP-1 | Selection menus: PlayForge's own dropdown in place of Unity's, for every picker (kinds, tags, assets, sequences): searchable, its items in submenus, no wider or taller than a size the user sets in Preferences, and with a Context section at its bottom that says more of the item under the pointer, as a tag's contexts | UI | open |
+| EP-2 | Categories for every dropdown's options: a new attribute, `[ForgeMenu("Path")]`, files a kind under submenus, a slash nesting them, with a description the menu's Context shows; `ForgeCategory` gives way to it, and every family PlayForge ships is filed: tasks, workers, components, cues, conditions, scalers and the rest | UI | open |
+| EP-3 | Project Settings → PlayForge: a short description of PlayForge and Forge Projects in place of the dense note at its top; more space between its parts; each row's foldout arrows in line with the others'; and the New Assets folders shown within the active project's folder (with EP-10) | UI | open |
+| EP-4 | Drawers out of line with the rows around them: an effect's Tags → Purges, an ability's Activation → Targeting | UI | open |
+| EP-5 | The Forge's summary of an asset with components breaks each down, as an ability's Cast Range; and the breakdowns, `AbilityBreakdown` first, read its components and every other part of the asset that matters | UI | open |
+| EP-6 | Forge save/load: what it is and when to use it | Question | open |
+| EP-7 | The Forge's Declared For shows the contexts a tag's code declares, `[ForgeTagExposed(...)]`, as `IMPACT_DEALT` declares Event: checked in its menu, and locked, as they're written in code | Refactor | open |
+| EP-8 | Quick-create: a field's New asks for the new asset's name first, in The Forge's New dialog | Refactor | open |
+| EP-9 | Asset types with no icon of their own (Crowd Control Rules, Requirement Templates, Value Pipelines and the rest) show PlayForge's icon, an anvil (Decision 89) | Refactor | open |
+| EP-10 | Forge Projects' files: a base folder, `Assets/PlayForge` by default and a project setting (Decision 89); a new project made at once in a folder of its own there, `Assets/PlayForge/<Project>/<Project>.asset`, its assets in `<Project>/<Type>/`; The Forge asks for a first project where there's none; and none ships in the package | Refactor | open |
+| EP-11 | The Bootstrapper, GameRoot and ProcessControl prefabs: none ships; code makes them in `Assets/PlayForge/Bootstrap` as the first project is made, and again where one's gone. Each Forge Project carries its own Game Root entity, `<Project>/GameRoot/GameRoot.asset`, and the Bootstrapper names the project a scene plays, whose Game Root entity and settings the GameRoot takes on (Decision 89) | Refactor | open |
+| EP-12 | The Asset Store export installs the code at `Assets/Plugins/PlayForge`, so a buyer's projects in `Assets/PlayForge` are never in its folder (Decision 89) | Packaging | open |
 
 ## Test project: PlayForge Proving Grounds
 
@@ -1506,6 +1534,15 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-15, **FN-27: the user's Lifesteal edit, followed.** The user's commit of their editor-pass edits (PF f71e1af):
+  Lifesteal heals its Heals attribute for its Receives attribute's losses, by the Share it names, the Lifesteal role
+  gone; the Passive preset activates at start; eleven core tags read with spaces. The worker joins its cache under
+  Receives now, and what named the old role, preset and tag names follows.
+  - Red, on a frozen snapshot: the worker's test, a Mana burn healing Health, healed nothing on either hub; the samples'
+    scan found the Demo's five projectiles storing Projectile Speed by its old name. The Passive preset's test passed.
+  - Gates, on a frozen snapshot of the package with the Demo imported: EditMode 961 of 961; PlayMode 1990 of 1998, 8
+    skipped; golden 25 of 25.
 
 - 2026-11-14, **The release check again, with phase 5 in.** `Tools/export-unitypackage.py --tests --build` on PF 48ba694:
   the export clean, 2.1 MB; a fresh project imports it with no error, warning or missing type; its samples 0 missing

@@ -46,7 +46,8 @@ A hit that would leave its target under a fifth of its Health takes the rest.
 
 While it lasts, its holder heals half of each loss it deals another.
 
-- **Lifesteal** (an attribute), in your Forge Project's **Lifesteal** role, beside Health in its **Health** role.
+- **Lifesteal** (an attribute), the **Share** of the Lifesteal worker in your Forge Project's **Workers**, with Health
+  in its **Health** role.
 - **Vampirism** (an effect): Infinite, +0.5 Lifesteal, which the Lifesteal worker heals by, the one your Forge Project's
   Workers give every entity as a project starts, to its Health role's attribute ([WORKERS.md](WORKERS.md#lifesteal)).
 
