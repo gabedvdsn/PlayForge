@@ -13,7 +13,7 @@ namespace FarEmerald.PlayForge
             {
                 new LambdaAction(_ =>
                 {
-                    Debug.Log($"Threshold is met: {ctx.Carrier}");
+                    ForgeLog.Info(ForgeLog.ESystem.Workers, $"Threshold is met: {ctx.Carrier}");
                 })
             };
         }

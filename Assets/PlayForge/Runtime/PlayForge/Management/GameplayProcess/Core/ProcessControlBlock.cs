@@ -194,7 +194,7 @@ namespace FarEmerald.PlayForge
         {
             if (state == State) return;
 
-            if (World.OutputLogs && World.DetailedLogs) Debug.Log($"\t[ {Wrapper.ProcessName} ] Queue {state}");
+            if (World.OutputLogs && World.DetailedLogs) ForgeLog.Info(ForgeLog.ESystem.Processes, $"\t[ {Wrapper.ProcessName} ] Queue {state}");
 
             switch (state)
             {
@@ -238,13 +238,13 @@ namespace FarEmerald.PlayForge
             }
             catch (Exception ex)
             {
-                Debug.LogException(ex);
+                ForgeLog.Exception(ForgeLog.ESystem.Processes, ex);
             }
         }
 
         private void SetQueuedState()
         {
-            if (World.OutputLogs && World.DetailedLogs) Debug.Log($"\t\t[{Wrapper.ProcessName}] Setting queued state: {State} -> {QueuedState}");
+            if (World.OutputLogs && World.DetailedLogs) ForgeLog.Info(ForgeLog.ESystem.Processes, $"\t\t[{Wrapper.ProcessName}] Setting queued state: {State} -> {QueuedState}");
 
             State = QueuedState;
 
@@ -255,7 +255,7 @@ namespace FarEmerald.PlayForge
         {
             if (state == State) return;
 
-            if (World.OutputLogs && World.DetailedLogs) Debug.Log($"\t[ {Wrapper.ProcessName} ] Force {state}");
+            if (World.OutputLogs && World.DetailedLogs) ForgeLog.Info(ForgeLog.ESystem.Processes, $"\t[ {Wrapper.ProcessName} ] Force {state}");
 
             if (State == EProcessState.Running && state != EProcessState.Running)
             {
@@ -391,7 +391,7 @@ namespace FarEmerald.PlayForge
             }
             catch (Exception ex)
             {
-                Debug.LogException(ex);
+                ForgeLog.Exception(ForgeLog.ESystem.Processes, ex);
             }
 
             try
@@ -466,7 +466,7 @@ namespace FarEmerald.PlayForge
             }
             catch (Exception ex)
             {
-                Debug.LogException(ex);
+                ForgeLog.Exception(ForgeLog.ESystem.Processes, ex);
             }
 
             if (timed)
@@ -509,7 +509,7 @@ namespace FarEmerald.PlayForge
             }
             catch (Exception ex)
             {
-                Debug.LogException(ex);
+                ForgeLog.Exception(ForgeLog.ESystem.Processes, ex);
                 return false;
             }
         }
@@ -522,7 +522,7 @@ namespace FarEmerald.PlayForge
             }
             catch (Exception ex)
             {
-                Debug.LogException(ex);
+                ForgeLog.Exception(ForgeLog.ESystem.Processes, ex);
                 return false;
             }
         }
@@ -553,7 +553,7 @@ namespace FarEmerald.PlayForge
             {
                 // A run that throws is over like any other, so the state queued for its end still applies.
                 // Skipping it left the process Running for good, with anything waiting on it hanging
-                Debug.LogException(ex);
+                ForgeLog.Exception(ForgeLog.ESystem.Processes, ex);
             }
 
             bool replaced = _cts != cts;

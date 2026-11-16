@@ -314,7 +314,7 @@ namespace FarEmerald.PlayForge
                     }
                     catch (Exception handlerEx)
                     {
-                        Debug.LogError($"[TaskSequence] Exception in OnException handler: {handlerEx}");
+                        ForgeLog.Error(ForgeLog.ESystem.Sequences, $"[TaskSequence] Exception in OnException handler: {handlerEx}");
                     }
                     
                     if (suppressed)
@@ -329,7 +329,7 @@ namespace FarEmerald.PlayForge
                         if (Definition.Metadata?.EnableErrorLogging ?? true)
                         {
                             var path = _failurePath ?? Data.Path;
-                            Debug.LogError($"[TaskSequence] {Definition.Metadata?.Name ?? "Unnamed"} {(!string.IsNullOrEmpty(path) ? $"({path})" : "")} failed: {FailureException}");
+                            ForgeLog.Error(ForgeLog.ESystem.Sequences, $"[TaskSequence] {Definition.Metadata?.Name ?? "Unnamed"} {(!string.IsNullOrEmpty(path) ? $"({path})" : "")} failed: {FailureException}");
                         }
                     }
 
@@ -359,7 +359,7 @@ namespace FarEmerald.PlayForge
                 }
                 catch (Exception ex)
                 {
-                    Debug.LogError($"[TaskSequence] Exception in OnComplete handler: {ex}");
+                    ForgeLog.Error(ForgeLog.ESystem.Sequences, $"[TaskSequence] Exception in OnComplete handler: {ex}");
                 }
                 
                 // Check repeat condition - loop continues if repeat is enabled and successful
@@ -377,7 +377,7 @@ namespace FarEmerald.PlayForge
                     }
                     catch (Exception ex)
                     {
-                        Debug.LogError($"[TaskSequence] Exception in OnTerminate handler: {ex}");
+                        ForgeLog.Error(ForgeLog.ESystem.Sequences, $"[TaskSequence] Exception in OnTerminate handler: {ex}");
                     }
                     
                     return;
@@ -587,7 +587,7 @@ namespace FarEmerald.PlayForge
                     }
                     catch (Exception handlerEx)
                     {
-                        Debug.LogError($"[TaskSequence] Exception in stage OnException handler: {handlerEx}");
+                        ForgeLog.Error(ForgeLog.ESystem.Sequences, $"[TaskSequence] Exception in stage OnException handler: {handlerEx}");
                     }
 
                     if (suppressed)
@@ -598,7 +598,7 @@ namespace FarEmerald.PlayForge
                     else if (stage.Metadata?.EnableErrorLogging ?? true)
                     {
                         // Stage handler chose not to suppress - log at stage level
-                        Debug.LogError($"[TaskSequence] Stage {stageId} ({stage.Metadata?.Name ?? "unnamed"}) error: {ex}");
+                        ForgeLog.Error(ForgeLog.ESystem.Sequences, $"[TaskSequence] Stage {stageId} ({stage.Metadata?.Name ?? "unnamed"}) error: {ex}");
                     }
                 }
                 // If no stage handler, let exception propagate silently to sequence level
@@ -619,7 +619,7 @@ namespace FarEmerald.PlayForge
                 }
                 catch (Exception ex)
                 {
-                    Debug.LogError($"[TaskSequence] Exception in stage OnTerminate handler: {ex}");
+                    ForgeLog.Error(ForgeLog.ESystem.Sequences, $"[TaskSequence] Exception in stage OnTerminate handler: {ex}");
                 }
 
                 // Pop stage from active stack (also decrements critical locks if applicable)
@@ -647,32 +647,17 @@ namespace FarEmerald.PlayForge
         {
             var token = stageSource.Token;
 
-            // If stage has Repeat flag, we loop here
-            if (stage.Repeat)
+            // If stage has Repeat flag, we loop here. A stage that repeats by its policy repeats there, its count and its
+            // OnRepeat with it, so the two never both count one run
+            if (stage.Repeat && stage.Policy is not RepeatUntilSkippedPolicy)
             {
                 while (!token.IsCancellationRequested && !IsRepeatBroken(stage))
                 {
                     int startFrame = ForgeTime.FrameCount;
 
                     await ExecuteStageInternal(stage, Data, token, stageSource);
-                    
-                    if (token.IsCancellationRequested || IsRepeatBroken(stage))
-                        break;
-                    
-                    // Invoke repeat iteration callback
-                    try
-                    {
-                        var ctx = new SequenceEventContext(Data, this, stage);
-                        stage.OnRepeat?.Invoke(ctx);
-                    }
-                    catch (Exception ex)
-                    {
-                        Debug.LogError($"[TaskSequence] Exception in OnRepeatIteration handler: {ex}");
-                    }
-                    
-                    _repeatCounts[stage] = GetRepeatCount(stage) + 1;
 
-                    if (token.IsCancellationRequested || IsRepeatBroken(stage))
+                    if (token.IsCancellationRequested || !RepeatsAgain(stage))
                         break;
 
                     await RestartStage(stage, startFrame, token);
@@ -683,6 +668,33 @@ namespace FarEmerald.PlayForge
                 // Normal single execution (policy may handle its own repeat like RepeatUntilSkippedPolicy)
                 await ExecuteStageInternal(stage, Data, token, stageSource);
             }
+        }
+
+        /// <summary>
+        /// Ends a run of a repeating stage, and says whether it runs again. A stage told how many times to run ends after
+        /// its last, with no OnRepeat, as it doesn't repeat; otherwise its OnRepeat hears the repeat, the run is counted,
+        /// and a break, before or in the handler, ends it.
+        /// </summary>
+        internal bool RepeatsAgain(SequenceStage stage)
+        {
+            if (IsRepeatBroken(stage)) return false;
+            if (stage.RepeatCount > 0 && GetRepeatCount(stage) + 1 >= stage.RepeatCount)
+            {
+                _repeatCounts[stage] = GetRepeatCount(stage) + 1;
+                return false;
+            }
+
+            try
+            {
+                stage.OnRepeat?.Invoke(new SequenceEventContext(Data, this, stage));
+            }
+            catch (Exception ex)
+            {
+                ForgeLog.Error(ForgeLog.ESystem.Sequences, $"[TaskSequence] Exception in OnRepeatIteration handler: {ex}");
+            }
+
+            _repeatCounts[stage] = GetRepeatCount(stage) + 1;
+            return !IsRepeatBroken(stage);
         }
         
         /// <summary>
@@ -868,7 +880,7 @@ namespace FarEmerald.PlayForge
             }
             catch (Exception ex)
             {
-                Debug.LogError($"[TaskSequence] Exception in OnCriticalSectionExited handler: {ex}");
+                ForgeLog.Error(ForgeLog.ESystem.Sequences, $"[TaskSequence] Exception in OnCriticalSectionExited handler: {ex}");
             }
         }
 
@@ -958,7 +970,7 @@ namespace FarEmerald.PlayForge
                 }
                 catch (Exception ex)
                 {
-                    Debug.LogError($"[TaskSequence] Exception in task Clean: {ex}");
+                    ForgeLog.Error(ForgeLog.ESystem.Sequences, $"[TaskSequence] Exception in task Clean: {ex}");
                 }
             }
             
@@ -996,7 +1008,7 @@ namespace FarEmerald.PlayForge
                     }
                     catch (Exception ex)
                     {
-                        Debug.LogError($"[TaskSequence] Exception in cleanup task Clean: {ex}");
+                        ForgeLog.Error(ForgeLog.ESystem.Sequences, $"[TaskSequence] Exception in cleanup task Clean: {ex}");
                     }
                 }
                 _activeTasks.Clear();
@@ -1042,7 +1054,7 @@ namespace FarEmerald.PlayForge
                         }
                         catch (Exception ex)
                         {
-                            Debug.LogError($"[TaskSequence] Exception in OnMaxDuration handler: {ex}");
+                            ForgeLog.Error(ForgeLog.ESystem.Sequences, $"[TaskSequence] Exception in OnMaxDuration handler: {ex}");
                         }
                         
                         LogInjection(Definition.MaxDurationInjection, "Sequence MaxDuration");
@@ -1075,7 +1087,7 @@ namespace FarEmerald.PlayForge
                         }
                         catch (Exception ex)
                         {
-                            Debug.LogError($"[TaskSequence] Exception in OnTimeout handler: {ex}");
+                            ForgeLog.Error(ForgeLog.ESystem.Sequences, $"[TaskSequence] Exception in OnTimeout handler: {ex}");
                         }
                         
                         LogInjection(timeout.Injection, "Sequence Timeout");
@@ -1103,7 +1115,7 @@ namespace FarEmerald.PlayForge
                     }
                     catch (Exception ex)
                     {
-                        Debug.LogError($"[TaskSequence] Exception in stage OnMaxDuration handler: {ex}");
+                        ForgeLog.Error(ForgeLog.ESystem.Sequences, $"[TaskSequence] Exception in stage OnMaxDuration handler: {ex}");
                     }
                     
                     LogInjection(stage.MaxDurationInjection, $"Stage {stageIndex} MaxDuration", stage);
@@ -1129,7 +1141,7 @@ namespace FarEmerald.PlayForge
                     }
                     catch (Exception ex)
                     {
-                        Debug.LogError($"[TaskSequence] Exception in OnTimeout handler: {ex}");
+                        ForgeLog.Error(ForgeLog.ESystem.Sequences, $"[TaskSequence] Exception in OnTimeout handler: {ex}");
                     }
                     
                     LogInjection(timeout.Injection, $"Stage {stageIndex} Timeout", stage);
@@ -1321,7 +1333,7 @@ namespace FarEmerald.PlayForge
             {
                 var stageName = stage?.Metadata?.Name ?? CurrentStage?.Metadata?.Name ?? "unknown";
                 var criticalTag = IsCriticalSection ? " [CRITICAL]" : "";
-                Debug.Log($"[TaskSequence] Injection applied: {injection.GetType().Name} (Source: {source}, Stage: {stageName}{criticalTag})");
+                ForgeLog.Info(ForgeLog.ESystem.Sequences, $"[TaskSequence] Injection applied: {injection.GetType().Name} (Source: {source}, Stage: {stageName}{criticalTag})");
             }
         }
         

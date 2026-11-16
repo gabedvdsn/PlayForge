@@ -422,8 +422,8 @@ namespace FarEmerald.PlayForge
                 // Wait for all tasks to complete using safe pattern
                 await WaitAllTasksSafe(taskUnits);
                 
-                // Check if we should break
-                if (token.IsCancellationRequested || runtime.IsRepeatBroken(stage))
+                // Whether it runs again: not once it's broken or has run its count; its OnRepeat hears it if it does
+                if (token.IsCancellationRequested || !runtime.RepeatsAgain(stage))
                     break;
                 
                 // Optional delay between repetitions

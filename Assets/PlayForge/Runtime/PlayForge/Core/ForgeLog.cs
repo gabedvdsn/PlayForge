@@ -5,18 +5,17 @@ using Object = UnityEngine.Object;
 namespace FarEmerald.PlayForge
 {
     /// <summary>
-    /// Level-gated logging for PlayForge runtime diagnostics. Framework code routes
-    /// informational output through here so users control verbosity in one place —
-    /// in-editor via The Forge → Settings → Logging (persisted and re-applied on domain
-    /// reload), or from game code by setting <see cref="MinimumLevel"/> directly.
+    /// Level-gated logging for PlayForge: all the runtime says goes through here, and this file alone writes to Unity's
+    /// console, so a project sets how much it hears in one place: Preferences → PlayForge → Logging in the editor, kept
+    /// and put back on a domain reload, or <see cref="MinimumLevel"/> from code.
     ///
-    /// <para>Each message is of a system, effects, abilities, workers, numbers, processes and the rest, and a system can
-    /// take a level of its own, <see cref="SetLevel"/>, as the Creator Lab's log does; <see cref="Logged"/> hears each
-    /// message let through, with the entity it's about where it names one.</para>
+    /// <para>Each message is of a system, effects, abilities, workers, numbers, processes, sequences and the rest, and a
+    /// system can take a level of its own, <see cref="SetLevel"/>, as the Creator Lab's log does; <see cref="Logged"/>
+    /// hears each message let through, with the entity it's about where it names one.</para>
     ///
-    /// <para>Deliberately NOT used for: authored debug tools the user invokes on purpose
-    /// (TagCache.LogWeights, ThresholdDebuggerEffectWorker, LogAction), ProcessControl's
-    /// own inspector-gated logs, or per-sequence EnableInjectionLogging output.</para>
+    /// <para>What's said only when asked, a debug tool's output (TagCache.LogWeights, the Threshold Debugger worker,
+    /// LogAction), ProcessControl's logs while its inspector's toggles are on, and a sequence's injection or chain
+    /// logging, is information: the toggle decides whether it's made, and the level whether it's shown.</para>
     /// </summary>
     public static class ForgeLog
     {
@@ -47,6 +46,7 @@ namespace FarEmerald.PlayForge
             Saves,
             Input,
             Lab,
+            Sequences,
         }
 
         /// <summary>Messages below this level are dropped, of a system with no level of its own. Default: Info.</summary>
@@ -100,6 +100,18 @@ namespace FarEmerald.PlayForge
         /// <inheritdoc cref="Verbose(ESystem, string, Object, object)"/>
         public static void Error(ESystem system, string message, Object context = null, object subject = null) =>
             Write(system, ELevel.Error, message, context, subject);
+
+        /// <summary>
+        /// An exception of a system, as an error, where an error is let through: the console shows it as Unity's own
+        /// LogException does, with its stack, and <see cref="Logged"/> hears its type and message.
+        /// </summary>
+        public static void Exception(ESystem system, System.Exception exception, Object context = null, object subject = null)
+        {
+            if (exception == null || !Allows(system, ELevel.Error)) return;
+            Debug.LogException(exception, context);
+            Logged?.Invoke(new ForgeLogEntry(ELevel.Error, system, $"{exception.GetType().Name}: {exception.Message}", context,
+                subject, ForgeTime.Time, ForgeTime.FrameCount));
+        }
 
         private static void Write(ESystem system, ELevel level, string message, Object context, object subject)
         {

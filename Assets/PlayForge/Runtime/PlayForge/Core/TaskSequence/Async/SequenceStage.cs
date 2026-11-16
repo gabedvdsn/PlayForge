@@ -86,7 +86,13 @@ namespace FarEmerald.PlayForge
         /// Works similar to sequence-level repeat but for a single stage.
         /// </summary>
         public bool Repeat { get; set; }
-        
+
+        /// <summary>
+        /// How many times a repeating stage runs in all, after which its sequence moves on; 0 repeats it until it's broken,
+        /// skipped or interrupted. It counts for a stage that repeats by its policy too.
+        /// </summary>
+        public int RepeatCount { get; set; }
+
         // ═══════════════════════════════════════════════════════════════════════════
         // STAGE-LOCAL INJECTION SETTINGS
         // ═══════════════════════════════════════════════════════════════════════════
@@ -512,7 +518,7 @@ namespace FarEmerald.PlayForge
             if (stage.OnTimeout != null || stage.OnMaxDuration != null) WarnLeftOut(owner, "its timeout handlers");
             if (stage.Tasks.Exists(task => task is DelegateSequenceTask))
             {
-                ForgeLog.Warning(ForgeLog.ESystem.Abilities, $"{owner}: its async-only tasks do nothing in a synchronous sequence, and finish at once.");
+                ForgeLog.Warning(ForgeLog.ESystem.Sequences, $"{owner}: its async-only tasks do nothing in a synchronous sequence, and finish at once.");
             }
 
             var policy = ESyncStagePolicy.WhenAll;
@@ -533,7 +539,7 @@ namespace FarEmerald.PlayForge
                 case WhenAllStagePolicy:
                     break;
                 default:
-                    ForgeLog.Warning(ForgeLog.ESystem.Abilities, $"{owner}: a synchronous sequence can't run its {stage.Policy.GetType().Name}, so it waits for all its tasks.");
+                    ForgeLog.Warning(ForgeLog.ESystem.Sequences, $"{owner}: a synchronous sequence can't run its {stage.Policy.GetType().Name}, so it waits for all its tasks.");
                     break;
             }
 
@@ -557,6 +563,7 @@ namespace FarEmerald.PlayForge
                 (stage.Metadata?.IsCritical ?? false) || wholeSequenceIsCritical)
             {
                 RequiredCount = requiredCount,
+                RepeatCount = stage.RepeatCount,
                 OnInit = stage.OnInit,
                 OnRepeat = stage.OnRepeat,
                 OnTerminate = stage.OnTerminate
@@ -565,12 +572,12 @@ namespace FarEmerald.PlayForge
 
         private static void WarnLeftOut(string owner, string feature)
         {
-            ForgeLog.Warning(ForgeLog.ESystem.Abilities, $"{owner}: left out {feature}, which a synchronous sequence can't run.");
+            ForgeLog.Warning(ForgeLog.ESystem.Sequences, $"{owner}: left out {feature}, which a synchronous sequence can't run.");
         }
 
         private static void WarnTimer(string owner, ISequenceInjection injection)
         {
-            ForgeLog.Warning(ForgeLog.ESystem.Abilities, $"{owner}: a timer that applies {injection?.GetType().Name ?? "nothing"} just ends its stage in a synchronous sequence.");
+            ForgeLog.Warning(ForgeLog.ESystem.Sequences, $"{owner}: a timer that applies {injection?.GetType().Name ?? "nothing"} just ends its stage in a synchronous sequence.");
         }
 
         private static bool StageHasConditionsRecursive(SequenceStage stage)

@@ -193,7 +193,7 @@ namespace FarEmerald.PlayForge
                     stage.WhenAll();
                     if (abilityPolicy != null)
                     {
-                        Debug.LogWarning(
+                        ForgeLog.Warning(ForgeLog.ESystem.Abilities,
                             $"[AbilitySequenceCompiler] Unknown stage policy type '{abilityPolicy.GetType().Name}', " +
                             "defaulting to WhenAll.");
                     }

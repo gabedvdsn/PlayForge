@@ -112,7 +112,7 @@ namespace FarEmerald.PlayForge
                     }
                     catch (Exception e)
                     {
-                        Debug.LogWarning($"[TagHierarchy] Failed to register tag from Tags.{prop.Name}: {e.Message}");
+                        ForgeLog.Warning(ForgeLog.ESystem.Tags, $"[TagHierarchy] Failed to register tag from Tags.{prop.Name}: {e.Message}");
                     }
                 }
             }

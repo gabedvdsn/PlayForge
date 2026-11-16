@@ -10,6 +10,18 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## Toward 1.0.0, since 0.1.0
 
 ### Added
+- Task sequences wait on the player (EP-28): `WaitForKey`, `WaitForAnyKey`, which returns the key, and `WaitForPointer`,
+  in both libraries, read through `ForgeInput`, a press while the sequence is paused not heard; and the async library's
+  `WaitUntil` and `WaitWhile`, which hold while it's paused.
+- The synced task library has the async one's tasks (EP-28): `MoveAlongPath`, `MoveAlongPathToTarget`, `LookAt` a
+  transform, `SlideElementTo`, `FadeElementTo`, `ColorElementTo`, `PunchScaleElement`, `TypeText`, `TypeTextSkippable`,
+  `WidthTo`, `HeightTo` and `Yield`; only `ArcForce`, which physics flies, is the async library's alone.
+- `WithRepeat(int times)` on a stage (EP-28): it runs that many times in all, then the sequence moves on.
+- `IForgeInput.KeyHeld` (EP-28), whether a key is down now, with a default of false, so an input of your own still
+  compiles; and `ForgeRandom.Range`, a float's or an int's, as Unity's `Random.Range`, drawn from ForgeRandom's source.
+- `ForgeLog.Exception` and a log system for the sequences, `ForgeLog.ESystem.Sequences` (EP-27).
+- PROCESSES.md and TASK_SEQUENCES.md in the docs (EP-28): processes, their lifecycles, pausing and groups; and task
+  sequences, every part of them.
 - A Value Pipeline's **Try** section (EP-23): a value put through its stages at each level, against a stand-in caster,
   target and caller as a Scaler asset's Try reads against, with **Chances Come Up** settling each roll, an **Out** row
   for each level and the steps behind the selected one. `ValuePipelineTry` does the same in code, and
@@ -527,6 +539,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   page, through one table of links in the editor.
 
 ### Changed
+- All the runtime says goes through `ForgeLog` (EP-27), so its level and `ForgeLog.Logged` reach it: ProcessControl's
+  logs, a sequence's and a chain's, the action queue's and the tags' among them, each "[PlayForge]" in the console. An
+  exception keeps its stack; a message made only when asked, as a toggle's or a debug tool's, is Info.
 - The package's comments say what its code does and nothing of how it was made (EP-26): no tracker ID, decision or
   interview question, as "(TW-30)", no doc of the repository's own, as `Docs/EDITOR_STYLE.md`, and no mockup or board
   of the design.
@@ -951,6 +966,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   Asking whether its sequence was paused took 24 bytes a frame.
 
 ### Fixed
+- A stage repeated by its policy, as `WithRepeatAndDelay` sets it, raises its `OnRepeat` and counts its runs, which
+  `GetRepeatCount` reads (EP-28).
+- The task library's garbled characters, as "â€”" for "—" in its comments, read right (EP-28).
 - The Additional Content's Game Root entity had the Demo's GUID, so where both samples were imported Unity gave one a
   new GUID and the Additional Content's project named neither (EP-22); it has its own.
 - An Absorb stage soaks against a side whose entity isn't an ability system, as a try's stand-in, and says what it
@@ -1226,6 +1244,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   or turning `Enabled` off. Once the first had ended, it threw, and the rest ran on.
 
 ### Removed
+- The task sequence framework's README in the runtime's folder (EP-28): it's PROCESSES.md and TASK_SEQUENCES.md.
 - Types nothing used (EP-25): `ManagementInitDeferment`, `ValidationRuleset`, `EntitySpec`, `EffectContainerFactory`
   and `EAttributeModificationMethod`, and two files of commented-out code.
 - The samples' tests (EP-24): the Demo and Additional Content ship no tests. PlayForge's testing is its golden tests and

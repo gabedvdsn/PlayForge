@@ -235,7 +235,7 @@ namespace FarEmerald.PlayForge
                 }
                 catch (System.Exception ex)
                 {
-                    Debug.LogError($"[TaskSequenceProcess] Exception in sync OnTerminate handler: {ex}");
+                    ForgeLog.Error(ForgeLog.ESystem.Sequences, $"[TaskSequenceProcess] Exception in sync OnTerminate handler: {ex}");
                 }
             }
 

@@ -1210,7 +1210,7 @@ namespace FarEmerald.PlayForge
                 }
                 catch (Exception exception)
                 {
-                    Debug.LogException(exception);
+                    ForgeLog.Exception(ForgeLog.ESystem.Effects, exception);
                 }
             }
         }

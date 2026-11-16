@@ -210,11 +210,12 @@ namespace FarEmerald.PlayForge
 
             if (OutputLogs)
             {
-                Debug.Log($"[ProcessControl] Found {processes.Length} processes in scene");
+                var found = new System.Text.StringBuilder($"[ProcessControl] Found {processes.Length} processes in scene");
                 if (DetailedLogs)
                 {
-                    for (int i = 0; i < processes.Length; i++) Debug.Log($"\t\t[{i+1}] {processes[i]}");
+                    for (int i = 0; i < processes.Length; i++) found.Append($"\n\t[{i + 1}] {processes[i]}");
                 }
+                ForgeLog.Info(ForgeLog.ESystem.Processes, found.ToString(), this);
             }
 
             // Sort by effective priority first, then by hierarchy depth (parents before children)
@@ -238,7 +239,7 @@ namespace FarEmerald.PlayForge
                 Register(process).With(ProcessDataPacket.Default()).In(this).Run();
             }
     
-            if (OutputLogs) Debug.Log($"[ProcessControl] {World.HierarchyDebugInfo()}");
+            if (OutputLogs) ForgeLog.Info(ForgeLog.ESystem.Processes, $"[ProcessControl] {World.HierarchyDebugInfo()}", this);
         }
 
         private static int GetEffectivePriority(AbstractMonoProcess process)

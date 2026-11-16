@@ -961,7 +961,20 @@ namespace FarEmerald.PlayForge
             _stage.Repeat = enabled;
             return this;
         }
-        
+
+        /// <summary>
+        /// Runs this stage the given number of times in all, then moves on: 3 runs it three times, repeating it twice. A
+        /// break, a skip or an interrupt still ends it sooner, and its OnRepeat hears each repeat, not the last run. With
+        /// <see cref="WithRepeatAndDelay"/>, the count holds as the policy repeats it.
+        /// </summary>
+        public StageBuilder WithRepeat(int times)
+        {
+            if (times < 1) throw new ArgumentOutOfRangeException(nameof(times), times, "A stage runs at least once.");
+            _stage.Repeat = times > 1;
+            _stage.RepeatCount = times;
+            return this;
+        }
+
         /// <summary>
         /// Sets the policy to RepeatUntilSkippedPolicy.
         /// Stage will repeat infinitely until skipped, interrupted, or broken.

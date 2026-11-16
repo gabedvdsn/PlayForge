@@ -9,6 +9,7 @@ namespace FarEmerald.PlayForge
     /// What click targeting reads of the player's input: whether a pointer's button went down this frame, and the ray the
     /// pointer aims along. The defaults read a mouse, a pen or a touch through a camera; a game with
     /// a gamepad's reticle, a controller's ray or input of its own puts its own in with <see cref="ForgeInput.Use"/>.
+    /// The Creator Lab and the task sequence libraries' waits read the keys and the pointer through it too.
     /// </summary>
     public interface IForgeInput
     {
@@ -21,8 +22,8 @@ namespace FarEmerald.PlayForge
         /// <summary>The ray the pointer aims along, or false with nothing to aim through, as with no camera.</summary>
         bool TryGetPointerRay(out Ray ray);
 
-        // What the Creator Lab reads besides. Each has a default, so an input written for click targeting
-        // alone still compiles, and reads as nothing held, nowhere, unscrolled and no key
+        // What the Creator Lab and a sequence's waits read besides. Each has a default, so an input written for click
+        // targeting alone still compiles, and reads as nothing held, nowhere, unscrolled and no key
 
         /// <summary>Whether a pointer's button is down now: 0 the primary, 1 the secondary, 2 the middle.</summary>
         bool PointerHeld(int button) => false;
@@ -39,6 +40,9 @@ namespace FarEmerald.PlayForge
 
         /// <summary>Whether a key went down this frame.</summary>
         bool KeyPressed(KeyCode key) => false;
+
+        /// <summary>Whether a key is down now, pressed this frame or held from an earlier one.</summary>
+        bool KeyHeld(KeyCode key) => false;
     }
 
     /// <summary>
@@ -129,6 +133,8 @@ namespace FarEmerald.PlayForge
         public float ScrollDelta => Input.mouseScrollDelta.y;
 
         public bool KeyPressed(KeyCode key) => key != KeyCode.None && Input.GetKeyDown(key);
+
+        public bool KeyHeld(KeyCode key) => key != KeyCode.None && Input.GetKey(key);
     }
 #endif
 
@@ -206,6 +212,13 @@ namespace FarEmerald.PlayForge
             var keys = Keyboard.current;
             var control = keys != null ? KeyOf(key) : Key.None;
             return control != Key.None && keys[control].wasPressedThisFrame;
+        }
+
+        public bool KeyHeld(KeyCode key)
+        {
+            var keys = Keyboard.current;
+            var control = keys != null ? KeyOf(key) : Key.None;
+            return control != Key.None && keys[control].isPressed;
         }
 
         // The Input System's key for the Input Manager's code: letters, digits, F-keys and the common others

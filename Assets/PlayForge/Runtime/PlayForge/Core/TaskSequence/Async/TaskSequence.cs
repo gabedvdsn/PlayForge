@@ -399,7 +399,7 @@ namespace FarEmerald.PlayForge
 
                     if (_enableLogging)
                     {
-                        Debug.Log("[TaskSequenceChain] Repeating chain...");
+                        ForgeLog.Info(ForgeLog.ESystem.Sequences, "[TaskSequenceChain] Repeating chain...");
                     }
 
                     // Every sequence can fail at once, and a round that took no frame would go round for ever
@@ -411,7 +411,7 @@ namespace FarEmerald.PlayForge
             {
                 if (_enableLogging)
                 {
-                    Debug.Log("[TaskSequenceChain] Chain was cancelled");
+                    ForgeLog.Info(ForgeLog.ESystem.Sequences, "[TaskSequenceChain] Chain was cancelled");
                 }
             }
             finally
@@ -453,14 +453,14 @@ namespace FarEmerald.PlayForge
                 {
                     if (_enableLogging)
                     {
-                        Debug.Log($"[TaskSequenceChain] Chain interrupted before sequence {i}");
+                        ForgeLog.Info(ForgeLog.ESystem.Sequences, $"[TaskSequenceChain] Chain interrupted before sequence {i}");
                     }
                     break;
                 }
                 
                 if (_enableLogging)
                 {
-                    Debug.Log($"[TaskSequenceChain] Starting sequence {i}: {_currentSequence.Definition.Metadata?.Name ?? "unnamed"}");
+                    ForgeLog.Info(ForgeLog.ESystem.Sequences, $"[TaskSequenceChain] Starting sequence {i}: {_currentSequence.Definition.Metadata?.Name ?? "unnamed"}");
                 }
                 
                 // Run the sequence with the CHAIN's token
@@ -471,7 +471,7 @@ namespace FarEmerald.PlayForge
                 {
                     if (_enableLogging)
                     {
-                        Debug.Log($"[TaskSequenceChain] Chain was interrupted during sequence {i}");
+                        ForgeLog.Info(ForgeLog.ESystem.Sequences, $"[TaskSequenceChain] Chain was interrupted during sequence {i}");
                     }
                     break;
                 }
@@ -482,7 +482,7 @@ namespace FarEmerald.PlayForge
                 {
                     if (_enableLogging)
                     {
-                        Debug.Log($"[TaskSequenceChain] Sequence {i} was skipped/cancelled, continuing chain");
+                        ForgeLog.Info(ForgeLog.ESystem.Sequences, $"[TaskSequenceChain] Sequence {i} was skipped/cancelled, continuing chain");
                     }
                     continue;
                 }
@@ -495,7 +495,7 @@ namespace FarEmerald.PlayForge
                 
                 if (_enableLogging)
                 {
-                    Debug.Log($"[TaskSequenceChain] Sequence {i} completed successfully");
+                    ForgeLog.Info(ForgeLog.ESystem.Sequences, $"[TaskSequenceChain] Sequence {i} completed successfully");
                 }
             }
 
@@ -553,7 +553,7 @@ namespace FarEmerald.PlayForge
                     
                     if (_enableLogging)
                     {
-                        Debug.Log($"[TaskSequenceChain] Condition triggered: {condition.Injection.GetType().Name}");
+                        ForgeLog.Info(ForgeLog.ESystem.Sequences, $"[TaskSequenceChain] Condition triggered: {condition.Injection.GetType().Name}");
                     }
                     
                     // Special handling for chain interrupt
@@ -614,7 +614,7 @@ namespace FarEmerald.PlayForge
             
             if (_enableLogging)
             {
-                Debug.Log("[TaskSequenceChain] Chain interrupted!");
+                ForgeLog.Info(ForgeLog.ESystem.Sequences, "[TaskSequenceChain] Chain interrupted!");
             }
             
             return true;

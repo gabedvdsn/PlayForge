@@ -796,6 +796,324 @@ namespace FarEmerald.PlayForge
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
+        // PATHS
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        /// <summary>
+        /// Moves a transform along a path of waypoints, one after another, in the time given for all of them, each
+        /// waypoint's share alike, as the async library's does.
+        /// </summary>
+        public static ISequenceTask MoveAlongPath(Transform target, Vector3[] waypoints, float totalDuration,
+            AnimationCurve curve = null)
+        {
+            int index = 0;
+            Vector3 start = default;
+            float elapsed = 0f;
+            float segment = 0f;
+            return new DelegateSyncTask(
+                step: (_, dt) =>
+                {
+                    if (waypoints == null) return true;
+                    elapsed += dt;
+                    while (index < waypoints.Length)
+                    {
+                        float t = segment > 0f ? Mathf.Clamp01(elapsed / segment) : 1f;
+                        float p = curve?.Evaluate(t) ?? t;
+                        target.position = Vector3.LerpUnclamped(start, waypoints[index], p);
+                        if (t < 1f) return false;
+                        // Its waypoint reached, on to the next with what's left of the step
+                        target.position = waypoints[index];
+                        start = waypoints[index];
+                        elapsed = segment > 0f ? elapsed - segment : 0f;
+                        index++;
+                    }
+                    return true;
+                },
+                prepare: _ =>
+                {
+                    index = 0;
+                    elapsed = 0f;
+                    start = target.position;
+                    segment = waypoints is { Length: > 0 } ? totalDuration / waypoints.Length : 0f;
+                }
+            );
+        }
+
+        /// <summary>
+        /// Moves along a path of waypoints at a speed, then follows a transform to the end, re-sampled each step: the last
+        /// leg tracks a target that moves, as the async library's does.
+        /// </summary>
+        public static ISequenceTask MoveAlongPathToTarget(Transform mover, Vector3[] waypoints, Transform finalTarget,
+            float speed, float stoppingDistance = 0.1f)
+        {
+            int index = 0;
+            return new DelegateSyncTask(
+                step: (_, dt) =>
+                {
+                    if (!mover) return true;
+                    float travel = speed * dt;
+                    if (waypoints != null && index < waypoints.Length)
+                    {
+                        mover.position = Vector3.MoveTowards(mover.position, waypoints[index], travel);
+                        if (Vector3.Distance(mover.position, waypoints[index]) > stoppingDistance) return false;
+                        // A waypoint reached is stood on, and the next leg starts the next step
+                        mover.position = waypoints[index];
+                        index++;
+                        return false;
+                    }
+                    if (!finalTarget) return true;
+                    mover.position = Vector3.MoveTowards(mover.position, finalTarget.position, travel);
+                    return Vector3.Distance(mover.position, finalTarget.position) <= stoppingDistance;
+                },
+                prepare: _ => { index = 0; }
+            );
+        }
+
+        /// <summary>
+        /// Turns a transform to face another's position, taken as the task starts, over the given duration.
+        /// </summary>
+        public static ISequenceTask LookAt(Transform target, Transform lookTarget, float duration, AnimationCurve curve = null)
+        {
+            Quaternion start = default;
+            Quaternion end = default;
+            float elapsed = 0f;
+            return new DelegateSyncTask(
+                step: (_, dt) =>
+                {
+                    elapsed += dt;
+                    float t = duration > 0f ? Mathf.Clamp01(elapsed / duration) : 1f;
+                    float p = curve?.Evaluate(t) ?? t;
+                    target.rotation = Quaternion.SlerpUnclamped(start, end, p);
+                    if (t >= 1f) { target.rotation = end; return true; }
+                    return false;
+                },
+                prepare: _ =>
+                {
+                    start = target.rotation;
+                    var direction = lookTarget ? lookTarget.position - target.position : Vector3.zero;
+                    end = direction != Vector3.zero ? Quaternion.LookRotation(direction) : start;
+                    elapsed = 0f;
+                }
+            );
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // UI TOOLKIT — FROM WHERE THE ELEMENT IS
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        /// <summary>Slides a VisualElement from its translate as the task starts to the offset given.</summary>
+        public static ISequenceTask SlideElementTo(VisualElement element, Vector2 to, float duration, AnimationCurve curve = null)
+        {
+            Vector2 from = default;
+            float elapsed = 0f;
+            return new DelegateSyncTask(
+                step: (_, dt) =>
+                {
+                    elapsed += dt;
+                    float t = duration > 0f ? Mathf.Clamp01(elapsed / duration) : 1f;
+                    float p = curve?.Evaluate(t) ?? t;
+                    element.style.translate = new Translate(Mathf.LerpUnclamped(from.x, to.x, p), Mathf.LerpUnclamped(from.y, to.y, p));
+                    if (t >= 1f) { element.style.translate = new Translate(to.x, to.y); return true; }
+                    return false;
+                },
+                prepare: _ =>
+                {
+                    var current = element.resolvedStyle.translate;
+                    from = new Vector2(current.x, current.y);
+                    elapsed = 0f;
+                }
+            );
+        }
+
+        /// <summary>Fades a VisualElement from its opacity as the task starts to the one given.</summary>
+        public static ISequenceTask FadeElementTo(VisualElement element, float toAlpha, float duration, AnimationCurve curve = null)
+        {
+            float from = 1f;
+            float elapsed = 0f;
+            return new DelegateSyncTask(
+                step: (_, dt) =>
+                {
+                    elapsed += dt;
+                    float t = duration > 0f ? Mathf.Clamp01(elapsed / duration) : 1f;
+                    float p = curve?.Evaluate(t) ?? t;
+                    element.style.opacity = Mathf.LerpUnclamped(from, toAlpha, p);
+                    if (t >= 1f) { element.style.opacity = toAlpha; return true; }
+                    return false;
+                },
+                prepare: _ => { from = element.resolvedStyle.opacity; elapsed = 0f; }
+            );
+        }
+
+        /// <summary>Tweens a VisualElement's background color from the one it has as the task starts to the one given.</summary>
+        public static ISequenceTask ColorElementTo(VisualElement element, Color to, float duration, AnimationCurve curve = null)
+        {
+            Color from = default;
+            float elapsed = 0f;
+            return new DelegateSyncTask(
+                step: (_, dt) =>
+                {
+                    elapsed += dt;
+                    float t = duration > 0f ? Mathf.Clamp01(elapsed / duration) : 1f;
+                    float p = curve?.Evaluate(t) ?? t;
+                    element.style.backgroundColor = Color.LerpUnclamped(from, to, p);
+                    if (t >= 1f) { element.style.backgroundColor = to; return true; }
+                    return false;
+                },
+                prepare: _ => { from = element.resolvedStyle.backgroundColor; elapsed = 0f; }
+            );
+        }
+
+        /// <summary>Punches a VisualElement's scale: up by the intensity in the first half, and back to 1 in the second.</summary>
+        public static ISequenceTask PunchScaleElement(VisualElement element, float intensity, float duration)
+        {
+            float elapsed = 0f;
+            return new DelegateSyncTask(
+                step: (_, dt) =>
+                {
+                    elapsed += dt;
+                    float t = duration > 0f ? Mathf.Clamp01(elapsed / duration) : 1f;
+                    // Up to the peak at the half, then down: 1 at both ends
+                    float scale = 1f + intensity * (1f - Mathf.Abs(t * 2f - 1f));
+                    element.style.scale = new Scale(Vector3.one * scale);
+                    if (t >= 1f) { element.style.scale = new Scale(Vector3.one); return true; }
+                    return false;
+                },
+                prepare: _ => { elapsed = 0f; }
+            );
+        }
+
+        /// <summary>Tweens a VisualElement's width in pixels, as a progress bar's fill.</summary>
+        public static ISequenceTask WidthTo(VisualElement element, float fromPx, float toPx, float duration, AnimationCurve curve = null)
+        {
+            float elapsed = 0f;
+            return new DelegateSyncTask(
+                step: (_, dt) =>
+                {
+                    elapsed += dt;
+                    float t = duration > 0f ? Mathf.Clamp01(elapsed / duration) : 1f;
+                    float p = curve?.Evaluate(t) ?? t;
+                    element.style.width = Mathf.LerpUnclamped(fromPx, toPx, p);
+                    if (t >= 1f) { element.style.width = toPx; return true; }
+                    return false;
+                },
+                prepare: _ => { element.style.width = fromPx; elapsed = 0f; }
+            );
+        }
+
+        /// <summary>Tweens a VisualElement's height in pixels.</summary>
+        public static ISequenceTask HeightTo(VisualElement element, float fromPx, float toPx, float duration, AnimationCurve curve = null)
+        {
+            float elapsed = 0f;
+            return new DelegateSyncTask(
+                step: (_, dt) =>
+                {
+                    elapsed += dt;
+                    float t = duration > 0f ? Mathf.Clamp01(elapsed / duration) : 1f;
+                    float p = curve?.Evaluate(t) ?? t;
+                    element.style.height = Mathf.LerpUnclamped(fromPx, toPx, p);
+                    if (t >= 1f) { element.style.height = toPx; return true; }
+                    return false;
+                },
+                prepare: _ => { element.style.height = fromPx; elapsed = 0f; }
+            );
+        }
+
+        /// <summary>
+        /// Types text into a Label a character at a time, each after the last's delay, a punctuation mark's the longer by
+        /// its multiplier, as the async library's typewriter does.
+        /// </summary>
+        public static ISequenceTask TypeText(Label label, string text, float charDelay, float punctuationMultiplier = 3f)
+        {
+            int shown = 0;
+            float wait = 0f;
+            return new DelegateSyncTask(
+                step: (_, dt) => TypeStep(label, text, charDelay, punctuationMultiplier, dt, ref shown, ref wait),
+                prepare: _ => { label.text = ""; shown = 0; wait = 0f; }
+            );
+        }
+
+        /// <summary>
+        /// Types text as <see cref="TypeText"/> does, until the skip condition holds, which shows the whole text at once and
+        /// ends it. The condition is first looked at the step after it starts, so the press that began it doesn't skip it.
+        /// </summary>
+        public static ISequenceTask TypeTextSkippable(Label label, string text, float charDelay, Func<bool> skipCondition,
+            float punctuationMultiplier = 3f)
+        {
+            int shown = 0;
+            float wait = 0f;
+            bool started = false;
+            return new DelegateSyncTask(
+                step: (_, dt) =>
+                {
+                    if (!started)
+                    {
+                        started = true;
+                        return false;
+                    }
+                    if (skipCondition())
+                    {
+                        label.text = text;
+                        return true;
+                    }
+                    return TypeStep(label, text, charDelay, punctuationMultiplier, dt, ref shown, ref wait);
+                },
+                prepare: _ => { label.text = ""; shown = 0; wait = 0f; started = false; }
+            );
+        }
+
+        // A typewriter's step: the next character once the last's delay is over; done once the last's is
+        private static bool TypeStep(Label label, string text, float charDelay, float punctuationMultiplier, float dt,
+            ref int shown, ref float wait)
+        {
+            wait -= dt;
+            if (wait > 0f) return false;
+            if (shown >= text.Length) return true;
+            shown++;
+            label.text = text.Substring(0, shown);
+            wait += text[shown - 1] is '.' or '!' or '?' or ',' ? charDelay * punctuationMultiplier : charDelay;
+            return false;
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // WAITING ON THE PLAYER
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        /// <summary>
+        /// Waits for a key to go down, read through ForgeInput, so a game's own input or a test's stands in. A runner
+        /// paused with its process isn't stepped, so a press while it's paused isn't heard.
+        /// </summary>
+        public static ISequenceTask WaitForKey(KeyCode key) =>
+            new DelegateSyncTask(step: (_, _) => ForgeInput.Current.KeyPressed(key));
+
+        /// <summary>
+        /// Waits for any of the keys to go down, read through ForgeInput, and tells the one that did to
+        /// <paramref name="onPressed"/>; the first given, of two pressed in one step.
+        /// </summary>
+        public static ISequenceTask WaitForAnyKey(Action<KeyCode> onPressed, params KeyCode[] keys)
+        {
+            return new DelegateSyncTask(step: (_, _) =>
+            {
+                foreach (var key in keys)
+                {
+                    if (!ForgeInput.Current.KeyPressed(key)) continue;
+                    onPressed?.Invoke(key);
+                    return true;
+                }
+                return false;
+            });
+        }
+
+        /// <summary>
+        /// Waits for a pointer's button to go down, read through ForgeInput: 0 the primary, the left button or a touch, 1
+        /// the secondary, 2 the middle.
+        /// </summary>
+        public static ISequenceTask WaitForPointer(int button) =>
+            new DelegateSyncTask(step: (_, _) => ForgeInput.Current.PointerPressed(button));
+
+        /// <summary>Waits a step: done on its first, as an async task's Yield is a frame.</summary>
+        public static ISequenceTask Yield() => new DelegateSyncTask(step: (_, _) => true);
+
+        // ═══════════════════════════════════════════════════════════════════════════
         // TIMING / UTILITY
         // ═══════════════════════════════════════════════════════════════════════════
 

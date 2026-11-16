@@ -659,7 +659,7 @@ namespace FarEmerald.PlayForge
                 }
                 catch (Exception ex)
                 {
-                    Debug.LogException(ex);
+                    ForgeLog.Exception(ForgeLog.ESystem.Attributes, ex);
                 }
                 finally
                 {

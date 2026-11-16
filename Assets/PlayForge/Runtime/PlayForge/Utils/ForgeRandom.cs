@@ -89,5 +89,20 @@ namespace FarEmerald.PlayForge
         public static float Value => source.Value;
         public static UnityEngine.Vector2 InsideUnitCircle => source.InsideUnitCircle;
         public static UnityEngine.Vector3 InsideUnitSphere => source.InsideUnitSphere;
+
+        /// <summary>A number from <paramref name="min"/> to <paramref name="max"/>, as <c>Random.Range</c>'s for floats.</summary>
+        public static float Range(float min, float max) => min + source.Value * (max - min);
+
+        /// <summary>
+        /// A whole number from <paramref name="min"/> up to, not with, <paramref name="maxExclusive"/>, as
+        /// <c>Random.Range</c>'s for ints; <paramref name="min"/> itself where the range is empty.
+        /// </summary>
+        public static int Range(int min, int maxExclusive)
+        {
+            if (maxExclusive <= min) return min;
+            int value = min + (int)(source.Value * (maxExclusive - min));
+            // A source's Value can be 1 itself, which would reach the end
+            return value < maxExclusive ? value : maxExclusive - 1;
+        }
     }
 }

@@ -90,7 +90,7 @@ packet's source, and anything else to GameRoot. A refused registration says why:
 
 ```csharp
 var result = ProcessControl.Register(projectile).HandledBy(gas).With(data).Run();
-if (!result) Debug.LogWarning($"Not registered: {result.Refusal}");
+if (!result) ForgeLog.Warning($"Not registered: {result.Refusal}");
 ```
 
 A process an ability's **Create Mono Process** task spawns takes the ability as its origin, so the effects it
@@ -102,6 +102,10 @@ the caster's attribute, or the caster's where it has one. The data that spawns i
 its code reads and sets them with `TryGetRole`, `SetRole`, `TryGetAttribute` and `SetAttribute`.
 
 A process that requires control waits after it registers; `relay.Run()` starts it.
+
+[PROCESSES.md](PROCESSES.md) covers processes, their lifecycles, pausing and groups, and
+[TASK_SEQUENCES.md](TASK_SEQUENCES.md) task sequences: their stages, tasks, repeats, injections, chains, synced runners
+and libraries.
 
 ### Time and random numbers
 
@@ -240,12 +244,13 @@ string perLevel = impact.FormatTotal();           // "20/30/40/50"
 
 ## Logging
 
-Framework diagnostics route through `ForgeLog`, controlled in **Preferences → PlayForge →
+All the runtime says goes through `ForgeLog`, controlled in **Preferences → PlayForge →
 Logging** (Verbose / Info / Warning / Error / None). In builds, set
-`ForgeLog.MinimumLevel` from code. `ProcessControl` has its own inspector toggles for
-process lifecycle logs.
+`ForgeLog.MinimumLevel` from code. What's said only when asked, `ProcessControl`'s lifecycle logs while its inspector's
+toggles are on, a sequence's or a chain's logging, a debug tool's output, is information: the toggle makes it, and the
+level shows it. `ForgeLog.Exception` logs an exception as Unity's own `LogException` does, its stack in the console.
 
-Each message is of a system, effects, abilities, numbers, processes, saves, input and the rest (`ForgeLog.ESystem`), and
+Each message is of a system, effects, abilities, numbers, processes, sequences, saves, input and the rest (`ForgeLog.ESystem`), and
 a system can take a level of its own, `ForgeLog.SetLevel(ForgeLog.ESystem.Effects, ForgeLog.ELevel.Verbose)`, or give it
 back with null. `ForgeLog.Logged` hears each message let through, with its system and the entity it's about where it
 names one, as the Creator Lab's Log page does.

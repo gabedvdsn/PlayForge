@@ -289,7 +289,7 @@ namespace FarEmerald.PlayForge
             }
             catch (Exception ex)
             {
-                UnityEngine.Debug.LogError($"[SyncSequence] Exception in OnComplete handler: {ex}");
+                ForgeLog.Error(ForgeLog.ESystem.Sequences, $"[SyncSequence] Exception in OnComplete handler: {ex}");
             }
         }
 
@@ -350,9 +350,13 @@ namespace FarEmerald.PlayForge
         private float _stageElapsed;
         private bool _repeatBroken;
         private bool _timedOut;
+        private int _runs;
 
         /// <summary>How many tasks end a <see cref="ESyncStagePolicy.WhenN"/> stage.</summary>
         public int RequiredCount { get; set; }
+
+        /// <summary>How many times a repeating stage runs in all, after which it's done; 0 repeats it until it's broken.</summary>
+        public int RepeatCount { get; set; }
 
         /// <summary>Called as the stage starts, with its tasks prepared.</summary>
         public Action<SequenceDataPacket> OnInit { get; set; }
@@ -389,8 +393,9 @@ namespace FarEmerald.PlayForge
         {
             ResetInternal();
 
-            // Broken for one run of the stage only: a repeat of the sequence runs it again
+            // Broken for one run of the stage only: a repeat of the sequence runs it again, and counts its runs anew
             _repeatBroken = false;
+            _runs = 0;
 
             foreach (var task in Tasks)
                 task.Prepare(data);
@@ -435,13 +440,16 @@ namespace FarEmerald.PlayForge
 
             if (stageComplete && Repeat && !_repeatBroken)
             {
+                // A stage told how many times to run is done after its last, with no OnRepeat, as it doesn't repeat
+                if (RepeatCount > 0 && ++_runs >= RepeatCount) return true;
+
                 try
                 {
                     OnRepeat?.Invoke(new SequenceEventContext(data, null));
                 }
                 catch (Exception ex)
                 {
-                    UnityEngine.Debug.LogError($"[SyncSequence] Exception in stage OnRepeat handler: {ex}");
+                    ForgeLog.Error(ForgeLog.ESystem.Sequences, $"[SyncSequence] Exception in stage OnRepeat handler: {ex}");
                 }
 
                 // OnRepeat can break the repeat, and then this was the last time round
@@ -468,7 +476,7 @@ namespace FarEmerald.PlayForge
             }
             catch (Exception ex)
             {
-                UnityEngine.Debug.LogError($"[SyncSequence] Exception in stage OnTerminate handler: {ex}");
+                ForgeLog.Error(ForgeLog.ESystem.Sequences, $"[SyncSequence] Exception in stage OnTerminate handler: {ex}");
             }
 
             Clean(data);

@@ -28,9 +28,9 @@ namespace FarEmerald.PlayForge
     /// </summary>
     public static class SequenceTaskLibrary
     {
-        // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+        // ═══════════════════════════════════════════════════════════════════════════
         // POSITION
-        // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+        // ═══════════════════════════════════════════════════════════════════════════
         
         /// <summary>
         /// Lerps a transform's world position to the destination over the given duration.
@@ -89,8 +89,8 @@ namespace FarEmerald.PlayForge
         /// through the arc), NOT the arc shape itself. The parabola is always smooth.
         ///
         /// Math:
-        ///   XZ = lerp(start, end, t)                       â€” linear
-        ///   Y  = lerp(startY, endY, t) + 4Â·HÂ·tÂ·(1âˆ’t)      â€” linear + parabolic offset
+        ///   XZ = lerp(start, end, t)                       — linear
+        ///   Y  = lerp(startY, endY, t) + 4·H·t·(1−t)      — linear + parabolic offset
         ///
         /// At t=0.5 the offset is exactly H, so the apex is H above the midpoint
         /// of the straight line between start and end positions.
@@ -124,9 +124,9 @@ namespace FarEmerald.PlayForge
             target.position = destination;
         }
 
-        // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-        // POSITION â€” TRACKING (dynamic target, speed-based)
-        // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+        // ═══════════════════════════════════════════════════════════════════════════
+        // POSITION — TRACKING (dynamic target, speed-based)
+        // ═══════════════════════════════════════════════════════════════════════════
 
         /// <summary>
         /// Moves towards a target transform at a fixed speed until within stoppingDistance.
@@ -172,7 +172,7 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// Orbits around a center transform at a given radius and angular speed.
-        /// Runs indefinitely until cancelled â€” pair with a stage timeout or WhenAny policy.
+        /// Runs indefinitely until cancelled — pair with a stage timeout or WhenAny policy.
         /// </summary>
         public static async UniTask Orbit(Transform mover, Transform center, float radius,
             float degreesPerSecond, Vector3 axis, CancellationToken token)
@@ -221,9 +221,9 @@ namespace FarEmerald.PlayForge
             await MoveTowards(mover, finalTarget, speed, token, stoppingDistance);
         }
 
-        // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+        // ═══════════════════════════════════════════════════════════════════════════
         // ROTATION
-        // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+        // ═══════════════════════════════════════════════════════════════════════════
         
         /// <summary>
         /// Lerps a transform's rotation to the destination.
@@ -277,7 +277,7 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// Continuously rotates to face a target transform each frame at a given angular speed.
-        /// Runs indefinitely until cancelled â€” pair with a stage timeout or WhenAny policy.
+        /// Runs indefinitely until cancelled — pair with a stage timeout or WhenAny policy.
         /// </summary>
         public static async UniTask LookAtTracking(Transform mover, Transform target,
             float degreesPerSecond, CancellationToken token)
@@ -293,9 +293,9 @@ namespace FarEmerald.PlayForge
             }
         }
 
-        // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+        // ═══════════════════════════════════════════════════════════════════════════
         // SCALE
-        // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+        // ═══════════════════════════════════════════════════════════════════════════
         
         /// <summary>
         /// Lerps a transform's local scale to the destination.
@@ -331,9 +331,9 @@ namespace FarEmerald.PlayForge
             await ScaleTo(target, original, half, token);
         }
 
-        // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+        // ═══════════════════════════════════════════════════════════════════════════
         // COMPOSITE TRANSFORM
-        // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+        // ═══════════════════════════════════════════════════════════════════════════
         
         /// <summary>
         /// Simultaneously lerps position, rotation, and scale in a single pass.
@@ -362,9 +362,9 @@ namespace FarEmerald.PlayForge
             if (scale.HasValue) target.localScale = scale.Value;
         }
 
-        // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+        // ═══════════════════════════════════════════════════════════════════════════
         // VISUAL - ALPHA / COLOR
-        // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+        // ═══════════════════════════════════════════════════════════════════════════
         
         /// <summary>
         /// Fades a CanvasGroup's alpha.
@@ -428,9 +428,9 @@ namespace FarEmerald.PlayForge
             target.material.SetFloat(property, endValue);
         }
 
-        // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+        // ═══════════════════════════════════════════════════════════════════════════
         // AUDIO
-        // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+        // ═══════════════════════════════════════════════════════════════════════════
         
         /// <summary>
         /// Plays a clip and waits for it to finish.
@@ -453,9 +453,9 @@ namespace FarEmerald.PlayForge
             source.volume = endVolume;
         }
 
-        // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+        // ═══════════════════════════════════════════════════════════════════════════
         // ANIMATOR
-        // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+        // ═══════════════════════════════════════════════════════════════════════════
         
         /// <summary>
         /// Sets a trigger and waits for the resulting animation state to finish.
@@ -483,9 +483,9 @@ namespace FarEmerald.PlayForge
             animator.SetFloat(parameter, endValue);
         }
 
-        // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+        // ═══════════════════════════════════════════════════════════════════════════
         // PHYSICS
-        // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+        // ═══════════════════════════════════════════════════════════════════════════
         
         /// <summary>
         /// Launches a Rigidbody in a parabolic arc from its current position to the destination
@@ -496,10 +496,10 @@ namespace FarEmerald.PlayForge
         /// to the destination and original gravity settings are restored.
         ///
         /// Derived from the same parabola as ArcTo:
-        ///   y(t) = yâ‚€ + Î”yÂ·(t/D) + 4Â·HÂ·(t/D)Â·(1âˆ’t/D)
+        ///   y(t) = y₀ + Δy·(t/D) + 4·H·(t/D)·(1−t/D)
         ///
-        ///   Initial velocity:   vâ‚€ = (Î”x/D,  (Î”y + 4H)/D,  Î”z/D)
-        ///   Custom gravity:     a  = (0,      âˆ’8H/DÂ²,        0)
+        ///   Initial velocity:   v₀ = (Δx/D,  (Δy + 4H)/D,  Δz/D)
+        ///   Custom gravity:     a  = (0,      −8H/D²,        0)
         ///
         /// The arc height H is the peak offset above the straight-line path, identical
         /// to the transform-based ArcTo. The arc shape is a perfect parabola regardless
@@ -529,9 +529,9 @@ namespace FarEmerald.PlayForge
             rb.useGravity = false;
             
             // Compute initial velocity from the parabolic arc's first derivative at t=0
-            //   vx = Î”x / D
-            //   vy = (Î”y + 4H) / D     (accounts for both height difference and arc)
-            //   vz = Î”z / D
+            //   vx = Δx / D
+            //   vy = (Δy + 4H) / D     (accounts for both height difference and arc)
+            //   vz = Δz / D
             Vector3 initialVelocity = new Vector3(
                 delta.x / duration,
                 (delta.y + 4f * arcHeight) / duration,
@@ -539,7 +539,7 @@ namespace FarEmerald.PlayForge
             );
             
             // Compute custom gravity from the parabolic arc's second derivative (constant)
-            //   ay = âˆ’8H / DÂ²
+            //   ay = −8H / D²
             // Applied as force = mass * acceleration each FixedUpdate
             float customGravity = -8f * arcHeight / (duration * duration);
             Vector3 gravityForce = new Vector3(0f, customGravity, 0f);
@@ -576,9 +576,9 @@ namespace FarEmerald.PlayForge
             }
         }
 
-        // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+        // ═══════════════════════════════════════════════════════════════════════════
         // UI TOOLKIT (VisualElement)
-        // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+        // ═══════════════════════════════════════════════════════════════════════════
         
         /// <summary>
         /// Slides a VisualElement by animating its translate style property.
@@ -787,12 +787,12 @@ namespace FarEmerald.PlayForge
             element.style.height = toPx;
         }
 
-        // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+        // ═══════════════════════════════════════════════════════════════════════════
         // GENERIC LERP PRIMITIVES
-        // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+        // ═══════════════════════════════════════════════════════════════════════════
         
         /// <summary>
-        /// Raw lerp: calls setter each frame with progress (0â†’1), applying optional easing.
+        /// Raw lerp: calls setter each frame with progress (0→1), applying optional easing.
         /// The universal building block for anything not covered by a specific method.
         /// 
         /// Usage:
@@ -837,9 +837,9 @@ namespace FarEmerald.PlayForge
             setter(to);
         }
         
-        // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+        // ═══════════════════════════════════════════════════════════════════════════
         // TIMING UTILITIES
-        // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+        // ═══════════════════════════════════════════════════════════════════════════
         
         /// <summary>
         /// True while the sequence running the task that holds this token is paused.
@@ -893,10 +893,70 @@ namespace FarEmerald.PlayForge
                 if (!IsPaused(token)) frames++;
             }
         }
-        
-        // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+
+        /// <summary>
+        /// Waits until the predicate holds, looking once a frame while the task's sequence runs. UniTask's own goes on
+        /// looking while the sequence is paused; this one holds with it.
+        /// </summary>
+        public static async UniTask WaitUntil(Func<bool> predicate, CancellationToken token,
+            PlayerLoopTiming timing = PlayerLoopTiming.Update)
+        {
+            while (IsPaused(token) || !predicate())
+                await ForgeTick.Next(timing, token);
+        }
+
+        /// <summary>Waits while the predicate holds, looking once a frame while the task's sequence runs.</summary>
+        public static async UniTask WaitWhile(Func<bool> predicate, CancellationToken token,
+            PlayerLoopTiming timing = PlayerLoopTiming.Update)
+        {
+            while (IsPaused(token) || predicate())
+                await ForgeTick.Next(timing, token);
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // WAITING ON THE PLAYER
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        /// <summary>
+        /// Waits for a key to go down, read through ForgeInput, so a game's own input or a test's stands in. It looks from
+        /// the frame after it starts, so the press that began it doesn't end it, and a press while the task's sequence is
+        /// paused isn't heard.
+        /// </summary>
+        public static async UniTask WaitForKey(KeyCode key, CancellationToken token)
+        {
+            do await ForgeTick.Next(token);
+            while (IsPaused(token) || !ForgeInput.Current.KeyPressed(key));
+        }
+
+        /// <summary>
+        /// Waits for any of the keys to go down, read through ForgeInput, and returns the one that did; the first given, of
+        /// two pressed in one frame. It looks as <see cref="WaitForKey"/> does.
+        /// </summary>
+        public static async UniTask<KeyCode> WaitForAnyKey(KeyCode[] keys, CancellationToken token)
+        {
+            if (keys == null || keys.Length == 0) throw new ArgumentException("Give it a key to wait for.", nameof(keys));
+            while (true)
+            {
+                await ForgeTick.Next(token);
+                if (IsPaused(token)) continue;
+                foreach (var key in keys)
+                    if (ForgeInput.Current.KeyPressed(key)) return key;
+            }
+        }
+
+        /// <summary>
+        /// Waits for a pointer's button to go down, read through ForgeInput: 0 the primary, the left button or a touch, 1 the
+        /// secondary, 2 the middle. It looks as <see cref="WaitForKey"/> does.
+        /// </summary>
+        public static async UniTask WaitForPointer(int button, CancellationToken token)
+        {
+            do await ForgeTick.Next(token);
+            while (IsPaused(token) || !ForgeInput.Current.PointerPressed(button));
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════
         // INTERNAL LERP ENGINE
-        // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+        // ═══════════════════════════════════════════════════════════════════════════
         
         /// <summary>
         /// Core lerp loop driving all timed operations.

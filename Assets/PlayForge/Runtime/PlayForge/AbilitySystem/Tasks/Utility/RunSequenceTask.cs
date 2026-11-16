@@ -65,7 +65,7 @@ namespace FarEmerald.PlayForge
                 var relay = registration.Relay;
                 if (!registration)
                 {
-                    Debug.LogWarning($"[RunSequenceTask] ProcessControl refused the inner sequence ({registration.Refusal}).");
+                    ForgeLog.Warning(ForgeLog.ESystem.Abilities, $"[RunSequenceTask] ProcessControl refused the inner sequence ({registration.Refusal}).");
                     return;
                 }
 

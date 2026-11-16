@@ -375,7 +375,7 @@ namespace FarEmerald.PlayForge
             }
             catch (Exception ex)
             {
-                Debug.LogException(ex);
+                ForgeLog.Exception(ForgeLog.ESystem.Processes, ex);
             }
 
             StopWatchingProcess(pcb.Relay);
@@ -772,8 +772,8 @@ namespace FarEmerald.PlayForge
 
             if (OutputLogs)
             {
-                if (DetailedLogs) Debug.Log($"[Process Control] Unregister process: {pcb.Wrapper.ProcessName} ({pcb.Handler?.GetName() ?? "No handler"})");
-                else Debug.Log($"[Process Control] Unregister process: {pcb.Wrapper.ProcessName}");
+                if (DetailedLogs) ForgeLog.Info(ForgeLog.ESystem.Processes, $"[Process Control] Unregister process: {pcb.Wrapper.ProcessName} ({pcb.Handler?.GetName() ?? "No handler"})");
+                else ForgeLog.Info(ForgeLog.ESystem.Processes, $"[Process Control] Unregister process: {pcb.Wrapper.ProcessName}");
             }
 
             // Fired ahead of the removal, as the callback says, and guarded so a throw can't stop it
@@ -786,7 +786,7 @@ namespace FarEmerald.PlayForge
                 }
                 catch (Exception ex)
                 {
-                    Debug.LogException(ex);
+                    ForgeLog.Exception(ForgeLog.ESystem.Processes, ex);
                 }
             }
 
@@ -1038,7 +1038,7 @@ namespace FarEmerald.PlayForge
                 string msg = DetailedLogs
                     ? $"[Process Control] Registered Process \"{pcb.Wrapper.ProcessName}\" ({pcb.Handler})"
                     : $"[Process Control] Registered Process: {pcb.Wrapper.ProcessName}";
-                Debug.Log(msg);
+                ForgeLog.Info(ForgeLog.ESystem.Processes, msg);
             }
 
             // The process's own code, with the block already in place. A throw goes through the usual
@@ -1049,7 +1049,7 @@ namespace FarEmerald.PlayForge
             }
             catch (Exception ex)
             {
-                Debug.LogException(ex);
+                ForgeLog.Exception(ForgeLog.ESystem.Processes, ex);
                 pcb.ForceIntoState(EProcessState.Terminated);
                 return false;
             }
@@ -1259,7 +1259,7 @@ namespace FarEmerald.PlayForge
             }
             catch (Exception ex)
             {
-                Debug.LogException(ex);
+                ForgeLog.Exception(ForgeLog.ESystem.Processes, ex);
             }
         }
 
@@ -1422,7 +1422,7 @@ namespace FarEmerald.PlayForge
             
             // Fallback for unhandled cases
             if (OutputLogs)
-                Debug.LogWarning($"[ProcessControl] Unhandled state transition: {key}");
+                ForgeLog.Warning(ForgeLog.ESystem.Processes, $"[ProcessControl] Unhandled state transition: {key}");
             
             return pcb.State; // Stay in current state
         }

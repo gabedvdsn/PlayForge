@@ -74,7 +74,7 @@ namespace FarEmerald.PlayForge
             }
             catch (Exception e)
             {
-                Debug.LogError($"[ActionQueue] OnActionQueued callback threw: {e}");
+                ForgeLog.Error(ForgeLog.ESystem.General, $"[ActionQueue] OnActionQueued callback threw: {e}");
             }
         }
 
@@ -145,12 +145,12 @@ namespace FarEmerald.PlayForge
                         }
                         catch (Exception e)
                         {
-                            Debug.LogError($"[ActionQueue] OnActionExecuted callback threw: {e}");
+                            ForgeLog.Error(ForgeLog.ESystem.General, $"[ActionQueue] OnActionExecuted callback threw: {e}");
                         }
                     }
                     catch (Exception e)
                     {
-                        Debug.LogError($"[ActionQueue] Action execution threw: {action.Description}\n{e}");
+                        ForgeLog.Error(ForgeLog.ESystem.General, $"[ActionQueue] Action execution threw: {action.Description}\n{e}");
                     }
 
                     // Run, so one the system uses again goes back to it
@@ -167,14 +167,14 @@ namespace FarEmerald.PlayForge
                     }
                     catch (Exception e)
                     {
-                        Debug.LogError($"[ActionQueue] OnActionInvalidated callback threw: {e}");
+                        ForgeLog.Error(ForgeLog.ESystem.General, $"[ActionQueue] OnActionInvalidated callback threw: {e}");
                     }
                 }
             }
 
             if (iterations >= maxIterations)
             {
-                Debug.LogError($"[ActionQueue] Max iterations ({maxIterations}) reached - possible infinite loop! " +
+                ForgeLog.Error(ForgeLog.ESystem.General, $"[ActionQueue] Max iterations ({maxIterations}) reached - possible infinite loop! " +
                               $"Executed: {executed}, Invalidated: {invalidated}, Remaining: {TotalCount}");
             }
 

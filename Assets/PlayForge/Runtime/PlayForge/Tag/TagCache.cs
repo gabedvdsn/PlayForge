@@ -417,7 +417,7 @@ namespace FarEmerald.PlayForge
 
             if (_system == null)
             {
-                Debug.LogWarning("[TagCache] System not set - cannot evaluate tag workers");
+                ForgeLog.Warning(ForgeLog.ESystem.Tags, "[TagCache] System not set - cannot evaluate tag workers");
                 return;
             }
             
@@ -675,7 +675,7 @@ namespace FarEmerald.PlayForge
                 catch (Exception ex)
                 {
                     // One listener's throw stops neither the change nor the others
-                    Debug.LogException(ex);
+                    ForgeLog.Exception(ForgeLog.ESystem.Tags, ex);
                 }
             }
         }
@@ -729,20 +729,22 @@ namespace FarEmerald.PlayForge
         
         public void LogWeights()
         {
-            Debug.Log("[ TAG WEIGHTS ]");
+            var weights = new System.Text.StringBuilder("[ TAG WEIGHTS ]");
             foreach (var kvp in _tagWeights)
             {
-                Debug.Log($"\t{kvp.Key} => {kvp.Value}");
+                weights.Append($"\n\t{kvp.Key} => {kvp.Value}");
             }
+            ForgeLog.Info(ForgeLog.ESystem.Tags, weights.ToString());
         }
         
         public void LogActiveWorkers()
         {
-            Debug.Log($"[ ACTIVE TAG WORKERS ({_activeWorkers.Count}) ]");
+            var workers = new System.Text.StringBuilder($"[ ACTIVE TAG WORKERS ({_activeWorkers.Count}) ]");
             foreach (var worker in _activeWorkers)
             {
-                Debug.Log($"\t{worker.GetType().Name}");
+                workers.Append($"\n\t{worker.GetType().Name}");
             }
+            ForgeLog.Info(ForgeLog.ESystem.Tags, workers.ToString());
         }
         
         /// <summary>

@@ -91,7 +91,7 @@ namespace FarEmerald.PlayForge
                     return Read(capturedValue.HasValue ? AttributeParts.Read(capturedValue.Value, CaptureWhat) : 0f);
                 }
 
-                Debug.LogWarning($"[PlayForge] Attribute backed scaler operation failed: impact derivation is null.");
+                ForgeLog.Warning(ForgeLog.ESystem.Numbers, "Attribute backed scaler operation failed: impact derivation is null.");
                 return 0f;
             }
             

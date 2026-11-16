@@ -129,7 +129,7 @@ namespace FarEmerald.PlayForge
             {
                 // Anything else went past targeting without the handle being cleaned, and the activation held its
                 // place for good
-                Debug.LogError($"[Ability] {Spec.Base.GetName()} failed in targeting: {e}");
+                ForgeLog.Error(ForgeLog.ESystem.Abilities, $"[Ability] {Spec.Base.GetName()} failed in targeting: {e}");
                 targetingCancelled = true;
                 how = EAbilityEnd.Failed;
             }
@@ -197,7 +197,7 @@ namespace FarEmerald.PlayForge
             {
                 // Anything else is a broken ability. Report it, rather than leave it looking like one that
                 // did nothing
-                Debug.LogError($"[Ability] {Spec.Base.GetName()} failed: {e}");
+                ForgeLog.Error(ForgeLog.ESystem.Abilities, $"[Ability] {Spec.Base.GetName()} failed: {e}");
                 how = EAbilityEnd.Failed;
             }
             finally

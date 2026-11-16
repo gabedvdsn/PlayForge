@@ -246,7 +246,7 @@ namespace FarEmerald.PlayForge
         public void Execute(ISource system)
         {
             if (!_isValid?.Invoke() ?? false) return;
-            UnityEngine.Debug.Log(Log);
+            ForgeLog.Info(Log);
         }
     }
     
