@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine.UIElements;
 
-namespace FarEmerald.PlayForge.Extended.Editor
+namespace FarEmerald.PlayForge.Editor
 {
     // The Tags view, as the design canvas's Tags board draws it: every tag the entities hold, as a tree by its path,
     // beside who holds the one selected and what grants it them. The Tag Debugger listed one entity's tags in a window of

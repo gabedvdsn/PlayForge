@@ -6,7 +6,7 @@ using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace FarEmerald.PlayForge.Extended.Editor
+namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>One choice of a <see cref="ForgeDropdown"/>: what it shows, where, and what picking it does.</summary>
     internal sealed class ForgeDropdownItem

@@ -1,6 +1,6 @@
 {
     "name": "FarEmerald.PlayForge.Samples.Battle",
-    "rootNamespace": "FarEmerald.PlayForge.Samples.Battles",
+    "rootNamespace": "FarEmerald.PlayForge.Samples.Battle",
     "references": [
         "FarEmerald.PlayForge",
         "UniTask"

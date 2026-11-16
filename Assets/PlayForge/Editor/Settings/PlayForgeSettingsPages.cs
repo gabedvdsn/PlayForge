@@ -8,7 +8,7 @@ using UnityEngine;
 using UnityEngine.UIElements;
 using ProjectSettingsData = FarEmerald.PlayForge.ForgeProjectSettings;
 
-namespace FarEmerald.PlayForge.Extended.Editor
+namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
     /// PlayForge's two settings pages (Q21, ED-21): Project Settings → PlayForge, for the settings the project shares, and

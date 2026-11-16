@@ -2,7 +2,6 @@
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
-using FarEmerald.PlayForge.Extended;
 
 namespace FarEmerald.PlayForge
 {

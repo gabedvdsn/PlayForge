@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace FarEmerald.PlayForge.Extended.Editor
+namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>What a track records: an entity's ability, or an effect on it.</summary>
     internal enum TimelineKind

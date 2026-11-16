@@ -58,6 +58,8 @@ The full review behind it is https://claude.ai/artifact/1GsrCxW3Wff2KvXM6fnai9.
 
 ## Gotchas
 
+- **The editor's namespace is `FarEmerald.PlayForge.Editor`** (EP-25), so in any `FarEmerald.PlayForge` namespace a bare
+  `Editor` names it: write `UnityEditor.Editor` in full, as the package's inspectors do.
 - **An effect's first impact entry is derived on every `Generate()` and never serialized.** Its Additional Impacts
   are the authored entries, each with its own delivery (ED-3); `RebuildEntries` appends them after the derived one.
 - **`TagCache.GetWeight` returns −1 for an absent tag,** not 0.

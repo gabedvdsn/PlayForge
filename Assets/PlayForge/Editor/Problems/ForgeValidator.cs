@@ -5,7 +5,7 @@ using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
-namespace FarEmerald.PlayForge.Extended.Editor
+namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
     /// PlayForge's one validator (Q8, ED-15). It runs every <see cref="ForgeValidationRule"/> on each PlayForge asset in
@@ -107,7 +107,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         /// <summary>
         /// Checks every PlayForge asset in the project afresh and writes each problem to the Console, an Error's as an
         /// error, then how many there are. Run it in batch mode, as on a build server, with -executeMethod
-        /// FarEmerald.PlayForge.Extended.Editor.ForgeValidator.LogAll.
+        /// FarEmerald.PlayForge.Editor.ForgeValidator.LogAll.
         /// </summary>
         public static void LogAll()
         {

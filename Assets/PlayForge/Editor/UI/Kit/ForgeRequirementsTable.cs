@@ -3,7 +3,7 @@ using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine.UIElements;
 
-namespace FarEmerald.PlayForge.Extended.Editor
+namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
     /// Tag requirements as the Effect mockup's table draws them (ED-37): a row for each group, such as Applying, While On

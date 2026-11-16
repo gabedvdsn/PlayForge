@@ -1,7 +1,7 @@
 using System;
 using UnityEngine.UIElements;
 
-namespace FarEmerald.PlayForge.Extended.Editor
+namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
     /// The asset tag an asset's name gives, as the Identity section shows it: Unity's text field, read-only, with its

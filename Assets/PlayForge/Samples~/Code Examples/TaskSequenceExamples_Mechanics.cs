@@ -6,7 +6,7 @@ using Random = UnityEngine.Random;
 using static FarEmerald.PlayForge.SequenceTaskLibrary;
 using Object = UnityEngine.Object;
 
-namespace FarEmerald.PlayForge.Extended.Examples
+namespace FarEmerald.PlayForge.Examples
 {
     /// <summary>
     /// Additional examples demonstrating TaskSequence features via

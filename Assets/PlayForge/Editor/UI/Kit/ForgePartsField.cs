@@ -1,6 +1,6 @@
 using UnityEngine.UIElements;
 
-namespace FarEmerald.PlayForge.Extended.Editor
+namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
     /// A row of fields as one field (ED-66): Unity's field, its label in the label column when it has one, then its parts

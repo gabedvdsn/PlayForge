@@ -1,5 +1,4 @@
 ﻿using System;
-using FarEmerald.PlayForge.Extended;
 using UnityEngine;
 
 namespace FarEmerald.PlayForge

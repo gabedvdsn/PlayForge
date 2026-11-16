@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEditor;
 using Object = UnityEngine.Object;
 
-namespace FarEmerald.PlayForge.Extended.Editor
+namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
     /// How serious a problem is: a Warning is likely a mistake, and an Error stops something working. A Note may be meant,

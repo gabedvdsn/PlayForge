@@ -1,7 +1,7 @@
 using System;
 using UnityEngine.UIElements;
 
-namespace FarEmerald.PlayForge.Extended.Editor
+namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
     /// A section of an inspector, as Unity's foldout headers draw one: the arrow, the bold title, a one-line summary

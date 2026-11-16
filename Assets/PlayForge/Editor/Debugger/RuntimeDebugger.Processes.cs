@@ -6,7 +6,7 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace FarEmerald.PlayForge.Extended.Editor
+namespace FarEmerald.PlayForge.Editor
 {
     // The Processes view, as the design canvas's Processes board draws it: every process ProcessControl holds, with what
     // it's doing and how long its steps take, beside the one selected, which can be paused, resumed and terminated (ED-5)

@@ -1,7 +1,7 @@
 using System;
 using UnityEngine.UIElements;
 
-namespace FarEmerald.PlayForge.Extended.Editor
+namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
     /// The kind a [SerializeReference] field holds, as a field shows it (ED-56, Docs/EDITOR_STYLE.md): Unity's field, its

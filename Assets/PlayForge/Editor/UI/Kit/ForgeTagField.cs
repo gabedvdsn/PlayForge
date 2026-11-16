@@ -1,7 +1,7 @@
 using System;
 using UnityEngine.UIElements;
 
-namespace FarEmerald.PlayForge.Extended.Editor
+namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
     /// A tag as a field shows it (ED-55, Docs/EDITOR_STYLE.md): Unity's field, its label in the label column, and the tag in

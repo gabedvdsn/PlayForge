@@ -4,7 +4,7 @@ using System.Linq;
 using UnityEditor;
 using Object = UnityEngine.Object;
 
-namespace FarEmerald.PlayForge.Extended.Editor
+namespace FarEmerald.PlayForge.Editor
 {
     // The validator's own rules (ED-15). Each finds what an inspector warns about in place, in the inspector's words where
     // it has some, so the Problems view, the header's count and the inspector agree. Validate All's four checks are gone:

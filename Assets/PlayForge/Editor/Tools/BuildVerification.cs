@@ -5,12 +5,12 @@ using UnityEditor.Build.Reporting;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 
-namespace FarEmerald.PlayForge.Extended.Editor
+namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
     /// Headless player-build verification (asset-store readiness / CI):
     ///   Unity -batchmode -nographics -projectPath &lt;proj&gt;
-    ///         -executeMethod FarEmerald.PlayForge.Extended.Editor.BuildVerification.BuildWindowsPlayer
+    ///         -executeMethod FarEmerald.PlayForge.Editor.BuildVerification.BuildWindowsPlayer
     /// Exit codes: 0 = build succeeded, 1 = build failed, 3 = exception.
     /// Proves the runtime assembly compiles and links in a real player (no editor-only leaks).
     /// </summary>

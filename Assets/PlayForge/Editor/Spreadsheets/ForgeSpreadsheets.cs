@@ -9,7 +9,7 @@ using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
-namespace FarEmerald.PlayForge.Extended.Editor
+namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>One change a sheet makes: a number of an asset, what it reads now, and what it will (TW-27).</summary>
     public sealed class SpreadsheetChange

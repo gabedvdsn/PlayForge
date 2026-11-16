@@ -3,7 +3,7 @@ using UnityEngine;
 using ForgeAttribute = FarEmerald.PlayForge.Attribute;
 using Object = UnityEngine.Object;
 
-namespace FarEmerald.PlayForge.Samples.Battles
+namespace FarEmerald.PlayForge.Samples.Battle
 {
     /// <summary>What an effect the battle builds holds. Each field is the plain default unless the battle needs otherwise.</summary>
     public sealed class EffectConfig

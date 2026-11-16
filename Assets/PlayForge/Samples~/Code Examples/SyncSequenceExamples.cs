@@ -1,7 +1,7 @@
 using UnityEngine;
 using SyncSeq = FarEmerald.PlayForge.SyncSequenceTaskLibrary;
 
-namespace FarEmerald.PlayForge.Extended.Examples
+namespace FarEmerald.PlayForge.Examples
 {
     /// <summary>
     /// Demo synchronous sequences and processes you can drop into a scene to test.

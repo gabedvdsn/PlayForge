@@ -1,7 +1,7 @@
 using System;
 using UnityEngine.UIElements;
 
-namespace FarEmerald.PlayForge.Extended.Editor
+namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
     /// Has a kind popup open PlayForge's dropdown in place of Unity's menu (EP-1), as a number field's Kind does: its

@@ -149,7 +149,7 @@ name others), and "Tags.cs" counts `[ForgeContextDefault]` properties.
   tooltip says "ForgeContext constants", which invites someone to type "RetentionGroup".
 - **Stale doc header:** it uses `ForgeTags.Effect`, a class that doesn't exist, on a `string` field
   (`ForgeContext.cs:3-10`). `ForgeContext` is in `FarEmerald.PlayForge.Extended`, while `Tags` is in
-  `FarEmerald.PlayForge`.
+  `FarEmerald.PlayForge`. (Since EP-25 both are in `FarEmerald.PlayForge`.)
 
 ---
 

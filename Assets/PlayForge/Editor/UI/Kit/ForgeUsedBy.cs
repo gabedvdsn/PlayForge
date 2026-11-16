@@ -5,7 +5,7 @@ using UnityEditor;
 using UnityEngine.UIElements;
 using Object = UnityEngine.Object;
 
-namespace FarEmerald.PlayForge.Extended.Editor
+namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
     /// The PlayForge assets whose data refers to an asset, each with its type icon, in name order: what

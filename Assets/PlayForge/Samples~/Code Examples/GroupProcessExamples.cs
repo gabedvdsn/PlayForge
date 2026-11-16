@@ -1,7 +1,7 @@
 using UnityEngine;
 using SyncSeq = FarEmerald.PlayForge.SyncSequenceTaskLibrary;
 
-namespace FarEmerald.PlayForge.Extended.Examples
+namespace FarEmerald.PlayForge.Examples
 {
     /// <summary>
     /// Demo processes that demonstrate Group Process functionality with Synchronous lifecycle.

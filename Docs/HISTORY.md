@@ -527,6 +527,14 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   page, through one table of links in the editor.
 
 ### Changed
+- Namespaces, each assembly's own name (EP-25): the editor's is `FarEmerald.PlayForge.Editor`, which was
+  `FarEmerald.PlayForge.Extended.Editor`, and the inspector attributes, `[ForgeTagContext]` and its kin,
+  `ForgeContext`, `[ForgeEffectTemplate]` and `[AvoidRequireTagGroupColor]`, are in `FarEmerald.PlayForge`, which were
+  in `FarEmerald.PlayForge.Extended`: a `using FarEmerald.PlayForge.Extended;` goes, and an editor script of yours takes
+  `using FarEmerald.PlayForge.Editor;`. The Battle sample's namespace is `FarEmerald.PlayForge.Samples.Battle` and Code
+  Examples' `FarEmerald.PlayForge.Examples`.
+- The package's folders say what each holds (EP-25): the editor's drawers, inspectors, number fields, The Forge, windows,
+  projects and utilities each a folder, and the runtime's scalers with its numbers. Every script keeps its GUID.
 - The Additional Content sample is a Forge Project of its own (EP-22), as the Demo is: **Additional Content**, with a
   Game Root entity of its own, which its Sparring scene plays. The samples' descriptions say what each is.
 - The package's docs and the strings the editor shows name no tracker ID or decision of the refactor (EP-21); the
@@ -938,6 +946,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   Asking whether its sequence was paused took 24 bytes a frame.
 
 ### Fixed
+- The Additional Content's Game Root entity had the Demo's GUID, so where both samples were imported Unity gave one a
+  new GUID and the Additional Content's project named neither (EP-22); it has its own.
 - An Absorb stage soaks against a side whose entity isn't an ability system, as a try's stand-in, and says what it
   takes; it passed the hit by (EP-23).
 - The Forge's tag view keeps to the active Forge Project (EP-20): it listed tags only another project's assets use,
@@ -1211,6 +1221,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   or turning `Enabled` off. Once the first had ended, it threw, and the rest ran on.
 
 ### Removed
+- Types nothing used (EP-25): `ManagementInitDeferment`, `ValidationRuleset`, `EntitySpec`, `EffectContainerFactory`
+  and `EAttributeModificationMethod`, and two files of commented-out code.
 - The samples' tests (EP-24): the Demo and Additional Content ship no tests. PlayForge's testing is its golden tests and
   its test kit.
 - `Runtime/Prefabs`: the Bootstrapper, GameRoot and ProcessControl prefabs and the Game Root entity. Code makes them

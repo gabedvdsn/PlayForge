@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace FarEmerald.PlayForge.Samples.Battles
+namespace FarEmerald.PlayForge.Samples.Battle
 {
     /// <summary>
     /// Plays battles, one after another: Blue and Red, eight fighters a side, each fighting with a mind of its own until one

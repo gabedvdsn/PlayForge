@@ -8,7 +8,7 @@ using ForgeAttribute = FarEmerald.PlayForge.Attribute;
 using Object = UnityEngine.Object;
 using Random = System.Random;
 
-namespace FarEmerald.PlayForge.Samples.Battles
+namespace FarEmerald.PlayForge.Samples.Battle
 {
     /// <summary>
     /// A battle: Blue and Red, eight fighters a side, fight until one side stands. Knights cleave and bash, knocking their

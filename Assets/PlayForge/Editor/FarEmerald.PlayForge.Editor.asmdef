@@ -1,6 +1,6 @@
 {
     "name": "FarEmerald.PlayForge.Editor",
-    "rootNamespace": "FarEmerald.PlayForge.Extended.Editor",
+    "rootNamespace": "FarEmerald.PlayForge.Editor",
     "references": [
         "FarEmerald.PlayForge",
         "UniTask",

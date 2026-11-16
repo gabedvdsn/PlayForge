@@ -1,6 +1,6 @@
 using UnityEngine.UIElements;
 
-namespace FarEmerald.PlayForge.Extended.Editor
+namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
     /// An attribute value as a field shows it (ED-49): Unity's field, its label in the label column, then its Current and

@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 
-namespace FarEmerald.PlayForge.Extended
+namespace FarEmerald.PlayForge
 {
     /// <summary>
     /// The contexts a tag is offered in: one per kind of tag, what a tag is rather than where it's used (TAG-6, Decision

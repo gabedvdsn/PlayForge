@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using UnityEngine;
 
-namespace FarEmerald.PlayForge.Samples.Battles
+namespace FarEmerald.PlayForge.Samples.Battle
 {
     /// <summary>
     /// What the battle draws over its fighters: a health bar over each one's head in its side's color, and above it a

@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using FarEmerald.PlayForge.Extended.Editor;
+using FarEmerald.PlayForge.Editor;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;

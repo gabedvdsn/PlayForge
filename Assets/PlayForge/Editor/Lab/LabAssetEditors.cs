@@ -1,6 +1,6 @@
 using UnityEditor;
 using UnityEngine.UIElements;
-using FarEmerald.PlayForge.Extended.Editor;
+using FarEmerald.PlayForge.Editor;
 
 namespace FarEmerald.PlayForge.Lab.Editor
 {

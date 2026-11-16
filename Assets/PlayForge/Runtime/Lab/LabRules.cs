@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using UnityEngine;
-using FarEmerald.PlayForge.Extended;
 
 namespace FarEmerald.PlayForge.Lab
 {

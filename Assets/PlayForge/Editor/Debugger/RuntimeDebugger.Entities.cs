@@ -6,7 +6,7 @@ using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace FarEmerald.PlayForge.Extended.Editor
+namespace FarEmerald.PlayForge.Editor
 {
     // The Entities view, as the design canvas's Entities board draws it (version 22): the hubs ProcessControl holds,
     // beside the one selected, with its attributes, effects, abilities and tags in a grid of four sections, each of

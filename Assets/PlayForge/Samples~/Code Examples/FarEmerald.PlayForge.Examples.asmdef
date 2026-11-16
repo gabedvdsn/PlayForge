@@ -1,6 +1,6 @@
 {
     "name": "FarEmerald.PlayForge.Examples",
-    "rootNamespace": "",
+    "rootNamespace": "FarEmerald.PlayForge.Examples",
     "references": [
         "FarEmerald.PlayForge",
         "UniTask"

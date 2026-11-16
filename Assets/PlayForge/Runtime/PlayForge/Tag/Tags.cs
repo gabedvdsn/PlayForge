@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using FarEmerald.PlayForge.Extended;
 
 namespace FarEmerald.PlayForge
 {

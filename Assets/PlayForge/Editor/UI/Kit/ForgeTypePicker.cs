@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace FarEmerald.PlayForge.Extended.Editor
+namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
     /// The picker a kind field opens (ED-56, EP-1): PlayForge's dropdown of the kinds a field can hold, by their names, None

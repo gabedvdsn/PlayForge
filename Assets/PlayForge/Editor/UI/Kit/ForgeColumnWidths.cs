@@ -4,7 +4,7 @@ using System.Linq;
 using UnityEditor;
 using UnityEngine.UIElements;
 
-namespace FarEmerald.PlayForge.Extended.Editor
+namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
     /// Remembers the widths a table's columns are dragged to, and the columns its header's menu hides, so they outlive the

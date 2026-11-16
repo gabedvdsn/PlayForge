@@ -1,6 +1,6 @@
 using UnityEngine.UIElements;
 
-namespace FarEmerald.PlayForge.Extended.Editor
+namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
     /// Views that take turns in one place, as the Debugger's views and The Forge's two lists do. Each view stays laid out
