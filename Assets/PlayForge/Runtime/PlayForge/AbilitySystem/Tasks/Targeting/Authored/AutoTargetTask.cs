@@ -31,7 +31,7 @@ namespace FarEmerald.PlayForge
         [NumberMin(0f)] public ScalableFloat Range = 20f;
 
         [Tooltip("Searches within its ability's Cast Range, where the ability has one and its range is measured from the " +
-                 "caster; off, within its own Range (FN-14)")]
+                 "caster; off, within its own Range")]
         public bool UseCastRange = true;
 
         [Tooltip("Layers to detect targets on, where it uses physics")]
@@ -39,14 +39,14 @@ namespace FarEmerald.PlayForge
         public LayerMask DetectionLayers = ~0;
 
         [Tooltip("Where its range is measured from: the caster; the activation's target, as an AI hands it or a task before " +
-                 "it in a Composite picks it; or the activation's point (TW-10)")]
+                 "it in a Composite picks it; or the activation's point")]
         public EAreaCentre Around = EAreaCentre.Caster;
 
-        [Tooltip("Measures its range along the ground, leaving height out; off, a sphere (TW-10)")]
+        [Tooltip("Measures its range along the ground, leaving height out; off, a sphere")]
         public bool Flat = true;
 
         [Tooltip("Finds entities with physics, by collider on its Detection Layers, as well as by position. Off, each entity " +
-                 "on either hub is found by its position, with no collider needed (TW-10)")]
+                 "on either hub is found by its position, with no collider needed")]
         public bool UsePhysics;
 
         [Tooltip("Optional attribute conditions targets must satisfy")]

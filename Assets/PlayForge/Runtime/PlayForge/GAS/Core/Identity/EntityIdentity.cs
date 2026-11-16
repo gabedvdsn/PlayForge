@@ -52,18 +52,18 @@ namespace FarEmerald.PlayForge
 
         public StandardWorkerGroup WorkerGroup;
 
-        [Tooltip("Modifiers of other effects, its holder's own or those landing on it, while it lives (TW-7)")]
+        [Tooltip("Modifiers of other effects, its holder's own or those landing on it, while it lives")]
         public List<EffectModifierEntry> Modifiers = new();
 
-        [Tooltip("Its components: features it carries, each a class with hooks into its life, as it registers, dies, revives and ends (FN-14)")]
+        [Tooltip("Its components: features it carries, each a class with hooks into its life, as it registers, dies, revives and ends")]
         [SerializeReference]
         public List<AbstractEntityComponent> Components = new();
 
-        [Tooltip("The crowd control rules its abilities follow. None, the project's (TW-16)")]
+        [Tooltip("The crowd control rules its abilities follow. None, the project's")]
         public CrowdControlRules CrowdControl;
 
         [Tooltip("What its death does: End, as an entity always did, or Stay, dead, until it revives, with the effects its " +
-                 "death ends and takes, and its body (TW-4)")]
+                 "death ends and takes, and its body")]
         public EntityDeath Death = new();
         
         public override string GetName()

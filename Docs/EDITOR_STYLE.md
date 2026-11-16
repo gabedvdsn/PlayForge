@@ -94,6 +94,8 @@ The only other colors:
   "6 seconds", and is short in a summary or a table, as in "6 s".
 - **A message is one sentence:** the problem and what it causes, as in "Nothing grants Status.Wet, so this removal
   never happens."
+- **No tooltip, note or message names the work behind it**, a tracker ID or a decision, as "(TW-29)": those are the
+  repository's, and the package's docs name none either (EP-21).
 
 ## Inspectors
 

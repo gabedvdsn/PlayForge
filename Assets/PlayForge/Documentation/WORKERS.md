@@ -2,27 +2,27 @@
 
 Workers are the small rules that react to what happens to an entity: a floor that keeps Health above 1, a share of each
 blow sent back, a rage at half Health, a burst as a tag comes off. This page maps each kind: when it runs, on whose
-system and for whom, and what its context holds (TW-23). [RECIPES.md](RECIPES.md) builds common rules from them.
+system and for whom, and what its context holds. [RECIPES.md](RECIPES.md) builds common rules from them.
 
 ## Where workers come from
 
 - **An attribute set's Worker Group**: the entity built from the set holds its workers as it lives.
 - **An entity's Worker Group** (its Entity asset): the same, as the entity's own.
 - **Its project's Workers**: every entity in a Forge Project holds the workers its settings list, under **Workers** in
-  Project Settings → PlayForge, after its own, as it registers (FN-15). A project starts with the Lifesteal worker,
+  Project Settings → PlayForge, after its own, as it registers. A project starts with the Lifesteal worker,
   whose Share is yours to name.
 - **An item's, an ability's or an effect's Worker Group**: the entity holds them while the item is equipped, the ability
-  known, or the effect lasts on it (TW-13). Two of an effect lasting give its group once.
+  known, or the effect lasts on it. Two of an effect lasting give its group once.
 - **An effect's Workers**: effect workers, which run for that effect's own events.
-- **Built in**: an On Hit entry gives its holder an impact worker (TW-6).
+- **Built in**: an On Hit entry gives its holder an impact worker.
 
 ## Lifesteal
 
-The **Lifesteal** worker, an impact worker, heals its holder a share of each workable loss it deals another (FN-15): the
+The **Lifesteal** worker, an impact worker, heals its holder a share of each workable loss it deals another: the
 value of its holder's **Share**, the attribute it names, as 0.15 for 15%; with none it heals nothing. The losses that
 count are to its **Receives** attribute, and it heals its **Heals** attribute, each the Health role's where it names
-none, so a mana burn can heal Health (FN-27). An effect raises the share while it should, as an effect has no lifesteal
-of its own (FN-22). Only hits of the **Impact Types** it names count, as attacks; with none, any; so a second worker on another attribute, of spells' types,
+none, so a mana burn can heal Health. An effect raises the share while it should, as an effect has no lifesteal
+of its own. Only hits of the **Impact Types** it names count, as attacks; with none, any; so a second worker on another attribute, of spells' types,
 makes a spell vamp. A worker that runs once for a hit, as this one, runs once however many of it its holder has, its
 project's and its own: the first of the kind to take the hit. It allocates nothing, healing or not.
 
@@ -48,7 +48,7 @@ either), and **Allow Self Modification** (whether it takes changes whose source 
 ## Hearing workers run
 
 An entity tells its workers' runs to whoever listens to its callbacks, and to no one else, so a worker no one hears
-costs nothing more (LAB-12, LAB-13):
+costs nothing more:
 
 - `OnEffectWorkerRan`: one of its effects' workers heard one of the effect's moments, its **Hook** (Application, Tick,
   Removal or Impact), on its **Side** (the **Target**, or the **Dealer** for a hit, as the map says), with the **System**
@@ -65,15 +65,15 @@ An `EffectJournal` hears all of it for the entities it's given ([ENTITIES.md](EN
 
 A change is **workable** unless it says it isn't (`SourcedModifiedAttributeValue.ImpactIsWorkable`). An unworkable one
 is a change the system makes on its own account (`GenerateUnworkable`), as the pulse each attribute starts with, or a
-transfer's two sides (TW-20). Only a workable change:
+transfer's two sides. Only a workable change:
 
 - reaches impact workers, unless a worker's **Accept Unworkable Impact** is on;
-- is soaked by a barrier as a loss (TW-12), and scaled by its attribute's **Gains Scaled By** as a gain, as Healing
-  Received (TW-15);
-- sends the core's Impact Dealt and Impact Taken events (TW-5), and counts toward the kill: the killer is whoever dealt
+- is soaked by a barrier as a loss, and scaled by its attribute's **Gains Scaled By** as a gain, as Healing
+  Received;
+- sends the core's Impact Dealt and Impact Taken events, and counts toward the kill: the killer is whoever dealt
   the last workable loss to the Health role's attribute;
-- counts for lifesteal, and is returned by Return Damage (TW-15);
-- is written in the combat log as a hit, taken or dealt (TW-22); another is a Change.
+- counts for lifesteal, and is returned by Return Damage;
+- is written in the combat log as a hit, taken or dealt; another is a Change.
 
 Attribute workers run for every change, workable or not; one that cares reads `ctx.Change.Value.ImpactIsWorkable`.
 
@@ -81,13 +81,13 @@ Attribute workers run for every change, workable or not; one that cares reads `c
 
 - **An impact worker runs for the dealer.** Its context's System is the dealer, and the one hit is
   `ImpactData.Target`. A worker that took System for the one hit applied its holder's effects to the target, and read
-  the target's items for its holder's (GAS-72).
+  the target's items for its holder's.
 - **An effect worker's Impact hook runs on the dealer's side too.** Its System is the effect's caster, where its
   Application, Tick and Removal hooks' System is the one the effect is on.
 - **A stacking effect's periodic tick lands once for each stack, while its lasting change counts once.** A number that
   reads the effect's stacks on each tick multiplies again: Hangover, which read its stacks, took 100 a tick where 20 was
-  meant. Read the stacks in a lasting change, or leave them out of a periodic one (FEAT-33 is to make a lasting change
-  count each stack as a tick does). The Problems view warns of it (TW-25).
+  meant. Read the stacks in a lasting change, or leave them out of a periodic one. The Problems view warns
+  of it.
 - **What a worker sets in motion waits for the frame's end.** Deferred actions, deaths and the kills they give, and an
   aura's effect coming off a dead holder all land at the entity's end of frame, so one area's hits resolve together
   ([EFFECTS.md](EFFECTS.md#resolve-order)).

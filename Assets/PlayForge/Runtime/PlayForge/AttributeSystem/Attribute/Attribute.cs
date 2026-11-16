@@ -16,24 +16,24 @@ namespace FarEmerald.PlayForge
         public List<TextureItem> Textures;
 
         [Tooltip("What the attribute is: how bonuses to it add up, and how a number reads it, unless an effect or the " +
-                 "number says otherwise (TW-1)")]
+                 "number says otherwise")]
         public EAttributeRole Role = EAttributeRole.Value;
 
         [Tooltip("As a Barrier: the attribute it absorbs for, as Health. Every workable loss to that one comes off this " +
-                 "first, as much as it holds (TW-12)")]
+                 "first, as much as it holds")]
         public Attribute AbsorbsFor;
 
-        [Tooltip("As a Barrier: how much it loses each second, by its holder's time and at its holder's level, as a barrier fades; 0, none (TW-12)")]
+        [Tooltip("As a Barrier: how much it loses each second, by its holder's time and at its holder's level, as a barrier fades; 0, none")]
         [NumberMin(0f)] public ScalableFloat DecayPerSecond = 0f;
 
         [Tooltip("As a Barrier: reads Decay Per Second as a share of its base, so a base of 100 at 0.1 loses 10 a second")]
         public bool DecayAsShareOfBase;
 
-        [Tooltip("As a Barrier: what a lasting effect gives it fades to 0 by the time that effect ends (TW-12)")]
+        [Tooltip("As a Barrier: what a lasting effect gives it fades to 0 by the time that effect ends")]
         public bool FadesWithEffect;
 
         [Tooltip("Each workable gain to its current is multiplied by this attribute's value on the same entity, as Health's by " +
-                 "Healing Received: 0 blocks healing outright. None, none (TW-15)")]
+                 "Healing Received: 0 blocks healing outright. None, none")]
         public Attribute GainsScaledBy;
         
         #region Internal

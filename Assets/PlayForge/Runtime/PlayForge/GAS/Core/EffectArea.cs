@@ -41,7 +41,7 @@ namespace FarEmerald.PlayForge
         [NumberMin(0f)] public ScalableInt MaxTargets = 0;
 
         [Tooltip("Lands on its target and those it takes in the project's resolve order, its target among them; off, its " +
-                 "target first, then those near (TW-31)")]
+                 "target first, then those near")]
         public bool UseResolveOrder = true;
 
         /// <summary>Whether it reaches past its target at all: a radius that's more than a plain 0.</summary>

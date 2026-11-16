@@ -17,7 +17,7 @@ MonoBehaviour:
   _templateOverrides: []
   _templateListSnapshots: []
   Name: Game Root
-  Description: 
+  Description: The game's own entity. Handles all processes without an assigned handler.
   Textures: []
   Affiliation:
   - Name: SystemOLQ9qO2QNi90czFATHnI2QYqY3e7WzWAOLQ9qO2QNi90czFATHnI2QYqY3

@@ -7,7 +7,7 @@ namespace FarEmerald.PlayForge
 {
     /// <summary>
     /// How an impact entry rides its carrier's lifecycle. Delivery IMPLIES the
-    /// contribution kind (see IMPACT_MODEL_REFACTOR.md §1) — there is deliberately no
+    /// contribution kind (see Docs/IMPACT_MODEL_REFACTOR.md §1) — there is deliberately no
     /// independent "retained?" switch to get wrong:
     ///
     /// <list type="bullet">

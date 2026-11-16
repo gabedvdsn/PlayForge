@@ -1,6 +1,6 @@
 # PlayForge — Recipes
 
-Ten common rules, each built from PlayForge's own assets and fields, with no code (TW-23). Each is in the **Additional
+Ten common rules, each built from PlayForge's own assets and fields, with no code. Each is in the **Additional
 Content** sample (Package Manager → PlayForge → Samples), under `Recipes`, a folder each, and Proving Grounds plays each
 as a test, built from the same recipe book as the sample's assets, so this page and the assets stay true. Each reads
 the sample's **Health** attribute, in `Recipes/Attributes`; point its fields at your own. [WORKERS.md](WORKERS.md) maps
@@ -33,7 +33,7 @@ A hit doubles on a 25% chance.
 - **Critical Strike** (a Value Pipeline): one **Chance** stage, **Chance** 0.25, **Multiplier** 2, **Note** "critical".
 - **Crit Blow** (an effect): Instant, -20 Health, its impact's **Pipeline** Critical Strike.
 
-The hit's breakdown notes the crit, as the combat log shows it (TW-22). The stage's **Roll** sets pseudo-random and luck.
+The hit's breakdown notes the crit, as the combat log shows it. The stage's **Roll** sets pseudo-random and luck.
 
 ## An execute
 
@@ -51,7 +51,7 @@ While it lasts, its holder heals half of each loss it deals another.
 - **Vampirism** (an effect): Infinite, +0.5 Lifesteal, which the Lifesteal worker heals by, the one your Forge Project's
   Workers give every entity as a project starts, to its Health role's attribute ([WORKERS.md](WORKERS.md#lifesteal)).
 
-An effect has no lifesteal of its own (FN-22): for a blow that steals more than others, an effect raises its caster's
+An effect has no lifesteal of its own: for a blow that steals more than others, an effect raises its caster's
 Lifesteal while it should, and an item gives it as one of its Granted Effects ([ITEMS.md](ITEMS.md#lifesteal)).
 
 ## Damage return
@@ -100,7 +100,7 @@ condition that reads it. The worker's **Event** sends a gameplay event as well, 
 
 ## Formulas
 
-Scaler assets for a genre's formulas, under `Formulas`, each named for what it computes (AC-3). A field reads one with
+Scaler assets for a genre's formulas, under `Formulas`, each named for what it computes. A field reads one with
 its **Shared** kind ([SCALERS.md](SCALERS.md)); each is a **Stacking Curve** of a count, with an **a**.
 
 - **1 ÷ (1 + 0.06 × Armor)**: Reciprocal, **a** 0.06, of the hit's target's Armor. In a Value Pipeline's **Multiply**
@@ -116,7 +116,7 @@ The Armor ones read the **Armor** attribute in `Formulas/Attributes`, as the hit
 
 ## A starter set
 
-Plain assets named for what they are, under `Starter Set` (AC-5); the recipes above hold the rest of a starter set, a
+Plain assets named for what they are, under `Starter Set`; the recipes above hold the rest of a starter set, a
 damage over time, an on hit, an on kill and a boss's phase. Each hit reads the recipes' Health.
 
 - **Melee Attack** (an ability): **Apply Effects**, Melee Hit, on what it's cast at; **Cooldown** Melee Cooldown.

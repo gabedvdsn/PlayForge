@@ -31,27 +31,27 @@ namespace FarEmerald.PlayForge
                  "code reads its own")]
         public List<AttributeRole> Roles = new();
 
-        [Tooltip("The crowd control rules an entity follows where it names none of its own (TW-16)")]
+        [Tooltip("The crowd control rules an entity follows where it names none of its own")]
         public CrowdControlRules CrowdControl;
 
         [Tooltip("The order an area's effects land on those it takes, by the tags they carry: each entry a tag and an Order, " +
-                 "lower first; one carrying none is at 0, one carrying several takes the first entry's (TW-31)")]
+                 "lower first; one carrying none is at 0, one carrying several takes the first entry's")]
         public List<ResolveOrderEntry> ResolveOrder = new();
 
         [Tooltip("What each entity's combat log writes, the hits it takes and deals, its other changes and the events it's " +
-                 "sent, and how many entries it keeps (TW-22)")]
+                 "sent, and how many entries it keeps")]
         public CombatLogSettings CombatLog = new();
 
         [Tooltip("How The Forge makes the project's assets: where each type's go, within the project's folder, their defaults, " +
-                 "and the Cost and Cooldown templates (TW-30)")]
+                 "and the Cost and Cooldown templates")]
         public ForgeAuthoringSettings Authoring = new();
 
         [Tooltip("Its purge levels: the tiers of tags an effect carries, weakest first, a purge of a tier taking the effects at " +
-                 "it or under it, and the categories a death keeps (FN-16)")]
+                 "it or under it, and the categories a death keeps")]
         public PurgeLevels PurgeLevels = new();
 
         [Tooltip("Workers every entity in the project has, beside its own, as it registers: the Lifesteal worker, which heals " +
-                 "by its Lifesteal, as a project starts (FN-15)")]
+                 "by its Lifesteal, as a project starts")]
         public StandardWorkerGroup Workers = new()
         {
             Name = "Every Entity",

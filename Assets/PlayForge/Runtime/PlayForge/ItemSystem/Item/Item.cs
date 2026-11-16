@@ -132,13 +132,13 @@ namespace FarEmerald.PlayForge
         [Tooltip("Worker group providing additional behaviors while equipped.")]
         public StandardWorkerGroup WorkerGroup;
 
-        [Tooltip("Effects its holder's hits apply, or a kill's, while it's equipped (TW-6)")]
+        [Tooltip("Effects its holder's hits apply, or a kill's, while it's equipped")]
         public List<OnHitEntry> OnHit = new();
 
-        [Tooltip("Modifiers of other effects, its holder's own or those landing on it, while it's equipped (TW-7)")]
+        [Tooltip("Modifiers of other effects, its holder's own or those landing on it, while it's equipped")]
         public List<EffectModifierEntry> Modifiers = new();
 
-        [Tooltip("Its components: features it carries, each a class with hooks into its life, as it's given, equipped, unequipped and removed (FN-14)")]
+        [Tooltip("Its components: features it carries, each a class with hooks into its life, as it's given, equipped, unequipped and removed")]
         [SerializeReference]
         public List<AbstractItemComponent> Components = new();
 

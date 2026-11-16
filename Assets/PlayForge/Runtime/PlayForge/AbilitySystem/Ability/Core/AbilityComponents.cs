@@ -15,13 +15,13 @@ namespace FarEmerald.PlayForge
         public override string Describe() => $"{NumberText.Of(Charges)} charges, {(Recharge is AllAtOnceRecharge ? "all recharging at once" : "each recharging on its own")}";
 
         [Tooltip("How many uses it holds, each spending a charge that comes back as its Recharge says; 1 is an ordinary " +
-                 "cooldown (TW-17)")]
+                 "cooldown")]
         [NumberMin(2)]
         public ScalableInt Charges = 2;
 
         [SerializeReference]
         [Tooltip("How its spent charges come back: each on a cooldown of its own, or all at once as one cooldown ends once " +
-                 "they're all spent, or as a recharge of your own says (TW-17)")]
+                 "they're all spent, or as a recharge of your own says")]
         public AbstractChargeRecharge Recharge = new EachChargeRecharge();
 
         public override bool AllowsSeveral => false;
@@ -40,7 +40,7 @@ namespace FarEmerald.PlayForge
         public override string Describe() => $"Toggles {NameOf(Effect)}";
 
         [Tooltip("The effect it toggles on its caster: used, it puts the effect on, paying its cost; used again, it takes " +
-                 "the effect off, paying and asking nothing, and starts its cooldown (TW-20)")]
+                 "the effect off, paying and asking nothing, and starts its cooldown")]
         public GameplayEffect Effect;
 
         public override bool AllowsSeveral => false;

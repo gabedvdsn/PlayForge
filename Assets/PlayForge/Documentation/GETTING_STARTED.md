@@ -8,7 +8,7 @@ task pipelines, and tags glue everything together for requirements, filtering an
 
 - **Unity 6.0+** (built and tested on 6000.0)
 - From the Asset Store, PlayForge installs in `Assets/Plugins/PlayForge`, and your Forge Projects go in
-  `Assets/PlayForge`, so the two never share a folder (EP-12).
+  `Assets/PlayForge`, so the two never share a folder.
 - **UniTask** 2.5.11 (Cysharp, MIT). From the Asset Store, PlayForge includes it, in `PlayForge/ThirdParty/UniTask`;
   a project that already has UniTask from Package Manager deletes that folder. Installed as a package from git, it
   needs UniTask added in Package Manager by git URL, pinned to that release:
@@ -61,7 +61,7 @@ the numbers, rules and the Tag Library.
 6. **Scene** — add a `GameplayAbilitySystem` to a GameObject, assign the EntityIdentity,
    and bring PlayForge up with a `Bootstrapper`: the prefab PlayForge makes in `Assets/PlayForge/Bootstrap` as your
    first Forge Project is made, or a GameObject with the component, naming the Forge Project the scene plays. It makes
-   ProcessControl and the GameRoot, which runs as the project's Game Root entity (EP-11). Grant + activate the ability through
+   ProcessControl and the GameRoot, which runs as the project's Game Root entity. Grant + activate the ability through
    the `AbilitySystemComponent`, or drive everything from code with
    `RuntimeGameplayAbilitySystem` (no GameObject needed), which `ProcessControl.Register(gas).Run()` starts.
 
@@ -124,7 +124,7 @@ next frame awaits `ForgeTick.Next(token)`. 0, the default, steps once a frame.
 
 `AbilityInspector.Build(ability)` returns a full static breakdown — every effect, its
 role, target scope, and per-level numbers evaluated through the real scaler pipeline, and its components, what sets it
-off on its own, its chance to activate and its Attribute Costs (EP-5):
+off on its own, its chance to activate and its Attribute Costs:
 
 ```csharp
 var breakdown = AbilityInspector.Build(fireball);
@@ -145,23 +145,23 @@ string perLevel = impact.FormatTotal();           // "20/30/40/50"
   project asset at its root (**Create → PlayForge → Forge Project**), and holds the assets under it that no project
   inside it does. New Project makes one at once in a folder of its own under the PlayForge Folder, `Assets/PlayForge`
   until Project Settings → PlayForge sets another, as `Assets/PlayForge/Arena/Arena.asset`, with its Game Root entity in
-  `Arena/GameRoot`; with no project, The Forge asks for the first (EP-10). The toolbar holds Back and Forward, which go over the assets it has shown, as a browser's do, the
+  `Arena/GameRoot`; with no project, The Forge asks for the first. The toolbar holds Back and Forward, which go over the assets it has shown, as a browser's do, the
   project menu, which switches projects and makes a new one, Create, a filter for each PlayForge asset type and More,
   which holds the filters of the rest, Scaler assets, Requirement Templates, Value Pipelines, Effect Modifiers and Crowd
-  Control Rules, then Tags, the search and the problem count. Create makes an asset of a type: Blank, or from a preset under it (TW-24), each ready to fill in: a
+  Control Rules, then Tags, the search and the problem count. Create makes an asset of a type: Blank, or from a preset under it, each ready to fill in: a
   **Damage**, **Damage over Time**, **Buff**, **Debuff**, **Stun** (granting the tag of the project's crowd control rule
   that stops every ability) or **Aura** effect; an **On-Hit** or **Active** item (the Active one with an ability of its
   own, its cost and cooldown copies of the project's Cost and Cooldown effects); a **Passive** ability, which activates
   as its entity starts and gives its holder its effects; or a
   **Hero**, with an attribute set of the attributes playing the project's roles, Health first. The project's own
   **Templates** follow, each a new asset's copy. A new asset goes into the active project, in its type's folder within the project's, as `Arena/Abilities`; the
-  first one made with no project makes one named for the game, in a folder of its own (EP-10). With projects and none chosen, the active one is the
+  first one made with no project makes one named for the game, in a folder of its own. With projects and none chosen, the active one is the
   project at the root, or none, when The Forge shows the assets in no project. The asset menu moves or copies the
   selected assets into another project, and renames an asset, as F2 on the list does: its name as its inspector gives
   it, with the tag the name gives and the file following, or the file of an asset with no name of its own. Every asset picker, an object field's among them, offers the active project's
   assets alone, and the tag picker the tags they use. The Demo's assets are a project of their own. Its window menu's
   **Spreadsheets** writes the project's numbers by level, or its items' stats, to CSV, and reads a sheet back, listing
-  its changes before it makes them ([SPREADSHEETS.md](SPREADSHEETS.md), TW-27). The list's columns sort, Summary among them, which shows each asset's one line, as its inspector's header does (TW-21); a click shows the asset's inspector in the detail pane, under its
+  its changes before it makes them ([SPREADSHEETS.md](SPREADSHEETS.md)). The list's columns sort, Summary among them, which shows each asset's one line, as its inspector's header does; a click shows the asset's inspector in the detail pane, under its
   summary: its description, then a line for each of its sections, or for a Scaler asset or a Requirement Template, of
   its parts. A double click shows it in the Project window, and a row of an asset's Used By opens that asset in The
   Forge. Tags lists the project's tags and what uses each. A context is a kind of tag, as Granted, Event, Impact Type or
@@ -180,7 +180,7 @@ string perLevel = impact.FormatTotal();           // "20/30/40/50"
 - **Debugger** (`Window → PlayForge → Debugger`) — the game as it plays, in four views the toolbar switches
   between. **Entities** lists every entity, of either kind, beside the one selected: its attributes with what changed
   them, its effects with the time each has left and where it came from, its abilities with their state and cooldown,
-  its tags with what grants them, and its combat log, newest first, a click on a hit showing its breakdown (TW-22). It acts on the entity too: select a row, and the foot row under its table acts
+  its tags with what grants them, and its combat log, newest first, a click on a hit showing its breakdown. It acts on the entity too: select a row, and the foot row under its table acts
   on it. Set an attribute's base and current values (a double-click on a value goes to its field), apply an effect
   or take one off, grant an ability and activate or interrupt it, or add a tag by name or from the project's tags (a
   loose tag, which Remove takes back). With Follow Selection on, it shows the entity
@@ -190,13 +190,13 @@ string perLevel = impact.FormatTotal();           // "20/30/40/50"
   refused activation, each effect's time on the shelf and each effect refused, and draws them over the last seconds, a
   track for each entity's ability or effect. Select a track to see an ability's stages and their tasks, with when the
   selected run reached each, beside its runs, or an effect's applications and refusals, with its journal under them:
-  each landing, tick, hit and removal, and each worker that ran, by its hook and side, with what it queued (LAB-17). A
+  each landing, tick, hit and removal, and each worker that ran, by its hook and side, with what it queued. A
   click on a journal entry shows its parts, and a click on a hit in the combat log its steps. Record pauses it, and
   Clear forgets it. Docked in a
   narrow column, each view's list sits above its detail. The window menu sets how often it reads the game.
 - **Asset fields** — every reference to a PlayForge asset is Unity's object field. **Open** beside it shows the asset
   in a window of its own; **New**, beside an empty one, asks the new asset's name in The Forge's New dialog, starting as
-  the asset that holds the field and the field's, then makes it where Project Settings → PlayForge puts its type (EP-8). An effect field's right-click menu has its template, a pick of the effects
+  the asset that holds the field and the field's, then makes it where Project Settings → PlayForge puts its type. An effect field's right-click menu has its template, a pick of the effects
   nothing links, and New Linked Effect, which names the effect in the New Asset window and links it to the asset.
 - **Import and Clear** — each inspector section's header has Import, Clear and Help. Import opens the Import window:
   choose a source on the left, the type's defaults first, then the assets of the type; the right lists the fields that differ,
@@ -212,21 +212,20 @@ string perLevel = impact.FormatTotal();           // "20/30/40/50"
   inspector marks it as Unity marks a prefab instance's override. A marked field's right-click menu has **Revert to
   Template**. Saving a template changes no child.
 - **Settings** — **Project Settings → PlayForge** shows the active Forge Project's settings, kept in its asset under
-  version control, each game its own (TW-30): where each type's new assets go, within the project's folder, a new
-  asset's file its name alone (EP-13); each type's defaults (the asset a new one starts as a copy of, and the assets Import lists first); the
-  effects a new Cost or Cooldown copies; its Templates, which The Forge's Create offers beside PlayForge's presets
-  (TW-24); and what its game reads through its GameRoot as it runs, the roles its
+  version control, each game its own: where each type's new assets go, within the project's folder, a new
+  asset's file its name alone; each type's defaults (the asset a new one starts as a copy of, and the assets Import lists first); the
+  effects a new Cost or Cooldown copies; its Templates, which The Forge's Create offers beside PlayForge's presets; and what its game reads through its GameRoot as it runs, the roles its
   attributes play, by tag, and its default crowd control ([ATTRIBUTES.md](ATTRIBUTES.md#roles)). Its **PlayForge
-  Folder** is where a new Forge Project goes (EP-10). With no Forge Project, **Create Forge Project** makes one named
+  Folder** is where a new Forge Project goes. With no Forge Project, **Create Forge Project** makes one named
   for the game, in a folder of its own there.
   **Preferences → PlayForge** holds your own view toggles, the most PlayForge's dropdowns grow to (**Menu Width** and
-  **Menu Height**, EP-1), and the log level. The
+  **Menu Height**), and the log level. The
   Forge's window menu opens both.
 - **Golden tests** (the Test Runner's EditMode tab, `FarEmerald.PlayForge.Tests.Golden`) — the framework's behavioral
   contract; run after upgrading.
 - **The test kit** (`FarEmerald.PlayForge.Testing`) — play your own abilities, effects and items in your own tests: a
   live world for each test, stepped a frame at a time, entities on either hub, Cast, Use, Hold and Hit, scripted time
-  and rolls, and checks after each test that nothing leaked (TW-26). [TESTING.md](TESTING.md) sets it up.
+  and rolls, and checks after each test that nothing leaked. [TESTING.md](TESTING.md) sets it up.
 - **Problems** (`Window → PlayForge → Problems`) — every problem the validator finds in the project's PlayForge
   assets, such as a link with no provider, an impact that never applies or a field that reads a scaler it hasn't got,
   with its severity and its asset; a click selects the asset. **By Rule**, in its toolbar, groups them under the rule
@@ -234,7 +233,7 @@ string perLevel = impact.FormatTotal();           // "20/30/40/50"
   All**, each one Undo step. Its linter reads what the project's assets give each other: a stacking effect's periodic
   number that reads its own stacks, an item's stacks read in an effect no item applies, a filter's impact type nothing
   deals, and a trigger on an event nothing sends, which is a **Note**, as code may send it: the view lists notes under a
-  filter of their own, and the counts leave them out (TW-25). An inspector's header counts its asset's problems. In
+  filter of their own, and the counts leave them out. An inspector's header counts its asset's problems. In
   batch mode, `ForgeValidator.LogAll` writes them to the Console, a note as a plain line. Add a check of your own by
   deriving from `ForgeValidationRule`: override `Name` to name its group, and give a problem a step that fixes it with
   its `Fix`.
@@ -249,7 +248,7 @@ process lifecycle logs.
 Each message is of a system, effects, abilities, numbers, processes, saves, input and the rest (`ForgeLog.ESystem`), and
 a system can take a level of its own, `ForgeLog.SetLevel(ForgeLog.ESystem.Effects, ForgeLog.ELevel.Verbose)`, or give it
 back with null. `ForgeLog.Logged` hears each message let through, with its system and the entity it's about where it
-names one, as the Creator Lab's Log page does (LAB-16).
+names one, as the Creator Lab's Log page does.
 
 ## Profiling
 

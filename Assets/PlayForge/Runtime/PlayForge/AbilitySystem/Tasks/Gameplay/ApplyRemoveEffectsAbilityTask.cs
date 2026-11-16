@@ -10,7 +10,7 @@ namespace FarEmerald.PlayForge
     {
         public List<GameplayEffect> Effects;
 
-        [Tooltip("Lands on the targets in the project's resolve order; off, in the order the targeting gave them (TW-31)")]
+        [Tooltip("Lands on the targets in the project's resolve order; off, in the order the targeting gave them")]
         public bool UseResolveOrder = true;
 
         public override void Prepare(AbilityDataPacket data)

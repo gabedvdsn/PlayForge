@@ -15,7 +15,7 @@ Stacks under **Item**, and a kind of a project's own under the category it names
 context provides, with `[NumberContext]`, offers only the kinds that can be worked out there: a targeting task's range,
 which has no target yet, offers no kind that reads one.
 
-Every number an asset authors is a number field (FN-19, Decision 83), read at the level of what holds it: an ability's,
+Every number an asset authors is a number field, read at the level of what holds it: an ability's,
 as its Buffer Window and its tasks', at its level; an effect's, as its Stack Bounds' Min and Max, its Starting Stacks and
 a Stacks change's, at the effect's; a cue's Strength, Duration, Lifetime and Volume, for its effect as it lands; an item's
 Max Stack Size at its own level, and a set bonus's Pieces at its holder's; and an entity's own, as a barrier's Decay Per
@@ -27,7 +27,7 @@ number field by what it reads, as "Uses 3".
 - **Constant**: the field reads its number, with its unit beside it, as Tick Every's "1 s". A field that used to read
   its scaler, and has none, reads 0, and a warning says so.
 - **Table**: the field reads one value for each level, exactly: level 1 the first, level 4 the 4th, and a level past
-  the last the last, as Laguna Blade's 450, 600 and 750 (TW-27). The range it gives shows beside the kind, as "6–8 s",
+  the last the last, as Laguna Blade's 450, 600 and 750. The range it gives shows beside the kind, as "6–8 s",
   or "-25 to -10" where it goes below 0. Its values sit in a row under it, with no curve.
 - **By Level**: the field reads its values spread over a level range, as points on a curve, a level between two reading
   between them (below). It's the same number by level as a Table, read another way, so choosing one for the other keeps
@@ -36,12 +36,12 @@ number field by what it reads, as "Uses 3".
 - **Shared**: the field reads a Scaler asset (below).
 - The other kinds work out a value from the values or from the entity: **× Attribute** reads an attribute of the
   caster or the target, its current, its base, what's missing of it (base − current) or its share of its base
-  (current ÷ base) (TW-9), which the menu starts as the field's number times it, all of it or only some of its retention
+  (current ÷ base), which the menu starts as the field's number times it, all of it or only some of its retention
   groups (below), and reads it as its attribute's role says, a Bonus Share as 1 + x and a Resistance as 1 − x, or as
-  its Read As says (TW-1), **Clamped** keeps a number within
+  its Read As says, **Clamped** keeps a number within
   bounds, **Conditional** reads one number where a condition holds and another where it doesn't, **Randomized** rolls
   a random value, **Threshold** steps at thresholds, and **Fixed Value** is one number. **Stacking Curve** turns a
-  **Count**, as an item's stacks or an attribute, into its number by a **Curve** and its **Coefficient**, a (TW-9):
+  **Count**, as an item's stacks or an attribute, into its number by a **Curve** and its **Coefficient**, a:
   **Linear**, a × n, as 15% a stack; **Hyperbolic**, 1 − 1 / (1 + a × n), a chance that nears 1 and never reaches it, 13%
   with one stack and 60% with ten at 0.15; **Reciprocal**, 1 / (1 + a × n), as what Dota's armor leaves of a hit at
   0.06; **Inverse**, a / n, as a wind-up an attack speed shortens; and **Exponential**, a to the n. Its **Plus** is
@@ -62,7 +62,7 @@ number field by what it reads, as "Uses 3".
   menu, as a number does, and says itself in a line:
   - **Tag**: whether the caster or the target holds a tag, counted by its weight, so a tag granted twice counts twice;
   - **Attribute**: an attribute of the caster or the target, its current, its base, what's missing of it or its share
-    of its base (TW-9), compared with a number, as 0.3 × the target's base Health, or a share above 0.9 for "above 90%";
+    of its base, compared with a number, as 0.3 × the target's base Health, or a share above 0.9 for "above 90%";
   - **Level**: the level, or how far up its range it is, from 0 to 1, compared with a number;
   - **Compare Numbers**: one number compared with another;
   - **Always** and **Never**;
@@ -78,7 +78,7 @@ number field by what it reads, as "Uses 3".
   Min Value, whatever field the Clamped is in.
 - A **Group** joins several numbers as one. It lists its members, each an **Operation** then its **Scaler**, which
   can be any kind. The members that **Add** are added up, that sum is multiplied by each member that **Multiplies**
-  and divided by each that **Divides** (TW-9), one that reads 0 dividing nothing, then each **Flat Bonus** is added
+  and divided by each that **Divides**, one that reads 0 dividing nothing, then each **Flat Bonus** is added
   on, in whatever order they're listed, so `(5 + Caster's Strength) × 2 + 3` is one number, and `1.7 ÷ Caster's Attack
   Speed` another, and a first member needn't add. Members that multiply or divide with none that adds work on 0, and
   the Group says so. A member that **Overrides** gives the group's value alone; where several do, the group's policy picks the
@@ -91,7 +91,7 @@ Kinds that read the game, each with a summary that says what it reads:
 - **Local Data** reads the number under a **Key** in Local Data: **Its Own**, what the number belongs to, as its
   ability's or its item's asset, or the **Caster**'s or the **Target**'s as the entity holds it. Where there's no
   number under the key it reads its **Default**. A hero's attack range kept in its Local Data is one field read by
-  every ability. The entry's number can scale too (EP-16), read where the kind reads it: Its Own in the number's
+  every ability. The entry's number can scale too, read where the kind reads it: Its Own in the number's
   context, the Caster's or the Target's at that entity's own level. One that reads its own key stops at the Default.
 - **Relative to a Field** reads another number field of the same object, picked from a menu of them, and the field's
   number joins it as Combine says: a Clamped scaler's Max can be 2 × its Min, and a stack bound's Max its Min + 3. The
@@ -104,7 +104,7 @@ Kinds that read the game, each with a summary that says what it reads:
   first impact, and after a load, it reads 0.
 - **Group Impact** reads one retention group's part of an attribute on the caster or the target, as "Caster's Strength
   (Bonus)": the Strength items add, and none of the hero's own.
-- **Retention groups in any attribute read** (TW-3): × Attribute, the Attribute condition, a relative attribute worker's
+- **Retention groups in any attribute read**: × Attribute, the Attribute condition, a relative attribute worker's
   Relative To and the Threshold worker each have *Groups*: **All**, the whole value, as before; **Only These**, as a
   bonus of the items' Strength reads their group; or **All But These**, as a bonus of a hero's own damage leaves its
   items' out. A group names the groups under it too, so *Items* takes *Items.Ring*. The read says which: "Caster's
@@ -208,7 +208,7 @@ A **kind of number** of your own is simpler: derive from `NumberKind` and overri
 `context.Level`, the caller's magnitudes, Local Data, an attribute on either side, and more; `context.Has(...)` says
 which. `Describe()` gives the field's summary, as "the distance to the target". `[NumberKind("Distance to Target",
 Reads = NumberReads.Caster | NumberReads.Target)]` names it and says what it reads, so a field offers it only where it can
-be worked out; where it can't, the field reads its number. `[ForgeMenu("Space")]` files it in the kind menu (EP-2). A kind
+be worked out; where it can't, the field reads its number. `[ForgeMenu("Space")]` files it in the kind menu. A kind
 is a scaler, so it also works in an effect's magnitude and inside a Group or a Conditional, and its fields draw as a
 scaler's do. Test one without an effect: `number.Evaluate(NumberContext.For(caster, target, level))`. A kind is saved
 by its class's name, so renaming the class needs Unity's `[MovedFrom]`. PlayForge's own kinds, Local Data, Tracked
@@ -244,10 +244,10 @@ public ScalableFloat Range = 20f;
   Clamped kind or clamp what the code reads.
 - In a kind of your own, as an ability task, a targeting task or a scaler, `[ShownWhen(nameof(UsePhysics))]` shows a
   field only while a toggle of the same object is on, and `[ShownWhen(nameof(Mode), (int)EMode.Area)]` only while an
-  enum is one of the values, as a targeting task's Detection Layers show under Use Physics (FN-20). A task reads its
+  enum is one of the values, as a targeting task's Detection Layers show under Use Physics. A task reads its
   numbers with `Read(number, data)`, at its ability's level.
 - Every kind of your own, a task, a worker, a component, a cue, a kind of number or a condition, takes
-  `[ForgeMenu("Path/Sub", Name = "...", Description = "...")]` (EP-2): its picker files it under the submenus its path
+  `[ForgeMenu("Path/Sub", Name = "...", Description = "...")]`: its picker files it under the submenus its path
   names, a slash nesting them; Name replaces its class's name in the picker and in its field; and Description is what
   the picker's Context says while it's highlighted. A path holds for the classes made from the one that names it, and
   `[ForgeMenu("")]` puts a kind at the top whatever its base names.
@@ -304,7 +304,7 @@ number and Combine: Scaler × Number with a number of 1.5 reads the asset's valu
   The Forge and the field menus list it, its **Description**, its **Values**, and **Used By**: each field that
   shares it, by its asset and field. Click a row to select the asset. In The Forge, its summary says its
   description, its kind, what it reads and how many fields use it.
-- Its **Try** section reads it at each level of a range, Levels 1 to 5 to start, as an effect's Levels does (LVL-5): a
+- Its **Try** section reads it at each level of a range, Levels 1 to 5 to start, as an effect's Levels does: a
   row of what it gives at each, and under it the parts behind the level picked. It reads against a stand-in
   **Caster** and **Target** and a **Caller**, each with a row for what the scaler asks of it, found as it reads: an
   attribute on its side, whether the side **Has** it, its current and its base; and a key the caller sets, whether

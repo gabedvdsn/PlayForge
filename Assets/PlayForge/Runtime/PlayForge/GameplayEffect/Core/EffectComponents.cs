@@ -17,7 +17,7 @@ namespace FarEmerald.PlayForge
         /// <summary>What it does, in one line (EP-5).</summary>
         public override string Describe() => $"Lands on {Whom(Area?.Takes ?? EAffinityFilter.Enemies)} within {NumberText.Of(Area?.Radius)}" + (Area?.MaxTargets is { } most && (most.Magnitude > 0f || !AbstractScaler.IsNone(most.Scaler)) ? $", {NumberText.Of(most)} at most" : "");
 
-        [Tooltip("Its area: as its effect lands on its target, it lands on each the area takes near that target too (TW-10)")]
+        [Tooltip("Its area: as its effect lands on its target, it lands on each the area takes near that target too")]
         public EffectArea Area = new();
 
         public override bool AllowsSeveral => false;
@@ -35,7 +35,7 @@ namespace FarEmerald.PlayForge
         /// <summary>What it does, in one line (EP-5).</summary>
         public override string Describe() => $"Moves {NumberText.Of(Transfer?.Amount)} of the {Transfer?.From.ToString().ToLowerInvariant()}'s {NameOf(Transfer?.FromAttribute)} to the {Transfer?.To.ToString().ToLowerInvariant()}'s {NameOf(Transfer?.ToAttribute)}";
 
-        [Tooltip("What it moves: when, who gives and of what, who gets and in what, which of the values, and how much (TW-20)")]
+        [Tooltip("What it moves: when, who gives and of what, who gets and in what, which of the values, and how much")]
         public AttributeTransfer Transfer = new();
     }
 
@@ -131,7 +131,7 @@ namespace FarEmerald.PlayForge
         [Tooltip("Passes over those who have the effect it spreads already")]
         public bool SkipHolders = true;
 
-        [Tooltip("Lands on those it takes in the project's resolve order; off, the nearest first (TW-31)")]
+        [Tooltip("Lands on those it takes in the project's resolve order; off, the nearest first")]
         public bool UseResolveOrder = true;
 
         public override void Land(EffectComponentContext ctx) { if ((When & ESpreadMoment.Land) != 0) ForgeSpread.Spread(this, ctx); }

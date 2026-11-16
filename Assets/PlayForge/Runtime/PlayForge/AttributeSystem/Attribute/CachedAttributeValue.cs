@@ -6,7 +6,7 @@ namespace FarEmerald.PlayForge
 {
     /// <summary>
     /// Per-attribute runtime state under the two-kind impact model
-    /// (IMPACT_MODEL_REFACTOR.md §1–§2):
+    /// (Docs/IMPACT_MODEL_REFACTOR.md §1–§2):
     ///
     /// <list type="bullet">
     ///   <item><b>Modifiers</b> (transient, derived) — registered via

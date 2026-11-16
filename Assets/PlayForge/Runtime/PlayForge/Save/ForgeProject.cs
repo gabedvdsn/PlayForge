@@ -19,16 +19,16 @@ namespace FarEmerald.PlayForge
         public string Description;
 
         [Tooltip("The project's settings, which its game reads as it runs: its attributes' roles, and the crowd control rules " +
-                 "an entity follows where it names none (TW-29)")]
+                 "an entity follows where it names none")]
         public ForgeProjectSettings Settings = new();
 
         [Tooltip("The entity its game's GameRoot runs as, the game's own attributes, abilities and workers, as a scene's " +
-                 "Bootstrapper plays the project. The project's GameRoot folder holds it (EP-11)")]
+                 "Bootstrapper plays the project. The project's GameRoot folder holds it")]
         public EntityIdentity GameRootEntity;
 
         [Tooltip("Names each PlayForge asset made, copied or moved into its folder for saves, by its GUID, as it lands, and lets " +
                  "go of one deleted, so a save finds every asset with no Add Its Assets to run. One moved out stays named, so a " +
-                 "save made before still finds it. Off, the catalog is left as it is (EP-15)")]
+                 "save made before still finds it. Off, the catalog is left as it is")]
         public bool KeepCatalogCurrent = true;
 
         // The project code uses, in place of the GameRoot's

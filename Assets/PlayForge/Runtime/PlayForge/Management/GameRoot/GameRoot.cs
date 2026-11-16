@@ -26,7 +26,7 @@ namespace FarEmerald.PlayForge
         [SerializeField] private new bool DontDestroyOnLoad = true;
 
         [Tooltip("The Forge Project this game runs, whose settings PlayForge reads as it runs: its attributes' roles, and its " +
-                 "default crowd control (TW-29)")]
+                 "default crowd control")]
         [SerializeField] private ForgeProject project;
 
         /// <summary>The Forge Project this game runs, whose settings PlayForge reads where code uses none (TW-29).</summary>

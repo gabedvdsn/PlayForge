@@ -26,7 +26,7 @@ namespace FarEmerald.PlayForge
     [Serializable]
     public class OnHitEntry
     {
-        [Tooltip("The attribute a hit lowers, as Health. None, the one playing the project's Health role (TW-28, TW-29)")]
+        [Tooltip("The attribute a hit lowers, as Health. None, the one playing the project's Health role")]
         public Attribute Attribute;
 
         [Tooltip("The effects it applies")]

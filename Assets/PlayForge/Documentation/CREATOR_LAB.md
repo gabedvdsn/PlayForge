@@ -4,9 +4,7 @@ A space for trying a project's own assets: put units down, give them abilities, 
 numbers move. Open it from **Window → PlayForge → Creator Lab**: it opens in a new scene and plays. The scenes open
 before are saved first, if you want them saved.
 
-The lab plays every PlayForge asset in the project's own folders. Its design is `Docs/CREATOR_LAB_DESIGN.md` in the
-repository; what's built so far is the space, its units and dummies, its panels and its time (phase 2, LAB-1 to LAB-8),
-and battle (phase 3, LAB-9 and LAB-10).
+The lab plays every PlayForge asset in the project's own folders.
 
 ## The space
 
@@ -75,7 +73,7 @@ moments are its rules':
   **Low** (below 35%, away from its foe, as an escape), **Stunned** (while something stops it) or **FoeLow** (its foe
   below half).
 - **Reach Key**: the key for an ability's reach, 0 for anywhere, where it has no Cast Range; one that has reaches as far
-  as its Cast Range (FN-14).
+  as its Cast Range.
 
 Low on health, a bot backs off a moment once in a while. The Demo's AI hero is a bot, its roster giving the keys.
 
@@ -106,7 +104,7 @@ while it's paused.
 
 ## Showing its working
 
-The bottom panel's pages show what happens as the lab plays (LAB-12 to LAB-16). Each records only while the lab runs.
+The bottom panel's pages show what happens as the lab plays. Each records only while the lab runs.
 
 - **Journal**: the lab's effect journal over every unit: each effect landing, with its number traced, refused and why,
   ticking, hitting, coming off, and each worker that ran, by its hook and its side, with the actions it queued and
@@ -138,7 +136,7 @@ Movement Speed (or Move Speed), and walks a unit without a speed at 4 a second. 
 - **Stops**: tags that stop a unit moving, as Stunned. **Hides**: tags under which the other side can't see or target
   it, as Invisible. **Shields**: tags under which no one can target it.
 - **Attack Range Key**: the Local Data key a unit's attack range is under, or **Attack Range** for every unit; a unit
-  whose attack has a Cast Range attacks from as far as it reaches (FN-14).
+  whose attack has a Cast Range attacks from as far as it reaches.
 - **Attack Slot**: which of an entity's starting abilities is its attack, from 0, or −1 for none.
 - **Driver**: the project's **Lab Driver**, which the unit you control is ordered about through ([Your unit](#your-unit)).
 

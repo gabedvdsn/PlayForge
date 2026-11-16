@@ -79,7 +79,7 @@ namespace FarEmerald.PlayForge
         [Tooltip("What the breakdown notes when it rolls: critical")]
         public string Note = "critical";
 
-        [Tooltip("How it rolls: pseudo-random, and its luck (TW-8)")]
+        [Tooltip("How it rolls: pseudo-random, and its luck")]
         public ChanceRoll Roll = new();
 
         public override float Apply(float value, in ValueRun run)
@@ -158,11 +158,11 @@ namespace FarEmerald.PlayForge
                  "hit's Block Chance, or a stacking curve of an item's stacks")]
         public ScalableFloat Chance = 0.1f;
 
-        [Tooltip("How it rolls: pseudo-random, and its luck (TW-8)")]
+        [Tooltip("How it rolls: pseudo-random, and its luck")]
         public ChanceRoll Roll = new();
 
         [Tooltip("What it can stop: Losses, an effect that lowers its attribute, as a hit, letting a heal land; or Any " +
-                 "Impact, heals and buffs too (GAS-77)")]
+                 "Impact, heals and buffs too")]
         public EStopImpacts Stops = EStopImpacts.Losses;
 
         /// <summary>What the one hit hears as it stops the effect.</summary>

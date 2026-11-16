@@ -30,7 +30,7 @@ namespace FarEmerald.PlayForge
         public bool FlattenRangeCheck;
 
         [Tooltip("Its range is its ability's Cast Range, flat as the Cast Range says, where the ability has one; off, its own " +
-                 "Max Target Range (FN-14)")]
+                 "Max Target Range")]
         public bool UseCastRange = true;
 
         [Tooltip("When true, an invalid click re-prompts instead of failing")]

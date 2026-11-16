@@ -163,7 +163,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f712e39f3adcf6e42a4597175cb552a0, type: 3}
   m_Name:
   m_EditorClassIdentifier:
-  Project: {fileID: 0}
+  Project: {fileID: 11400000, guid: 72db4f8678fb4142ae766c910d4adb14, type: 2}
   ProcessControlPrefab: {fileID: 0}
   GameRootPrefab: {fileID: 0}
   BootstrapOnAwake: 1

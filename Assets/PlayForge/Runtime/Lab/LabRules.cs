@@ -117,7 +117,7 @@ namespace FarEmerald.PlayForge.Lab
 
         [Header("The author's unit")]
         [Tooltip("The project's own way of ordering a unit about, which the author's unit is moved and made to cast through. " +
-                 "With none, the lab's: a unit walks in a straight line (LAB-11)")]
+                 "With none, the lab's: a unit walks in a straight line")]
         public LabDriver Driver;
 
         [System.NonSerialized] private Attribute foundHealth;

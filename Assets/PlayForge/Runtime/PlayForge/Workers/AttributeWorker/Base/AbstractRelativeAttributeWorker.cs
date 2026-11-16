@@ -19,7 +19,7 @@ namespace FarEmerald.PlayForge
         [Tooltip("Multiplier applied to the relative attribute value")]
         public ScalableFloat RelativeMultiplier = 1f;
 
-        [Tooltip("Which of the relative attribute's retention groups it reads: all of them, the whole value, unless it says (TW-3)")]
+        [Tooltip("Which of the relative attribute's retention groups it reads: all of them, the whole value, unless it says")]
         public RetentionGroups RelativeGroups = new();
         
         // ═══════════════════════════════════════════════════════════════════════════

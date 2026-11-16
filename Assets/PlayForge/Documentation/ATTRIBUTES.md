@@ -21,7 +21,7 @@ it holds, such as the abbreviation or how many assets use the attribute.
 - **Description**: free text for your UI.
 - **Textures**: icons, each paired with a tag. The texture tagged `Primary` is the attribute's icon. Without one, the
   first texture is used.
-- **Role** (TW-1): what the attribute is, which says how bonuses to it add up and how a number reads it:
+- **Role**: what the attribute is, which says how bonuses to it add up and how a number reads it:
   - **Value**, every attribute's unless it says: bonuses add and multiply as each effect says, and a number reads it as
     it is.
   - **Bonus Share**, as Damage Amplification at 0.2 for 20%: bonuses add, +20% and +30% making 0.5, and × Attribute
@@ -30,15 +30,14 @@ it holds, such as the abbreviation or how many assets use the attribute.
   - **Resistance**, a share taken off or a chance, as Damage Resistance: bonuses stack with diminishing returns, each on
     what's left, so two of 30% make 51% and none takes it past 1; × Attribute reads what's left, 1 − x. The lasting
     bonuses diminish; a permanent change, which an instant or periodic impact commits, adds as it is.
-  - **Barrier** (TW-12), as a shield before Health: it absorbs for the attribute its **Absorbs For** names, each workable
+  - **Barrier**, as a shield before Health: it absorbs for the attribute its **Absorbs For** names, each workable
     loss to that one coming off it first, as much as it holds, and the rest going on; two hits in a frame soak no more
-    than it holds, and what it soaks comes off it at the frame's end. **Decay Per Second**, a number field read at its holder's level (FN-19), takes it down by its holder's
+    than it holds, and what it soaks comes off it at the frame's end. **Decay Per Second**, a number field read at its holder's level, takes it down by its holder's
     own time, a number a second or, with **Decay As Share Of Base**, that share of its base, as Topaz Brooch's barrier
     fades; **Fades With Effect** fades what a lasting effect gives it to 0 by the time that effect ends. A hit the
     barrier soaks whole is no loss to the other, so an On Hit counting it doesn't go off.
 
-**Gains Scaled By** names an attribute that multiplies each workable gain to this one's current, on the same entity
-(TW-15): Health's by Healing Received, so a curse at 0.5 halves heals and Ice Blast's 0 blocks them. A loss passes it by,
+**Gains Scaled By** names an attribute that multiplies each workable gain to this one's current, on the same entity: Health's by Healing Received, so a curse at 0.5 halves heals and Ice Blast's 0 blocks them. A loss passes it by,
 and a gain to the base, as more maximum, does too.
 
   An effect's impact can add its own way (**Add Behaviour**: as the attribute's role says, a plain Sum, or Diminishing),
@@ -48,7 +47,7 @@ An attribute that plays one of its project's roles says so, as "Plays Health in 
 
 ## Roles
 
-A game's settings live on its **Forge Project** (TW-29), the asset at the root of its folder that The Forge's projects
+A game's settings live on its **Forge Project**, the asset at the root of its folder that The Forge's projects
 are. Among them are its **Roles**: the part each attribute plays in the game, each a **role tag** and the attribute that
 plays it. PlayForge's own features read the roles it ships, and a game's code reads its own by their tags, so no
 attribute's name is built in:
@@ -57,7 +56,7 @@ attribute's name is built in:
   for its death and its Death doesn't say otherwise ([ENTITIES.md](ENTITIES.md#death)); what On Hit counts, lifesteal
   heals and Execute reads where they name no attribute; and whose loss names the killer, for Kill and Died. An entity
   whose set has no attribute in this role doesn't die of it.
-- **Luck** (`Tags.ROLE_LUCK`): read on the caster of every chance that gives no luck of its own (TW-8).
+- **Luck** (`Tags.ROLE_LUCK`): read on the caster of every chance that gives no luck of its own.
 - **Movement Speed** (`Tags.ROLE_MOVEMENT_SPEED`): what the Creator Lab's units walk at, where its rules name none.
 - **A role of your own**: any tag, as `Role.Energy`, in the same list. Code reads it with `ForgeRoles.AttributeFor(tag)`,
   and an ability's attribute cost can spend it ([ABILITIES.md](ABILITIES.md#activation)).
@@ -74,9 +73,6 @@ the editor, the inspectors and the Problems window read each asset against its o
 it. The Problems window warns of an attribute cost that spends nothing, or a role no attribute plays in its project; an
 entity whose starting abilities spend attributes its set doesn't give; and an entity that stays when it dies whose set
 lacks the Health role's attribute, with no death watcher of its own.
-
-TW-28 kept fixed Health, Mana, Luck and Movement Speed slots in a Resources asset, read through `ForgeAttributes`; TW-29
-replaced them.
 
 ## Local Data
 

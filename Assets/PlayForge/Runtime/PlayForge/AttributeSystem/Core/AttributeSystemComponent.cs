@@ -191,7 +191,7 @@ namespace FarEmerald.PlayForge
             return false;
         }
 
-        // ─── Per-group attribution surface (IMPACT_MODEL_REFACTOR.md §2.3) ─────────
+        // ─── Per-group attribution surface (Docs/IMPACT_MODEL_REFACTOR.md §2.3) ─────────
         // Groups partition an attribute's pool for UX/consumer queries (base vs bonus
         // health, base vs bonus damage). Slices always sum exactly to ActiveValue.
 
@@ -220,7 +220,7 @@ namespace FarEmerald.PlayForge
         }
         
         // ═══════════════════════════════════════════════════════════════════════════
-        // ATTRIBUTE MODIFICATION — the four-verb surface (IMPACT_MODEL_REFACTOR.md §2.4)
+        // ATTRIBUTE MODIFICATION — the four-verb surface (Docs/IMPACT_MODEL_REFACTOR.md §2.4)
         //
         //   RegisterModifier   — Continuous entries; transient, derived, auto-reversing.
         //   UnregisterModifier — the ONLY reversal mechanism. Runs through the same

@@ -13,7 +13,7 @@ Tags are names, such as `State.Stunned`, that an entity carries and that require
 made from its Name: Fire Ball gives `Ability.FireBall`. The entity carries this tag while it has the ability, and keeps
 the ability's level under it. Each section below matches the inspector section of the same name.
 
-The inspector's header shows the ability's one line, as The Forge's Summary column does (TW-21): each effect it applies,
+The inspector's header shows the ability's one line, as The Forge's Summary column does: each effect it applies,
 by its first impact across its levels, then its costs and its cooldown, as "-450/-600/-750 Health; 280/420/680 Mana;
 70/60/50 s". A number that reads what the editor can't give it, as the target, is marked `*`.
 
@@ -107,8 +107,8 @@ passes it in, and one effect serves every strength.
 
   Whatever the choice, an ability can't start again while its own activation holds its claim.
 - **Buffer Window** (default 0.3 s) and **Buffer Priority** (default 0): the input buffer's, under Queue, as above,
-  each a number field read at the ability's level (FN-19). A window of 0 doesn't wait, so the request is refused. They show under Queue and under the entity's policy, which may be
-  Queue, and are hidden under the others (FN-23).
+  each a number field read at the ability's level. A window of 0 doesn't wait, so the request is refused. They show under Queue and under the entity's policy, which may be
+  Queue, and are hidden under the others.
 - **Activate At Start**: when the ability is one of the entity's Starting Abilities, it tries to activate once, as the
   entity's GAS starts. An ability that an item or code grants later doesn't try it.
 - **Triggers**: what sets the ability off on its own. A **Gameplay Event** trigger activates it when code sends the
@@ -116,11 +116,11 @@ passes it in, and one effect serves every strength.
   the event's data, its target among it. A **Tag Added** trigger activates it as the entity gains the tag, or one under
   it, that it didn't have; more of a tag it holds sets off nothing. Each trigger tries the ability as a request would,
   so its checks and its When Busy still hold.
-  - **The core's own events** (TW-5), sent only where an ability listens for them: **Impact Dealt**, to the dealer, and
+  - **The core's own events**, sent only where an ability listens for them: **Impact Dealt**, to the dealer, and
     **Impact Taken**, to the one hit, as an impact lands between two entities; **Kill**, to the killer, and **Died**, to
     the one who died, its killer the source of the last blow it took; **Revived**, to a staying entity as it revives;
     **Blocked** and **Evaded**, to one that stops an effect by a Block or Evade stage, and **Hit Blocked** and **Hit
-    Evaded**, to its dealer (TW-12).
+    Evaded**, to its dealer.
     Their data hold the instigator as Source, the entity it was done to as Subject, and an impact as Impact.
   - For an impact event, a trigger takes only impacts on its **Attribute**, a **Sign** (Loss or Gain), and its
     **Impact Types**. Its **Chance** rolls once for each event: Counter Helix's 20%, its **Chance Roll** pseudo-random
@@ -130,26 +130,25 @@ passes it in, and one effect serves every strength.
     rules don't ask that its caster be alive.
   - The Problems view notes a Gameplay Event trigger on an event neither the core nor an asset in the project sends, as
     a threshold's Event or a stop stage's does, as only code can send it; and warns of an Impact Dealt or Impact Taken
-    trigger's impact type that no effect deals, which never matches (TW-25).
-- **Chance to Activate** (TW-8): how likely an activation is to start, from 0 to 1, rolled once for each, a player's
+    trigger's impact type that no effect deals, which never matches.
+- **Chance to Activate**: how likely an activation is to start, from 0 to 1, rolled once for each, a player's
   or a trigger's, after its other checks; a miss is refused with Chance. **Activation Roll** makes it pseudo-random or
-  lucky, and shows for a chance that can miss (FN-23). **Proc Coefficient**: what its effects' hits carry for on-hit effects, where an effect sets none of its own.
-- **Ignores Crowd Control** (TW-16): the crowd control rules the ability ignores, by their tags, as Black King Bar's
+  lucky, and shows for a chance that can miss. **Proc Coefficient**: what its effects' hits carry for on-hit effects, where an effect sets none of its own.
+- **Ignores Crowd Control**: the crowd control rules the ability ignores, by their tags, as Black King Bar's
   Avatar ignores Silenced: the other rules still stop it, and still interrupt it as it runs (see Requirements). A tag
   ignores the rules under it too.
 - **Cost** and **Cooldown**: gameplay effects ([EFFECTS.md](EFFECTS.md)) applied to the caster as the ability starts,
-  after its targeting, so a cancelled targeting pays nothing, or by the stage that takes them (see Stages) (TW-17). A
+  after its targeting, so a cancelled targeting pays nothing, or by the stage that takes them (see Stages). A
   cost is usually an Instant effect that lowers a resource such as Mana. A cooldown is
   usually a Durational effect: while it is active, the caster carries its asset tag, and the Cooldown check refuses the
   ability. A line under each field says how its effect takes its levels, and **Link** makes it take this ability's.
   **New**, beside an empty field, makes an effect linked to this ability. If Project Settings → PlayForge names a Cost
   or Cooldown effect, the field's right-click menu copies it or uses it.
-- **Attribute Costs**, after Cost (TW-29): what the ability spends of attributes as it's used, beside its Cost effect,
+- **Attribute Costs**, after Cost: what the ability spends of attributes as it's used, beside its Cost effect,
   both paid. Each names the **Attribute** it spends, or, where it names none, a **Role** whose attribute in the project it
   spends ([ATTRIBUTES.md](ATTRIBUTES.md#roles)), and an **Amount** that can scale by level. It's refused with Cost while
   its caster has less than they come to, lacks the attribute, or no attribute plays the role, and they're paid where a
-  Cost is, as the ability starts or its stage applies usage. The section's line says them, as "30 Mana". They took the
-  place of TW-28's Mana Cost, which spent the project's Mana alone.
+  Cost is, as the ability starts or its stage applies usage. The section's line says them, as "30 Mana".
 - **Targeting**: the task that picks what the ability acts on, such as an entity the player clicks, or the caster
   itself. Targeting holds the activation's claim. If the task fails while its **Break Runtime On Invalid** is on, or it
   doesn't finish, the activation ends. Leave Targeting empty to skip this step.
@@ -166,10 +165,10 @@ passes it in, and one effect serves every strength.
     Cast Range where it has one, the range measured from the caster and **Use Cast Range** on, sorted by its
     **Mode**, up to **Max Targets**, or every one at 0. Each is a target of the activation, and the first, the nearest
     for Nearest, is its primary. Apply Effects and Apply/Remove Effects reach each target, in the project's resolve
-    order unless their **Use Resolve Order** is off (TW-31, [EFFECTS.md](EFFECTS.md#resolve-order)), so an area ability
+    order unless their **Use Resolve Order** is off ([EFFECTS.md](EFFECTS.md#resolve-order)), so an area ability
     is Auto Target and then Apply Effects. A Target row and the Target Checks check the primary. **Auto Target From Data**
     with **Primary Only** off takes each target its key holds.
-    Each entity is found by its position, on either hub, with no collider needed (TW-10). **Around** says where the
+    Each entity is found by its position, on either hub, with no collider needed. **Around** says where the
     range is measured from: the caster, the activation's target (as an AI hands it, or a task before it in a
     Composite picks it), or its point; **Flat**, on by default, measures along the ground, and off, a sphere. **Use
     Physics** finds entities with physics instead, by collider on its **Detection Layers**, which show under it alone,
@@ -177,7 +176,7 @@ passes it in, and one effect serves every strength.
     it's of the sides it takes.
   - A targeting task's numbers, as its **Range**, its **Max Targets**, a pointer task's **Max Distance** and an
     attribute condition's value, are numbers that can scale by level or read an attribute, read as its activation
-    starts, at its ability's level (FN-20). A pointer's **Mouse Button** picks one of three, so it stays a choice.
+    starts, at its ability's level. A pointer's **Mouse Button** picks one of three, so it stays a choice.
 - **Use Implicit Targeting** (default on): before targeting, record the caster as the activation's target, under
   **Implicit Tag** (default `Target`), which shows while this is on. A targeting task that sets a target replaces it.
 
@@ -200,20 +199,20 @@ This section is what the ability does once it has started.
   - **Completion**: All ends the stage when every task has finished. Any ends it when the first task finishes,
     and cancels the rest. A stage with no policy set behaves as All.
   - **Apply Usage Effects**: apply the ability's cost and cooldown in this stage. They apply once per activation, in
-    the first stage that does this. If no stage does, they apply as the ability starts, after its targeting (TW-17).
+    the first stage that does this. If no stage does, they apply as the ability starts, after its targeting.
   - **At Stage Start**, under Apply Usage Effects: on, apply them as the stage starts. Off, apply them as it ends,
     and only if it succeeded.
   - **Tasks**: the work, such as Apply Effects, Delay or Run Sequence, in a list whose **+** adds an empty task to
     pick a kind for, from a searchable picker in which each task sits under its category: Effects, Asset Loaders,
-    Process, Sequence, Waits, Events and Tags, Movement, Items and Utility (FN-24). A task of your own names its
-    submenu with `[ForgeMenu("Effects", Description = "...")]` (EP-2), a slash nesting one submenu in another and a
+    Process, Sequence, Waits, Events and Tags, Movement, Items and Utility. A task of your own names its
+    submenu with `[ForgeMenu("Effects", Description = "...")]`, a slash nesting one submenu in another and a
     class's path holding for those made from it; one that names none sits after the submenus, and its Description is
     what the picker's Context says while it's highlighted. A task's numbers, as Delay's milliseconds and Channel's duration, are numbers that can
     scale by level, read as it runs, at its ability's level. Run Sequence runs the sequence a static method
     makes, picked in **Sequence** by name, from a searchable dropdown of the project's `[TaskSequenceMethod]` methods,
-    each class's under its name where more than one class holds them (FN-24), or, for an ability built in code, a fresh run of the sequence its `Definition` describes, which
+    each class's under its name where more than one class holds them, or, for an ability built in code, a fresh run of the sequence its `Definition` describes, which
     `TaskSequenceBuilder` makes. A stage that holds a critical task is critical.
-    PlayForge's own tasks, by category (FN-24): **Effects**, Apply Effects, Apply/Remove Effects, **Area Effect** (its
+    PlayForge's own tasks, by category: **Effects**, Apply Effects, Apply/Remove Effects, **Area Effect** (its
     effects on each within its radius of its caster, its target or its point, of the sides it takes, by position on
     either hub or with physics) and **Apply To Caster**; **Asset Loaders**, the Set tasks; **Process**, Create Mono
     Process, Run Process and Disjoint; **Sequence**, Run Sequence and Inject; **Waits**, Delay, Channel, and **Wait For
@@ -271,8 +270,7 @@ skip its cost and cooldown.
 
 ### Crowd Control
 
-**Crowd control** holds for every ability at once, so no ability has to list Stunned among the tags it must not have
-(TW-16). A **Crowd Control Rules** asset (Create → PlayForge → Crowd Control Rules) holds its rules, each a **Tag** the
+**Crowd control** holds for every ability at once, so no ability has to list Stunned among the tags it must not have. A **Crowd Control Rules** asset (Create → PlayForge → Crowd Control Rules) holds its rules, each a **Tag** the
 caster carries, as Stunned, and what it **Stops**: **Every Ability**, as a stun, or **Abilities Tagged**, those whose
 asset tag or a context tag is one of its **Ability Tags** or under it, as Silenced stops spells and Disarmed attacks.
 An entity's abilities follow its own **Crowd Control** ([ENTITIES.md](ENTITIES.md#abilities)), or, where it names none,
@@ -285,17 +283,16 @@ ability's **Ignores Crowd Control** (see Activation) opts it out of the rules it
 
 ## Components
 
-An ability's components are features it carries, each a class with hooks into its life, added with the list's **+**
-(FN-14). A component hears the ability **Granted** to an entity and **Removed** from it; is asked whether an activation may start, **CanStart**, where a reason it gives refuses the activation, named by it; and hears an activation **Start**, **Commit** its cost and cooldown, and **End**, by how it ended: done, cancelled or failed. A kind that makes no sense twice is offered only while the ability holds none of it.
+An ability's components are features it carries, each a class with hooks into its life, added with the list's **+**. A component hears the ability **Granted** to an entity and **Removed** from it; is asked whether an activation may start, **CanStart**, where a reason it gives refuses the activation, named by it; and hears an activation **Start**, **Commit** its cost and cooldown, and **End**, by how it ended: done, cancelled or failed. A kind that makes no sense twice is offered only while the ability holds none of it.
 
 A component of your own derives from `AbstractAbilityComponent` and overrides the hooks it needs, each a no-op
 otherwise. It's the ability's, shared by everything that holds it, so what it keeps for one entity's ability it keeps through its
 context: `ctx.GetState<T>(this)`. **Describe** says what it does in one line with its numbers, as a Cast Range's "Range
-600", which the Components section's line, The Forge's summary and the ability's breakdown say beside its name (EP-5).
+600", which the Components section's line, The Forge's summary and the ability's breakdown say beside its name.
 
 ### Cast Range
 
-A **Cast Range** component is the one range the ability has (FN-14): how far from its caster its target or its point
+A **Cast Range** component is the one range the ability has: how far from its caster its target or its point
 may be, its **Range** a number that can scale by level, measured along the ground unless **Flat** is off; 0 reaches
 anywhere. An activation handed a target or a point beyond it, under TargetReal or Position, as an AI's is, is refused
 as **Range**, so nothing of it is paid and an AI can walk closer and ask again; targeting that picks a target beyond it,
@@ -307,7 +304,7 @@ ability holds one at most.
 
 ### Charges
 
-A **Charges** component (TW-17) says how many uses the ability holds, a number that can scale by level, each use spending a charge. With 1 it
+A **Charges** component says how many uses the ability holds, a number that can scale by level, each use spending a charge. With 1 it
 is an ordinary cooldown. With more, the Cooldown check refuses it only with none in hand, and its **Recharge** says
 how spent ones come back: **Each Charge** (the default) starts the Cooldown for each charge spent, a container of its
 own whatever the effect does when applied again, and each brings its charge back as it ends, so three spent a second
@@ -318,21 +315,21 @@ of your own counts even a single charge, unless its `CountsASingleCharge` says n
 through its spec's `Charges`, as `container.Spec.Charges.InHand`. The section's line counts them, as "3 charges",
 and a warning under the Components list, as in the
 Problems view, says where built-in charges have no Cooldown to bring them
-back, so they never run out. An ability holds one at most (FN-14).
+back, so they never run out. An ability holds one at most.
 
 ### Toggle
 
-A **Toggle** component (TW-20) holds an **Effect** the ability turns on and off on its caster, as a mana shield: used, it puts the effect
+A **Toggle** component holds an **Effect** the ability turns on and off on its caster, as a mana shield: used, it puts the effect
 on where its usage would be paid, paying its Cost and Attribute Costs and starting no cooldown; used again, it takes
 the effect off, paying nothing and asking no cost, and starts its Cooldown, or spends a charge. Neither its cost nor
 its cooldown stops it turning off. It counts only the effect it put on; one another put there leaves it off. Code asks
-through its spec's `IsToggledOn`. The Problems view warns where it toggles an Instant effect, which is never on. As its holder forgets the ability, the effect comes off; it stayed on (FN-14). An ability
+through its spec's `IsToggledOn`. The Problems view warns where it toggles an Instant effect, which is never on. As its holder forgets the ability, the effect comes off; it stayed on. An ability
 holds one at most.
 
 ### Auras
 
 An **Aura** component holds an effect on those near its holder, while the entity knows the ability, as a banner that inspires the allies
-round its bearer (TW-10): each a radius, whom it takes, its holder too or not, and how often it checks
+round its bearer: each a radius, whom it takes, its holder too or not, and how often it checks
 ([EFFECTS.md](EFFECTS.md#auras)).
 
 ## Workers
@@ -351,22 +348,21 @@ from another asset.
 
 ### On Hit
 
-**On Hit**, above the workers, holds the effects the entity's hits apply while it knows the ability, as a passive's
-(TW-6). Its entries are an item's: an attribute, the effects, to the one hit or the holder, only on a kill, impact
+**On Hit**, above the workers, holds the effects the entity's hits apply while it knows the ability, as a passive's. Its entries are an item's: an attribute, the effects, to the one hit or the holder, only on a kill, impact
 types and a condition ([ITEMS.md](ITEMS.md#on-hit)).
 
 
 ### Modifiers
 
 **Modifiers**, under On Hit, change other effects as they're made, while the entity knows the ability: its holder's own, as a boon that adds a
-burst to its holder's every Chill, or those landing on it, as a cloak that halves the stuns its wearer takes (TW-7).
+burst to its holder's every Chill, or those landing on it, as a cloak that halves the stuns its wearer takes.
 Each entry is a rule of its own or names a shared Effect Modifier asset ([EFFECTS.md](EFFECTS.md#modifiers)).
 
 ### Lifesteal
 
 An ability gives its holder lifesteal by an effect that raises the holder's **Lifesteal**, the attribute the project's
 Lifesteal worker names as its Share, as a passive applies it to its caster, which the Lifesteal worker heals by ([WORKERS.md](WORKERS.md#lifesteal)): a vampiric mask's
-Infinite effect of +0.15 Lifesteal heals its wearer 15% of each blow it deals. Its Lifesteal list is gone (FN-15).
+Infinite effect of +0.15 Lifesteal heals its wearer 15% of each blow it deals. Its Lifesteal list is gone.
 ## Local Data
 
 Local Data is a list of named values stored on the asset. Each row has a **Key** (a tag), a **Type**, and a value of

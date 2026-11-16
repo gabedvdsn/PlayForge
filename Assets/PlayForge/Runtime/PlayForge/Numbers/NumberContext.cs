@@ -481,7 +481,7 @@ namespace FarEmerald.PlayForge
         internal static void LogUnresolved(NumberKind kind, in NumberContext context)
         {
             if (kind == null || !Unresolved.Add(kind.GetType())) return;
-            ForgeLog.Warning(ForgeLog.ESystem.Numbers, $"A {NumberText.KindName(kind.GetType())} number can't be worked out where it was read: {kind.WhyNot(in context)}, so it reads its number (FEAT-29).");
+            ForgeLog.Warning(ForgeLog.ESystem.Numbers, $"A {NumberText.KindName(kind.GetType())} number can't be worked out where it was read: {kind.WhyNot(in context)}, so it reads its number.");
         }
 
         // The Local Data an origin reads: its asset's, as an ability's or an entity's

@@ -2,7 +2,7 @@
 
 A game's abilities, effects and items are easiest to trust when a test plays them as the game does: a burn's ticks
 landing over its second, a ring's armor while it's held, a cast paying its cost. PlayForge's test kit is the assembly
-`FarEmerald.PlayForge.Testing`, in the package's `TestKit` folder, which a project's own tests reference (TW-26). It
+`FarEmerald.PlayForge.Testing`, in the package's `TestKit` folder, which a project's own tests reference. It
 brings up a live PlayForge for each test, steps it a frame at a time, makes entities on either hub, and plays them; and
 after each test it checks what must always hold, and takes it all down again, so tests run in any order.
 

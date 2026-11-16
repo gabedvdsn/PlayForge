@@ -49,7 +49,7 @@ namespace FarEmerald.PlayForge
         public GameplayEffect CooldownEffect;
 
         [Tooltip("Assets of the project's own that a new asset can start as a copy of, listed in The Forge's Create menu " +
-                 "under their type, after PlayForge's presets (TW-24)")]
+                 "under their type, after PlayForge's presets")]
         public List<UnityEngine.ScriptableObject> Templates = new();
     }
 }

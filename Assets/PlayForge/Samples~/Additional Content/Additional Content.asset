@@ -1,0 +1,52 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 29f7bf28f0954fb8894c2e7fc82525e3, type: 3}
+  m_Name: Additional Content
+  m_EditorClassIdentifier: 
+  entries: []
+  Description: The Additional Content's assets, its recipes, formulas, starter set and sparring dummies,
+    a Forge Project of their own
+  Settings:
+    Roles: []
+    CrowdControl: {fileID: 0}
+    ResolveOrder: []
+    CombatLog:
+      Keep: 100
+      Records: 3
+      Events: []
+    Authoring:
+      NewAssets: []
+      Defaults: []
+      CostEffect: {fileID: 0}
+      CooldownEffect: {fileID: 0}
+      Templates: []
+    PurgeLevels:
+      Tiers: []
+      KeptOnDeath: 7
+    Workers:
+      Name: Every Entity
+      AttributeWorkers: []
+      ImpactWorkers:
+      - rid: 2403794439031488536
+      TagWorkers: []
+      AnalysisWorkers: []
+  GameRootEntity: {fileID: 11400000, guid: 4c3feafb6f8e415f9a445da1121dfda3, type: 2}
+  references:
+    version: 2
+    RefIds:
+    - rid: 2403794439031488536
+      type: {class: LifestealImpactWorker, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        AcceptUnworkableImpact: 0
+        Share: {fileID: 0}
+        Heals: {fileID: 0}
+        ImpactTypes: []

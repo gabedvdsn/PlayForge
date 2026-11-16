@@ -94,18 +94,18 @@ namespace FarEmerald.PlayForge
         [Tooltip("The attribute it watches")]
         public Attribute Target;
 
-        [Tooltip("Which retention groups' parts it reads: all of them, the whole value, unless it says (TW-3)")]
+        [Tooltip("Which retention groups' parts it reads: all of them, the whole value, unless it says")]
         public RetentionGroups Groups = new();
 
         [Tooltip("What of it it reads: its current, its base, what's missing of it, or its share of its base, as half its " +
-                 "Health at a Threshold of 0.5 (TW-11)")]
+                 "Health at a Threshold of 0.5")]
         public EAttributeTargetBinary What = EAttributeTargetBinary.Current;
 
         [Tooltip("The value it watches for, read at its entity's level")]
         public ScalableFloat Threshold = 0f;
 
         [Tooltip("As it fires: while its comparison holds, as a threshold always did; or as what it reads crosses its " +
-                 "threshold, falling to it or below, rising above it, or either way (TW-11)")]
+                 "threshold, falling to it or below, rising above it, or either way")]
         public EThresholdCrossing Crossing = EThresholdCrossing.WhileItHolds;
 
         [Tooltip("How what it reads compares with its threshold, where it fires while that holds")]
@@ -114,15 +114,15 @@ namespace FarEmerald.PlayForge
         [Tooltip("Fires once; off, each time: each crossing, or each frame its comparison holds")]
         public bool TriggerOnce = true;
 
-        [Tooltip("The effects it applies to the entity as it fires, as a rage at half Health (TW-11)")]
+        [Tooltip("The effects it applies to the entity as it fires, as a rage at half Health")]
         public List<GameplayEffect> Effects = new();
 
         [Tooltip("Whom its effects come from: the entity itself, as a rage; or the one whose hit crossed it, so a shatter " +
-                 "is its caster's, kill and all (TW-11)")]
+                 "is its caster's, kill and all")]
         public EThresholdSource AppliedBy = EThresholdSource.Itself;
 
         [Tooltip("A gameplay event it sends the entity as it fires, for its abilities' triggers: its source the one whose " +
-                 "change crossed it, its subject the entity. None, none (TW-11)")]
+                 "change crossed it, its subject the entity. None, none")]
         [ForgeTagContext(ForgeContext.Event)]
         public Tag Event;
         

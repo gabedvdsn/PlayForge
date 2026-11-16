@@ -32,11 +32,11 @@ namespace FarEmerald.PlayForge
         public EDeathPolicy Policy = EDeathPolicy.End;
 
         [Tooltip("Dies as the attribute playing the project's Health role reaches 0, where no death watcher of its own " +
-                 "watches for its death. Off, as for a training dummy, that attribute doesn't kill it (TW-28, TW-29)")]
+                 "watches for its death. Off, as for a training dummy, that attribute doesn't kill it")]
         public bool DiesAtZeroHealth = true;
 
         [Tooltip("Where it stays: as it dies, it purges its effects, all but those it keeps, as the games' deaths do; off, it " +
-                 "keeps them all (FN-16)")]
+                 "keeps them all")]
         public bool Purges = true;
 
         [Tooltip("It keeps what its project's Purge Levels keep on death, their tiers and categories, beside its own below; " +

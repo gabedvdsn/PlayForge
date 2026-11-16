@@ -315,7 +315,7 @@ namespace FarEmerald.PlayForge
         }
 
         // ════════════════════════════════════════════════════════════════════════
-        // Impacter pipeline — entry-driven (IMPACT_MODEL_REFACTOR.md §3.1)
+        // Impacter pipeline — entry-driven (Docs/IMPACT_MODEL_REFACTOR.md §3.1)
         //
         // One ScalerImpacter per authored AttributeImpactEntry, built lazily and cached
         // for the spec's lifetime. Entries carry their own attribute target, delivery
@@ -499,7 +499,7 @@ namespace FarEmerald.PlayForge
 
         // IsSustainedModifier removed — the Mode A/B inference is gone. Each impact entry
         // declares its own delivery (Continuous | OnApply | Periodic); delivery implies
-        // the contribution kind. See AttributeImpactEntry / IMPACT_MODEL_REFACTOR.md §1.
+        // the contribution kind. See AttributeImpactEntry / Docs/IMPACT_MODEL_REFACTOR.md §1.
 
         public bool ValidateApplication(ITarget target)
         {

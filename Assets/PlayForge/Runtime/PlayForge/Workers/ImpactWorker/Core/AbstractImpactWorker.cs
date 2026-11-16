@@ -14,7 +14,7 @@ namespace FarEmerald.PlayForge
     public abstract class AbstractImpactWorker
     {
         [Tooltip("Also take unworkable impacts, which only the system makes: an attribute's first pulse, and rescaling " +
-                 "Current to Base. They're typed DisallowImpact too, so a worker that checks impact types still skips them (Decision 9)")]
+                 "Current to Base. They're typed DisallowImpact too, so a worker that checks impact types still skips them")]
         public bool AcceptUnworkableImpact = false;
         
         /// <summary>

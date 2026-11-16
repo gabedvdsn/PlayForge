@@ -2,7 +2,7 @@
 
 Games balance in spreadsheets: a column of damage by level, a row of stats for each item. PlayForge writes its numbers
 by level and its items' stats to CSV, which any spreadsheet opens, and reads a sheet back, listing each change before it
-makes it (TW-27). The Forge's window menu (its tab's ⋮) holds them under **Spreadsheets**:
+makes it. The Forge's window menu (its tab's ⋮) holds them under **Spreadsheets**:
 
 - **Export Numbers…** writes a sheet of every number by level in the active Forge Project; **Export Selected
   Numbers…** the selected assets' alone.

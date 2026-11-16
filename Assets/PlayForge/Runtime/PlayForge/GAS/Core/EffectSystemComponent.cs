@@ -11,7 +11,7 @@ namespace FarEmerald.PlayForge
     /// <see cref="GameplayAbilitySystem"/> (the twin-drift class of bugs ends here; the
     /// GAS classes keep only thin delegating wrappers).
     ///
-    /// <para>Lifecycle under the two-kind impact model (IMPACT_MODEL_REFACTOR.md §3.2):</para>
+    /// <para>Lifecycle under the two-kind impact model (Docs/IMPACT_MODEL_REFACTOR.md §3.2):</para>
     /// <code>
     /// Apply (durational):  shelve container
     ///                      → RegisterModifier per Continuous entry

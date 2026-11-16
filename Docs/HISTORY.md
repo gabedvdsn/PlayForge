@@ -523,6 +523,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   page, through one table of links in the editor.
 
 ### Changed
+- The Additional Content sample is a Forge Project of its own (EP-22), as the Demo is: **Additional Content**, with a
+  Game Root entity of its own, which its Sparring scene plays. The samples' descriptions say what each is.
+- The package's docs and the strings the editor shows name no tracker ID or decision of the refactor (EP-21); the
+  internal docs, the impact model's design plan and the publishing checklist, moved to the repository's `Docs/`.
 - A Local Data entry's Int and Float are numbers that can scale, a `ScalableInt` and a `ScalableFloat`, read in their
   reader's context: a Local Data kind's Its Own in the number's, the Caster's or the Target's at that entity's own level
   (EP-16). An asset saved before holds plain values, which load as 0; the samples' are written in the new form.

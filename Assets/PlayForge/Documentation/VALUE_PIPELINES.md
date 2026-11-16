@@ -1,13 +1,13 @@
 # Value Pipelines
 
 A **Value Pipeline** is an asset that takes a value as it lands, sends it through ordered stages, and gives what comes
-out (TW-2). An effect's impact names one as its calculation, as an Unreal effect names its execution calculation: each
+out. An effect's impact names one as its calculation, as an Unreal effect names its execution calculation: each
 hit of that impact goes through the pipeline's stages, so a project writes once how a hit's damage is worked out, and a
 new item that changes every hit is a stage, not an edit to each attack.
 
 It's generic: the value is any number an impact lands with, a blow, a heal, a drain. Create one from
 **Create > PlayForge > Value Pipeline**, or with **New** beside an impact's Pipeline field, which makes one named for
-the effect and uses it; once the field names one, **Open** shows it (FN-11). A Crowd Control Rules or Effect Modifier
+the effect and uses it; once the field names one, **Open** shows it. A Crowd Control Rules or Effect Modifier
 field has the same two.
 
 ## Not a Scaler asset
@@ -27,7 +27,7 @@ does.
 It runs for what an impact commits: an instant impact's hit, and each tick of a periodic one. A lasting impact, as +10
 Strength while a buff holds, is read again whenever its attribute changes, so a pipeline doesn't run it.
 
-A modifier's **Change Impact** brings a stage of its own (TW-7, [EFFECTS.md](EFFECTS.md#modifiers)): a hit runs it after
+A modifier's **Change Impact** brings a stage of its own ([EFFECTS.md](EFFECTS.md#modifiers)): a hit runs it after
 its pipeline, or alone where it has none, and the breakdown keeps it with the pipeline's steps; a lasting impact takes it
 on its magnitude.
 
@@ -41,20 +41,20 @@ Each stage has a **Label**, the name a breakdown gives it, and **Enabled**, whic
 - **Add**: a number added to the value's size. A flat bonus of 10 makes a blow of −100 one of −110, and a heal of 50 one
   of 60.
 - **Chance**: on a chance, the value times a number: a critical hit. It rolls once for the hit, and the breakdown notes
-  it. Its **Roll** makes it pseudo-random or lucky (TW-8, [EFFECTS.md](EFFECTS.md#requirements)).
+  it. Its **Roll** makes it pseudo-random or lucky ([EFFECTS.md](EFFECTS.md#requirements)).
 - **Clamp**: the value's size kept between two numbers, its sign as it was.
 - **Absorb**: a loss taken first from another attribute of the one hit, as a barrier or a shield takes a blow before
   health. What it soaks comes off that attribute at the frame's end, and the rest goes on. An attribute with the
-  Barrier role soaks the losses to the one it absorbs for with no stage at all (TW-12, [ATTRIBUTES.md](ATTRIBUTES.md)).
-- **Block** and **Evade** (TW-12): a **Chance**, read as the effect lands, that stops it. Each rolls once, before anything
+  Barrier role soaks the losses to the one it absorbs for with no stage at all ([ATTRIBUTES.md](ATTRIBUTES.md)).
+- **Block** and **Evade**: a **Chance**, read as the effect lands, that stops it. Each rolls once, before anything
   of the effect lands, and where it comes up nothing of it does, its damage, tags, contained effects and on-hits, and
   its ticks aren't rolled again; the one hit hears Blocked or Evaded, and the dealer Hit Blocked or Hit Evaded. A
   defender brings one through an incoming modifier's Change Impact, as Tougher Times blocks the hits landing on its
   holder by a stacking curve of its stacks ([EFFECTS.md](EFFECTS.md#modifiers)). Its **Stops** says what it can stop:
   **Losses**, the default, an effect that lowers its attribute, an add below 0, a multiplier below 1 or an override
-  below where it stands, so a heal lands past it unrolled; or **Any Impact**, heals and buffs too (GAS-77). As the hit
+  below where it stands, so a heal lands past it unrolled; or **Any Impact**, heals and buffs too. As the hit
   commits, it passes the value on.
-- **Execute** (TW-15): a hit that would leave the one hit with less than its **Share** of its **Attribute**'s base, the
+- **Execute**: a hit that would leave the one hit with less than its **Share** of its **Attribute**'s base, the
   Health role's where it names none, takes the rest, as Culling Blade; the breakdown notes it.
 
 A project writes its own stage by deriving from `AbstractValueStage` and overriding `Apply(value, in run)`. `run.Context`
@@ -71,8 +71,7 @@ reads the hit's caster, target and level, as any number does, and `run.Note` not
 Every damage effect names it, so a blow of 100 from a caster with 50% amplification, on a target with 20% resistance,
 lands as 120.
 
-The Demo's blows go through two such pipelines, **Physical Damage** and **Magic Damage** in its `Effects/Pipelines`
-(FN-11): each multiplies a blow by its dealer's Attack or Magic Amplification, a Stacking Curve of it read as 1 + it,
+The Demo's blows go through two such pipelines, **Physical Damage** and **Magic Damage** in its `Effects/Pipelines`: each multiplies a blow by its dealer's Attack or Magic Amplification, a Stacking Curve of it read as 1 + it,
 then by what its target's Armor leaves, 100 ÷ (100 + Armor), or its Magic Resistance, 1 − it, kept between 0 and 1.
 Its Physical and Magic Strike templates name them, and so does each blow that takes one, so a new attack takes its
 kind's from its template.

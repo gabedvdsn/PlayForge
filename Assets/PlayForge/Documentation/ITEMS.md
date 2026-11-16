@@ -14,7 +14,7 @@ equipped or not, and keeps the item's level under it. Each section below matches
 name. A collapsed section shows one line about what it holds, such as the level range or how many effects the item
 grants.
 
-The inspector's header shows the item's one line, as The Forge's Summary column does (TW-21): what each effect it gives
+The inspector's header shows the item's one line, as The Forge's Summary column does: what each effect it gives
 changes while it's equipped, by its first impact across its levels, then the ability it grants, as "+20 Armor; Blink".
 
 ## Identity
@@ -29,7 +29,7 @@ changes while it's equipped, by its first impact across its levels, then the abi
   The runtime doesn't act on it.
 - **Textures**: icons, each paired with a tag. The texture tagged `Primary` is the item's icon. Without one, the first
   texture is used.
-- **Max Stack Size**: how many of the item one inventory slot holds, a number field read at the item's level (FN-19),
+- **Max Stack Size**: how many of the item one inventory slot holds, a number field read at the item's level,
   as `StackSizeOf(spec)` reads it. 1 or less, and each is a slot of its own.
 
 Whether an inventory may hold an item more than once is the entity's choice, through its **Allow Duplicate Items**
@@ -46,7 +46,7 @@ off goes; `RemoveItem(item)` still takes the whole slot. A slot's count is its c
 A stack applies its effects and its ability once. An **Item Stacks** scaler reads the count of the item that applied
 the effect, so a magnitude of 5 with Multiply With Scaler grants +5 a stack. As the count changes, an equipped
 item's effects read it again. An effect that reads an item's stacks where no item in the project applies it reads 1, and
-the Problems view says so (TW-25).
+the Problems view says so.
 
 ## Leveling
 
@@ -102,8 +102,7 @@ To make the ability's levels follow the item's, use **Link Ability & Effects** i
 
 ## Components
 
-An item's components are features it carries, each a class with hooks into its life, added with the list's **+**
-(FN-14). A component hears the item **Given** to an entity, **Equipped**, **Unequipped** and **Removed**, and **Used**, as
+An item's components are features it carries, each a class with hooks into its life, added with the list's **+**. A component hears the item **Given** to an entity, **Equipped**, **Unequipped** and **Removed**, and **Used**, as
 its holder's use of the item's Active Ability ends having paid what it costs. Its context's `Restoring` says a moment
 comes from a load, which puts back what the component's earlier moments did, as the effects it applied. A kind that
 makes no sense twice is offered only while the item holds none of it.
@@ -115,13 +114,13 @@ context: `ctx.GetState<T>(this)`.
 ### Auras
 
 An **Aura** component holds an effect on those near its holder, while it's equipped, as a banner that inspires the allies
-round its bearer (TW-10): each a radius, whom it takes, its holder too or not, and how often it checks
+round its bearer: each a radius, whom it takes, its holder too or not, and how often it checks
 ([EFFECTS.md](EFFECTS.md#auras)).
 
 ### Uses
 
 A **Uses** component counts the uses of the item's Active Ability, each a use that paid what it costs, as a potion's
-sips or a wand's charges, its **Uses** read at the item's level (FN-14). With none left, one of the item goes, at the
+sips or a wand's charges, its **Uses** read at the item's level. With none left, one of the item goes, at the
 frame's end: a stack of it, its uses whole again for the next, or the item with its last, and its ability with it. A
 load gives its uses whole. An item with no Active Ability never counts any, which the Problems view says. An item holds
 one at most.
@@ -129,8 +128,8 @@ one at most.
 ### Set Bonus
 
 A **Set Bonus** component gives its holder a **Bonus** effect while it has enough of a set's pieces equipped, as two
-pieces of a set giving fire resistance and four a flame aura (FN-14). Each piece names its **Set** by a tag and carries
-the set's bonuses, each a component with the **Pieces** it needs, a number field read at its holder's level (FN-19). The holder's equipped pieces count each item once, and
+pieces of a set giving fire resistance and four a flame aura. Each piece names its **Set** by a tag and carries
+the set's bonuses, each a component with the **Pieces** it needs, a number field read at its holder's level. The holder's equipped pieces count each item once, and
 a bonus holds while they're as many as it needs, once for the holder however many pieces carry it; it comes from one of
 the pieces, and moves to another as that one leaves while enough stay. A load puts the bonus back with the other
 effects, and weighs each set once.
@@ -152,7 +151,7 @@ from another asset.
 ### On Hit
 
 **On Hit**, above the workers, holds the effects the item applies as its holder's hits land, while it's equipped: a
-dagger's bleed, a hammer's armor break, a barrier on a kill (TW-6). Each entry has:
+dagger's bleed, a hammer's armor break, a barrier on a kill. Each entry has:
 
 - **Attribute**: what a hit lowers, as Health. A hit is a loss to it that the holder deals another entity. None
   counts the attribute playing the project's Health role ([ATTRIBUTES.md](ATTRIBUTES.md#roles)), where it has one.
@@ -162,21 +161,21 @@ dagger's bleed, a hammer's armor break, a barrier on a kill (TW-6). Each entry h
 - **To**: the one hit (**Target**), or the **Holder**, as a barrier on a kill does.
 - **Only On Kill**: only the hit that takes the attribute from above 0 to 0 or below.
 - **Impact Types**: only hits of one of these types, as attacks, so a bleed's ticks, typed apart, set off nothing.
-  None takes any hit. The Problems view warns of a type no effect in the project deals, which never matches (TW-25).
+  None takes any hit. The Problems view warns of a type no effect in the project deals, which never matches.
 - **When**: a condition read at the hit, the holder its caster and the one hit its target.
 
 
 ### Modifiers
 
 **Modifiers**, under On Hit, change other effects as they're made, while it's equipped: its holder's own, as a boon that adds a
-burst to its holder's every Chill, or those landing on it, as a cloak that halves the stuns its wearer takes (TW-7).
+burst to its holder's every Chill, or those landing on it, as a cloak that halves the stuns its wearer takes.
 Each entry is a rule of its own or names a shared Effect Modifier asset ([EFFECTS.md](EFFECTS.md#modifiers)).
 
 ### Lifesteal
 
 An item gives its holder lifesteal by an effect that raises the holder's **Lifesteal**, the attribute the project's
 Lifesteal worker names as its Share, one of its Granted Effects while it's equipped, which the Lifesteal worker heals by ([WORKERS.md](WORKERS.md#lifesteal)): a vampiric mask's
-Infinite effect of +0.15 Lifesteal heals its wearer 15% of each blow it deals. Its Lifesteal list is gone (FN-15).
+Infinite effect of +0.15 Lifesteal heals its wearer 15% of each blow it deals. Its Lifesteal list is gone.
 ## Local Data
 
 Local Data is a list of named values stored on the asset. Each row has a **Key** (a tag), a **Type**, and a value of

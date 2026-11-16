@@ -64,24 +64,24 @@ namespace FarEmerald.PlayForge
         [ForgeTagContext(ForgeContext.Event, ForgeContext.Granted)]
         public Tag Tag;
 
-        [Tooltip("For an impact event, only impacts on this attribute. None, any (TW-5)")]
+        [Tooltip("For an impact event, only impacts on this attribute. None, any")]
         public Attribute Attribute;
 
-        [Tooltip("For an impact event, only impacts that lower the attribute, that raise it, or either (TW-5)")]
+        [Tooltip("For an impact event, only impacts that lower the attribute, that raise it, or either")]
         public ETriggerImpactSign Sign = ETriggerImpactSign.Any;
 
-        [Tooltip("For an impact event, only impacts of one of these types. None, any (TW-5)")]
+        [Tooltip("For an impact event, only impacts of one of these types. None, any")]
         [ForgeTagContext(ForgeContext.ImpactType)]
         public List<Tag> ImpactTypes = new();
 
-        [Tooltip("The chance the event sets the ability off, from 0 to 1, rolled once for each event (TW-5)")]
+        [Tooltip("The chance the event sets the ability off, from 0 to 1, rolled once for each event")]
         public ScalableFloat Chance = 1f;
 
-        [Tooltip("How its chance rolls: pseudo-random, and its luck (TW-8)")]
+        [Tooltip("How its chance rolls: pseudo-random, and its luck")]
         public ChanceRoll ChanceRoll = new();
 
         [Tooltip("What the ability targets: what its own targeting finds; the event's instigator, as a counterattack; or " +
-                 "its subject, as an on-hit (TW-5)")]
+                 "its subject, as an on-hit")]
         public ETriggerTarget Target = ETriggerTarget.Own;
 
         /// <summary>

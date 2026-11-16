@@ -36,7 +36,7 @@ namespace FarEmerald.PlayForge
                 if (!saidTooDeep)
                 {
                     saidTooDeep = true;
-                    ForgeLog.Warning(ForgeLog.ESystem.Numbers, $"A number read numbers {MostDepth} deep, as a loop of numbers would, so the deepest reads 0 (FEAT-29).");
+                    ForgeLog.Warning(ForgeLog.ESystem.Numbers, $"A number read numbers {MostDepth} deep, as a loop of numbers would, so the deepest reads 0.");
                 }
                 return null;
             }

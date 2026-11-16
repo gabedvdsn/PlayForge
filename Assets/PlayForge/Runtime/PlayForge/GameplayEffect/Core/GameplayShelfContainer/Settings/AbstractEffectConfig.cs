@@ -279,7 +279,7 @@ namespace FarEmerald.PlayForge
         [Tooltip("Effects that land, from the application's origin, as an application would take the effect past its most")]
         public List<GameplayEffect> OverflowEffects = new();
 
-        [Tooltip("Whom its overflow effects land on: the target, as they always did, or the caster (TW-14)")]
+        [Tooltip("Whom its overflow effects land on: the target, as they always did, or the caster")]
         public EEffectRecipient OverflowLandsOn = EEffectRecipient.Target;
 
         /// <summary>Whether an application that overflows leaves the effect's duration alone, where it would refresh or extend it.</summary>

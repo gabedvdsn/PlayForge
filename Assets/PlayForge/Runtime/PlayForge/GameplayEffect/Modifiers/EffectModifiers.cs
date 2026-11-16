@@ -100,7 +100,7 @@ namespace FarEmerald.PlayForge
         [Tooltip("When it lands: as the effect lands, each tick, or as it ends")]
         public EApplyTickRemove When = EApplyTickRemove.OnApply;
 
-        [Tooltip("Whom it lands on: the effect's target, or its caster (TW-14)")]
+        [Tooltip("Whom it lands on: the effect's target, or its caster")]
         public EEffectRecipient LandsOn = EEffectRecipient.Target;
 
         public override void Apply(EffectChanges changes, GameplayEffectSpec spec, EffectModifierRule rule)
@@ -156,7 +156,7 @@ namespace FarEmerald.PlayForge
         [Tooltip("Its stacks come off as it overflows, so it starts again from none")]
         public bool ClearStacks;
 
-        [Tooltip("Whom the overflow's effect lands on: the effect's target, or its caster (TW-14)")]
+        [Tooltip("Whom the overflow's effect lands on: the effect's target, or its caster")]
         public EEffectRecipient LandsOn = EEffectRecipient.Target;
 
         public override void Apply(EffectChanges changes, GameplayEffectSpec spec, EffectModifierRule rule)

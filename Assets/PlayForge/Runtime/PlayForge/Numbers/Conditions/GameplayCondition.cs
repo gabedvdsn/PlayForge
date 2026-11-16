@@ -102,7 +102,7 @@ namespace FarEmerald.PlayForge
             if (!CanEvaluate(in context))
             {
                 if (Unresolved.Add(GetType()))
-                    ForgeLog.Warning(ForgeLog.ESystem.Numbers, $"A {NumberText.ConditionName(GetType())} condition can't be worked out where it was read: {WhyNot(in context)}, so it doesn't hold (FEAT-29).");
+                    ForgeLog.Warning(ForgeLog.ESystem.Numbers, $"A {NumberText.ConditionName(GetType())} condition can't be worked out where it was read: {WhyNot(in context)}, so it doesn't hold.");
                 return false;
             }
             if (depth >= MostDepth)
@@ -110,7 +110,7 @@ namespace FarEmerald.PlayForge
                 if (!loggedDepth)
                 {
                     loggedDepth = true;
-                    ForgeLog.Warning(ForgeLog.ESystem.Numbers, $"A {NumberText.ConditionName(GetType())} condition is read inside itself, {MostDepth} deep, so it doesn't hold (FEAT-29).");
+                    ForgeLog.Warning(ForgeLog.ESystem.Numbers, $"A {NumberText.ConditionName(GetType())} condition is read inside itself, {MostDepth} deep, so it doesn't hold.");
                 }
                 return false;
             }

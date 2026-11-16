@@ -21,14 +21,14 @@ namespace FarEmerald.PlayForge
         public ECaptureAttributeWhen CaptureWhen = ECaptureAttributeWhen.OnApplication;
         
         [Tooltip("What of it it reads: its current value, its base, what's missing of it (base − current), or its share " +
-                 "of its base (current ÷ base) (TW-9)")]
+                 "of its base (current ÷ base)")]
         public EAttributeTargetBinary CaptureWhat = EAttributeTargetBinary.Current;
 
-        [Tooltip("Which retention groups' parts it reads: all of them, the whole value, unless it says (TW-3)")]
+        [Tooltip("Which retention groups' parts it reads: all of them, the whole value, unless it says")]
         public RetentionGroups Groups = new();
 
         [Tooltip("How it reads the attribute: as its role says, a Bonus Share as 1 + x and a Resistance as 1 − x; as it " +
-                 "is; as a multiplier, 1 + x; or as what's left, 1 − x (TW-1)")]
+                 "is; as a multiplier, 1 + x; or as what's left, 1 − x")]
         public EAttributeRead ReadAs = EAttributeRead.ByRole;
 
         /// <summary>How a read of <paramref name="attribute"/> as <paramref name="read"/> reads it, the role resolved.</summary>

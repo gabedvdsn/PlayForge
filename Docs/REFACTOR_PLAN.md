@@ -1507,8 +1507,8 @@ EP-13 to EP-16 came as the pass went on; EP-17 to EP-25 are the user's notes of 
 | EP-18 | The user, 2026-11-16: a Scaler asset's Try section drew its Levels row's two number fields at two sizes, the first stretched across the row, the second 48 px. Done: a Levels row's two numbers, the Try's and an effect's Levels', are alike, each 48 px, neither growing nor shrinking (`.pf-levels__range`); the rule had stretched the first field, label and all | UI | verified |
 | EP-19 | The user, 2026-11-16: The Forge deletes a selection of several assets, and with the Delete key. Done: Move to Trash takes the whole selection and asks once, "These 3 assets", naming each one's users outside the selection, and moves them together (`ForgeAssetDeletion.MoveToTrash(IReadOnlyList<Object>)`, the one-asset call its case of one); the list's Delete key, or ⌘⌫ on a Mac, does the same, and F2 renames the selected asset | UI | verified |
 | EP-20 | The user, 2026-11-16: The Forge's tag view listed tags only another Forge Project's assets use. Done: it lists the tags the active project's tag pickers offer (`ForgeProjects.OffersTag`): those its assets use, those no asset uses yet, and PlayForge's own; a tag's uses, its detail's list of users and the view's summary count the active project's assets alone, and the status bar names the project | Bug | verified |
-| EP-21 | The user, 2026-11-16: no doc names the refactor's own process, its tracker IDs and decisions, as "(TW-30)" or "Decision 89" | Docs | open |
-| EP-22 | The user, 2026-11-16: the samples' descriptions apt for a buyer, and each sample's content imported as a Forge Project of its own | Packaging | open |
+| EP-21 | The user, 2026-11-16: no doc names the refactor's own process, its tracker IDs and decisions, as "(TW-30)" or "Decision 89". Done: the package's docs and its samples' READMEs lose 187 such parentheticals, and 18 lines where one held a sentence's sense are said again without it; the two internal docs, the impact model's design plan `IMPACT_MODEL_REFACTOR.md` and the publishing checklist `PUBLISHING.md`, live in the repository's `Docs/`, outside the package, so the export leaves nothing out; and the strings the editor shows, the tooltips and notes of 38 files, lose theirs. The code's comments keep their IDs, for the people who work on it | Docs | verified |
+| EP-22 | The user, 2026-11-16: the samples' descriptions apt for a buyer, and each sample's content imported as a Forge Project of its own. Done: Additional Content is a Forge Project of its own, as the Demo is, **Additional Content** at its root with a Game Root entity of its own, and its Sparring scene plays it, as the Demo's arena plays the Demo Project; Proving Grounds' recipe export names the project whose folder holds the scene it saves. Code Examples' description says what it is, not how it came to be; the Demo's and Additional Content's say their assets are a Forge Project of their own, as Additional Content's README does; and a Game Root entity says what it is. The Battle sample and Code Examples hold no assets, so no project | Packaging | verified |
 | EP-23 | The user, 2026-11-16: a Try section for the Value Pipeline inspector | Feature | open |
 | EP-24 | The user, 2026-11-16: nothing meant only for testing ships, but the testing infrastructure agreed on | Packaging | open |
 | EP-25 | The user, 2026-11-16: the project's file structure and namespaces, one final sweep: each script where its name, its base class and its neighbours say it belongs, in the namespace its folder says | Refactor | open |
@@ -1548,6 +1548,16 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-16, **EP-21 and EP-22: docs without the refactor's process; each sample with assets a Forge Project.** The
+  user's notes of 2026-11-16, the fifth and sixth: the package's docs, its samples' READMEs and the strings the editor
+  shows name no tracker ID or decision, and the internal docs live in the repository's `Docs/`; Additional Content is a
+  Forge Project of its own, which its Sparring scene plays. Gated together, on HEAD and their changes alone, the user's
+  two edits and EP-23's work in progress set aside.
+  - Red, on HEAD: EP-21's tests found the docs naming the process, ABILITIES.md's TW-21 first, and the strings, a
+    settings page's EP-10 among them; EP-22's, Additional Content with no project. With the project in and the scene as
+    HEAD had it, the scene's test found Sparring's Bootstrapper naming none.
+  - Gates: EditMode 1020 of 1020; PlayMode 1992 of 2000, 8 skipped; golden 25 of 25.
 
 - 2026-11-16, **EP-17 to EP-20: workers without headers, a Levels row's numbers alike, deleting a selection, and the
   tag view's project.** The user's notes of 2026-11-16, the first four: no worker field carries a `[Header]`; a Levels

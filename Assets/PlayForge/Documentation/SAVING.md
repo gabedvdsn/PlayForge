@@ -1,6 +1,6 @@
 # PlayForge — Saving and Loading
 
-`ForgeSave` saves an entity at rest and loads it back (FEAT-9). `ForgeSave.Capture` takes what lasts on an entity
+`ForgeSave` saves an entity at rest and loads it back. `ForgeSave.Capture` takes what lasts on an entity
 into a `ForgeSnapshot`. `ForgeSave.Restore` puts it back, on the entity it came from or on a fresh one of the same
 kind. A snapshot is plain serializable types, so a game writes it where it likes, through `JsonUtility` or its own
 serializer.
@@ -25,7 +25,7 @@ asset by an ID instead, and an **Asset Catalog** finds the asset by that ID. The
 abilities and items. A **Forge Project** is the catalog of its own assets, those in its folder.
 
 1. Use your Forge Project, or create one with **Create → PlayForge → Forge Project**.
-2. Its catalog keeps itself current (EP-15). Each PlayForge asset made, copied or moved into the project's folder is
+2. Its catalog keeps itself current. Each PlayForge asset made, copied or moved into the project's folder is
    named as it lands, by its GUID, which stays the same when the asset is renamed or moved, and a deleted one's entry
    goes. An asset moved out stays named, so a save made before still finds it. The project catches up on assets it
    doesn't name yet as it's imported and once each editor session, so one made before PlayForge kept catalogs catches

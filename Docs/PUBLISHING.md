@@ -30,7 +30,8 @@ gets it, in a throwaway project, so PlayForge's own repository never changes and
    `PlayForge/ThirdParty/UniTask/`, and its licence in `PlayForge/Third-Party Notices.txt`. The embedded copy's
    assembly is also named `UniTask`, so no assembly definition changes.
 2. Each sample is copied out of `Samples~` into `PlayForge/Samples/`.
-3. `Documentation/IMPACT_MODEL_REFACTOR.md` and this checklist are left out; `Tests/` and the test kit ship.
+3. The internal docs live in the repository's `Docs/`, this checklist among them, outside the package, so none ships;
+   `Tests/` and the test kit ship.
 4. The throwaway project compiles it, with `com.unity.ugui` and `com.unity.profiling.core`, and exports
    `PlayForge-<version>.unitypackage`. A fresh project imports that, and the gate is the clean import's: no compile
    error or warning, no missing type, and no missing script, reference or type in the samples. `--tests` runs the

@@ -8,7 +8,7 @@ using ForgeAttribute = FarEmerald.PlayForge.Attribute;
 namespace FarEmerald.PlayForge.Tests
 {
     /// <summary>
-    /// Golden tests for the impact-model overhaul (IMPACT_MODEL_REFACTOR.md, Phase 0).
+    /// Golden tests for the impact-model overhaul (Docs/IMPACT_MODEL_REFACTOR.md, Phase 0).
     ///
     /// Every scenario must pass. RunScenario's targetSemantics flag reports a failure as
     /// expected-red instead; no scenario uses it, and none may (SP-16 in Docs/REFACTOR_PLAN.md).

@@ -497,7 +497,7 @@ namespace FarEmerald.PlayForge
         
         [Tooltip("Uses the provider's levels, up to its own MaxLevel: min(MaxLevel, the provider's max level).\n" +
                  "A level past MaxLevel reads the last value, so the scaler reaches its last value at MaxLevel\n" +
-                 "however many levels the provider has (GAS-64).")]
+                 "however many levels the provider has.")]
         [InspectorName("Clamped to Provider")] Clamped
     }
     

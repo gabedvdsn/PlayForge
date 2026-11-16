@@ -310,7 +310,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 }
                 holder.Add(Note("No Forge Project is active, so none holds the project's settings: how The Forge makes its assets, " +
                                 "and what its game reads as it runs. Choose one in The Forge, or make one, in a folder of its own " +
-                                $"under {ForgeFolders.Root}, with its Game Root and the Bootstrap prefabs (EP-10)."));
+                                $"under {ForgeFolders.Root}, with its Game Root and the Bootstrap prefabs."));
                 var buttons = new VisualElement();
                 buttons.AddToClassList("pf-settings__buttons");
                 buttons.Add(new Button(() =>

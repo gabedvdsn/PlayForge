@@ -29,7 +29,7 @@ namespace FarEmerald.PlayForge
         [Header("Fixed Tick")]
         [Tooltip("Ticks a second of game time. Each steps every process, its end of frame with it, and lets each " +
                  "sequence's wait go on, a fixed step of time, and a frame runs as many as its time holds, so a run " +
-                 "comes out the same at any frame rate. 0 steps once a frame (FEAT-7)")]
+                 "comes out the same at any frame rate. 0 steps once a frame")]
         [SerializeField] private int fixedTickRate;
         [Tooltip("The most ticks a frame runs, so a long frame doesn't fall further behind: the rest of its time is " +
                  "dropped")]

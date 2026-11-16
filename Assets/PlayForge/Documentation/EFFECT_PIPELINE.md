@@ -1,7 +1,7 @@
 # PlayForge — Gameplay Effect & Attribute Pipeline
 
 How a `GameplayEffect` becomes an attribute change, stays correct while it lives, and reverses
-when it dies — under the **two-kind impact model** (design rationale: `IMPACT_MODEL_REFACTOR.md`).
+when it dies — under the **two-kind impact model**.
 This is the authoritative description of the runtime pipeline; if code and doc disagree, one of
 them has a bug — file it either way.
 
@@ -55,7 +55,7 @@ State:
 - `modifiers` — ordered `(carrier, impacter, group)` entries. Presence == contribution; no
   alive-flags, no zombie state. Re-registering a carrier **replaces** its entries (idempotent
   refresh — the stacking path relies on this). Removed entries are kept spare and reused, so a
-  refresh allocates nothing (GAS-P4).
+  refresh allocates nothing.
 - `committedByGroup` — permanent history per retention group. Written only by `CommitImpact`.
 - Attribution — rebuilt on every `Recompute`; per-group slices that sum exactly to `ActiveValue`.
 
@@ -64,13 +64,12 @@ State:
 1. Baseline = the root value.
 2. **Add** — additive modifier impacters, per slot (Current / Base / CurrentAndBase) → `DirtyValue`. The sums
    first; then each add that diminishes, on what's left, `1 − (1 − x)(1 − v)`: every add on a Resistance attribute,
-   unless its Add Behaviour says Sum, and any whose Add Behaviour says Diminishing (TW-1).
+   unless its Add Behaviour says Sum, and any whose Add Behaviour says Diminishing.
 3. **Multiply** — `Multiplicative` impacters compound (×1.5, ×1.5 → ×2.25);
    `AdditiveBonus` impacters pool `(eval − 1)` into one `×(1 + Σ)` (+50%, +50% → ×2.0).
 4. **FlatBonus** — post-multiplication additive.
 5. **Committed history** — all of it, where it was measured: after the modifiers, so a transient %
    modifier doesn't scale it. 50 base × 1.5 aura + 10 tome = 85, and a 30 hit under the aura takes 30.
-   Until Decision 4 (2026-11-03) it joined the baseline, and the same hit took 45.
 6. **Override** — per-slot, lowest `SortOrder` wins. It comes after the committed history, so an
    override ("stun: speed = 0") still pins the value.
 7. Constrain: element overflow clamp (`AttributeOverflowData.Clamp`) + rounding policy.
@@ -107,7 +106,7 @@ impact relay (`ImpactData`, frame summaries, source-side `TrackImpact`, `Attribu
 | Verb | Dispatch | Used by |
 |---|---|---|
 | `RegisterModifier(attr, smv, impacters)` | register/refresh in `modifiers` + recompute | Continuous entries on apply / stack refresh / replace |
-| `UnregisterModifier(attr, smv)` | remove carrier's entries + recompute | removal & replacement — **fires callbacks like any change**, so regulated attributes refresh (removal used to be silent → stale derived values). It's no hit, though: its `ImpactData.Ends` holds, so its effect's workers and components hear no impact, its dealer's impact workers don't run and no Impact Taken or Dealt is sent (GAS-85, Decision 84) |
+| `UnregisterModifier(attr, smv)` | remove carrier's entries + recompute | removal & replacement — **fires callbacks like any change**, so regulated attributes refresh (removal used to be silent → stale derived values). It's no hit, though: its `ImpactData.Ends` holds, so its effect's workers and components hear no impact, its dealer's impact workers don't run and no Impact Taken or Dealt is sent |
 | `CommitImpact(attr, smv, impacters)` | permanent per-group commit | OnApply / Periodic entries |
 | `ModifyAttribute(attr, smv)` | CommitImpact; a delta-only carrier's delta commits as constant Adds in its retention group | init pulse, `EnforceScaling` propagation, external systems (`TryModifyAttribute`) |
 
@@ -128,7 +127,7 @@ on incoming damage and the clamp comes after: 20 HP, −30 hit, 50% armor → �
 deltas (`ModifyAttribute`) preview as themselves. Register/Unregister are observe-only here,
 because modifiers are re-derived every recompute, so a one-off adjustment has nowhere to live.
 
-**A commit allocates nothing** (GAS-P6), adjusted or not. It rents its `ChangeValue` and its
+**A commit allocates nothing**, adjusted or not. It rents its `ChangeValue` and its
 frozen impacters and gives them back when it's done, one set for each commit in progress, since
 a worker or a listener can commit inside another. An adjusted delta's Adds are frozen in the same
 impacters. So:
@@ -139,12 +138,12 @@ impacters. So:
 - the source-side `TrackImpact` keeps a total, the last impact and a count, not every impact.
 
 A raw delta allocates nothing on its way through either: its delta's Adds are frozen in the same
-impacters, and a `SourceAttributeImpact` keeps the origin it makes (GAS-P8). `GenerateSimple` makes a
+impacters, and a `SourceAttributeImpact` keeps the origin it makes. `GenerateSimple` makes a
 new carrier on every call, so a raw delta made every frame keeps its carrier, made once with
 `IAttributeImpactCarrier.GenerateSourceDerivation(source, attribute)`.
 
 The changes the system makes on someone's behalf, `EnforceScaling`'s rescale and the lifesteal
-worker's heal, allocate nothing either (GAS-P9, Decision 21):
+worker's heal, allocate nothing either:
 - each is carried by a carrier kept for its source and attribute, in a table keyed weakly by
   source, so a source that's gone isn't held;
 - each deferred one is queued in a `ModifyAttributeAction` the system takes back once the queue
@@ -201,7 +200,7 @@ freshly by the impacter pipeline.
 | `DoNothing` | absorbed; only the interaction runs |
 | `ReplaceOldContainer` | `ReverseImpact()` old spec → container adopts new spec (+durations; stack count preserved) → register new spec's Continuous entries. Old commits stay — commits never reverse. |
 | `AppendNewContainer` | fresh container + distinct spec instance → modifiers coexist (stacking by coexistence; `MultiplyBehaviour` controls composition) |
-| `StackExistingContainers` | `Stack(n)` on the found container → re-register Continuous entries so stack-aware magnitudes recompute now (`ScalerImpacter` evaluates container-aware via `spec.RuntimeContainer`). A stack lost when its time runs out re-registers the same way, as does the stack `Extend` adds to independent durations (GAS-34) |
+| `StackExistingContainers` | `Stack(n)` on the found container → re-register Continuous entries so stack-aware magnitudes recompute now (`ScalerImpacter` evaluates container-aware via `spec.RuntimeContainer`). A stack lost when its time runs out re-registers the same way, as does the stack `Extend` adds to independent durations |
 
 `ReApplicationInteraction` (Refresh/Extend + re-fire TickOnApplication) runs **only when
 absorbed** — the append path would double-tick otherwise.
@@ -214,20 +213,20 @@ absorbed** — the append path would double-tick otherwise.
   shelf mid-loop); already-finished containers are skipped.
 - `ClearFinishedEffects` snapshots-and-clears, then takes the whole pass off the shelf and out of the
   index, in one walk of each, **before** any `OnRemove`. Taken off one at a time, each a linear
-  remove, ending n containers cost n² (GAS-P5).
+  remove, ending n containers cost n².
 - A spec builds its impacters once, with each delivery's attributes and each attribute's
   impacters. `GetImpactersFor` returns the spec's own list: read it, don't change it. A tick's
   lookups, its contained effects and a recompute allocate nothing; walk the lists by index or
-  with a `foreach` over the concrete type, since one through an interface boxes (GAS-P4).
+  with a `foreach` over the concrete type, since one through an interface boxes.
 - Scaler-driven execute-tick counts are evaluated once per batch, never per loop iteration.
 - An effect asked for again on an entity before its own application there is over is refused, with one
   warning per entity and effect. An effect that contains itself, directly or through other contained
-  effects or what applying it sets off, recursed until the stack overflowed (GAS-28).
-- Any change to a container's stack count re-registers its Continuous entries, gained or lost (GAS-34).
+  effects or what applying it sets off, recursed until the stack overflowed.
+- Any change to a container's stack count re-registers its Continuous entries, gained or lost.
 - Applying never walks the shelf. Its requirements wait for one pass at the next tick, a container's tags
   count from the moment it is shelved, and re-application finds its containers in an index by asset tag,
   which `Shelve` and `Unshelve` keep. Each application re-checked every container and rebuilt all tags, so
-  it cost as much as the entity carried (GAS-P3).
+  it cost as much as the entity carried.
 
 ---
 
@@ -239,7 +238,7 @@ unregistration** fires `AttributeChanged` → `RefreshRegulatedAttributes(contac
 `Recompute` (re-deriving their root from the contact's fresh `ActiveValue` while their own
 modifiers and committed history are preserved) → chained `AttributeChanged`, cycle-guarded.
 
-A dependent's refresh is the system's own change (Decision 14). It takes the post-change half of
+A dependent's refresh is the system's own change. It takes the post-change half of
 the pipeline: `EnforceScaling`, post-change workers and `AttributePostChange`. It is recorded in
 the frame summary as received and dealt, self to self. Its carrier is the attribute's root, typed
 `DisallowImpact`, so a worker that checks impact types passes it by.
@@ -253,13 +252,12 @@ blueprint scalers create live dependencies.
 
 - `ProvideAttributeSet`: register attributes → initialize each cached value (first recompute)
   → zero-delta `ModifyAttribute` pulse per attribute (callbacks observe initial values; no worker does, as the pulse
-  runs none and is unworkable; commits nothing) (GAS-86).
+  runs none and is unworkable; commits nothing).
 - `EnforceScaling` (`AutoScaleWithBase`): Base changes, a dependent's refresh included, enqueue a
-  deferred proportional Current adjustment through a synthetic carrier, kept for whoever changed Base
-  (GAS-P9) — lands as ordinary committed history. The carrier is typed `DisallowImpact` and unworkable, as the pulse is, so no worker that
-  checks impact types sees it (GAS-35). The adjustment is a share of Current before the bounds, where
+  deferred proportional Current adjustment through a synthetic carrier, kept for whoever changed Base — lands as ordinary committed history. The carrier is typed `DisallowImpact` and unworkable, as the pulse is, so no worker that
+  checks impact types sees it. The adjustment is a share of Current before the bounds, where
   it lands, so the bounds clamp the result once: under ZeroToBase an 80/100 attribute that loses half
-  its Base ends at 40/50 (GAS-37).
+  its Base ends at 40/50.
 
 ---
 
@@ -276,7 +274,7 @@ magnitudes on their next recompute.
 > into assets (null targets, stale magnitudes, deliveries minted while the policy was still
 > Instant) and never re-synced.
 
-**Additional impacts are authored entries** (ED-3). `GameplayEffectImpact.AdditionalImpacts`
+**Additional impacts are authored entries**. `GameplayEffectImpact.AdditionalImpacts`
 holds `AttributeImpactEntry` values that the impact drawer edits, each naming its own delivery,
 and `RebuildEntries` appends them, live, after the derived entry. One with no attribute is
 skipped, and so is one whose delivery the duration can't make (`IsDeliveryValidFor`), which the

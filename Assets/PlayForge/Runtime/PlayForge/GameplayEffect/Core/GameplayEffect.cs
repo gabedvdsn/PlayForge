@@ -14,7 +14,7 @@ namespace FarEmerald.PlayForge
         public GameplayEffectTags Tags = new();
 
         [Tooltip("Its purge, as it lands on its target: the effects there at its strength's tier or under it, by the " +
-                 "project's Purge Levels, of the kinds it names and applied by whom it says, come off (FN-16)")]
+                 "project's Purge Levels, of the kinds it names and applied by whom it says, come off")]
         public EffectPurge Purges = new();
 
         /// <summary>
@@ -27,10 +27,10 @@ namespace FarEmerald.PlayForge
         /// <summary>Its side change: its Side Change component's, or none (TW-18, FN-26).</summary>
         public SideChangeEffectComponent SideChange => FirstComponent<SideChangeEffectComponent>();
 
-        [Tooltip("Effects its holder's hits apply, or a kill's, while it lasts, the holder the one it's on (TW-6)")]
+        [Tooltip("Effects its holder's hits apply, or a kill's, while it lasts, the holder the one it's on")]
         public List<OnHitEntry> OnHit = new();
 
-        [Tooltip("Modifiers of other effects, its holder's own or those landing on it, while it lasts, the holder the one it's on (TW-7)")]
+        [Tooltip("Modifiers of other effects, its holder's own or those landing on it, while it lasts, the holder the one it's on")]
         public List<EffectModifierEntry> Modifiers = new();
 
         /// <summary>Its area: its Area component's, or none, where it lands on its target alone (TW-10, FN-14).</summary>
@@ -61,10 +61,10 @@ namespace FarEmerald.PlayForge
             return null;
         }
 
-        [Tooltip("Its own proc coefficient in place of its ability's: what its hits carry for their on-hit effects (TW-8)")]
+        [Tooltip("Its own proc coefficient in place of its ability's: what its hits carry for their on-hit effects")]
         public bool OwnProcCoefficient;
 
-        [Tooltip("What its hits carry for their on-hit effects, whose chance and duration scale by it; 0 sets nothing off (TW-8)")]
+        [Tooltip("What its hits carry for their on-hit effects, whose chance and duration scale by it; 0 sets nothing off")]
         [NumberMin(0f)] public ScalableFloat ProcCoefficient = 1f;
 
         public GameplayEffectImpact ImpactSpecification;
@@ -74,12 +74,12 @@ namespace FarEmerald.PlayForge
         public List<AbstractEffectWorker> Workers;
 
         [Tooltip("Its components: features it carries, each a class with hooks into its life, as it lands, ticks, hits and " +
-                 "ends (FN-14)")]
+                 "ends")]
         [SerializeReference]
         public List<AbstractEffectComponent> Components = new();
 
         [Tooltip("Workers it gives the one it's on while it lasts, and takes back as it goes: attribute, impact, tag and " +
-                 "analysis workers, as a debuff that changes how its target takes damage, or shatters it below 13% (TW-13)")]
+                 "analysis workers, as a debuff that changes how its target takes damage, or shatters it below 13%")]
         public StandardWorkerGroup WorkerGroup;
 
         /// <summary>
@@ -92,7 +92,7 @@ namespace FarEmerald.PlayForge
         public EffectTagRequirements SourceRequirements;
         public EffectTagRequirements TargetRequirements;
 
-        [Tooltip("Its conditions beside the tags of each phase: to land, to go on, and to come off (TW-19)")]
+        [Tooltip("Its conditions beside the tags of each phase: to land, to go on, and to come off")]
         public EffectConditions Conditions = new();
 
         // ═══════════════════════════════════════════════════════════════════════════
@@ -320,7 +320,7 @@ namespace FarEmerald.PlayForge
         public List<TextureItem> Textures;
 
         [Tooltip("Its icon is its origin's, the ability, item or entity that applied it: the origin's texture under Origin " +
-                 "Texture, its own where the origin has none (FN-25)")]
+                 "Texture, its own where the origin has none")]
         public bool InheritFromOrigin;
 
         [Tooltip("The origin's texture it takes, by its tag: Primary, or another")]

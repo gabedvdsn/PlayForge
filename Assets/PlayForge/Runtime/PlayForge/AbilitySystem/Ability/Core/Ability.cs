@@ -36,7 +36,7 @@ namespace FarEmerald.PlayForge
         public GameplayEffect Cost;
 
         [Tooltip("What it spends of attributes as it's used, beside its Cost effect: each the attribute it names, or the one " +
-                 "playing the role it names in the project, an amount that can scale by level (TW-29)")]
+                 "playing the role it names in the project, an amount that can scale by level")]
         public List<AttributeCost> AttributeCosts = new();
 
         [ForgeEffectTemplate("Cooldown", "Cooldown")]
@@ -81,13 +81,13 @@ namespace FarEmerald.PlayForge
 
         public StandardWorkerGroup WorkerGroup;
 
-        [Tooltip("Effects its holder's hits apply, or a kill's, while it's known (TW-6)")]
+        [Tooltip("Effects its holder's hits apply, or a kill's, while it's known")]
         public List<OnHitEntry> OnHit = new();
 
-        [Tooltip("Modifiers of other effects, its holder's own or those landing on it, while it's known (TW-7)")]
+        [Tooltip("Modifiers of other effects, its holder's own or those landing on it, while it's known")]
         public List<EffectModifierEntry> Modifiers = new();
 
-        [Tooltip("Its components: features it carries, each a class with hooks into its life, as it's granted, starts, commits its cost and cooldown, ends and is removed; each may refuse an activation (FN-14)")]
+        [Tooltip("Its components: features it carries, each a class with hooks into its life, as it's granted, starts, commits its cost and cooldown, ends and is removed; each may refuse an activation")]
         [SerializeReference]
         public List<AbstractAbilityComponent> Components = new();
 

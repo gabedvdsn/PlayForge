@@ -1,6 +1,7 @@
 # Additional Content
 
-Content past PlayForge's core, to import where you want it.
+Content past PlayForge's core, to import where you want it. Its assets are a Forge Project of their own, **Additional
+Content**: choose it in The Forge's project menu to see them there.
 
 ## Recipes
 
@@ -11,7 +12,7 @@ an execute, lifesteal, damage return, can't die, on hit, on kill, and a boss's p
 
 ## Formulas
 
-Scaler assets for a genre's formulas, each named for what it computes (AC-3), under `Formulas`. A field reads one with
+Scaler assets for a genre's formulas, each named for what it computes, under `Formulas`. A field reads one with
 its **Shared** kind; a Value Pipeline's stage reads one for each hit.
 
 - `Armor`: **1 ÷ (1 + 0.06 × Armor)** and **100 ÷ (100 + Armor)**, what a hit leaves of itself against its target's
@@ -22,7 +23,7 @@ its **Shared** kind; a Value Pipeline's stage reads one for each hit.
 
 ## Starter Set
 
-Plain assets named for what they are (AC-5), under `Starter Set`: a **Melee Attack** (10 to the one it's cast at, once
+Plain assets named for what they are, under `Starter Set`: a **Melee Attack** (10 to the one it's cast at, once
 a second) and a **Bolt** (25, once in three seconds), each with its hit and its cooldown; a **Slow** (70% of Movement
 Speed for 3 seconds); and a **Shield** (50 that takes its holder's hits on Health first, for 5 seconds, as an Absorb
 stage it adds to each effect landing on its holder). They read the recipes' Health and the Movement Speed and Shield
@@ -31,9 +32,9 @@ on kill and a boss's phase.
 
 ## Feedback
 
-Components and cues that show what PlayForge does (AC-2), in the sample's own assembly,
+Components and cues that show what PlayForge does, in the sample's own assembly,
 `FarEmerald.PlayForge.AdditionalContent`, which reads PlayForge, uGUI and TextMeshPro, and which nothing in PlayForge
-references (AC-1). TextMeshPro asks to import its Essential Resources the first time one of them draws.
+references. TextMeshPro asks to import its Essential Resources the first time one of them draws.
 
 - On an entity, beside its hub, each showing that entity's changes to one attribute, the project's Health role's where
   none is set, with nothing set on any effect:

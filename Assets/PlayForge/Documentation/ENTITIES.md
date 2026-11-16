@@ -14,7 +14,7 @@ made from its Name: Hero gives `Entity.Hero`. The entity carries this tag and ke
 below matches the inspector section of the same name. A collapsed section shows one line about what it holds, such as
 the level range or how many starting items the entity equips.
 
-The inspector's header shows the entity's one line, as The Forge's Summary column does (TW-21): its attribute set's
+The inspector's header shows the entity's one line, as The Forge's Summary column does: its attribute set's
 first three attributes as it starts, at its starting level, then its starting abilities, as "Health 500, Mana 300, Armor
 5; Fireball, Blink".
 
@@ -53,7 +53,7 @@ it is linked.
 
 - **Affiliation**: the entity's team or faction tags. An effect's Affiliation check compares its origin's affiliation
   with its target's. Code that starts a GAS can pass affiliation tags in its registration data, and those replace this
-  list; as the game runs, `SetAffiliation` on either hub sets them, as a side switch or a scripted betrayal (TW-18). The
+  list; as the game runs, `SetAffiliation` on either hub sets them, as a side switch or a scripted betrayal. The
   GAS also applies these tags to the entity, on either hub. An effect's Side Change goes over them while it lasts
   ([EFFECTS.md](EFFECTS.md)), and `GetSides` says which it's under.
 - **Context Tags** describe the entity, such as `Undead`. Changes the entity makes as an origin itself carry them as
@@ -101,7 +101,7 @@ Scale, the entity's time scale is its game's code's to set, through `GetClock().
 - **Max Abilities** (default 99): the most abilities the entity can hold. Its kind can make it a scaler, which changes
   the limit with the entity's level ([SCALERS.md](SCALERS.md)).
 - **Allow Duplicates** (default off): let the entity hold the same ability more than once.
-- **Crowd Control** (TW-16): the crowd control rules its abilities follow, as a stun stops every ability and Silenced
+- **Crowd Control**: the crowd control rules its abilities follow, as a stun stops every ability and Silenced
   spells, or, where it names none, the project's ([ABILITIES.md](ABILITIES.md#crowd-control)). A runtime entity's
   identity names them too.
 
@@ -120,8 +120,7 @@ Each Max field is a number, or, by its kind, a scaler that changes the limit wit
 
 ## Components
 
-An entity's components are features it carries, each a class with hooks into its life, added with the list's **+**
-(FN-14). A component hears the entity **Register**, its systems set up; **Death**, whether it stays or ends, its context's
+An entity's components are features it carries, each a class with hooks into its life, added with the list's **+**. A component hears the entity **Register**, its systems set up; **Death**, whether it stays or ends, its context's
 `Killer` the one whose loss killed it, as its Died event names; **Revive**, for one that stays; and **End**. A kind that
 makes no sense twice is offered only while the entity holds none of it.
 
@@ -132,20 +131,20 @@ context: `ctx.GetState<T>(this)`.
 ### Auras
 
 An **Aura** component holds an effect on those near the entity as long as it lives, as a captain's command aura
-(TW-10, [EFFECTS.md](EFFECTS.md#auras)). An entity that dies takes its auras' effects off, and one that stays and
+([EFFECTS.md](EFFECTS.md#auras)). An entity that dies takes its auras' effects off, and one that stays and
 revives holds them again.
 
 ### Bounty
 
 A **Bounty** component gives the entity's killer an **Effect** as it dies, from the entity, so the effect reads its
-level, as gold or experience (FN-14). With a **Share Radius**, read at its level, the killer's allies within it of the
+level, as gold or experience. With a **Share Radius**, read at its level, the killer's allies within it of the
 entity take the effect too, as an assist, measured along the ground unless **Flat** is off. A death no one dealt gives
 none. An entity holds as many as it gives.
 
 ### Respawn
 
 A **Respawn** component revives an entity that stays as it dies once its **Delay**, in seconds of its own time and read
-at its level, has passed, at its **Home**, where it stood as it registered, **Where It Died**, or a **Point** (FN-14),
+at its level, has passed, at its **Home**, where it stood as it registered, **Where It Died**, or a **Point**,
 as a hero comes back at its fountain. Its Death's On Revive effects land as it does, as any revive's do, and a revive
 before its time, as a buyback, ends the wait. An entity that ends as it dies has nothing to revive, which the Problems
 view says. A save keeps neither the entity's death nor its wait. An entity holds one at most.
@@ -164,7 +163,7 @@ the same time. **Name** labels the group. It holds four lists:
 Each list's **+** adds an empty worker to pick a kind for. The section's import button copies a worker group
 from another asset.
 
-A **Threshold**, an analysis worker, acts as an attribute crosses a value, without code (TW-11): Megaera rages as her
+A **Threshold**, an analysis worker, acts as an attribute crosses a value, without code: Megaera rages as her
 Health falls past half, and Ice Blast shatters below 13%. It reads its **Target** attribute's **What**: its current, its
 base, what's missing of it, or its share of its base, so a **Threshold** of 0.5 on its share is half. **Crossing** says
 when it fires: while its **Comparison** holds, as it always did; or as what it reads falls to the threshold or below,
@@ -175,33 +174,31 @@ abilities' triggers hear, its source the one who crossed it and its subject the 
 as the death watcher, a Threshold that kills, does, so the frame's hits and heals net out. An entity that revives re-arms
 it, and its first check after notes its side again.
 
-Two attribute workers keep the common rules (TW-15). **Can't Fall Below** holds its attribute at its **Floor**: a loss
+Two attribute workers keep the common rules. **Can't Fall Below** holds its attribute at its **Floor**: a loss
 that would take it lower takes it to the floor, as Shallow Grave keeps its target at 1 Health, in a buff's worker group
 while it lasts. **Return Damage** sends its **Share** of each workable loss its attribute takes from another back to the
 one who dealt it, typed Returned, so a return on the other side doesn't send it back again and no lifesteal heals from it,
 as Blade Mail.
 
 **Modifiers**, above the workers, change other effects as they're made for as long as the entity lives: its own, as a
-Frost Mage's every Chill granting Frozen, or those landing on it (TW-7). Each entry is a rule of its own or names a
+Frost Mage's every Chill granting Frozen, or those landing on it. Each entry is a rule of its own or names a
 shared Effect Modifier asset ([EFFECTS.md](EFFECTS.md#modifiers)).
 
 An entity's own lifesteal is its **Lifesteal**, the attribute its project's Lifesteal worker names as its Share, its
-set's value for it, which the Lifesteal worker heals by ([WORKERS.md](WORKERS.md#lifesteal)); its Lifesteal list is gone (FN-15).
+set's value for it, which the Lifesteal worker heals by ([WORKERS.md](WORKERS.md#lifesteal)); its Lifesteal list is gone.
 
 ## Death
 
-What the entity's death does (TW-4). **Policy** is **End** by default: as it dies, its hub ends it at its frame's end,
+What the entity's death does. **Policy** is **End** by default: as it dies, its hub ends it at its frame's end,
 as an entity always did. **Stay** keeps it, dead, until it revives: a MOBA hero, or anyone who dies and comes back.
 
 An entity dies as a death watcher among its analysis workers, or its attribute set's, says it does. Where none watches
-and an attribute plays its project's Health role ([ATTRIBUTES.md](ATTRIBUTES.md#roles)), it dies as that attribute reaches 0
-(TW-28, TW-29). **Dies At Zero Health**, on by default, says it does; off, as for a training dummy, that attribute
+and an attribute plays its project's Health role ([ATTRIBUTES.md](ATTRIBUTES.md#roles)), it dies as that attribute reaches 0. **Dies At Zero Health**, on by default, says it does; off, as for a training dummy, that attribute
 doesn't kill it.
 
 - A staying entity dies at its frame's end and stays registered, with its items, levels and lasting effects. Its
   abilities are refused while it's dead.
-- **Purges**, on by default: its death purges its effects, all but those it keeps, as the games' deaths do (FN-16,
-  [EFFECTS.md](EFFECTS.md#purging)). It keeps the **categories** it keeps whatever their effects' tiers: an ability's
+- **Purges**, on by default: its death purges its effects, all but those it keeps, as the games' deaths do ([EFFECTS.md](EFFECTS.md#purging)). It keeps the **categories** it keeps whatever their effects' tiers: an ability's
   **Cooldown**, what's **Lent** (by an equipped item, a set bonus, an aura, or a passive, an ability that activates as
   it's granted), a **Toggle**, and its **Own**, the rest it applied to itself; and the **tiers** it keeps. **Keeps As
   Project**, on, keeps what its project's Purge Levels keep on death, each tier's Kept On Death and their Kept On Death
@@ -215,18 +212,18 @@ doesn't kill it.
   dies. A runtime entity takes its position from its body, so an area search finds it there; `GetBody()` returns it.
   A running entity can be given a body of its own at runtime with `UseBody(process)`, a process running already or
   registered for it there, which it follows and which ends with it as it dies, as its identity's Body does; a revive
-  spawns the identity's Body, where it has one (FN-18). The body it had ends first, `UseBody(null)` lets one go, ending
+  spawns the identity's Body, where it has one. The body it had ends first, `UseBody(null)` lets one go, ending
   it, and a dead entity takes none.
 
 A dead entity takes no one else's effects, as the dead in the games are untargetable: its own still land, as its On Death
-respawn timer and its On Revive effects, and an effect another applies to it while it's dead is refused (FN-16).
+respawn timer and its On Revive effects, and an effect another applies to it while it's dead is refused.
 
 `Revive(at)` on either hub brings a staying entity back, at a point or where it was; it re-arms the entity's analysis
 workers, so its death watcher sees its next death. Callbacks hear `OnEntityRevived`, as they hear `OnEntityDied`.
 
 ## Combat Log
 
-Each entity keeps a combat log of what happens to it (TW-22), which a test reads as the game does, through
+Each entity keeps a combat log of what happens to it, which a test reads as the game does, through
 `gas.GetCombatLog()`, and the Debugger shows under the entity it has selected. What it writes is the project's to say,
 under **Combat Log** in Project Settings → PlayForge: its **Records**, the **Hits Taken** (a workable change another's
 effect makes to its attributes), the **Hits Dealt**, and its other **Changes** (its own, a cost, regeneration, a transfer);
@@ -237,11 +234,11 @@ build.
 Each entry is a `CombatLogEntry`: its **Kind** (Taken, Dealt, Changed or Event), its **Time** and **Frame**, the
 **Other** entity (the dealer of a hit taken, the one a hit dealt struck, an event's source or the one it names), the
 **Effect** behind it, the **Attribute**, its value **Before** and **After** and the **Change**, the hit's **Steps** through
-its pipeline (TW-2), and whether it **Killed**, marked on the blow that killed in both logs. The log's **Entries** run
+its pipeline, and whether it **Killed**, marked on the blow that killed in both logs. The log's **Entries** run
 oldest first; **Of(kind)**, **By(effect)** and **With(entity)** filter them, and **Total(kind, attribute)** adds their
 changes up, as the damage an entity took. An entry reads as a line: "Took -20 Health from Lina (Fireball)".
 
-An entry tells how its change came to land, too (LAB-13): its change as **Made**, before any step, and its
+An entry tells how its change came to land, too: its change as **Made**, before any step, and its
 **ChangeSteps**, each step it took on the way: each attribute worker that heard it, with its **Timing** (before the
 commit or after), its **Execution** (inline, or the actions it **Queued**) and the change **Before** and **After** it; a
 barrier's soak; a gain's scaling, as Healing Received's. **StepsText** reads them as a line: "-30 as made → Math -30 →
@@ -250,7 +247,7 @@ something hears the entity's `OnAttributeChangeStep`.
 
 ## Effect Journal
 
-An `EffectJournal` keeps the life of each effect on the entities it listens to (LAB-12): `Listen(gas)` one, `Follow(list)`
+An `EffectJournal` keeps the life of each effect on the entities it listens to: `Listen(gas)` one, `Follow(list)`
 these and no others, `Forget(gas)` one, and `Dispose()` all; what it wrote stays. Its **Entries** run oldest first, its
 last **Keep** of them, 500 unless it's told; **Of(effect)** and **On(entity)** filter them, **Written** counts every one
 it wrote, and **Wrote** is raised as each is. It records only while it listens, and an entity no journal listens to pays
@@ -284,8 +281,7 @@ Object fields take project assets, not scene objects.
 
 When a `GameplayAbilitySystem` component initializes, it loads the entity's Local Data into a store of its own. Code and
 workers read and write that store through the GAS, with `TryGetLocalData` and `SetLocalData`. Threshold analysis
-workers, for example, note there that they have fired. A `RuntimeGameplayAbilitySystem` loads its identity's rows the same way, the entity asset's where it's made from one
-(GAS-86).
+workers, for example, note there that they have fired. A `RuntimeGameplayAbilitySystem` loads its identity's rows the same way, the entity asset's where it's made from one.
 
 ## Used By
 

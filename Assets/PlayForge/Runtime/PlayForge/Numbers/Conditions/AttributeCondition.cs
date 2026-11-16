@@ -20,10 +20,10 @@ namespace FarEmerald.PlayForge
         public Attribute Attribute;
 
         [Tooltip("What of it it compares: its current value, its base, what's missing of it (base − current), or its share " +
-                 "of its base (current ÷ base), as the Crowbar's above 90% (TW-9)")]
+                 "of its base (current ÷ base), as the Crowbar's above 90%")]
         public EAttributeTargetBinary What = EAttributeTargetBinary.Current;
 
-        [Tooltip("Which retention groups' parts it reads: all of them, the whole value, unless it says (TW-3)")]
+        [Tooltip("Which retention groups' parts it reads: all of them, the whole value, unless it says")]
         public RetentionGroups Groups = new();
 
         [Tooltip("How the attribute compares with the value")]
