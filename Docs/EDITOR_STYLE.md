@@ -82,6 +82,8 @@ The only other colors:
 - An inspector has one label column, 148 px at the mockups' width; in code it follows `EditorGUIUtility.labelWidth`.
   A section's content indents 18 px, past the foldout arrow.
 - Fields, buttons and outlines take Unity's 3 px radius, and checkboxes 2 px. Nothing else is rounded.
+- A settings page has 10 px of room on every side and 20 px above each heading, and its foldout arrows keep one
+  column. It opens on a description of two sentences at most; its fields' tooltips say the rest (EP-3).
 
 ## Text
 

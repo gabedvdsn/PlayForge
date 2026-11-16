@@ -42,8 +42,8 @@ namespace FarEmerald.PlayForge
                  "sent, and how many entries it keeps (TW-22)")]
         public CombatLogSettings CombatLog = new();
 
-        [Tooltip("How The Forge makes the project's assets: where each type's go and how they're named, their defaults, and " +
-                 "the Cost and Cooldown templates (TW-30)")]
+        [Tooltip("How The Forge makes the project's assets: where each type's go, within the project's folder, their defaults, " +
+                 "and the Cost and Cooldown templates (TW-30)")]
         public ForgeAuthoringSettings Authoring = new();
 
         [Tooltip("Its purge levels: the tiers of tags an effect carries, weakest first, a purge of a tier taking the effects at " +

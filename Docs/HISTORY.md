@@ -518,6 +518,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   page, through one table of links in the editor.
 
 ### Changed
+- Project Settings → PlayForge opens on two sentences of what PlayForge is and what a Forge Project holds, where a long
+  note of roles and rules was; its parts have room, its foldout arrows keep one column, and New Assets shows each
+  type's folder within the project's (EP-3).
 - A new Forge Project is made at once in a folder of its own under the PlayForge Folder, as
   `Assets/PlayForge/Arena/Arena.asset`, with its Game Root entity, and each type's new assets go in a folder within it,
   as `Abilities` (EP-10). With no project, the first asset made makes one named for the game there; it made the

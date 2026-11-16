@@ -59,6 +59,14 @@ namespace FarEmerald.PlayForge.Extended.Editor
         internal static VisualElement BuildProjectPage(VisualElement root)
         {
             var page = Page(root, "PlayForge");
+
+            // What PlayForge is and what a Forge Project holds, in two sentences, where a dense note of roles and rules was;
+            // each field's tooltip says the rest (EP-3)
+            var description = Note("PlayForge is a gameplay ability system: attributes, effects, abilities, tags and items. A " +
+                                   "Forge Project holds one game's assets, in a folder of its own, and the settings on this page.");
+            description.name = "PlayForgeDescription";
+            description.AddToClassList("pf-settings__description");
+            page.Add(description);
             page.Add(FolderSection());
             page.Add(ActiveProjectSection());
             return page;
@@ -112,7 +120,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
             Heading(section, "New Assets");
             section.Add(Note("Where The Forge and a field's New put each type's new assets, within the project's folder."));
-            section.Add(NewAssetsTable(authoring.FindPropertyRelative(nameof(ForgeAuthoringSettings.NewAssets))));
+            section.Add(NewAssetsTable(authoring.FindPropertyRelative(nameof(ForgeAuthoringSettings.NewAssets)), project.Folder));
             var buttons = new VisualElement();
             buttons.AddToClassList("pf-settings__buttons");
             buttons.Add(new Button(() =>
@@ -160,9 +168,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
             return page;
         }
 
-        // A row for each type: its name, then its folder, with a button that picks one. A new asset's file is its name
-        // alone: the prefix and suffix columns are gone (EP-13)
-        private static VisualElement NewAssetsTable(SerializedProperty newAssets)
+        // A row for each type: its name, then its folder within the project's, which it shows first (EP-3), with a button
+        // that picks one. A new asset's file is its name alone: the prefix and suffix columns are gone (EP-13)
+        private static VisualElement NewAssetsTable(SerializedProperty newAssets, string projectFolder)
         {
             var table = new VisualElement { name = "NewAssets" };
             table.AddToClassList("pf-table");
@@ -192,7 +200,10 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 var folderProp = entry.FindPropertyRelative(nameof(NewAssetSettings.Folder));
                 var folder = new VisualElement();
                 folder.AddToClassList("pf-settings__folder-field");
-                var folderField = Text(folderProp, "Folder", $"The folder a new {ForgeAssetTypes.NameOf(type)} goes in");
+                var within = new Label($"{projectFolder}/") { name = "FolderRoot", tooltip = $"The project's folder, {projectFolder}" };
+                within.AddToClassList("pf-settings__folder-root");
+                folder.Add(within);
+                var folderField = Text(folderProp, "Folder", $"The folder a new {ForgeAssetTypes.NameOf(type)} goes in, within {projectFolder}");
                 folder.Add(folderField);
                 folder.Add(new Button(() => ChooseFolder(folderProp, type))
                 {
@@ -328,13 +339,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
         {
             var section = new VisualElement { name = "ForgeProject" };
             if (project == null) return section;
-            section.Add(Note("What the project's game reads as it runs, through its GameRoot: the part each attribute plays, by a " +
-                             "role tag, the crowd control rules an entity follows where it names none, the order an area's " +
-                             "effects land on those it takes, by the tags they carry, and what each entity's combat log " +
-                             "writes and keeps, and the workers every entity has. PlayForge reads its " +
-                             "own roles: Health, what an entity dies of at 0 and what On Hit counts where an entry names none; " +
-                             "Luck, read on every chance's caster; Movement Speed, what the Creator Lab's units walk at. " +
-                             "Your code reads its own by their tags."));
+            // A heading and a line, each field's tooltip saying what it is, where one note said it all (EP-3)
+            Heading(section, "Forge Project");
+            section.Add(Note("What the project's game reads as it runs, through its GameRoot."));
 
             var held = new ObjectField("Project") { name = "ForgeProjectAsset", objectType = typeof(ForgeProject), tooltip = "The Forge Project whose settings these are" };
             held.SetValueWithoutNotify(project);

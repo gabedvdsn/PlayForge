@@ -1506,9 +1506,10 @@
 
 /* ─── Settings pages: Project Settings and Preferences, each a title, then headings over Unity's own fields ───────── */
 
+/* The page has room on every side, and each part room above its heading (EP-3) */
 .pf-root .pf-settings {
     flex-grow: 1;
-    padding: 1px 10px 10px 10px;
+    padding: 10px;
 }
 
 .pf-root .pf-settings__title {
@@ -1520,7 +1521,7 @@
 }
 
 .pf-root .pf-settings__heading {
-    margin: 12px 0 4px 0;
+    margin: 20px 0 4px 0;
     padding: 0;
     -unity-font-style: bold;
     color: var(--pf-strong-text);
@@ -1528,7 +1529,30 @@
 
 .pf-root .pf-settings__buttons {
     flex-direction: row;
-    margin-top: 6px;
+    margin-top: 8px;
+}
+
+/* The page's description, under its title (EP-3) */
+.pf-root .pf-settings__description {
+    margin: 0 0 10px 0;
+}
+
+/* A list's foldout arrow in the column of the page's other rows, a field's 3 px in from the page's edge, where a list's
+   header put its arrow at the edge itself (EP-3) */
+.pf-root .pf-settings .unity-list-view__foldout-header > .unity-foldout__toggle {
+    margin-left: 3px;
+}
+
+/* The project's folder, before each type's, clipping before the field does (EP-3) */
+.pf-root .pf-settings__folder-root {
+    flex-shrink: 4;
+    min-width: 0;
+    margin: 0 2px 0 0;
+    padding: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--pf-secondary-text);
+    -unity-text-align: middle-left;
 }
 
 /* A table row that holds fields takes their height */
