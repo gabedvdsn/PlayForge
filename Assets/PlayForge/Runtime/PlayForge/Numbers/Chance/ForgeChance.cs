@@ -146,6 +146,7 @@ namespace FarEmerald.PlayForge
     /// </summary>
     [Serializable]
     [GameplayCondition("Chance", Reads = NumberReads.Caster)]
+    [ForgeMenu(Description = "Holds on a roll of its chance.")]
     public class ChanceCondition : GameplayCondition
     {
         [Tooltip("The chance it holds, from 0 to 1, read for the roll")]

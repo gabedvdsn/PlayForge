@@ -10,7 +10,7 @@ namespace FarEmerald.PlayForge
     /// or when you want to explicitly validate the self-target against tag requirements.
     /// </summary>
     [Serializable]
-    [ForgeCategory("Automatic")]
+    [ForgeMenu("Automatic", Description = "Targets the caster itself, checked against the task's tag requirements.")]
     public class AutoTargetSelfTask : AbstractGasTargetingAbilityTask
     {
         public override string Description => "Automatically target self";

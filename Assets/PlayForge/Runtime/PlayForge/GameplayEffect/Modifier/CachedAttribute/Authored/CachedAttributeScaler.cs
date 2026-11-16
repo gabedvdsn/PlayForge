@@ -10,6 +10,7 @@ namespace FarEmerald.PlayForge
     /// Initial value reads from the captured attribute's RootValue (its base definition);
     /// active value reads from its current ActiveValue.
     /// </summary>
+    [ForgeMenu(Description = "Another attribute's value, kept as it changes.")]
     public class CachedAttributeScaler : AbstractCachedScaler
     {
         [Tooltip("Which attribute to read")]

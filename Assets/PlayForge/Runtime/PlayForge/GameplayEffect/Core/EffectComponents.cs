@@ -11,6 +11,7 @@ namespace FarEmerald.PlayForge
     /// at most.
     /// </summary>
     [Serializable]
+    [ForgeMenu(Description = "Lands the effect on others near its target too.")]
     public sealed class AreaEffectComponent : AbstractEffectComponent
     {
         [Tooltip("Its area: as its effect lands on its target, it lands on each the area takes near that target too (TW-10)")]
@@ -25,6 +26,7 @@ namespace FarEmerald.PlayForge
     /// as many as it moves, each its own.
     /// </summary>
     [Serializable]
+    [ForgeMenu(Description = "Moves an amount of an attribute from the caster or the target to either.")]
     public sealed class TransferEffectComponent : AbstractEffectComponent
     {
         [Tooltip("What it moves: when, who gives and of what, who gets and in what, which of the values, and how much (TW-20)")]
@@ -39,6 +41,7 @@ namespace FarEmerald.PlayForge
     /// effect holds one at most. It was a field of the effect's own, with a switch.
     /// </summary>
     [Serializable]
+    [ForgeMenu(Description = "Changes the target's sides while the effect lasts, as a mind control.")]
     public sealed class SideChangeEffectComponent : AbstractEffectComponent
     {
         [Tooltip("Whose sides it gives: its caster's, as a mind control, or those it names")]
@@ -84,6 +87,7 @@ namespace FarEmerald.PlayForge
     /// its chance to land are its own. A landing by spread spreads on only so far as its Hops allow.
     /// </summary>
     [Serializable]
+    [ForgeMenu(Description = "Spreads the effect, or another, from its target to those near it.")]
     public sealed class SpreadEffectComponent : AbstractEffectComponent
     {
         [Tooltip("When it spreads: as its effect lands, each tick, as it comes off, or as the one it's on dies; any of them")]

@@ -15,6 +15,7 @@ namespace FarEmerald.PlayForge
     /// one that holds two heals a hit once. It allocates nothing, healing or not.
     /// </summary>
     [Serializable]
+    [ForgeMenu(Description = "Heals its holder a share of each loss it deals another.")]
     public class LifestealImpactWorker : AbstractImpactWorker
     {
         [Tooltip("The attribute whose value is the share it heals, as 0.15")]

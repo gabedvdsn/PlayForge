@@ -10,6 +10,7 @@ namespace FarEmerald.PlayForge
     /// as long as the effect lasts, following a target that has a place (FEAT-1).
     /// </summary>
     [Serializable]
+    [ForgeMenu(Description = "Places a prefab at the target, for a moment or for as long as the effect lasts.")]
     public class PrefabCue : AbstractCueHandler
     {
         public GameObject Prefab;

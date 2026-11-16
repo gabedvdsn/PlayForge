@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
-    [ForgeCategory("Process")]
+    [ForgeMenu("Process")]
     public abstract class AbstractCreateProcessAbilityTask : AbstractAbilityTask
     {
         

@@ -4,6 +4,7 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
+    [ForgeMenu(Description = "Logs as its target's attribute crosses a threshold, for debugging.")]
     public class ThresholdDebuggerEffectWorker : TargetAttributeThresholdEffectWorker
     {
         protected override IEnumerable<IRootAction> OnThresholdMet(EffectWorkerContext ctx)

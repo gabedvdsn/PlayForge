@@ -80,6 +80,7 @@ namespace FarEmerald.PlayForge
 
     /// <summary>Each spent charge comes back on a cooldown of its own, run alongside the others: the default (TW-17).</summary>
     [Serializable]
+    [ForgeMenu(Description = "Each spent charge comes back on a cooldown of its own.")]
     public class EachChargeRecharge : AbstractChargeRecharge
     {
         /// <summary>The one an ability with no Recharge set follows.</summary>
@@ -90,6 +91,7 @@ namespace FarEmerald.PlayForge
 
     /// <summary>No cooldown until the last charge is spent; its end brings every charge back at once (TW-17).</summary>
     [Serializable]
+    [ForgeMenu(Description = "Every charge comes back at once, after the last one is spent.")]
     public class AllAtOnceRecharge : AbstractChargeRecharge
     {
         // All spent, and the cooldown they started gone: all are back

@@ -8,6 +8,7 @@ namespace FarEmerald.PlayForge
     /// <see cref="ForgeCues.Shaker"/> (FEAT-1).
     /// </summary>
     [Serializable]
+    [ForgeMenu(Description = "Shakes the camera as the effect lands, and on each tick where set.")]
     public class CameraShakeCue : AbstractCueHandler
     {
         [NumberMin(0f)] public ScalableFloat Strength = 1f;

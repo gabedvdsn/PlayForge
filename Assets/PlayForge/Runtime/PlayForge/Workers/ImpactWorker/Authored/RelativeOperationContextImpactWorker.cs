@@ -8,6 +8,7 @@ namespace FarEmerald.PlayForge
     /// Impact worker that applies effects relative to the impact (e.g., lifesteal).
     /// Can be configured as INLINE (immediate) or DEFERRED (end-of-frame).
     /// </summary>
+    [ForgeMenu(Description = "Changes an attribute of its holder by a share of each impact.")]
     public class RelativeOperationContextImpactWorker : AbstractContextImpactWorker
     {
         [Header("Relative & Operation")]

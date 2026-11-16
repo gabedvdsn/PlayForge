@@ -130,7 +130,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 field.showMixedValue = mixed;
                 var data = prop.managedReferenceFullTypename;
                 // A class Unity can't find keeps its data, and the field names it as missing
-                var name = type != null || string.IsNullOrEmpty(data) ? GetStringValue(prop, type) : $"{data.Substring(data.LastIndexOf('.') + 1)} (missing)";
+                var name = type != null || string.IsNullOrEmpty(data) ? ShownName(prop, type) : $"{data.Substring(data.LastIndexOf('.') + 1)} (missing)";
                 if (!mixed) field.Show(name, string.IsNullOrEmpty(data), TipOf(prop, type));
                 var kind = mixed ? "\u0001mixed" : prop.managedReferenceFullTypename ?? "";
                 if (kind != built)
@@ -173,9 +173,13 @@ namespace FarEmerald.PlayForge.Extended.Editor
         /// <summary>The kinds the picker offers, each with its name, in name order.</summary>
         internal IReadOnlyList<(Type Type, string Name)> KindsFor(SerializedProperty prop) =>
             GetEntries().Where(type => type != null && !type.IsAbstract && Offers(prop, type))
-                .Select(type => (type, GetStringValue(prop, type)))
+                .Select(type => (type, ShownName(prop, type)))
                 .OrderBy(kind => kind.Item2, StringComparer.OrdinalIgnoreCase)
                 .ToList();
+
+        // A kind's name as the field and the picker show it: the one its [ForgeMenu] gives, or the drawer's (EP-2)
+        private string ShownName(SerializedProperty prop, Type type) =>
+            type != null && ForgeMenuAttribute.NameOf(type) is { } named ? named : GetStringValue(prop, type);
 
         // The kind's own fields, each Unity's, under the kind field; or why there are none to show
         private static void Fill(VisualElement fields, SerializedProperty prop, bool mixed)

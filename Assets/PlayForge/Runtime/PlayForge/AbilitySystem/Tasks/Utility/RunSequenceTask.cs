@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
-    [ForgeCategory("Sequence")]
+    [ForgeMenu("Sequence", Description = "Runs a sequence a static method in code makes.")]
     public class RunSequenceTask : AbstractAbilityTask
     {
         public TaskSequenceReference Sequence;

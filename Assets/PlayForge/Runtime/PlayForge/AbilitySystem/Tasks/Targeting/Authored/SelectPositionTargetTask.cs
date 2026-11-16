@@ -11,7 +11,7 @@ namespace FarEmerald.PlayForge
     /// Stores the hit position in the data packet under Tags.POSITION.
     /// </summary>
     [Serializable]
-    [ForgeCategory("Picked")]
+    [ForgeMenu("Picked", Description = "The player clicks a point on the ground.")]
     public class SelectPositionTargetTask : AbstractTargetingAbilityTask
     {
         [Tooltip("Layers to raycast against when selecting positions")]

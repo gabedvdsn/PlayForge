@@ -10,7 +10,8 @@ namespace FarEmerald.PlayForge
     /// it's read doesn't hold, so neither does this.
     /// </summary>
     [Serializable]
-    [GameplayCondition("All Of", Category = "Logic")]
+    [GameplayCondition("All Of")]
+    [ForgeMenu("Logic", Description = "Holds where every one of its conditions holds.")]
     public class AllCondition : GameplayCondition
     {
         [Tooltip("The conditions that must all hold")]
@@ -42,7 +43,8 @@ namespace FarEmerald.PlayForge
     /// it's read doesn't hold, and the others still can.
     /// </summary>
     [Serializable]
-    [GameplayCondition("Any Of", Category = "Logic")]
+    [GameplayCondition("Any Of")]
+    [ForgeMenu("Logic", Description = "Holds where any one of its conditions holds.")]
     public class AnyCondition : GameplayCondition
     {
         [Tooltip("The conditions of which one must hold")]
@@ -73,7 +75,8 @@ namespace FarEmerald.PlayForge
     /// doesn't hold either: not having a target's tag doesn't hold where there's no target.
     /// </summary>
     [Serializable]
-    [GameplayCondition("Not", Category = "Logic")]
+    [GameplayCondition("Not")]
+    [ForgeMenu("Logic", Description = "Holds where its condition doesn't.")]
     public class NotCondition : GameplayCondition
     {
         [Tooltip("The condition that must not hold")]

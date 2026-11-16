@@ -28,7 +28,8 @@ namespace FarEmerald.PlayForge
     /// needs no worker of its own. Plus 1 makes a share a multiplier.
     /// </summary>
     [Serializable]
-    [NumberKind("Stacking Curve", Category = "Scaler")]
+    [NumberKind("Stacking Curve")]
+    [ForgeMenu("Scaler", Description = "A count, as stacks, through a stacking curve, then a number added.")]
     public class StackingCurveKind : NumberKind
     {
         [Tooltip("What it counts, n: an item's stacks, an effect's stacks, an attribute")]

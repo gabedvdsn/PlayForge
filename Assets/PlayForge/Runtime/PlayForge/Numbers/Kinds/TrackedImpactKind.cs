@@ -51,7 +51,8 @@ namespace FarEmerald.PlayForge
     /// </para>
     /// </summary>
     [Serializable]
-    [NumberKind("Tracked Impact", Category = "Effect")]
+    [NumberKind("Tracked Impact")]
+    [ForgeMenu("Effect", Description = "What an effect has dealt: its last impact, its total, or how many.")]
     public class TrackedImpactKind : NumberKind
     {
         [Tooltip("What it reads of what was dealt: the last impact, the total, or how many impacts")]

@@ -31,6 +31,7 @@ namespace FarEmerald.PlayForge
     /// Target's Damage Resistance read as what's left; an armor curve; a bonus that reads the target, as Crowbar's above 90%.
     /// </summary>
     [Serializable]
+    [ForgeMenu(Description = "Multiplies the value by a number, as a bonus or a resistance.")]
     public class MultiplyStage : AbstractValueStage
     {
         [Tooltip("What the value is multiplied by, read for the hit")]
@@ -46,6 +47,7 @@ namespace FarEmerald.PlayForge
     /// heal of 50 one of 60, as the value's sign has it.
     /// </summary>
     [Serializable]
+    [ForgeMenu(Description = "Adds a number to the value's size.")]
     public class AddStage : AbstractValueStage
     {
         [Tooltip("What's added to the value's size, read for the hit: 10 makes a blow of -100 one of -110")]
@@ -65,6 +67,7 @@ namespace FarEmerald.PlayForge
     /// breakdown says so (TW-8).
     /// </summary>
     [Serializable]
+    [ForgeMenu(Description = "On a chance, multiplies the value, as a critical hit.")]
     public class ChanceStage : AbstractValueStage
     {
         [Tooltip("The chance, from 0 to 1, read for the hit: a critical strike chance, as Caster's Crit Chance")]
@@ -92,6 +95,7 @@ namespace FarEmerald.PlayForge
 
     /// <summary>The value's size kept between two numbers read for the hit, its sign as it was.</summary>
     [Serializable]
+    [ForgeMenu(Description = "Keeps the value's size between two numbers.")]
     public class ClampStage : AbstractValueStage
     {
         [Tooltip("The least its size can be, read for the hit")]
@@ -117,6 +121,7 @@ namespace FarEmerald.PlayForge
     /// (TW-12). A gain passes it by.
     /// </summary>
     [Serializable]
+    [ForgeMenu(Description = "Takes a loss from another attribute first, as a shield takes a blow before health.")]
     public class AbsorbStage : AbstractValueStage
     {
         [Tooltip("The attribute that takes the loss first: a barrier, a shield")]
@@ -187,6 +192,7 @@ namespace FarEmerald.PlayForge
 
     /// <summary>A block: on its chance, nothing of the effect lands, as Tougher Times blocks a hit outright (TW-12).</summary>
     [Serializable]
+    [ForgeMenu(Description = "On a chance, nothing of the effect lands, as a block.")]
     public class BlockStage : AbstractStopStage
     {
         public override Tag StoppedEvent => Tags.BLOCKED;
@@ -196,6 +202,7 @@ namespace FarEmerald.PlayForge
 
     /// <summary>An evade: on its chance, nothing of the effect lands, as a dodge (TW-12).</summary>
     [Serializable]
+    [ForgeMenu(Description = "On a chance, nothing of the effect lands, as a dodge.")]
     public class EvadeStage : AbstractStopStage
     {
         public override Tag StoppedEvent => Tags.EVADED;
@@ -208,6 +215,7 @@ namespace FarEmerald.PlayForge
     /// takes the rest, as Culling Blade does below its threshold.
     /// </summary>
     [Serializable]
+    [ForgeMenu(Description = "Takes the rest where a hit would leave less than a share of the attribute's base.")]
     public class ExecuteStage : AbstractValueStage
     {
         [Tooltip("The share of its base below which a hit takes the rest, as 0.13")]

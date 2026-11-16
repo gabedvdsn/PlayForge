@@ -3,7 +3,7 @@ using Cysharp.Threading.Tasks;
 
 namespace FarEmerald.PlayForge
 {
-    [ForgeCategory("Process")]
+    [ForgeMenu("Process", Description = "Makes every disjointable shot homing on the caster lose it, as a dodge.")]
     public class DisjointAbilityTask : AbstractAbilityTask
     {
         public override bool IsCriticalSection => false;

@@ -58,7 +58,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 // The menu files a condition under its category, as the kind menu does: "Logic/All Of"
                 kind.formatListItemCallback = ConditionKinds.MenuPath;
                 // PlayForge's dropdown, its conditions under their categories (EP-1)
-                ForgePopupDropdown.Use(kind, "Condition");
+                ForgePopupDropdown.Use(kind, "Condition", ConditionKinds.ContextOf);
                 kind.showMixedValue = mixedKinds;
                 row.Add(kind);
                 root.Add(row);
@@ -143,8 +143,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
         public static List<Type> All => all ??= TypeCache.GetTypesDerivedFrom<GameplayCondition>()
             .Where(type => !type.IsAbstract && !type.IsGenericType && type.IsSerializable && type.GetConstructor(Type.EmptyTypes) != null)
-            .OrderBy(type => string.IsNullOrEmpty(GameplayConditionAttribute.Of(type)?.Category) ? 0 : 1)
-            .ThenBy(type => GameplayConditionAttribute.Of(type)?.Category ?? "", StringComparer.OrdinalIgnoreCase)
+            .OrderBy(type => ForgeMenuAttribute.PathOf(type).Length == 0 ? 0 : 1)
+            .ThenBy(type => ForgeMenuAttribute.PathOf(type), StringComparer.OrdinalIgnoreCase)
             .ThenBy(Rank)
             .ThenBy(NumberText.ConditionName, StringComparer.OrdinalIgnoreCase)
             .ToList();
@@ -161,12 +161,22 @@ namespace FarEmerald.PlayForge.Extended.Editor
             return index < 0 ? Framework.Length : index;
         }
 
-        /// <summary>A condition's place in the menu by its name, as "Logic/All Of", or its name alone at the top.</summary>
+        /// <summary>
+        /// A condition's place in the menu by its name, as "Logic/All Of", by its <see cref="ForgeMenuAttribute"/>'s path
+        /// (EP-2); or its name alone at the top.
+        /// </summary>
         public static string MenuPath(string name)
         {
             var type = All.FirstOrDefault(each => NumberText.ConditionName(each) == name);
-            var category = type == null ? null : GameplayConditionAttribute.Of(type)?.Category;
+            var category = type == null ? null : ForgeMenuAttribute.PathOf(type);
             return string.IsNullOrEmpty(category) ? name : $"{category}/{name}";
+        }
+
+        /// <summary>What the condition menu says of a condition by its name: its description (EP-2).</summary>
+        public static string ContextOf(string name)
+        {
+            var type = All.FirstOrDefault(each => NumberText.ConditionName(each) == name);
+            return type == null ? null : ForgeMenuAttribute.DescriptionOf(type);
         }
     }
 }

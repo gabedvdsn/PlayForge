@@ -5,7 +5,7 @@ using UnityEngine;
 namespace FarEmerald.PlayForge
 {
     /// <summary>Waits: holds its stage for its delay, in its caster's time, read as it starts at its ability's level (FN-24).</summary>
-    [ForgeCategory("Waits")]
+    [ForgeMenu("Waits", Description = "Waits a while before its stage goes on.")]
     public class DelayTask : AbstractAbilityTask
     {
         [Tooltip("How long it waits, in milliseconds of its caster's time")]

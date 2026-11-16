@@ -4,6 +4,7 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
+    [ForgeMenu(Description = "Several impact workers as one.")]
     public class ImpactWorkerGroup : AbstractImpactWorker
     {
         public List<AbstractImpactWorker> Workers;

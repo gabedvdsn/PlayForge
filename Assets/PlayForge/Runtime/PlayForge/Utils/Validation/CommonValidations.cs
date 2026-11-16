@@ -5,6 +5,7 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
+    [ForgeMenu(Description = "Activates only where the caster can pay the cost.")]
     public class CostValidation : IAbilityValidationRule
     {
         public bool Validate(AbilityDataPacket data, Func<ITarget> getSource, out string error)
@@ -42,6 +43,7 @@ namespace FarEmerald.PlayForge
         }
     }
 
+    [ForgeMenu(Description = "Activates only where the ability isn't cooling down.")]
     public class CooldownValidation : IAbilityValidationRule
     {
         public bool Validate(AbilityDataPacket data, Func<ITarget> getSource, out string error)
@@ -63,6 +65,7 @@ namespace FarEmerald.PlayForge
     }
 
     [Serializable]
+    [ForgeMenu(Description = "Activates only while the caster lives.")]
     public class IsAliveValidation : IAbilityValidationRule
     {
 
@@ -78,6 +81,7 @@ namespace FarEmerald.PlayForge
     }
 
     [Serializable]
+    [ForgeMenu(Description = "Activates only where an attribute compares with a value.")]
     public class AttributeValidation : AbstractAttributeValidationRule
     {
         public EComparisonOperator Comparison;
@@ -152,6 +156,7 @@ namespace FarEmerald.PlayForge
         public abstract string GetName();
     }
     
+    [ForgeMenu(Description = "Activates only where the target is within range.")]
     public class CheckRangeValidation : AbstractTagValidationRule
     {
         public override bool Validate(AbilityDataPacket data, Func<ITarget> getSource, out string error)

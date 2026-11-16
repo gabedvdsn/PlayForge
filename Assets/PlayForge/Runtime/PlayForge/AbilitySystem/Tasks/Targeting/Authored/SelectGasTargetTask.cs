@@ -11,7 +11,7 @@ namespace FarEmerald.PlayForge
     /// Validates the hit object has an ITarget component and passes tag requirements.
     /// </summary>
     [Serializable]
-    [ForgeCategory("Picked")]
+    [ForgeMenu("Picked", Description = "The player clicks an entity.")]
     public class SelectGasTargetTask : AbstractGasTargetingAbilityTask
     {
         [Tooltip("Layers to raycast against when selecting targets")]

@@ -2,6 +2,7 @@
 
 namespace FarEmerald.PlayForge
 {
+    [ForgeMenu(Description = "Turns the number into a factor: as it is, one plus it, or one minus it.")]
     public class AttenuateScalerBehaviour : AbstractScalerBehaviour
     {
         public EMathApplicationPolicy Policy;

@@ -6,7 +6,7 @@ using FarEmerald.PlayForge.Extended;
 
 namespace FarEmerald.PlayForge
 {
-    [ForgeCategory("Effects")]
+    [ForgeMenu("Effects", Description = "Applies its effects to the ability's targets.")]
     public class ApplyEffectsAbilityTask : AbstractAbilityTask
     {
         [Tooltip("The effects it applies to each of the activation's targets, in order")]

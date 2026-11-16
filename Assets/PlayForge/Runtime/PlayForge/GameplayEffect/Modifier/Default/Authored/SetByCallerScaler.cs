@@ -24,6 +24,7 @@ namespace FarEmerald.PlayForge
     /// </summary>
     [Serializable]
     [NumberKind("Set By Caller")]
+    [ForgeMenu("", Description = "A value code passes in under a tag as it applies the effect or activates the ability.")]
     public class SetByCallerScaler : NumberKind
     {
         [Tooltip("The tag the caller sets the value under, on the effect's spec or the activation's data. Only this tag " +

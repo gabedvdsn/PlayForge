@@ -15,6 +15,7 @@ namespace FarEmerald.PlayForge
     /// - Partitioned: Uses the minimum of MaxLevel and the source's current level.
     /// </summary>
     [Serializable]
+    [ForgeMenu("Scaler")]
     public abstract class AbstractScaler : IScaler
     {
         [Tooltip("Optional name for this scaler (helps identify when importing or viewing)")]

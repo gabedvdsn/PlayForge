@@ -439,14 +439,25 @@ namespace FarEmerald.PlayForge.Extended.Editor
         public static bool Resolves(NumberReads provides, Type kind) => (NeedsOf(kind) & ~provides) == NumberReads.None;
 
         /// <summary>
-        /// The kind menu's group for a kind: the category its <see cref="NumberKindAttribute"/> names; none for the kinds
-        /// at the menu's top, By Level, Shared, × Attribute and Set By Caller; Scaler for every other.
+        /// The kind menu's group for a kind: the path its <see cref="ForgeMenuAttribute"/> names, or the class it's made
+        /// from names (EP-2): Scaler for a scaler, as AbstractScaler names it, but the kinds at the menu's top, By Level,
+        /// Shared, × Attribute, Set By Caller and Group, and each kind of number, which name none; or null at the top. It
+        /// was a number kind's Category, and a rule for the scalers.
         /// </summary>
         public static string CategoryOf(Type kind)
         {
-            var declared = NumberKindAttribute.Of(kind);
-            if (declared != null) return string.IsNullOrEmpty(declared.Category) ? null : declared.Category;
-            return kind == typeof(CachedSimpleScaler) || kind == typeof(SharedCachedScaler) ? null : ScalerCategory;
+            var path = ForgeMenuAttribute.PathOf(kind);
+            return string.IsNullOrEmpty(path) ? null : path;
+        }
+
+        /// <summary>What the kind menu says of each of its choices: its kind's description, by the choice's name (EP-2).</summary>
+        internal static Func<string, string> ContextOf(IEnumerable<Type> kinds)
+        {
+            var said = new Dictionary<string, string>();
+            foreach (var kind in kinds ?? Enumerable.Empty<Type>())
+                foreach (var choice in ScalerFields.ChoiceNames(kind))
+                    said.TryAdd(choice, ForgeMenuAttribute.DescriptionOf(kind));
+            return choice => choice != null && said.TryGetValue(choice, out var text) ? text : null;
         }
 
         /// <summary>A kind's place in the kind menu, as "Scaler/Clamped", or its name alone at the top.</summary>

@@ -21,7 +21,7 @@ namespace FarEmerald.PlayForge
     /// triggers try to activate as a trigger's do.
     /// </summary>
     [Serializable]
-    [ForgeCategory("Events and Tags")]
+    [ForgeMenu("Events and Tags", Description = "Sends a gameplay event to the caster or to each target.")]
     public class SendEventTask : AbstractAbilityTask
     {
         [Tooltip("The event it sends, by its tag")]
@@ -68,7 +68,7 @@ namespace FarEmerald.PlayForge
     /// and take back their own.
     /// </summary>
     [Serializable]
-    [ForgeCategory("Events and Tags")]
+    [ForgeMenu("Events and Tags", Description = "Grants tags to the caster or the target while its stage runs.")]
     public class GrantTagsTask : AbstractAbilityTask
     {
         [Tooltip("The tags it grants while its stage runs")]
@@ -115,7 +115,7 @@ namespace FarEmerald.PlayForge
     /// is committed (Decision 30), and never the ability it runs in (FN-24).
     /// </summary>
     [Serializable]
-    [ForgeCategory("Events and Tags")]
+    [ForgeMenu("Events and Tags", Description = "Cancels the caster's running abilities tagged with one of its tags.")]
     public class CancelAbilitiesTask : AbstractAbilityTask
     {
         [Tooltip("The abilities it cancels, by their asset tag or a context tag, or a child of one")]

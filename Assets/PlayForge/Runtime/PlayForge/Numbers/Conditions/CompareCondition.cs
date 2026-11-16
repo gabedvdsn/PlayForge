@@ -9,6 +9,7 @@ namespace FarEmerald.PlayForge
     /// </summary>
     [Serializable]
     [GameplayCondition("Compare Numbers")]
+    [ForgeMenu(Description = "Compares one number with another.")]
     public class CompareCondition : GameplayCondition
     {
         [Tooltip("The number on the left")]

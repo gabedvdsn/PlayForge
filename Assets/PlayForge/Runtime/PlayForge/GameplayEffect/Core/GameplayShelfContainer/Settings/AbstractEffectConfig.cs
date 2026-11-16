@@ -260,6 +260,7 @@ namespace FarEmerald.PlayForge
     }
 
     [Serializable]
+    [ForgeMenu(Description = "The fewest and the most stacks the effect holds, and what happens at the most.")]
     public class StackBoundsConfig : AbstractStackingConfig
     {
         [Tooltip("The fewest stacks the effect holds; a new one starts with these. Read at the effect's level")]
@@ -318,6 +319,7 @@ namespace FarEmerald.PlayForge
     }
 
     [Serializable]
+    [ForgeMenu(Description = "How many stacks an application adds.")]
     public class StackAmountOperation : AbstractStackingConfig
     {
         [Tooltip("How the scaler sets the stacks an application adds: times the amount, plus it, or in its place")]
@@ -366,6 +368,7 @@ namespace FarEmerald.PlayForge
     }
 
     [Serializable]
+    [ForgeMenu(Description = "The stacks a new effect starts with.")]
     public class InitializationOperation : AbstractStackingConfig
     {
         /// <summary>

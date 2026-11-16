@@ -149,6 +149,7 @@ namespace FarEmerald.PlayForge
 
     /// <summary>Spares the effects carrying one of its tags, as their asset tag or a context tag, as a purge that leaves stuns (FN-16).</summary>
     [Serializable]
+    [ForgeMenu(Description = "Spares the effects carrying one of its tags.")]
     public sealed class ExceptTaggedPurgeFilter : AbstractPurgeFilter
     {
         [Tooltip("Effects carrying one of these, as their asset tag or a context tag, are spared")]

@@ -10,6 +10,7 @@ namespace FarEmerald.PlayForge
     /// (ED-33). It keeps no values of its own.
     /// </summary>
     [Serializable]
+    [ForgeMenu("", Description = "A shared Scaler asset's number, for an attribute set.")]
     public class SharedCachedScaler : AbstractCachedScaler
     {
         [Tooltip("The Scaler asset this element reads; its scaler is one of the cached kinds")]

@@ -8,7 +8,8 @@ namespace FarEmerald.PlayForge
     /// the count again as it changes. Only a scaler written for it read an effect's stack count (FEAT-19).
     /// </summary>
     [Serializable]
-    [NumberKind("Effect Stacks", Category = "Effect")]
+    [NumberKind("Effect Stacks")]
+    [ForgeMenu("Effect", Description = "The effect's stack count.")]
     public class EffectStacksScaler : AbstractScaler
     {
         // It reads the effect's stacks alone (ED-51)

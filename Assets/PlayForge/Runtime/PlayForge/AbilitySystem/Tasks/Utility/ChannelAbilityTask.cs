@@ -8,7 +8,7 @@ namespace FarEmerald.PlayForge
     /// Channels: holds its stage for its duration, in its caster's time, read as it starts at its ability's level, a
     /// critical section, as a cast bar fills (FN-24). It kept a cast bar's calls commented out, which nothing drew.
     /// </summary>
-    [ForgeCategory("Waits")]
+    [ForgeMenu("Waits", Description = "Holds its stage for a duration nothing interrupts, as a cast bar fills.")]
     public class ChannelAbilityTask : AbstractAbilityTask
     {
         [Tooltip("How long it channels, in seconds of its caster's time")]

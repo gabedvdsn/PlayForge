@@ -72,6 +72,7 @@ namespace FarEmerald.PlayForge
     }
 
     [Serializable]
+    [ForgeMenu(Description = "Kills its entity as an attribute reaches its threshold, as Health reaching 0.")]
     public class DeathWatcherAnalysisWorker : ThresholdAnalysisWorker
     {
         protected override IEnumerable<IRootAction> OnThresholdReached(IGameplayAbilitySystem system, AttributeValue value, FrameSummary frameSummary)
@@ -87,6 +88,7 @@ namespace FarEmerald.PlayForge
     /// Analysis worker that triggers callbacks based on attribute thresholds.
     /// </summary>
     [Serializable]
+    [ForgeMenu(Description = "Applies effects and sends an event as an attribute crosses a threshold.")]
     public class ThresholdAnalysisWorker : AbstractAnalysisWorker
     {
         [Tooltip("The attribute it watches")]

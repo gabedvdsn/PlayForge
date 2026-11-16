@@ -10,6 +10,7 @@ namespace FarEmerald.PlayForge
     /// </summary>
     [Serializable]
     [GameplayCondition("Attribute")]
+    [ForgeMenu(Description = "Compares an attribute of the caster or the target with a number.")]
     public class AttributeCondition : GameplayCondition
     {
         [Tooltip("Whose attribute it reads")]

@@ -6,10 +6,11 @@ namespace FarEmerald.PlayForge.Extended.Editor
 {
     /// <summary>
     /// The picker a kind field opens (ED-56, EP-1): PlayForge's dropdown of the kinds a field can hold, by their names, None
-    /// first where the field may be empty, and the kind it holds checked. Kinds that name a category, by
-    /// <see cref="ForgeCategoryAttribute"/>, are listed in a submenu for each, in name order, the kinds that name none after
-    /// them; its search finds any kind whatever its category (FN-24). It was Unity's searchable dropdown, and before that a
-    /// list drawn under the field in tinted boxes, from styles set in C#.
+    /// first where the field may be empty, and the kind it holds checked. Each kind sits under the submenus its
+    /// <see cref="ForgeMenuAttribute"/> names, or a class it's made from names, submenus first in name order, then the
+    /// kinds; its search finds any kind whatever its submenu, and its Context says a kind's description (EP-2). It was
+    /// Unity's searchable dropdown, a group of one level for ability tasks alone (FN-24), and before that a list drawn under
+    /// the field in tinted boxes, from styles set in C#.
     /// </summary>
     internal sealed class ForgeTypePicker
     {
@@ -31,15 +32,12 @@ namespace FarEmerald.PlayForge.Extended.Editor
             foreach (var (type, name) in kinds ?? Array.Empty<(Type, string)>())
             {
                 var kind = type;
-                Dropdown.Add(CategoryOf(kind) ?? "", name, () => picked?.Invoke(kind), isChecked: kind != null && kind == current);
+                Dropdown.Add(ForgeMenuAttribute.PathOf(kind), name, () => picked?.Invoke(kind), ForgeMenuAttribute.DescriptionOf(kind),
+                    isChecked: kind != null && kind == current);
             }
         }
 
         /// <summary>Shows it under a rect of the field's panel, as the field's box.</summary>
         public void Show(Rect worldBound) => Dropdown.Show(worldBound);
-
-        /// <summary>The category a kind names, its class's or the one it's made from, or null for none (FN-24).</summary>
-        internal static string CategoryOf(Type type) =>
-            type == null ? null : (System.Attribute.GetCustomAttribute(type, typeof(ForgeCategoryAttribute), true) as ForgeCategoryAttribute)?.Name;
     }
 }

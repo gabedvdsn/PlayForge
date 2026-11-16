@@ -9,6 +9,7 @@ namespace FarEmerald.PlayForge
     /// attribute value via <see cref="RelativeOperation"/>. Returned as a symmetric AttributeValue
     /// (same float on Current and Base) — the blueprint projects the slot it needs.
     /// </summary>
+    [ForgeMenu(Description = "An attribute's value through a curve by level, kept as the attribute changes.")]
     public class CachedAttributeBackedScaler : CachedAttributeScaler
     {
         [Tooltip("Operation combining the captured attribute value with the level-curve value")]

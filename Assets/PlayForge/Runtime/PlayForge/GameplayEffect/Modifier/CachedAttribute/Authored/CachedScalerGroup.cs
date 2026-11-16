@@ -16,6 +16,7 @@ namespace FarEmerald.PlayForge
     /// Group does (ED-80, Decision 44). Its Ignore policy threw; it sets overriding members aside (ED-80).
     /// </para>
     /// </summary>
+    [ForgeMenu(Description = "Several kept numbers joined as one.")]
     public class CachedScalerGroup : AbstractCachedScaler
     {
         [Tooltip("Group members with their operations")]

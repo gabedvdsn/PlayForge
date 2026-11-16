@@ -9,6 +9,7 @@ namespace FarEmerald.PlayForge
     /// </summary>
     [Serializable]
     [GameplayCondition("Level", Reads = NumberReads.Level)]
+    [ForgeMenu(Description = "Compares the level with a number.")]
     public class LevelCondition : GameplayCondition
     {
         [Tooltip("Off: the level itself. On: how far up its range it is, from 0 at its least to 1 at its most")]

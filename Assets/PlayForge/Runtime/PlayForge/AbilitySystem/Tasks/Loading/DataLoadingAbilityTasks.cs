@@ -8,7 +8,7 @@ using UnityEngine;
 namespace FarEmerald.PlayForge
 {
     [Serializable]
-    [ForgeCategory("Asset Loaders")]
+    [ForgeMenu("Asset Loaders")]
     public abstract class AbstractSetAssetsTask : AbstractAbilityTask
     {
         public override UniTask Activate(AbilityDataPacket data, CancellationToken token)
@@ -17,6 +17,7 @@ namespace FarEmerald.PlayForge
         }
     }
     
+    [ForgeMenu(Description = "Puts assets in the ability's data under a key, for its later tasks.")]
     public class SetAssetsTask : AbstractSetAssetsTask
     {
         
@@ -37,6 +38,7 @@ namespace FarEmerald.PlayForge
         }
     }
     
+    [ForgeMenu(Description = "Puts effects in the ability's data under a key, for its later tasks.")]
     public class SetEffectsTask : AbstractSetAssetsTask
     {
         [ForgeTagContext(ForgeContext.DataKey)]  public Tag Tag = Tags.EFFECTS;
@@ -55,6 +57,7 @@ namespace FarEmerald.PlayForge
         }
     }
     
+    [ForgeMenu(Description = "Puts entities in the ability's data under a key, for its later tasks.")]
     public class SetEntitiesTask : AbstractSetAssetsTask
     {
         
@@ -74,6 +77,7 @@ namespace FarEmerald.PlayForge
         }
     }
     
+    [ForgeMenu(Description = "Puts attributes in the ability's data under a key, for its later tasks.")]
     public class SetAttributesTask : AbstractSetAssetsTask
     {
         
@@ -93,6 +97,7 @@ namespace FarEmerald.PlayForge
         }
     }
     
+    [ForgeMenu(Description = "Puts attribute sets in the ability's data under a key, for its later tasks.")]
     public class SetAttributeSetsTask : AbstractSetAssetsTask
     {
         
@@ -112,6 +117,7 @@ namespace FarEmerald.PlayForge
         }
     }
     
+    [ForgeMenu(Description = "Puts abilities in the ability's data under a key, for its later tasks.")]
     public class SetAbilitiesTask : AbstractSetAssetsTask
     {
         [ForgeTagContext(ForgeContext.DataKey)]  public Tag Tag = Tags.ABILITIES;
@@ -130,6 +136,7 @@ namespace FarEmerald.PlayForge
         }
     }
     
+    [ForgeMenu(Description = "Puts tags in the ability's data under a key, for its later tasks.")]
     public class SetTagsTask : AbstractSetAssetsTask
     {
         [ForgeTagContext(ForgeContext.DataKey)]  public Tag Tag = PlayForge.Tags.TAGS;

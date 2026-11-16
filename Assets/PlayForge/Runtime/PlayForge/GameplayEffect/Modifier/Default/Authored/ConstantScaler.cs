@@ -6,7 +6,8 @@ namespace FarEmerald.PlayForge
     /// Returns a constant value regardless of level.
     /// Useful for fixed bonuses or base values.
     /// </summary>
-    [NumberKind("Fixed Value", Category = "Scaler")]
+    [NumberKind("Fixed Value")]
+    [ForgeMenu("Scaler", Description = "One number, whatever the level.")]
     public class ConstantScaler : AbstractScaler
     {
         [Tooltip("The constant value to return")]

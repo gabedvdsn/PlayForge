@@ -91,6 +91,7 @@ namespace FarEmerald.PlayForge
 
     /// <summary>Adds a contained effect to it, landing on its target as it lands, each tick, or as it ends.</summary>
     [Serializable]
+    [ForgeMenu(Description = "Adds a contained effect, landing as it lands, each tick, or as it ends.")]
     public class AddContainedEffectChange : AbstractEffectChange
     {
         [Tooltip("The effect it adds")]
@@ -118,6 +119,7 @@ namespace FarEmerald.PlayForge
     /// magnitude.
     /// </summary>
     [Serializable]
+    [ForgeMenu(Description = "Changes the numbers of its impacts by a Value Pipeline stage.")]
     public class ChangeImpactChange : AbstractEffectChange
     {
         [Tooltip("Only its impacts on this attribute. None, every impact")]
@@ -145,6 +147,7 @@ namespace FarEmerald.PlayForge
     /// bound of the effect's own to overflow. Clear Stacks takes its stacks off as it overflows, as its bound can.
     /// </summary>
     [Serializable]
+    [ForgeMenu(Description = "Adds an overflow effect, landing as an application would pass its most stacks.")]
     public class AddOverflowChange : AbstractEffectChange
     {
         [Tooltip("The effect that lands as it overflows")]
@@ -167,6 +170,7 @@ namespace FarEmerald.PlayForge
 
     /// <summary>Changes how long it lasts: its time multiplied, then more added. Its ticks spread over the time it has.</summary>
     [Serializable]
+    [ForgeMenu(Description = "Changes how long it lasts.")]
     public class DurationChange : AbstractEffectChange
     {
         [Tooltip("What its time is multiplied by")]
@@ -186,6 +190,7 @@ namespace FarEmerald.PlayForge
 
     /// <summary>Changes its stacks: more it can hold at most, and more a landing gives.</summary>
     [Serializable]
+    [ForgeMenu(Description = "Changes its most stacks, and how many a landing gives.")]
     public class StacksChange : AbstractEffectChange
     {
         [Tooltip("More stacks it can hold at most, where a stack bound of its own sets a most, read at the effect's level")]
@@ -205,6 +210,7 @@ namespace FarEmerald.PlayForge
 
     /// <summary>Changes its chance to apply: multiplied, then added to.</summary>
     [Serializable]
+    [ForgeMenu(Description = "Changes its chance to apply.")]
     public class ChanceChange : AbstractEffectChange
     {
         [Tooltip("What its chance is multiplied by")]
@@ -224,6 +230,7 @@ namespace FarEmerald.PlayForge
 
     /// <summary>Adds tags it grants while it's on, as its own granted tags are.</summary>
     [Serializable]
+    [ForgeMenu(Description = "Adds tags it grants while it's on.")]
     public class GrantTagsChange : AbstractEffectChange
     {
         [Tooltip("The tags it grants besides its own")]

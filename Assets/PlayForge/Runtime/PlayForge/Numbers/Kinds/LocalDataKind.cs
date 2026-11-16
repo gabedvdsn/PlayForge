@@ -25,6 +25,7 @@ namespace FarEmerald.PlayForge
     /// </summary>
     [Serializable]
     [NumberKind("Local Data")]
+    [ForgeMenu(Description = "A value kept in Local Data, under a key.")]
     public class LocalDataKind : NumberKind
     {
         [Tooltip("The key the value is under")]

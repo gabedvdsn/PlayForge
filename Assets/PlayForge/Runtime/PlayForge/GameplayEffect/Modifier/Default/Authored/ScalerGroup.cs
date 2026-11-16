@@ -27,6 +27,7 @@ namespace FarEmerald.PlayForge
     /// </summary>
     [Serializable]
     [NumberKind("Group")]
+    [ForgeMenu("", Description = "Several numbers joined as one.")]
     public class ScalerGroup : AbstractScaler
     {
         [Tooltip("The group's members, each with how it joins the others: added up, then multiplied and divided, then flat " +

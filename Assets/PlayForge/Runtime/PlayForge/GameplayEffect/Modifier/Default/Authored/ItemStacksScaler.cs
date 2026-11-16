@@ -9,7 +9,8 @@ namespace FarEmerald.PlayForge
     /// read an item's stack count (FEAT-14).
     /// </summary>
     [Serializable]
-    [NumberKind("Item Stacks", Category = "Item")]
+    [NumberKind("Item Stacks")]
+    [ForgeMenu("Item", Description = "The stack count of the item that applied the effect.")]
     public class ItemStacksScaler : AbstractScaler
     {
         // It reads the item's stacks alone (ED-51)

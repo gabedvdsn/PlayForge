@@ -206,8 +206,9 @@ This section is what the ability does once it has started.
   - **Tasks**: the work, such as Apply Effects, Delay or Run Sequence, in a list whose **+** adds an empty task to
     pick a kind for, from a searchable picker in which each task sits under its category: Effects, Asset Loaders,
     Process, Sequence, Waits, Events and Tags, Movement, Items and Utility (FN-24). A task of your own names its
-    category with `[ForgeCategory("Effects")]`, a class's category holding for those made from it; one that names none
-    sits after the categories. A task's numbers, as Delay's milliseconds and Channel's duration, are numbers that can
+    submenu with `[ForgeMenu("Effects", Description = "...")]` (EP-2), a slash nesting one submenu in another and a
+    class's path holding for those made from it; one that names none sits after the submenus, and its Description is
+    what the picker's Context says while it's highlighted. A task's numbers, as Delay's milliseconds and Channel's duration, are numbers that can
     scale by level, read as it runs, at its ability's level. Run Sequence runs the sequence a static method
     makes, picked in **Sequence** by name, from a searchable dropdown of the project's `[TaskSequenceMethod]` methods,
     each class's under its name where more than one class holds them (FN-24), or, for an ability built in code, a fresh run of the sequence its `Definition` describes, which

@@ -10,6 +10,7 @@ namespace FarEmerald.PlayForge
     /// by a buyback, takes nothing from it.
     /// </summary>
     [Serializable]
+    [ForgeMenu(Description = "Revives the entity it's on as the effect ends, as a respawn timer.")]
     public class ReviveOnRemovalEffectWorker : AbstractEffectWorker
     {
         [Tooltip("Revive at the point below, where on, else where the entity was")]

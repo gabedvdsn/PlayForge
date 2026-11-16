@@ -12,6 +12,7 @@ namespace FarEmerald.PlayForge
     /// </summary>
     [Serializable]
     [NumberKind("Group Impact", Reads = NumberReads.Caster)]
+    [ForgeMenu(Description = "One retention group's part of an attribute.")]
     public class GroupImpactKind : NumberKind
     {
         [Tooltip("The attribute whose part it reads")]

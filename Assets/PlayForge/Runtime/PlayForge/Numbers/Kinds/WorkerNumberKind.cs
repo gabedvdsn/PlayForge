@@ -30,6 +30,7 @@ namespace FarEmerald.PlayForge
     /// </summary>
     [Serializable]
     [NumberKind("Worker")]
+    [ForgeMenu(Description = "A value a worker answers under a key.")]
     public class WorkerNumberKind : NumberKind
     {
         [Tooltip("The key it asks for. A worker answers the keys it knows; the first worker that answers this one gives the value")]

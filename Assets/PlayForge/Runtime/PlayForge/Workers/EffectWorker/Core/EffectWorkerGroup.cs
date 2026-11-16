@@ -3,6 +3,7 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
+    [ForgeMenu(Description = "Several effect workers as one.")]
     public class EffectWorkerGroup : AbstractEffectWorker
     {
         public List<AbstractEffectWorker> EffectWorkers;

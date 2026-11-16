@@ -10,6 +10,7 @@ namespace FarEmerald.PlayForge
     /// none. An entity holds as many as it gives, each its own.
     /// </summary>
     [Serializable]
+    [ForgeMenu(Description = "An effect the entity's killer takes as it dies, as gold or experience.")]
     public sealed class BountyEntityComponent : AbstractEntityComponent
     {
         [Tooltip("The effect its killer takes as it dies, from it, so the effect reads its level: gold or experience")]
@@ -62,6 +63,7 @@ namespace FarEmerald.PlayForge
     /// revive, which the Problems view says. An entity holds one at most.
     /// </summary>
     [Serializable]
+    [ForgeMenu(Description = "Brings the entity back a while after it dies.")]
     public sealed class RespawnEntityComponent : AbstractEntityComponent
     {
         [Tooltip("How long after it dies it revives, in seconds of its own time, read at its level")]

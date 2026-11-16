@@ -22,7 +22,7 @@ namespace FarEmerald.PlayForge
     /// its stage runs.
     /// </summary>
     [Serializable]
-    [ForgeCategory("Waits")]
+    [ForgeMenu("Waits")]
     public abstract class AbstractWaitTask : AbstractAbilityTask
     {
         [Tooltip("Whose it waits on: its caster, or its activation's target")]
@@ -62,6 +62,7 @@ namespace FarEmerald.PlayForge
     /// them where anything listens.
     /// </summary>
     [Serializable]
+    [ForgeMenu(Description = "Waits for a gameplay event sent to the caster or the target.")]
     public class WaitForEventTask : AbstractWaitTask
     {
         [Tooltip("The event it waits for, by its tag or one under it")]
@@ -98,6 +99,7 @@ namespace FarEmerald.PlayForge
     /// tag already held counts as gained, and one not held as lost, so it waits for the state, not a change.
     /// </summary>
     [Serializable]
+    [ForgeMenu(Description = "Waits for the caster or the target to gain a tag, or to lose it.")]
     public class WaitForTagTask : AbstractWaitTask
     {
         [Tooltip("The tag it waits for")]
@@ -125,6 +127,7 @@ namespace FarEmerald.PlayForge
     /// to fall under half (FN-24). The value is read as it starts, at its ability's level; the attribute each step.
     /// </summary>
     [Serializable]
+    [ForgeMenu(Description = "Waits for an attribute of the caster or the target to cross a value.")]
     public class WaitForAttributeTask : AbstractWaitTask
     {
         [Tooltip("The attribute it watches")]

@@ -21,6 +21,7 @@ namespace FarEmerald.PlayForge
     /// </summary>
     [Serializable]
     [NumberKind("Relative to a Field", Reads = NumberReads.Owner)]
+    [ForgeMenu(Description = "Another number field of the same object, times or plus a number.")]
     public class RelativeToFieldKind : NumberKind
     {
         [Tooltip("The other number field of the same object it reads, plain or a number. Its own number joins it as its " +

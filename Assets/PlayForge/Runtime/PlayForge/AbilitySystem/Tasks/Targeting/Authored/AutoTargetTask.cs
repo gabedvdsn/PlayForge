@@ -15,7 +15,7 @@ namespace FarEmerald.PlayForge
     /// for ITarget components that pass tag and attribute validation.
     /// </summary>
     [Serializable]
-    [ForgeCategory("Automatic")]
+    [ForgeMenu("Automatic", Description = "Targets the entities in range that pass its tag requirements and conditions.")]
     public class AutoTargetTask : AbstractGasTargetingAbilityTask
     {
         [Tooltip("How targets are selected and sorted")]

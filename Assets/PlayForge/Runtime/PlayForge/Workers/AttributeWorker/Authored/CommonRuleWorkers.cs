@@ -9,6 +9,7 @@ namespace FarEmerald.PlayForge
     /// floor, and no further, as Shallow Grave keeps its target at 1 Health while it lasts, in a buff's worker group.
     /// </summary>
     [Serializable]
+    [ForgeMenu(Description = "Keeps its attribute from falling below a floor.")]
     public class CantFallBelowAttributeWorker : AbstractFocusedAttributeWorker
     {
         [Tooltip("The least its attribute falls to, as 1")]
@@ -40,6 +41,7 @@ namespace FarEmerald.PlayForge
     /// one who dealt it, typed Returned, so no return returns it again and no lifesteal heals from it, as Blade Mail.
     /// </summary>
     [Serializable]
+    [ForgeMenu(Description = "Sends a share of each loss back to the one who dealt it.")]
     public class ReturnDamageAttributeWorker : AbstractFocusedAttributeWorker
     {
         [Tooltip("The share of each loss it returns to its dealer, as 1 for all of it")]

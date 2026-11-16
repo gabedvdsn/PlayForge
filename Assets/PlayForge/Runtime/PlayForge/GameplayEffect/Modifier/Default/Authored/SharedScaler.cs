@@ -10,6 +10,7 @@ namespace FarEmerald.PlayForge
     /// </summary>
     [Serializable]
     [NumberKind("Shared")]
+    [ForgeMenu("", Description = "A shared Scaler asset's number, so one edit reaches every field that uses it.")]
     public class SharedScaler : AbstractScaler
     {
         [Tooltip("The Scaler asset this field reads")]

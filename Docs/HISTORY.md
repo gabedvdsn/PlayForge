@@ -10,6 +10,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## Toward 1.0.0, since 0.1.0
 
 ### Added
+- `[ForgeMenu]`, a kind's place in its pickers (EP-2): a path, a slash nesting its submenus, as "Effects/Damage", which
+  holds for the classes made from the one that names it; a Name for its picker and its field; and a Description its
+  picker's Context says. Every kind PlayForge ships says what it does.
 - PlayForge's own dropdown, every picker's and every field menu's (EP-1): searchable, its choices in submenus, the
   field's value checked, and a Context section where its choices say more, as the contexts a tag is for, or an asset's
   description and file. Preferences → PlayForge → Menus sets the most it grows to, Menu Width and Menu Height. It was
@@ -1153,6 +1156,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   or turning `Enabled` off. Once the first had ended, it threw, and the rest ran on.
 
 ### Removed
+- `ForgeCategory`, and the Category of `[NumberKind]` and `[GameplayCondition]`: `[ForgeMenu]` files every family's kinds
+  (EP-2).
 - A new asset's file prefix and suffix, from Project Settings → PlayForge and wherever a file is named: a new asset's
   file is its name alone, and Use Default Folders and Names is Use Default Folders (EP-13).
 - Legacy, obsolete and asset-updating code (FN-21, Decision 83), every asset of the package, its samples and Proving

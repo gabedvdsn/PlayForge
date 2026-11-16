@@ -7,6 +7,7 @@ namespace FarEmerald.PlayForge
     /// Uses the level values array for easy configuration.
     /// </summary>
     [NumberKind("By Level", Reads = NumberReads.Level)]
+    [ForgeMenu("", Description = "A number for each level.")]
     public class SimpleScaler : AbstractScaler
     {
         public override void Initialize(IAttributeImpactCarrier deriv)

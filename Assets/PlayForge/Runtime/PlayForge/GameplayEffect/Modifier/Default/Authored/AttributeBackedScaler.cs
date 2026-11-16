@@ -8,6 +8,7 @@ namespace FarEmerald.PlayForge
     /// The attribute value is used as input to the scaling curve.
     /// </summary>
     [NumberKind("× Attribute", Reads = NumberReads.Caster)]
+    [ForgeMenu("", Description = "An attribute of the caster or the target, times a number for each level.")]
     public class AttributeBackedScaler : AbstractScaler
     {
         [Tooltip("Which attribute to read")]

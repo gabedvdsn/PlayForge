@@ -8,6 +8,7 @@ namespace FarEmerald.PlayForge
     /// FN-14). Without one, an ability has one charge, an ordinary cooldown. An ability holds one at most.
     /// </summary>
     [Serializable]
+    [ForgeMenu(Description = "How many uses the ability holds, each coming back as it recharges.")]
     public sealed class ChargesAbilityComponent : AbstractAbilityComponent
     {
         [Tooltip("How many uses it holds, each spending a charge that comes back as its Recharge says; 1 is an ordinary " +
@@ -29,6 +30,7 @@ namespace FarEmerald.PlayForge
     /// holds one at most.
     /// </summary>
     [Serializable]
+    [ForgeMenu(Description = "Turns an effect on with one use and off with the next.")]
     public sealed class ToggleAbilityComponent : AbstractAbilityComponent
     {
         [Tooltip("The effect it toggles on its caster: used, it puts the effect on, paying its cost; used again, it takes " +
@@ -48,6 +50,7 @@ namespace FarEmerald.PlayForge
     /// most.
     /// </summary>
     [Serializable]
+    [ForgeMenu(Description = "How far from the caster the ability's target may be.")]
     public sealed class CastRangeAbilityComponent : AbstractAbilityComponent
     {
         [Tooltip("How far from its caster its target or point may be, read at the ability's level; 0 reaches anywhere")]

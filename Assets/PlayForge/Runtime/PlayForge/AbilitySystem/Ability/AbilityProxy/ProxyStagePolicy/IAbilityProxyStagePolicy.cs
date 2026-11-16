@@ -9,11 +9,13 @@
     }
 
     /// <summary>The stage ends as its first task does.</summary>
+    [ForgeMenu(Description = "The stage ends as its first task does.")]
     public class AnyProxyStagePolicy : IAbilityProxyStagePolicy
     {
     }
 
     /// <summary>The stage ends as its last task does.</summary>
+    [ForgeMenu(Description = "The stage ends as its last task does.")]
     public class AllProxyStagePolicy : IAbilityProxyStagePolicy
     {
     }

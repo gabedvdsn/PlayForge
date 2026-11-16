@@ -8,6 +8,7 @@ namespace FarEmerald.PlayForge
     /// Returns the same scalar on both Current and Base sides — the blueprint will project
     /// whichever slot it needs.
     /// </summary>
+    [ForgeMenu("", Description = "A number for each level, for an attribute set's start.")]
     public class CachedSimpleScaler : AbstractCachedScaler
     {
         public override AttributeValue EvaluateActiveValue(AttributeBlueprint blueprint, IReadOnlyDictionary<IAttribute, CachedAttributeValue> cache)

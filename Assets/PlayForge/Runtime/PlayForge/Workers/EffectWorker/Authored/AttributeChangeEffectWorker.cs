@@ -35,6 +35,7 @@ namespace FarEmerald.PlayForge
     /// </para>
     /// </summary>
     [Serializable]
+    [ForgeMenu(Description = "Tells how far an attribute has moved since the effect began, for a number to read.")]
     public class AttributeChangeEffectWorker : AbstractEffectWorker, INumberWorker
     {
         [Tooltip("The key it answers under: a number of the Worker kind with this key reads its answer")]

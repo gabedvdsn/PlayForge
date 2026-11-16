@@ -130,17 +130,14 @@ namespace FarEmerald.PlayForge
     }
 
     /// <summary>
-    /// Names a condition in the condition menu, files it under a category, and says what it reads of a number's context
-    /// (FEAT-29). Without it, a condition takes its class's name without "Condition", and is read everywhere.
+    /// Names a condition in the condition menu and says what it reads of a number's context (FEAT-29). Its place in the
+    /// menu is its <see cref="ForgeMenuAttribute"/>'s (EP-2): it named a Category of its own. Without it, a condition takes its class's name without "Condition", and is read everywhere.
     /// </summary>
     [AttributeUsage(AttributeTargets.Class, Inherited = false)]
     public sealed class GameplayConditionAttribute : System.Attribute
     {
         /// <summary>The condition's name in the condition menu, as "Target Is Caster".</summary>
         public string Name { get; }
-
-        /// <summary>The condition menu's group the condition sits in, as "Logic"; with none, the menu's top level.</summary>
-        public string Category { get; set; }
 
         /// <summary>What the condition needs of a number's context, as <c>NumberReads.Caster | NumberReads.Target</c>.</summary>
         public NumberReads Reads { get; set; }

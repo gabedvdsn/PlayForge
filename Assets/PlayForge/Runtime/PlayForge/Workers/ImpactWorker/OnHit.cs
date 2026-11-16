@@ -75,6 +75,7 @@ namespace FarEmerald.PlayForge
     }
 
     /// <summary>The impact worker an On Hit gives its holder: it runs for the hits the holder deals (TW-6).</summary>
+    [ForgeMenu(Description = "Lands an On Hit's effects on the hits its holder deals.")]
     internal sealed class OnHitImpactWorker : AbstractImpactWorker
     {
         private readonly OnHitEntry entry;

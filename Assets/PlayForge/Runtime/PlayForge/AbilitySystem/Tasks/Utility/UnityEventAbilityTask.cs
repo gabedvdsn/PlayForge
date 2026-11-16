@@ -6,7 +6,7 @@ using UnityEngine.Events;
 
 namespace FarEmerald.PlayForge
 {
-    [ForgeCategory("Utility")]
+    [ForgeMenu("Utility", Description = "Invokes UnityEvents, for objects in the scene to answer.")]
     public class UnityEventAbilityTask : AbstractAbilityTask
     {
         public List<UnityEvent> Events;

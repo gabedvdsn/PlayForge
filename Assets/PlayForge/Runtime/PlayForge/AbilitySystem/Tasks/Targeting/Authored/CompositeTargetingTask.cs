@@ -18,6 +18,7 @@ namespace FarEmerald.PlayForge
     /// If any sub-task fails and StopOnFailure is true, the entire composite fails.
     /// </summary>
     [Serializable]
+    [ForgeMenu(Description = "Runs several targeting tasks in turn, each adding its targets, as an entity and then a point.")]
     public class CompositeTargetingTask : AbstractTargetingAbilityTask
     {
         [Tooltip("Ordered list of targeting tasks to execute sequentially")]

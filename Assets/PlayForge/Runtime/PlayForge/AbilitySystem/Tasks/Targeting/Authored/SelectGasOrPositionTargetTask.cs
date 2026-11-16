@@ -11,7 +11,7 @@ namespace FarEmerald.PlayForge
     /// falls back to using the hit position. Tag requirements apply only to GAS targets.
     /// </summary>
     [Serializable]
-    [ForgeCategory("Picked")]
+    [ForgeMenu("Picked", Description = "The player clicks an entity, or else a point on the ground.")]
     public class SelectGasOrPositionTargetTask : AbstractGasTargetingAbilityTask
     {
         [Tooltip("Layers to raycast against")]

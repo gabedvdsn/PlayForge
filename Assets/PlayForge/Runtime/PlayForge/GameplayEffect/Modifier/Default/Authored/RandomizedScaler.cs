@@ -10,7 +10,8 @@ namespace FarEmerald.PlayForge
     /// widen by level and a Max multiplier can be 3 × its Min (FEAT-29).
     /// </summary>
     [Serializable]
-    [NumberKind("Randomized", Category = "Scaler")]
+    [NumberKind("Randomized")]
+    [ForgeMenu("Scaler", Description = "A number for each level, with random variance.")]
     public class RandomizedScaler : AbstractScaler
     {
         [Tooltip("How variance is applied")]

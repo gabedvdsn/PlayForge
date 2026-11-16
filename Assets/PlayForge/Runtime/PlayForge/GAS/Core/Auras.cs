@@ -71,6 +71,7 @@ namespace FarEmerald.PlayForge
 
     /// <summary>An aura an effect holds while it lasts, on those near the one it's on (TW-10, FN-14).</summary>
     [Serializable]
+    [ForgeMenu(Description = "Gives those near the target an aura's effects while the effect lasts.")]
     public sealed class AuraEffectComponent : AbstractEffectComponent, IAuraComponent
     {
         public AuraEntry Aura = new();
@@ -79,6 +80,7 @@ namespace FarEmerald.PlayForge
 
     /// <summary>An aura an ability holds while its holder knows it, on those near its holder (TW-10, FN-14).</summary>
     [Serializable]
+    [ForgeMenu(Description = "Gives those near the holder an aura's effects while it knows the ability.")]
     public sealed class AuraAbilityComponent : AbstractAbilityComponent, IAuraComponent
     {
         public AuraEntry Aura = new();
@@ -87,6 +89,7 @@ namespace FarEmerald.PlayForge
 
     /// <summary>An aura an item holds while it's equipped, on those near its holder (TW-10, FN-14).</summary>
     [Serializable]
+    [ForgeMenu(Description = "Gives those near the holder an aura's effects while the item is equipped.")]
     public sealed class AuraItemComponent : AbstractItemComponent, IAuraComponent
     {
         public AuraEntry Aura = new();
@@ -95,6 +98,7 @@ namespace FarEmerald.PlayForge
 
     /// <summary>An aura an entity holds while it lives, on those near it (TW-10, FN-14).</summary>
     [Serializable]
+    [ForgeMenu(Description = "Gives those near the entity an aura's effects while it lives.")]
     public sealed class AuraEntityComponent : AbstractEntityComponent, IAuraComponent
     {
         public AuraEntry Aura = new();

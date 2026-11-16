@@ -7,6 +7,7 @@ namespace FarEmerald.PlayForge
     /// Performs math operations on attribute changes relative to another attribute.
     /// This is an INLINE worker because it modifies the ChangeValue directly.
     /// </summary>
+    [ForgeMenu(Description = "Changes each change to its attribute by another attribute.")]
     public class MathAttributeWorker : AbstractRelativeAttributeWorker
     {
         [Header("Math Operation")]

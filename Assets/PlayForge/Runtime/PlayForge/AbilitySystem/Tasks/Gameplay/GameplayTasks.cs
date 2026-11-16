@@ -28,7 +28,7 @@ namespace FarEmerald.PlayForge
     /// origin with its caller's magnitudes, the dead left out.
     /// </summary>
     [Serializable]
-    [ForgeCategory("Effects")]
+    [ForgeMenu("Effects", Description = "Applies its effects to each entity of the sides it takes within a radius of the caster, the target or a point.")]
     public class AreaEffectTask : AbstractAbilityTask
     {
         [Tooltip("How far from its middle the area reaches, read as it starts at its ability's level")]
@@ -91,7 +91,7 @@ namespace FarEmerald.PlayForge
     /// ability's targets alone.
     /// </summary>
     [Serializable]
-    [ForgeCategory("Effects")]
+    [ForgeMenu("Effects", Description = "Applies its effects to the caster, whatever the ability targets.")]
     public class ApplyToCasterTask : AbstractAbilityTask
     {
         [Tooltip("The effects its caster takes, with its caller's magnitudes")]
@@ -114,7 +114,7 @@ namespace FarEmerald.PlayForge
     /// A caster with no object in the scene doesn't move.
     /// </summary>
     [Serializable]
-    [ForgeCategory("Movement")]
+    [ForgeMenu("Movement", Description = "Moves the caster toward the target, or away from it, over a moment.")]
     public class DashTask : AbstractAbilityTask
     {
         [Tooltip("How far its caster moves, at most")]
@@ -170,7 +170,7 @@ namespace FarEmerald.PlayForge
     /// as it starts, at its ability's level; its caster's own mover, where it has one, is stopped after.
     /// </summary>
     [Serializable]
-    [ForgeCategory("Movement")]
+    [ForgeMenu("Movement", Description = "Puts the caster at the target at once: at the point within its reach, or behind the entity.")]
     public class BlinkTask : AbstractAbilityTask
     {
         [Tooltip("How far the blink reaches, at most")]
@@ -217,7 +217,7 @@ namespace FarEmerald.PlayForge
     /// Consumed hears it, so a game's own bookkeeping, as a shop's stock, follows.
     /// </summary>
     [Serializable]
-    [ForgeCategory("Items")]
+    [ForgeMenu("Items", Description = "Uses up items the caster holds, as a potion is drunk.")]
     public class ConsumeItemTask : AbstractAbilityTask
     {
         [Tooltip("The item it uses up")]

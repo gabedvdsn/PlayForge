@@ -9,6 +9,7 @@ namespace FarEmerald.PlayForge
     /// </summary>
     [Serializable]
     [GameplayCondition("Tag")]
+    [ForgeMenu(Description = "Holds where the caster or the target has a tag.")]
     public class TagCondition : GameplayCondition
     {
         [Tooltip("Whose tags it looks at")]

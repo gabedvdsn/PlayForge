@@ -206,8 +206,8 @@ A **kind of number** of your own is simpler: derive from `NumberKind` and overri
 `Evaluate(in NumberContext context)`, which reads what the field's site has: `context.Caster`, `context.Target`,
 `context.Level`, the caller's magnitudes, Local Data, an attribute on either side, and more; `context.Has(...)` says
 which. `Describe()` gives the field's summary, as "the distance to the target". `[NumberKind("Distance to Target",
-Category = "Space", Reads = NumberReads.Caster | NumberReads.Target)]` names it, files it in the kind menu, and says
-what it reads, so a field offers it only where it can be worked out; where it can't, the field reads its number. A kind
+Reads = NumberReads.Caster | NumberReads.Target)]` names it and says what it reads, so a field offers it only where it can
+be worked out; where it can't, the field reads its number. `[ForgeMenu("Space")]` files it in the kind menu (EP-2). A kind
 is a scaler, so it also works in an effect's magnitude and inside a Group or a Conditional, and its fields draw as a
 scaler's do. Test one without an effect: `number.Evaluate(NumberContext.For(caster, target, level))`. A kind is saved
 by its class's name, so renaming the class needs Unity's `[MovedFrom]`. PlayForge's own kinds, Local Data, Tracked
@@ -245,6 +245,11 @@ public ScalableFloat Range = 20f;
   field only while a toggle of the same object is on, and `[ShownWhen(nameof(Mode), (int)EMode.Area)]` only while an
   enum is one of the values, as a targeting task's Detection Layers show under Use Physics (FN-20). A task reads its
   numbers with `Read(number, data)`, at its ability's level.
+- Every kind of your own, a task, a worker, a component, a cue, a kind of number or a condition, takes
+  `[ForgeMenu("Path/Sub", Name = "...", Description = "...")]` (EP-2): its picker files it under the submenus its path
+  names, a slash nesting them; Name replaces its class's name in the picker and in its field; and Description is what
+  the picker's Context says while it's highlighted. A path holds for the classes made from the one that names it, and
+  `[ForgeMenu("")]` puts a kind at the top whatever its base names.
 - Unity's own `[Min]` and `[Range]` don't work on a number field: Unity gives the field to that attribute's drawer,
   which draws "Use Range with float or int" where the number was. As scripts load, the console names each number
   field that has one, with the attribute to use in its place.

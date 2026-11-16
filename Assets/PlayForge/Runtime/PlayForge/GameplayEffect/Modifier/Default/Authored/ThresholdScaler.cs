@@ -11,7 +11,8 @@ namespace FarEmerald.PlayForge
     /// reads its number where the scaler is read, and the default with the scaler as its owner.
     /// </summary>
     [Serializable]
-    [NumberKind("Threshold", Category = "Scaler", Reads = NumberReads.Level)]
+    [NumberKind("Threshold", Reads = NumberReads.Level)]
+    [ForgeMenu("Scaler", Description = "A number for each tier of levels.")]
     public class ThresholdScaler : NumberKind
     {
         [Tooltip("Level thresholds and their corresponding values")]

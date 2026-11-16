@@ -9,7 +9,8 @@ namespace FarEmerald.PlayForge
     /// ceiling can be twice its floor, and its floor can scale by level.
     /// </summary>
     [Serializable]
-    [NumberKind("Clamped", Category = "Scaler")]
+    [NumberKind("Clamped")]
+    [ForgeMenu("Scaler", Description = "A number kept between a floor and a ceiling.")]
     public class ClampedScaler : NumberKind
     {
         [Tooltip("The least it reads")]

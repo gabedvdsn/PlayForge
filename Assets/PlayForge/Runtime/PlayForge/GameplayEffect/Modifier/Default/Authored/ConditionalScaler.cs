@@ -10,7 +10,8 @@ namespace FarEmerald.PlayForge
     /// any kind, read with the scaler as its owner. With no condition, it reads its False branch.
     /// </summary>
     [Serializable]
-    [NumberKind("Conditional", Category = "Scaler")]
+    [NumberKind("Conditional")]
+    [ForgeMenu("Scaler", Description = "One number where a condition holds, and another where it doesn't.")]
     public class ConditionalScaler : NumberKind
     {
         [Tooltip("The condition that chooses the branch")]

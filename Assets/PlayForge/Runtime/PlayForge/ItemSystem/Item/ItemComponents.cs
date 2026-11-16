@@ -11,6 +11,7 @@ namespace FarEmerald.PlayForge
     /// the next, or the item with its last. A load gives its uses whole. An item holds one at most.
     /// </summary>
     [Serializable]
+    [ForgeMenu(Description = "How many times the item's ability can be used before one of the item goes.")]
     public sealed class UsesItemComponent : AbstractItemComponent
     {
         [Tooltip("How many times its ability can be used before one of it goes, read at the item's level")]
@@ -66,6 +67,7 @@ namespace FarEmerald.PlayForge
     /// once for the holder however many pieces carry it. An item holds one for each of its set's bonuses.
     /// </summary>
     [Serializable]
+    [ForgeMenu(Description = "An effect its holder has while enough of a set's pieces are equipped.")]
     public sealed class SetBonusItemComponent : AbstractItemComponent
     {
         [Tooltip("The set the item is a piece of, by its tag")]

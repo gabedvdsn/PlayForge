@@ -18,7 +18,7 @@ namespace FarEmerald.PlayForge
     /// - Buff all allies in range
     /// </summary>
     [Serializable]
-    [ForgeCategory("Automatic")]
+    [ForgeMenu("Automatic", Description = "Targets the entities in range of an affiliation, as the nearest ally to heal or every enemy in reach.")]
     public class AutoTargetByAffinityTask : AbstractGasTargetingAbilityTask
     {
         [Tooltip("Which affiliations to include relative to the caster")]

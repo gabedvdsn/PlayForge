@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
-    [ForgeCategory("Process")]
+    [ForgeMenu("Process", Description = "Runs processes for the caster and waits for them, up to a time.")]
     public class RunProcessTask : AbstractAbilityTask
     {
         [Tooltip("The processes it runs, each registered for its caster as it starts")]

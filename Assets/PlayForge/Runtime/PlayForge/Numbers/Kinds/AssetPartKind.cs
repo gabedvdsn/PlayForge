@@ -118,6 +118,7 @@ namespace FarEmerald.PlayForge
     /// </summary>
     [Serializable]
     [NumberKind("Asset Part")]
+    [ForgeMenu(Description = "A part of an effect, an ability or an item on the caster or the target, found by a tag, as its stacks.")]
     public class AssetPartKind : NumberKind
     {
         [Tooltip("What it looks for: effects on the entity, abilities it knows or items it holds")]

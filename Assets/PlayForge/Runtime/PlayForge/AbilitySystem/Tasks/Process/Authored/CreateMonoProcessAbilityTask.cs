@@ -14,6 +14,7 @@ namespace FarEmerald.PlayForge
     /// It spawns the processes the activation's data holds under <see cref="DataTag"/>, or, where the data holds none or
     /// <see cref="InternalIsOverride"/> is on, its own.
     /// </summary>
+    [ForgeMenu(Description = "Spawns a process, as a projectile, whose effects are the caster's at the ability's level.")]
     public class CreateMonoProcessAbilityTask : AbstractCreateProcessAbilityTask
     {
         [ForgeTagContext(ForgeContext.DataKey)]

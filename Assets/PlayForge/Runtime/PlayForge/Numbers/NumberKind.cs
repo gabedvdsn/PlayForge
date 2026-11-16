@@ -11,7 +11,8 @@ namespace FarEmerald.PlayForge
     /// in every number field whose context provides what it reads:
     /// <code>
     /// [Serializable]
-    /// [NumberKind("Distance to Target", Category = "Space", Reads = NumberReads.Caster | NumberReads.Target)]
+    /// [NumberKind("Distance to Target", Reads = NumberReads.Caster | NumberReads.Target)]
+    /// [ForgeMenu("Space", Description = "How far the target is from the caster")]
     /// public class DistanceToTarget : NumberKind
     /// {
     ///     [Tooltip("Along the ground, leaving height out")]
@@ -40,6 +41,7 @@ namespace FarEmerald.PlayForge
     /// </para>
     /// </summary>
     [Serializable]
+    [ForgeMenu("")]
     public abstract class NumberKind : AbstractScaler
     {
         // What it reads, from its [NumberKind], looked up once
@@ -125,8 +127,8 @@ namespace FarEmerald.PlayForge
     }
 
     /// <summary>
-    /// Names a kind of number in the kind menu, files it under a category, and says what it reads of a field's context
-    /// (FEAT-29). The inspector offers the kind only in fields whose context provides what it reads, and the Problems
+    /// Names a kind of number in the kind menu and says what it reads of a field's context (FEAT-29). Its place in the menu
+    /// is its <see cref="ForgeMenuAttribute"/>'s, as every kind's is (EP-2): it named a Category of its own. The inspector offers the kind only in fields whose context provides what it reads, and the Problems
     /// window flags it where it's found in one that doesn't. Without it, a kind takes its class's name, as a scaler does, and
     /// is offered everywhere.
     /// </summary>
@@ -135,9 +137,6 @@ namespace FarEmerald.PlayForge
     {
         /// <summary>The kind's name in the kind menu, as "Distance to Target".</summary>
         public string Name { get; }
-
-        /// <summary>The kind menu's group the kind sits in, as "Space"; with none, the menu's top level.</summary>
-        public string Category { get; set; }
 
         /// <summary>What the kind needs of a field's context, as <c>NumberReads.Caster | NumberReads.Target</c>.</summary>
         public NumberReads Reads { get; set; }
@@ -186,6 +185,7 @@ namespace FarEmerald.PlayForge
 
     /// <summary>A number a function works out, which <see cref="ScalableFloat.From"/> makes for an asset built in code.</summary>
     [Serializable]
+    [ForgeMenu(Description = "A number a function in code works out, for an asset built in code.")]
     internal sealed class FunctionNumberKind : NumberKind
     {
         // A function can't be saved: a copy loaded from a save has none, and reads 0

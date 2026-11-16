@@ -153,7 +153,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 popup.tooltip = "The field's kind: Constant, or another";
                 NumberFields.FileByCategory(popup, kinds, shownType);
                 // PlayForge's dropdown, its kinds under their categories (EP-1)
-                ForgePopupDropdown.Use(popup, "Kind");
+                ForgePopupDropdown.Use(popup, "Kind", NumberFields.ContextOf(kinds));
                 return popup;
             }
 
