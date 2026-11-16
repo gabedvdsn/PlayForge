@@ -113,6 +113,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             entity.Name = "Game Root";
             entity.Affiliation = new List<Tag> { Tags.SYSTEM };
             entity.AssetTag = Tag.Generate("Entity.GameRoot", "GameRoot");
+            entity.Description = "The game's own entity. Handles all processes without an assigned handler.";
             AssetDatabase.CreateAsset(entity, AssetDatabase.GenerateUniqueAssetPath($"{folder}/{GameRootName}.asset"));
             project.GameRootEntity = entity;
             EditorUtility.SetDirty(project);

@@ -987,7 +987,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         // The levels an asset uses, as "1–5", or nothing for an asset without levels of its own
         private static string LevelsOf(ScriptableObject asset)
         {
-            if (asset is not BaseForgeLevelProvider provider || asset is GameplayEffect) return "";
+            if (asset is not BaseForgeLevelProvider provider) return "";
             int max = provider.GetMaxLevel();
             return max <= 0 ? "" : $"{provider.GetStartingLevel()}–{max}";
         }
