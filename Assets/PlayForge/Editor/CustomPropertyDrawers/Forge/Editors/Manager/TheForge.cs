@@ -244,6 +244,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
             split.Add(scroll);
             root.Add(split);
 
+            // Where the Unity project has no Forge Project, The Forge asks for one in place of its list (EP-10)
+            root.Add(FirstProject());
+
             status = new Label { name = "ForgeStatus" };
             status.AddToClassList("pf-forge__status");
             root.Add(status);
@@ -565,8 +568,50 @@ namespace FarEmerald.PlayForge.Extended.Editor
         // ═══════════════════════════════════════════════════════════════════════════
 
         // Reads the project's assets again, then shows what the filters let through
+        /// <summary>
+        /// What The Forge shows where the Unity project has no Forge Project: what one is, a name, and Create, which makes it
+        /// in a folder of its own under the PlayForge Folder, with its Game Root and the Bootstrap prefabs (EP-10).
+        /// </summary>
+        internal static VisualElement FirstProject()
+        {
+            var first = new VisualElement { name = "FirstProject" };
+            first.AddToClassList("pf-forge__first-project");
+            var title = new Label("Make your first Forge Project");
+            title.AddToClassList("pf-forge__summary-title");
+            first.Add(title);
+            var note = new Label($"A Forge Project holds a game's assets and settings, in a folder of its own under {ForgeFolders.Root}. " +
+                                 "PlayForge makes its folder, its Game Root entity, and the Bootstrap prefabs a scene starts PlayForge with.");
+            note.AddToClassList("pf-note");
+            first.Add(note);
+            var name = new TextField("Name") { name = "FirstProjectName", value = ForgeProjects.DefaultName, tooltip = "The project's name, and its folder's" };
+            name.AddToClassList(TextField.alignedFieldUssClassName);
+            first.Add(name);
+            var problem = new Label { name = "FirstProjectProblem" };
+            problem.AddToClassList("pf-note");
+            first.Add(problem);
+            var buttons = new VisualElement();
+            buttons.AddToClassList("pf-dialog__footer");
+            buttons.Add(new Button(() =>
+            {
+                var why = ForgeProjects.WhyNotName(name.value);
+                problem.text = why ?? "";
+                if (why == null) ForgeProjects.Make(name.value);
+            }) { name = "CreateFirstProject", text = "Create Forge Project" });
+            first.Add(buttons);
+            return first;
+        }
+
+        // The first project's ask in place of the list and the detail, while the Unity project has none (EP-10)
+        private void ShowFirstProject()
+        {
+            bool none = ForgeProjects.All().Count == 0;
+            rootVisualElement.Q(name: "Split")?.EnableInClassList("pf-hidden", none);
+            rootVisualElement.Q(name: "FirstProject")?.EnableInClassList("pf-hidden", !none);
+        }
+
         private void Reload()
         {
+            ShowFirstProject();
             // The active Forge Project's assets alone; every asset, while the project has none (FEAT-34)
             var inActive = ForgeProjects.InActive();
             allAssets = ForgeValidator.ProjectAssets().Where(asset => inActive(asset)).ToList();

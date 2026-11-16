@@ -21,8 +21,9 @@ completed groundwork ☑.
 
 ## ☑ 2. The export: embed UniTask, include the samples
 
-A `.unitypackage` exports `Assets/PlayForge` and nothing else, and a package under Assets resolves no dependency and
-imports no folder whose name ends in `~`. Proving Grounds' `Tools/export-unitypackage.py` builds the package as a buyer
+A `.unitypackage` exports `Assets/Plugins/PlayForge` and nothing else, which a buyer's import puts in the same place,
+so the Forge Projects PlayForge makes in `Assets/PlayForge` are never in its folder (EP-12, Decision 89). A package
+under Assets resolves no dependency and imports no folder whose name ends in `~`. Proving Grounds' `Tools/export-unitypackage.py` builds the package as a buyer
 gets it, in a throwaway project, so PlayForge's own repository never changes and Decision 19 holds (Decision 87):
 
 1. UniTask 2.5.11's source, from GitHub's archive of its tag (`src/UniTask/Assets/Plugins/UniTask`), goes in
@@ -36,7 +37,7 @@ gets it, in a throwaway project, so PlayForge's own repository never changes and
    golden tests there, and `--build` builds a Windows player from it.
 
 The throwaway project stays, at `%TEMP%\claude\export\build` unless `--out` says otherwise, for the Asset Store Tools to
-upload `Assets/PlayForge` from. Under **Set your dependencies**, turn on **Include Package Manifest** and pick
+upload `Assets/Plugins/PlayForge` from. Under **Set your dependencies**, turn on **Include Package Manifest** and pick
 `com.unity.ugui` and `com.unity.profiling.core`, which `package.json` names for a UPM install, so a buyer's import
 installs them. The notice tells buyers to delete `PlayForge/ThirdParty/UniTask` where UniTask already comes from Package
 Manager.
@@ -62,7 +63,7 @@ reserved all rights, is gone; the Demo has an outline of its own.
 
 `python Tools/export-unitypackage.py --tests --build`, in Proving Grounds, does the first four; the rest is by hand.
 
-1. ☑ Export `Assets/PlayForge` (and nothing else) as a `.unitypackage`.
+1. ☑ Export `Assets/Plugins/PlayForge` (and nothing else) as a `.unitypackage`.
 2. ☑ Import it into a **brand-new** Unity 6 project.
 3. ☑ Zero console errors and warnings on import, and no import-time log spam; no missing script, reference or type in
    the samples. `Tools/clean-import.py` checks the UPM import the same way.

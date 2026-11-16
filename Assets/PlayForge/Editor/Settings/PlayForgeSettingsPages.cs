@@ -59,8 +59,43 @@ namespace FarEmerald.PlayForge.Extended.Editor
         internal static VisualElement BuildProjectPage(VisualElement root)
         {
             var page = Page(root, "PlayForge");
+            page.Add(FolderSection());
             page.Add(ActiveProjectSection());
             return page;
+        }
+
+        // The PlayForge Folder, where a new Forge Project goes, each in a folder of its own, and the Bootstrap prefabs: the
+        // Unity project's own setting, kept in ProjectSettings/PlayForge.asset (EP-10, Decision 89)
+        private static VisualElement FolderSection()
+        {
+            var row = new VisualElement { name = "PlayForgeFolder" };
+            row.AddToClassList("pf-settings__folder-field");
+            var field = new TextField("PlayForge Folder")
+            {
+                name = "PlayForgeFolderField",
+                value = ForgeFolders.Setting,
+                isDelayed = true,
+                tooltip = "Where a new Forge Project goes, in a folder of its own, and the Bootstrap prefabs a scene starts PlayForge with",
+            };
+            field.AddToClassList(TextField.alignedFieldUssClassName);
+            field.AddToClassList("pf-settings__text");
+            field.RegisterValueChangedCallback(change =>
+            {
+                ForgeFolders.Setting = change.newValue;
+                field.SetValueWithoutNotify(ForgeFolders.Setting);
+            });
+            row.Add(field);
+            row.Add(new Button(() =>
+            {
+                var chosen = PickFolder("PlayForge Folder", ForgeFolders.Setting, "Assets");
+                if (chosen != null) field.value = chosen;
+            })
+            {
+                name = "ChoosePlayForgeFolder",
+                text = "…",
+                tooltip = "Choose the PlayForge Folder",
+            });
+            return row;
         }
 
         // Everything the page shows of a project, bound to it, each edit saved in its asset (TW-30)
@@ -171,19 +206,31 @@ namespace FarEmerald.PlayForge.Extended.Editor
             return table;
         }
 
-        // A folder picked in the project, kept as a path from Assets; one outside the project is refused
+        // A folder picked within the active project's folder, kept as a path from it, as "Abilities" (EP-10); the project's
+        // folder itself, or one outside it, is refused, as a project's assets stay within its folder
         private static void ChooseFolder(SerializedProperty folder, Type type)
         {
-            var start = Path.GetFullPath(PlayForgeSettings.FolderFor(type).Length > 0 && AssetDatabase.IsValidFolder(PlayForgeSettings.FolderFor(type))
-                ? PlayForgeSettings.FolderFor(type)
-                : "Assets");
-            var chosen = EditorUtility.OpenFolderPanel($"Folder for New {ForgeAssetTypes.NameOf(type)} Assets", start, "");
-            if (string.IsNullOrEmpty(chosen)) return;
-            var project = Path.GetFullPath(".").Replace('\\', '/').TrimEnd('/') + "/";
-            chosen = Path.GetFullPath(chosen).Replace('\\', '/');
-            if (!chosen.StartsWith(project + "Assets", StringComparison.OrdinalIgnoreCase)) return;
-            folder.stringValue = chosen.Substring(project.Length);
+            var project = PlayForgeSettings.Project;
+            var root = project != null ? project.Folder : ForgeFolders.Root;
+            var chosen = PickFolder($"Folder for New {ForgeAssetTypes.NameOf(type)} Assets", ForgeProjects.FolderIn(project, type), root);
+            if (chosen == null || chosen.Length <= root.Length) return;
+            folder.stringValue = chosen.Substring(root.Length + 1);
             folder.serializedObject.ApplyModifiedProperties();
+        }
+
+        // A folder picked in the project, as a path from Assets, as "Assets/PlayForge/Arena/Abilities", where it's within
+        // <within> or is it; else null
+        private static string PickFolder(string title, string start, string within)
+        {
+            var from = Path.GetFullPath(!string.IsNullOrEmpty(start) && AssetDatabase.IsValidFolder(start) ? start
+                : AssetDatabase.IsValidFolder(within) ? within : "Assets");
+            var chosen = EditorUtility.OpenFolderPanel(title, from, "");
+            if (string.IsNullOrEmpty(chosen)) return null;
+            var project = Path.GetFullPath(".").Replace('\\', '/').TrimEnd('/') + "/";
+            chosen = Path.GetFullPath(chosen).Replace('\\', '/').TrimEnd('/');
+            if (!chosen.StartsWith(project, StringComparison.OrdinalIgnoreCase)) return null;
+            chosen = chosen.Substring(project.Length);
+            return chosen == within || chosen.StartsWith(within + "/", StringComparison.Ordinal) ? chosen : null;
         }
 
         // A type's defaults: the asset a new one copies, then the assets Import lists first
@@ -251,8 +298,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
                     return;
                 }
                 holder.Add(Note("No Forge Project is active, so none holds the project's settings: how The Forge makes its assets, " +
-                                "and what its game reads as it runs. Choose one in The Forge, or make the default one, at the " +
-                                "project's root, which holds every asset no other project does."));
+                                "and what its game reads as it runs. Choose one in The Forge, or make one, in a folder of its own " +
+                                $"under {ForgeFolders.Root}, with its Game Root and the Bootstrap prefabs (EP-10)."));
                 var buttons = new VisualElement();
                 buttons.AddToClassList("pf-settings__buttons");
                 buttons.Add(new Button(() =>
@@ -263,7 +310,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 {
                     name = "CreateForgeProject",
                     text = "Create Forge Project",
-                    tooltip = "Make the default Forge Project, at the project's root, which holds every asset no other project does",
+                    tooltip = $"Make a Forge Project named for the game, in a folder of its own under {ForgeFolders.Root}",
                 });
                 holder.Add(buttons);
             }

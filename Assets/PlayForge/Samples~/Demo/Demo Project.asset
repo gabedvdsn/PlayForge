@@ -39,6 +39,7 @@ MonoBehaviour:
       - rid: 2403794439031488536
       TagWorkers: []
       AnalysisWorkers: []
+  GameRootEntity: {fileID: 11400000, guid: 7d1176c3ad63f484089a151ec2f98949, type: 2}
   references:
     version: 2
     RefIds:

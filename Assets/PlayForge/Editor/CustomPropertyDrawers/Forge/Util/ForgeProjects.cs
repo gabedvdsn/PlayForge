@@ -10,9 +10,10 @@ namespace FarEmerald.PlayForge.Extended.Editor
     /// <summary>
     /// The project's Forge Projects and the active one (FEAT-34, Decision 44). The Forge shows the active project's assets
     /// alone, and a new asset goes in it: in the folder Project Settings names for its type, within the project's folder.
-    /// While the project has no Forge Project, The Forge shows every asset, and the first asset made makes the default
-    /// one, at the project's root, which holds every asset no other project does. Which is active belongs to each user,
-    /// so it stays in EditorPrefs, for this Unity project alone.
+    /// A project is made in a folder of its own under the PlayForge Folder, as Assets/PlayForge/Arena, with its Game Root
+    /// entity, and the Bootstrap prefabs made where they're missing (EP-10, EP-11, Decision 89). While the Unity project has
+    /// no Forge Project, The Forge asks for one; and the first asset made elsewhere makes one named for the game. Which is
+    /// active belongs to each user, so it stays in EditorPrefs, for this Unity project alone.
     /// </summary>
     internal static class ForgeProjects
     {
@@ -107,8 +108,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
         }
 
         /// <summary>
-        /// The active project, made while the project has none: the default project, at the project's root, which holds
-        /// every asset no other project does.
+        /// The active project, made while the Unity project has none: one named for the game, in a folder of its own under
+        /// the PlayForge Folder (EP-10). It was made at the project's root, in no folder of its own.
         /// </summary>
         public static ForgeProject EnsureActive()
         {
@@ -116,32 +117,51 @@ namespace FarEmerald.PlayForge.Extended.Editor
             if (active != null) return active;
             // Projects, none chosen and none at the root: the assets are those in no project, and so is a new one's
             if (All().Count > 0) return null;
-            var made = ScriptableObject.CreateInstance<ForgeProject>();
-            made.Description = "The project's own assets: those no other Forge Project holds";
-            AssetDatabase.CreateAsset(made, AssetDatabase.GenerateUniqueAssetPath("Assets/Forge Project.asset"));
-            Active = made;
-            return made;
+            return Make(DefaultName);
+        }
+
+        /// <summary>The name a project made without one takes: the game's, as Player Settings names it, or My Game.</summary>
+        public static string DefaultName
+        {
+            get
+            {
+                var game = ForgeAssetCreation.FileNameOf(PlayerSettings.productName ?? "").Trim();
+                return string.IsNullOrEmpty(game) || WhyNotName(game) != null ? "My Game" : game;
+            }
+        }
+
+        /// <summary>
+        /// Why a project can't take a name, or null where it can: it needs one, and the PlayForge Folder's Bootstrap folder
+        /// isn't a project's (EP-11).
+        /// </summary>
+        public static string WhyNotName(string name)
+        {
+            var file = ForgeAssetCreation.FileNameOf(name ?? "").Trim();
+            if (string.IsNullOrEmpty(file)) return "A Forge Project needs a name.";
+            if (string.Equals(file, ForgeFolders.BootstrapName, StringComparison.OrdinalIgnoreCase))
+                return $"{ForgeFolders.BootstrapName} is where PlayForge keeps the prefabs a scene starts with.";
+            return null;
         }
 
         /// <summary>
         /// The folder a new asset of a type goes in: the type's folder from Project Settings, within the active project's
-        /// folder, as Assets/Data/Abilities is Assets/Arena/Data/Abilities in a project at Assets/Arena. While the project
-        /// has none, the type's folder, which the default project, at the project's root, holds.
+        /// folder, as Abilities is Assets/PlayForge/Arena/Abilities in a project at Assets/PlayForge/Arena (EP-10).
         /// </summary>
         public static string FolderFor(Type type) => FolderIn(Active, type);
 
         /// <summary>
         /// The folder an asset of a type goes in, in a project: the type's folder from Project Settings, within the
-        /// project's folder; the type's folder alone for no project.
+        /// project's folder, a folder set as "Assets/Data/Abilities" read as "Data/Abilities" there; under the PlayForge
+        /// Folder for no project (EP-10).
         /// </summary>
         public static string FolderIn(ForgeProject project, Type type)
         {
             var folder = PlayForgeSettings.FolderFor(type, project);
-            var root = project != null ? project.Folder : "Assets";
-            if (root == "Assets") return folder;
-            return folder == "Assets" ? root
-                : folder.StartsWith("Assets/", StringComparison.Ordinal) ? root + folder.Substring("Assets".Length)
-                : $"{root}/{folder}";
+            var root = project != null ? project.Folder : ForgeFolders.Root;
+            var within = folder == "Assets" ? ""
+                : folder.StartsWith("Assets/", StringComparison.Ordinal) ? folder.Substring("Assets/".Length)
+                : folder;
+            return string.IsNullOrEmpty(within) ? root : $"{root}/{within}";
         }
 
         /// <summary>
@@ -172,14 +192,23 @@ namespace FarEmerald.PlayForge.Extended.Editor
             return AssetDatabase.CopyAsset(path, target) ? AssetDatabase.LoadAssetAtPath<Object>(target) : null;
         }
 
-        /// <summary>A new project, named, in a folder of its own at the project's root, which becomes the active one.</summary>
+        /// <summary>
+        /// A new project, named, made at once in a folder of its own under the PlayForge Folder, as
+        /// Assets/PlayForge/Arena/Arena.asset, with its Game Root entity in its GameRoot folder; the Bootstrap prefabs are made
+        /// where they're missing, the Bootstrapper playing it where it plays none. It becomes the active one (EP-10, EP-11).
+        /// </summary>
         public static ForgeProject Make(string name)
         {
-            name = string.IsNullOrWhiteSpace(name) ? "New Project" : name.Trim();
-            var folder = AssetDatabase.GenerateUniqueAssetPath($"Assets/{ForgeAssetCreation.FileNameOf(name)}");
+            name = string.IsNullOrWhiteSpace(name) || WhyNotName(name) != null ? DefaultName : name.Trim();
+            var file = ForgeAssetCreation.FileNameOf(name);
+            var root = ForgeFolders.Root;
+            ForgeAssetCreation.EnsureFolder(root);
+            var folder = AssetDatabase.GenerateUniqueAssetPath($"{root}/{file}");
             ForgeAssetCreation.EnsureFolder(folder);
             var project = ScriptableObject.CreateInstance<ForgeProject>();
-            AssetDatabase.CreateAsset(project, $"{folder}/{ForgeAssetCreation.FileNameOf(name)}.asset");
+            AssetDatabase.CreateAsset(project, $"{folder}/{file}.asset");
+            ForgeBootstrap.MakeGameRootEntity(project);
+            ForgeBootstrap.EnsurePrefabs(project);
             Active = project;
             return project;
         }

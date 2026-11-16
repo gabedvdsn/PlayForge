@@ -172,8 +172,6 @@ namespace FarEmerald.PlayForge.Samples.Demo.Building
         // The scene
         // ═══════════════════════════════════════════════════════════════════════════
 
-        private const string Bootstrapper = "Packages/com.faremerald.playforge/Runtime/Prefabs/Bootstrapper/Bootstrapper.prefab";
-
         private static GameObject Shape(string name, Transform parent, PrimitiveType shape, Vector3 at, Vector3 size, Color color, bool collider = false)
         {
             var host = new GameObject(name);
@@ -199,10 +197,10 @@ namespace FarEmerald.PlayForge.Samples.Demo.Building
             var light = Object.FindObjectsByType<Light>(FindObjectsSortMode.None).FirstOrDefault();
             if (light) light.transform.rotation = Quaternion.Euler(55f, -35f, 0f);
 
-            var boot = AssetDatabase.LoadAssetAtPath<GameObject>(Bootstrapper);
-            if (boot == null) throw new System.Exception($"No Bootstrapper prefab at {Bootstrapper}");
-            var booted = (GameObject)PrefabUtility.InstantiatePrefab(boot, scene);
-            booted.name = "PlayForge Bootstrapper";
+            // PlayForge's Bootstrapper, playing the Demo Project, whose Game Root entity the GameRoot runs as. It names no
+            // prefab, so it makes ProcessControl and the GameRoot itself: PlayForge ships none (EP-11)
+            var booted = new GameObject("PlayForge Bootstrapper").AddComponent<Bootstrapper>();
+            booted.Project = AssetDatabase.LoadAssetAtPath<ForgeProject>($"{Root}/Demo Project.asset");
 
             var arena = new GameObject("Arena").transform;
             Shape("Floor", arena, PrimitiveType.Cube, new Vector3(0f, -0.1f, 0f), new Vector3(44f, 0.2f, 44f), new Color(0.32f, 0.35f, 0.3f), collider: true);

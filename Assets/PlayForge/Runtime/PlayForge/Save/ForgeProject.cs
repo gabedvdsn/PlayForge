@@ -21,6 +21,10 @@ namespace FarEmerald.PlayForge
                  "an entity follows where it names none (TW-29)")]
         public ForgeProjectSettings Settings = new();
 
+        [Tooltip("The entity its game's GameRoot runs as, the game's own attributes, abilities and workers, as a scene's " +
+                 "Bootstrapper plays the project. The project's GameRoot folder holds it (EP-11)")]
+        public EntityIdentity GameRootEntity;
+
         // The project code uses, in place of the GameRoot's
         private static ForgeProject used;
 

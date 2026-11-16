@@ -15,21 +15,24 @@ namespace FarEmerald.PlayForge.Extended.Editor
     /// </summary>
     public static class PlayForgeSettings
     {
-        /// <summary>The asset types with settings, in The Forge's order, with the folder each one's new assets go in.</summary>
+        /// <summary>
+        /// The asset types with settings, in The Forge's order, with the folder each one's new assets go in, within the
+        /// project's folder: Assets/PlayForge/Arena/Abilities for a project at Assets/PlayForge/Arena (EP-10, Decision 89).
+        /// </summary>
         internal static readonly (Type type, string folder)[] Kinds =
         {
-            (typeof(Ability), "Assets/Data/Abilities"),
-            (typeof(GameplayEffect), "Assets/Data/Effects"),
-            (typeof(Item), "Assets/Data/Items"),
-            (typeof(Attribute), "Assets/Data/Attributes"),
-            (typeof(AttributeSet), "Assets/Data/AttributeSets"),
-            (typeof(EntityIdentity), "Assets/Data/Entities"),
-            (typeof(ScalerAsset), "Assets/Data/Templates/Scalers"),
-            (typeof(RequirementTemplate), "Assets/Data/Templates/Requirements"),
+            (typeof(Ability), "Abilities"),
+            (typeof(GameplayEffect), "Effects"),
+            (typeof(Item), "Items"),
+            (typeof(Attribute), "Attributes"),
+            (typeof(AttributeSet), "AttributeSets"),
+            (typeof(EntityIdentity), "Entities"),
+            (typeof(ScalerAsset), "Scalers"),
+            (typeof(RequirementTemplate), "Requirements"),
             // The rules assets, which The Forge lists too (FN-12, Decision 72)
-            (typeof(ValuePipeline), "Assets/Data/Pipelines"),
-            (typeof(EffectModifier), "Assets/Data/Modifiers"),
-            (typeof(CrowdControlRules), "Assets/Data/Rules"),
+            (typeof(ValuePipeline), "Pipelines"),
+            (typeof(EffectModifier), "Modifiers"),
+            (typeof(CrowdControlRules), "Rules"),
         };
 
         // The project a test uses in place of the active one
@@ -83,10 +86,10 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
         // ─── What the settings say ───
 
-        /// <summary>The folder a new asset of the type goes in, in the project in use, as "Assets/Data/Abilities".</summary>
+        /// <summary>The folder a new asset of the type goes in, within the project in use's folder, as "Abilities".</summary>
         public static string FolderFor(Type type) => FolderFor(type, Project);
 
-        /// <summary>The folder a new asset of the type goes in, by a project's settings, as "Assets/Data/Abilities" (TW-30).</summary>
+        /// <summary>The folder a new asset of the type goes in, by a project's settings, within its folder, as "Abilities" (TW-30).</summary>
         public static string FolderFor(Type type, ForgeProject project)
         {
             var folder = NewAssetsFor(AuthoringOf(project)?.NewAssets, type)?.Folder;
@@ -176,7 +179,10 @@ namespace FarEmerald.PlayForge.Extended.Editor
             Save(project);
         }
 
-        /// <summary>The folder a type's new assets go in until a setting says otherwise.</summary>
+        /// <summary>
+        /// The folder a type's new assets go in until a setting says otherwise, within the project's folder; "" for the
+        /// project's folder itself, a type The Forge doesn't list, as a Tag Library (EP-10).
+        /// </summary>
         public static string DefaultFolder(Type type)
         {
             for (var each = type; each != null; each = each.BaseType)
@@ -186,7 +192,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                     if (kind == each) return folder;
                 }
             }
-            return "Assets/Data";
+            return "";
         }
 
         // The entry for a type, or for the nearest of its base types with one

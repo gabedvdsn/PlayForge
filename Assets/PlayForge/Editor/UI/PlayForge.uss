@@ -2967,3 +2967,9 @@
 .pf-root.pf-foldout--aligned > .unity-foldout__toggle.unity-foldout__toggle--inspector {
     margin-left: 0;
 }
+
+/* The Forge's ask for a first Forge Project, in place of its list, where the Unity project has none (EP-10) */
+.pf-root .pf-forge__first-project {
+    flex-grow: 1;
+    padding: 12px 16px;
+}

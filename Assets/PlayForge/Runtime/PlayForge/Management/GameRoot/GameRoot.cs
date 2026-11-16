@@ -7,7 +7,9 @@ using UnityEngine;
 namespace FarEmerald.PlayForge
 {
     /// <summary>
-    /// GameRoot
+    /// The game's own entity, a Mono hub every scene has one of, which ProcessControl hands any registration that names no
+    /// handler. It runs as its Forge Project's Game Root entity: the project a scene's Bootstrapper plays, or else its own,
+    /// or else the entity it names (EP-11). It keeps through scene loads.
     /// </summary>
     public class GameRoot : GameplayAbilitySystem, IManagerial
     {
@@ -39,6 +41,38 @@ namespace FarEmerald.PlayForge
         public List<AbstractCreateProcessAbilityTask> CreateProcessTasks = new();
         private AbilityDataPacket NativeDataPacket;
         
+        /// <summary>
+        /// Takes on its Forge Project as it starts: the one its registration names, as the Bootstrapper names the one a
+        /// scene plays, or else its own; and runs as that project's Game Root entity, where it has one (EP-11).
+        /// </summary>
+        public override void WhenInitialize()
+        {
+            if (regData != null && regData.TryGet(Tags.FORGE_PROJECT, EDataTarget.Primary, out ForgeProject playing) && playing) project = playing;
+            if (project && project.GameRootEntity) EntityData = project.GameRootEntity;
+            else if (!EntityData) EntityData = DefaultEntity;
+            base.WhenInitialize();
+        }
+
+        // The Game Root entity a GameRoot runs as where neither its project nor it names one: the game's own, on the System
+        // side, as the one PlayForge shipped was; made once, and again where it's gone. It holds no state, so a session
+        // with domain reload off reuses the last one's
+        private static EntityIdentity defaultEntity;
+
+        /// <summary>The Game Root entity a GameRoot runs as where neither its Forge Project nor it names one (EP-11).</summary>
+        internal static EntityIdentity DefaultEntity
+        {
+            get
+            {
+                if (defaultEntity) return defaultEntity;
+                defaultEntity = ScriptableObject.CreateInstance<EntityIdentity>();
+                defaultEntity.hideFlags = HideFlags.HideAndDontSave;
+                defaultEntity.name = defaultEntity.Name = "Game Root";
+                defaultEntity.Affiliation = new List<Tag> { Tags.SYSTEM };
+                defaultEntity.AssetTag = Tag.Generate("Entity.GameRoot", "GameRoot");
+                return defaultEntity;
+            }
+        }
+
         public void Bootstrap()
         {
             // Unity's null, so a destroyed GameRoot gives way. `is not null` kept it (PC-26)

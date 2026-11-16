@@ -135,6 +135,9 @@ namespace FarEmerald.PlayForge
         [ForgeTagExposed(ForgeContext.DataKey)] public static Tag ENTITIES { get; } = Tag.GenerateAsUnique("Entities");
         [ForgeTagExposed(ForgeContext.DataKey)] public static Tag ATTRIBUTES { get; } = Tag.GenerateAsUnique("Attributes");
         [ForgeTagExposed(ForgeContext.DataKey)] public static Tag ATTRIBUTE_SETS { get; } = Tag.GenerateAsUnique("Attribute Sets");
+
+        /// <summary>The Forge Project a Bootstrapper plays, in the GameRoot's registration (EP-11).</summary>
+        [ForgeTagExposed(ForgeContext.DataKey)] public static Tag FORGE_PROJECT { get; } = Tag.GenerateAsUnique("Forge Project");
         [ForgeTagExposed(ForgeContext.DataKey)] public static Tag TAGS { get; } = Tag.GenerateAsUnique("Tags");
 
         // ═══════════════════════════════════════════════════════════════════════════

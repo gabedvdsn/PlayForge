@@ -10,6 +10,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## Toward 1.0.0, since 0.1.0
 
 ### Added
+- The PlayForge Folder (EP-10): where Forge Projects go, each in a folder of its own, `Assets/PlayForge` until it's set,
+  on Project Settings → PlayForge. The Forge asks for a first project where there's none.
+- A Forge Project's Game Root entity, `ForgeProject.GameRootEntity`, in its GameRoot folder, and the Bootstrapper's
+  `Project`, the project a scene plays: the GameRoot runs as its Game Root entity (EP-11).
 - A component says what it does, `AbstractForgeComponent.Describe()`: one line with its numbers, as a Cast Range's
   "Range 600". Every component PlayForge ships says it; one of your own overrides it (EP-5).
 - PlayForge's icon, an anvil, for every PlayForge asset type without an icon of its own: Scaler assets, Requirement
@@ -514,6 +518,15 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   page, through one table of links in the editor.
 
 ### Changed
+- A new Forge Project is made at once in a folder of its own under the PlayForge Folder, as
+  `Assets/PlayForge/Arena/Arena.asset`, with its Game Root entity, and each type's new assets go in a folder within it,
+  as `Abilities` (EP-10). With no project, the first asset made makes one named for the game there; it made the
+  default project at the Assets root.
+- The Bootstrapper, GameRoot and ProcessControl prefabs are made by code, in the PlayForge Folder's Bootstrap folder, as
+  the first project is made, and again where one's gone; a Bootstrapper with no prefab makes ProcessControl and the
+  GameRoot itself (EP-11).
+- The Asset Store package installs at `Assets/Plugins/PlayForge`, so the Forge Projects in `Assets/PlayForge` are never
+  in its folder (EP-12).
 - An asset's Components line, which The Forge's summary shows, names each component and what it does, as "Cast Range:
   Range 600 · Charges: 3 charges, each recharging on its own". It said how many there were (EP-5).
 - `AbilityBreakdown` reads an ability's components, what sets it off on its own, its chance to activate and its
@@ -906,6 +919,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   Asking whether its sequence was paused took 24 bytes a frame.
 
 ### Fixed
+- The shipped GameRoot prefab stepped in neither Update nor LateUpdate; the GameRoot made by code steps in both, as a
+  GAS must for its end of frame (EP-11, GAS-1).
 - Rows out of line in two inspectors (EP-4): an effect's Purges hung its arrow 12 px to the left of the lists' around
   it, and an ability's Targeting, empty, sat its label 18 px to the right of the fields' around it.
 - The Lifesteal worker heard no hit where its Receives was another attribute than its Heals: it joined its cache under
@@ -1170,6 +1185,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   or turning `Enabled` off. Once the first had ended, it threw, and the rest ran on.
 
 ### Removed
+- `Runtime/Prefabs`: the Bootstrapper, GameRoot and ProcessControl prefabs and the Game Root entity. Code makes them
+  in a project's own folders, so none ships (EP-11).
 - `ForgeCategory`, and the Category of `[NumberKind]` and `[GameplayCondition]`: `[ForgeMenu]` files every family's kinds
   (EP-2).
 - A new asset's file prefix and suffix, from Project Settings → PlayForge and wherever a file is named: a new asset's

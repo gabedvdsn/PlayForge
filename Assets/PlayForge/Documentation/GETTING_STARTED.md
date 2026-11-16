@@ -7,6 +7,8 @@ task pipelines, and tags glue everything together for requirements, filtering an
 ## Requirements
 
 - **Unity 6.0+** (built and tested on 6000.0)
+- From the Asset Store, PlayForge installs in `Assets/Plugins/PlayForge`, and your Forge Projects go in
+  `Assets/PlayForge`, so the two never share a folder (EP-12).
 - **UniTask** 2.5.11 (Cysharp, MIT). From the Asset Store, PlayForge includes it, in `PlayForge/ThirdParty/UniTask`;
   a project that already has UniTask from Package Manager deletes that folder. Installed as a package from git, it
   needs UniTask added in Package Manager by git URL, pinned to that release:
@@ -57,7 +59,9 @@ the numbers, rules and the Tag Library.
    effects if desired; set the level range and link the damage effect's scaler
    `LockToLevelProvider`.
 6. **Scene** — add a `GameplayAbilitySystem` to a GameObject, assign the EntityIdentity,
-   make sure a `ProcessControl` exists in the scene. Grant + activate the ability through
+   and bring PlayForge up with a `Bootstrapper`: the prefab PlayForge makes in `Assets/PlayForge/Bootstrap` as your
+   first Forge Project is made, or a GameObject with the component, naming the Forge Project the scene plays. It makes
+   ProcessControl and the GameRoot, which runs as the project's Game Root entity (EP-11). Grant + activate the ability through
    the `AbilitySystemComponent`, or drive everything from code with
    `RuntimeGameplayAbilitySystem` (no GameObject needed), which `ProcessControl.Register(gas).Run()` starts.
 
@@ -139,7 +143,9 @@ string perLevel = impact.FormatTotal();           // "20/30/40/50"
 - **The Forge** (`Window → PlayForge → The Forge`, or Ctrl+Alt+Shift+F, which focuses its search) — every
   PlayForge asset of the active **Forge Project** in one list beside a detail pane. A Forge Project is a folder with a
   project asset at its root (**Create → PlayForge → Forge Project**), and holds the assets under it that no project
-  inside it does. The toolbar holds Back and Forward, which go over the assets it has shown, as a browser's do, the
+  inside it does. New Project makes one at once in a folder of its own under the PlayForge Folder, `Assets/PlayForge`
+  until Project Settings → PlayForge sets another, as `Assets/PlayForge/Arena/Arena.asset`, with its Game Root entity in
+  `Arena/GameRoot`; with no project, The Forge asks for the first (EP-10). The toolbar holds Back and Forward, which go over the assets it has shown, as a browser's do, the
   project menu, which switches projects and makes a new one, Create, a filter for each PlayForge asset type and More,
   which holds the filters of the rest, Scaler assets, Requirement Templates, Value Pipelines, Effect Modifiers and Crowd
   Control Rules, then Tags, the search and the problem count. Create makes an asset of a type: Blank, or from a preset under it (TW-24), each ready to fill in: a
@@ -148,8 +154,8 @@ string perLevel = impact.FormatTotal();           // "20/30/40/50"
   own, its cost and cooldown copies of the project's Cost and Cooldown effects); a **Passive** ability, which activates
   as its entity starts and gives its holder its effects; or a
   **Hero**, with an attribute set of the attributes playing the project's roles, Health first. The project's own
-  **Templates** follow, each a new asset's copy. A new asset goes into the active project, in its type's folder within the project's; the first one
-  made makes the default project, at the project's root. With projects and none chosen, the active one is the
+  **Templates** follow, each a new asset's copy. A new asset goes into the active project, in its type's folder within the project's, as `Arena/Abilities`; the
+  first one made with no project makes one named for the game, in a folder of its own (EP-10). With projects and none chosen, the active one is the
   project at the root, or none, when The Forge shows the assets in no project. The asset menu moves or copies the
   selected assets into another project, and renames an asset, as F2 on the list does: its name as its inspector gives
   it, with the tag the name gives and the file following, or the file of an asset with no name of its own. Every asset picker, an object field's among them, offers the active project's
@@ -210,8 +216,9 @@ string perLevel = impact.FormatTotal();           // "20/30/40/50"
   asset's file its name alone (EP-13); each type's defaults (the asset a new one starts as a copy of, and the assets Import lists first); the
   effects a new Cost or Cooldown copies; its Templates, which The Forge's Create offers beside PlayForge's presets
   (TW-24); and what its game reads through its GameRoot as it runs, the roles its
-  attributes play, by tag, and its default crowd control ([ATTRIBUTES.md](ATTRIBUTES.md#roles)). With no Forge Project,
-  **Create Forge Project** makes the default one.
+  attributes play, by tag, and its default crowd control ([ATTRIBUTES.md](ATTRIBUTES.md#roles)). Its **PlayForge
+  Folder** is where a new Forge Project goes (EP-10). With no Forge Project, **Create Forge Project** makes one named
+  for the game, in a folder of its own there.
   **Preferences → PlayForge** holds your own view toggles, the most PlayForge's dropdowns grow to (**Menu Width** and
   **Menu Height**, EP-1), and the log level. The
   Forge's window menu opens both.

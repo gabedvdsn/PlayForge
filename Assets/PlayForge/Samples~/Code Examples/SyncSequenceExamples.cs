@@ -11,7 +11,7 @@ namespace FarEmerald.PlayForge.Extended.Examples
     /// TaskSequenceBuilder, demonstrating the consolidated sync/async framework.
     ///
     /// Setup:
-    ///   1. Ensure a ProcessControl instance exists in the scene (via the ProcessControl prefab).
+    ///   1. Ensure a ProcessControl instance exists in the scene (a Bootstrapper brings it up).
     ///   2. Add the demo component to any GameObject.
     ///   3. Assign inspector fields (target, waypoints, etc.) as needed.
     ///   4. Enter Play mode.

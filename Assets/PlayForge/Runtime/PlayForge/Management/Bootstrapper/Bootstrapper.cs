@@ -6,9 +6,22 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
+    /// <summary>
+    /// Brings PlayForge up as a scene starts: ProcessControl, then the GameRoot, which runs as the Game Root entity of the
+    /// Forge Project the Bootstrapper names (EP-11, Decision 89). It names prefabs for both, which code makes in the
+    /// PlayForge folder's Bootstrap folder as the first Forge Project is made; without them it makes each itself, so a
+    /// scene needs nothing but a Bootstrapper. PlayForge ships no prefab.
+    /// </summary>
     public class Bootstrapper : MonoBehaviour
     {
+        [Tooltip("The Forge Project this scene plays: the GameRoot runs as its Game Root entity and reads its settings. " +
+                 "None, the GameRoot prefab's own")]
+        public ForgeProject Project;
+
+        [Tooltip("The ProcessControl it brings up. None, one it makes")]
         public ProcessControl ProcessControlPrefab;
+
+        [Tooltip("The GameRoot it brings up. None, one it makes, stepping in Update and LateUpdate")]
         public GameRoot GameRootPrefab;
 
         [Tooltip("Or in Start() when false")]
@@ -47,7 +60,8 @@ namespace FarEmerald.PlayForge
         {
             TagRegistry.Initialize();
 
-            foreach (var attrSet in RegisterSets)
+            // None where it's made in code and given none
+            foreach (var attrSet in RegisterSets ?? new List<AttributeSet>())
             {
                 foreach (var attr in attrSet.GetUnique())
                 {
@@ -77,9 +91,19 @@ namespace FarEmerald.PlayForge
             // Bootstrap GameRoot, by Unity's null as above (PC-26)
             if (!GameRoot.Instance)
             {
+                // The project it plays, which the GameRoot takes on as it starts, and runs as its Game Root entity (EP-11)
+                var data = ProcessDataPacket.Default();
+                if (Project) data.AddPayload(Tags.FORGE_PROJECT, Project);
+                GameObject madeTemplates = null;
+                var template = GameRootPrefab ? GameRootPrefab : MadeGameRoot(out madeTemplates);
+
                 // Refused, there's no relay to read, and a bare clone would never initialize or step, so it's
                 // reported. Reading the relay threw, and the Bootstrapper never finished (PC-23)
-                if (ProcessControl.Register(GameRootPrefab).With(ProcessDataPacket.Default()).Run(out var relay)
+                bool registered = ProcessControl.Register(template).With(data).Run(out var relay);
+
+                // The registration copied the template it made, which goes
+                if (madeTemplates) Destroy(madeTemplates);
+                if (registered
                     && relay.TryGetProcess<GameRoot>(out var gameRoot))
                 {
                     gameRoot.Bootstrap();
@@ -104,7 +128,22 @@ namespace FarEmerald.PlayForge
         
         protected virtual void BootstrapOverrides()
         {
-            // Any further bootstrap initialization here   
+            // Any further bootstrap initialization here
+        }
+
+        // A GameRoot where it names no prefab, as the Creator Lab's: a template, off, which the registration copies, stepping
+        // in Update and LateUpdate, as a GAS must for its end of frame (GAS-1); its project's Game Root entity it takes as it
+        // starts (EP-11)
+        private static GameRoot MadeGameRoot(out GameObject templates)
+        {
+            templates = new GameObject("PlayForge Templates") { hideFlags = HideFlags.HideAndDontSave };
+            templates.SetActive(false);
+            var made = new GameObject("GameRoot");
+            made.transform.SetParent(templates.transform, false);
+            var gameRoot = made.AddComponent<GameRoot>();
+            gameRoot.ProcessLifecycle = EProcessLifecycle.Synchronous;
+            gameRoot.ProcessTiming = EProcessStepTiming.UpdateAndLate;
+            return gameRoot;
         }
     }
 }
