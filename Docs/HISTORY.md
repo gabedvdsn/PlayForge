@@ -10,6 +10,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## Toward 1.0.0, since 0.1.0
 
 ### Added
+- A component says what it does, `AbstractForgeComponent.Describe()`: one line with its numbers, as a Cast Range's
+  "Range 600". Every component PlayForge ships says it; one of your own overrides it (EP-5).
 - PlayForge's icon, an anvil, for every PlayForge asset type without an icon of its own: Scaler assets, Requirement
   Templates, Value Pipelines, Effect Modifiers, Crowd Control Rules, Forge Projects and Tag Libraries (EP-9).
 - `[ForgeMenu]`, a kind's place in its pickers (EP-2): a path, a slash nesting its submenus, as "Effects/Damage", which
@@ -512,6 +514,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   page, through one table of links in the editor.
 
 ### Changed
+- An asset's Components line, which The Forge's summary shows, names each component and what it does, as "Cast Range:
+  Range 600 · Charges: 3 charges, each recharging on its own". It said how many there were (EP-5).
+- `AbilityBreakdown` reads an ability's components, what sets it off on its own, its chance to activate and its
+  Attribute Costs, and its `Describe` says each (EP-5).
 - The Forge's Declared For shows the contexts a tag's code declares, `[ForgeTagExposed(...)]`, checked and locked in its
   menu (EP-7).
 - An asset field's New asks for the new asset's name first, in The Forge's New dialog, where its folder can change too

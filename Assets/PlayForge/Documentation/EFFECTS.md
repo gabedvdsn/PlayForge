@@ -347,7 +347,8 @@ off. A kind that makes no sense twice is offered only while the effect holds non
 
 A component of your own derives from `AbstractEffectComponent` and overrides the hooks it needs, each a no-op
 otherwise. It's the effect's, shared by everything that holds it, so what it keeps for one application of it it keeps through its
-context: `ctx.GetState<T>(this)`.
+context: `ctx.GetState<T>(this)`. **Describe** says what it does in one line with its numbers, as an Area's "Lands on
+enemies within 300", which the Components section's line and The Forge's summary say beside its name (EP-5).
 
 ### Auras
 

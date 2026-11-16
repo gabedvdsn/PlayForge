@@ -275,6 +275,24 @@ namespace FarEmerald.PlayForge
         /// <summary>Code-driven sequences (RunSequenceTask) and their declared behavior.</summary>
         public List<SequenceInfo> Sequences = new();
 
+        /// <summary>
+        /// The ability's components, each its name and what it does with its numbers, as ("Cast Range", "Range 600") (EP-5).
+        /// A component that says nothing more has a null line.
+        /// </summary>
+        public List<(string Name, string Line)> Components = new();
+
+        /// <summary>What sets it off on its own: at its entity's start, and each trigger, as "Gameplay Event: Impact Taken" (EP-5).</summary>
+        public List<string> Activation = new();
+
+        /// <summary>Its chance to activate, as its field's summary reads it, or null where it always activates (EP-5).</summary>
+        public string Chance;
+
+        /// <summary>
+        /// What it spends of its entity's attributes as it activates, its Attribute Costs, each the attribute's name and the
+        /// amount, as ("Mana", "20/25/30") (EP-5). Its Cost effect is its usages'.
+        /// </summary>
+        public List<(string Attribute, string Amount)> AttributeCosts = new();
+
         /// <summary>Everything the ability applies, stage-ordered; cost/cooldown last.</summary>
         public List<AbilityEffectUsage> Usages = new();
 
@@ -298,6 +316,12 @@ namespace FarEmerald.PlayForge
             {
                 lines.Add($"Targeting: {TargetingTaskType}");
             }
+
+            // Its components, as its Cast Range, and what sets it off on its own (EP-5)
+            foreach (var (name, line) in Components) lines.Add(string.IsNullOrEmpty(line) ? name : $"{name}: {line}");
+            foreach (var each in Activation) lines.Add($"Activates: {each}");
+            if (!string.IsNullOrEmpty(Chance)) lines.Add($"Chance to activate: {Chance}");
+            foreach (var (attribute, amount) in AttributeCosts) lines.Add($"Cost: {amount} {attribute}");
 
             foreach (var sequence in Sequences)
             {
@@ -409,6 +433,26 @@ namespace FarEmerald.PlayForge
                 TargetingDescription = ability.Behaviour?.Targeting?.Description,
                 HasImplicitSelfTarget = ability.Behaviour?.UseImplicitTargeting ?? false,
             };
+
+            // Its components, what sets it off on its own, and its chance to activate (EP-5)
+            if (ability.Components != null)
+                foreach (var component in ability.Components)
+                    if (component != null) breakdown.Components.Add((AbstractForgeComponent.NameOf(component), component.Describe()));
+            var definition = ability.Definition;
+            if (definition != null)
+            {
+                if (definition.ActivateImmediately) breakdown.Activation.Add("at its entity's start");
+                if (definition.Triggers != null)
+                    foreach (var trigger in definition.Triggers)
+                        if (trigger != null) breakdown.Activation.Add(trigger.Tag.IsValid ? $"{trigger.Source}: {trigger.Tag}" : trigger.Source.ToString());
+                var chance = definition.ChanceToActivate;
+                if (chance != null && (chance.Magnitude < 1f || !AbstractScaler.IsNone(chance.Scaler))) breakdown.Chance = NumberText.Of(chance);
+            }
+            if (ability.AttributeCosts != null)
+                foreach (var cost in ability.AttributeCosts)
+                    if (cost != null)
+                        breakdown.AttributeCosts.Add((cost.Spends ? cost.Spends.GetName() : cost.Role.IsValid ? cost.Role.ToString() : "nothing",
+                            NumberText.Of(cost.Amount)));
 
             // With no targeting task the only target is the caster (implicit targeting);
             // with one, stage tasks act on whatever it acquired.

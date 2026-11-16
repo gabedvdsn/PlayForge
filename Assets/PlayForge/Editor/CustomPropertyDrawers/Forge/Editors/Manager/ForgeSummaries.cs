@@ -42,6 +42,22 @@ namespace FarEmerald.PlayForge.Extended.Editor
             }
         }
 
+        /// <summary>
+        /// A Components section's line, which The Forge's summary shows: each component's name and what it does, as
+        /// "Cast Range: Range 600 · Charges: 3 charges, each recharging on its own"; or None (EP-5). It said how many there
+        /// were.
+        /// </summary>
+        public static string ComponentsLine(IEnumerable<AbstractForgeComponent> components)
+        {
+            var parts = (components ?? Enumerable.Empty<AbstractForgeComponent>())
+                .Where(component => component != null)
+                .Select(component => component.Describe() is { Length: > 0 } line
+                    ? $"{AbstractForgeComponent.NameOf(component)}: {line}"
+                    : AbstractForgeComponent.NameOf(component))
+                .ToList();
+            return parts.Count == 0 ? "None" : string.Join(" · ", parts);
+        }
+
         // Tags by their display names, as The Forge shows a tag, or None
         private static string Tags(IEnumerable<TagQuery> queries)
         {

@@ -290,7 +290,8 @@ An ability's components are features it carries, each a class with hooks into it
 
 A component of your own derives from `AbstractAbilityComponent` and overrides the hooks it needs, each a no-op
 otherwise. It's the ability's, shared by everything that holds it, so what it keeps for one entity's ability it keeps through its
-context: `ctx.GetState<T>(this)`.
+context: `ctx.GetState<T>(this)`. **Describe** says what it does in one line with its numbers, as a Cast Range's "Range
+600", which the Components section's line, The Forge's summary and the ability's breakdown say beside its name (EP-5).
 
 ### Cast Range
 

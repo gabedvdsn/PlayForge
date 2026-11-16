@@ -11,6 +11,9 @@ namespace FarEmerald.PlayForge
     [ForgeMenu(Description = "How many uses the ability holds, each coming back as it recharges.")]
     public sealed class ChargesAbilityComponent : AbstractAbilityComponent
     {
+        /// <summary>What it does, in one line (EP-5).</summary>
+        public override string Describe() => $"{NumberText.Of(Charges)} charges, {(Recharge is AllAtOnceRecharge ? "all recharging at once" : "each recharging on its own")}";
+
         [Tooltip("How many uses it holds, each spending a charge that comes back as its Recharge says; 1 is an ordinary " +
                  "cooldown (TW-17)")]
         [NumberMin(2)]
@@ -33,6 +36,9 @@ namespace FarEmerald.PlayForge
     [ForgeMenu(Description = "Turns an effect on with one use and off with the next.")]
     public sealed class ToggleAbilityComponent : AbstractAbilityComponent
     {
+        /// <summary>What it does, in one line (EP-5).</summary>
+        public override string Describe() => $"Toggles {NameOf(Effect)}";
+
         [Tooltip("The effect it toggles on its caster: used, it puts the effect on, paying its cost; used again, it takes " +
                  "the effect off, paying and asking nothing, and starts its cooldown (TW-20)")]
         public GameplayEffect Effect;
@@ -53,6 +59,9 @@ namespace FarEmerald.PlayForge
     [ForgeMenu(Description = "How far from the caster the ability's target may be.")]
     public sealed class CastRangeAbilityComponent : AbstractAbilityComponent
     {
+        /// <summary>What it does, in one line (EP-5).</summary>
+        public override string Describe() => $"Range {NumberText.Of(Range)}";
+
         [Tooltip("How far from its caster its target or point may be, read at the ability's level; 0 reaches anywhere")]
         public ScalableFloat Range = 6f;
 

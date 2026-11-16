@@ -17,6 +17,38 @@ namespace FarEmerald.PlayForge
         /// Components section offers it only while the asset holds none.
         /// </summary>
         public virtual bool AllowsSeveral => true;
+
+        /// <summary>
+        /// What the component does, in one line with its numbers, as "Range 600" or "3 charges, each recharging on its own",
+        /// which The Forge's summary and the breakdowns say beside its name (EP-5); null to say its name alone. A
+        /// component of your own overrides it.
+        /// </summary>
+        public virtual string Describe() => null;
+
+        /// <summary>A component's name, as its picker and The Forge show it: its [ForgeMenu] name, or its class's (EP-5).</summary>
+        public static string NameOf(AbstractForgeComponent component) => component == null ? "" : NameOf(component.GetType());
+
+        /// <summary>A component kind's name: its [ForgeMenu] name, or its class's without its family's suffix.</summary>
+        public static string NameOf(System.Type type)
+        {
+            if (type == null) return "";
+            if (ForgeMenuAttribute.NameOf(type) is { } named) return named;
+            var name = type.Name;
+            foreach (var suffix in new[] { "EffectComponent", "AbilityComponent", "EntityComponent", "ItemComponent", "Component" })
+                if (name.EndsWith(suffix) && name.Length > suffix.Length) { name = name.Substring(0, name.Length - suffix.Length); break; }
+            return System.Text.RegularExpressions.Regex.Replace(name, "(?<=[a-z0-9])(?=[A-Z])", " ");
+        }
+
+        /// <summary>An asset's name for a component's line: its PlayForge name, its file's, or "nothing".</summary>
+        protected static string NameOf(UnityEngine.ScriptableObject asset) => asset switch
+        {
+            null => "nothing",
+            BaseForgeAsset forge when !string.IsNullOrEmpty(forge.GetName()) => forge.GetName(),
+            _ => asset.name,
+        };
+
+        /// <summary>Who an area or an aura takes, in words: "allies", "enemies", "everyone".</summary>
+        protected static string Whom(EAffinityFilter takes) => System.Text.RegularExpressions.Regex.Replace(takes.ToString(), "(?<=[a-z])(?=[A-Z])", " ").ToLowerInvariant();
     }
 
     /// <summary>What a holder's components keep for it: an object for each component, made the first time it's asked for (FN-14).</summary>

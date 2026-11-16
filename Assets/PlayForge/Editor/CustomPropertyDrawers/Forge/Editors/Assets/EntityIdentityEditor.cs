@@ -648,7 +648,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             if (abilitiesSection != null)
                 abilitiesSection.Summary.text = CountOf(entity.StartingAbilities?.Count(ability => ability != null) ?? 0, "ability", "abilities");
             if (itemsSection != null) itemsSection.Summary.text = ItemsSummary();
-            if (componentsSection != null) componentsSection.Summary.text = CountOf(entity.Components?.Count(each => each != null) ?? 0, "component", "components");
+            if (componentsSection != null) componentsSection.Summary.text = ForgeSummaries.ComponentsLine(entity.Components);
             if (workersSection != null) workersSection.Summary.text = WorkersLine(null, entity.Modifiers, WorkerCount(entity.WorkerGroup));
             if (localDataSection != null) localDataSection.Summary.text = CountOf(entity.LocalData?.Count ?? 0, "entry", "entries");
             if (usedBySection != null) usedBySection.Summary.text = usedBy == null ? "" : CountOf(usedBy.Count, "asset", "assets");

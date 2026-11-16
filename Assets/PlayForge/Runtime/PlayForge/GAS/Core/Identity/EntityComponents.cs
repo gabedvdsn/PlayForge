@@ -13,6 +13,9 @@ namespace FarEmerald.PlayForge
     [ForgeMenu(Description = "An effect the entity's killer takes as it dies, as gold or experience.")]
     public sealed class BountyEntityComponent : AbstractEntityComponent
     {
+        /// <summary>What it does, in one line (EP-5).</summary>
+        public override string Describe() => $"{NameOf(Effect)} to its killer";
+
         [Tooltip("The effect its killer takes as it dies, from it, so the effect reads its level: gold or experience")]
         public GameplayEffect Effect;
 
@@ -66,6 +69,9 @@ namespace FarEmerald.PlayForge
     [ForgeMenu(Description = "Brings the entity back a while after it dies.")]
     public sealed class RespawnEntityComponent : AbstractEntityComponent
     {
+        /// <summary>What it does, in one line (EP-5).</summary>
+        public override string Describe() => $"Respawns after {NumberText.Of(Delay)} s, {System.Text.RegularExpressions.Regex.Replace(At.ToString(), "(?<=[a-z])(?=[A-Z])", " ").ToLowerInvariant()}";
+
         [Tooltip("How long after it dies it revives, in seconds of its own time, read at its level")]
         public ScalableFloat Delay = 5f;
 

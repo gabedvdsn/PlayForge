@@ -119,7 +119,8 @@ next frame awaits `ForgeTick.Next(token)`. 0, the default, steps once a frame.
 ### Tooltips: what does this ability do?
 
 `AbilityInspector.Build(ability)` returns a full static breakdown — every effect, its
-role, target scope, and per-level numbers evaluated through the real scaler pipeline:
+role, target scope, and per-level numbers evaluated through the real scaler pipeline, and its components, what sets it
+off on its own, its chance to activate and its Attribute Costs (EP-5):
 
 ```csharp
 var breakdown = AbilityInspector.Build(fireball);

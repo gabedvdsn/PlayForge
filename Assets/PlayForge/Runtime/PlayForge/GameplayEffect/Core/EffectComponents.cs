@@ -14,6 +14,9 @@ namespace FarEmerald.PlayForge
     [ForgeMenu(Description = "Lands the effect on others near its target too.")]
     public sealed class AreaEffectComponent : AbstractEffectComponent
     {
+        /// <summary>What it does, in one line (EP-5).</summary>
+        public override string Describe() => $"Lands on {Whom(Area?.Takes ?? EAffinityFilter.Enemies)} within {NumberText.Of(Area?.Radius)}" + (Area?.MaxTargets is { } most && (most.Magnitude > 0f || !AbstractScaler.IsNone(most.Scaler)) ? $", {NumberText.Of(most)} at most" : "");
+
         [Tooltip("Its area: as its effect lands on its target, it lands on each the area takes near that target too (TW-10)")]
         public EffectArea Area = new();
 
@@ -29,6 +32,9 @@ namespace FarEmerald.PlayForge
     [ForgeMenu(Description = "Moves an amount of an attribute from the caster or the target to either.")]
     public sealed class TransferEffectComponent : AbstractEffectComponent
     {
+        /// <summary>What it does, in one line (EP-5).</summary>
+        public override string Describe() => $"Moves {NumberText.Of(Transfer?.Amount)} of the {Transfer?.From.ToString().ToLowerInvariant()}'s {NameOf(Transfer?.FromAttribute)} to the {Transfer?.To.ToString().ToLowerInvariant()}'s {NameOf(Transfer?.ToAttribute)}";
+
         [Tooltip("What it moves: when, who gives and of what, who gets and in what, which of the values, and how much (TW-20)")]
         public AttributeTransfer Transfer = new();
     }
@@ -44,6 +50,9 @@ namespace FarEmerald.PlayForge
     [ForgeMenu(Description = "Changes the target's sides while the effect lasts, as a mind control.")]
     public sealed class SideChangeEffectComponent : AbstractEffectComponent
     {
+        /// <summary>What it does, in one line (EP-5).</summary>
+        public override string Describe() => Source == ESideSource.Caster ? "Sides become its caster's" : $"Sides become {(Sides is { Count: > 0 } ? string.Join(", ", Sides) : "none")}";
+
         [Tooltip("Whose sides it gives: its caster's, as a mind control, or those it names")]
         public ESideSource Source = ESideSource.Caster;
 
@@ -90,6 +99,9 @@ namespace FarEmerald.PlayForge
     [ForgeMenu(Description = "Spreads the effect, or another, from its target to those near it.")]
     public sealed class SpreadEffectComponent : AbstractEffectComponent
     {
+        /// <summary>What it does, in one line (EP-5).</summary>
+        public override string Describe() => $"Spreads {(Effect != null ? NameOf(Effect) : "itself")} to {Whom(Takes)}, {NumberText.Of(MaxTargets)} at most";
+
         [Tooltip("When it spreads: as its effect lands, each tick, as it comes off, or as the one it's on dies; any of them")]
         public ESpreadMoment When = ESpreadMoment.Death;
 

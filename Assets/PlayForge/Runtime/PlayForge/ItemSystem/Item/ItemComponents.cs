@@ -14,6 +14,9 @@ namespace FarEmerald.PlayForge
     [ForgeMenu(Description = "How many times the item's ability can be used before one of the item goes.")]
     public sealed class UsesItemComponent : AbstractItemComponent
     {
+        /// <summary>What it does, in one line (EP-5).</summary>
+        public override string Describe() => $"{NumberText.Of(Uses)} uses";
+
         [Tooltip("How many times its ability can be used before one of it goes, read at the item's level")]
         public ScalableInt Uses = 3;
 
@@ -70,6 +73,9 @@ namespace FarEmerald.PlayForge
     [ForgeMenu(Description = "An effect its holder has while enough of a set's pieces are equipped.")]
     public sealed class SetBonusItemComponent : AbstractItemComponent
     {
+        /// <summary>What it does, in one line (EP-5).</summary>
+        public override string Describe() => $"{NameOf(Bonus)} with {NumberText.Of(Pieces)} pieces of {Set}";
+
         [Tooltip("The set the item is a piece of, by its tag")]
         [ForgeTagContext(ForgeContext.ContextTag)]
         public Tag Set;

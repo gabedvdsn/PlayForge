@@ -74,6 +74,9 @@ namespace FarEmerald.PlayForge
     [ForgeMenu(Description = "Gives those near the target an aura's effects while the effect lasts.")]
     public sealed class AuraEffectComponent : AbstractEffectComponent, IAuraComponent
     {
+        /// <summary>What it does, in one line (EP-5).</summary>
+        public override string Describe() => $"{NameOf(Aura?.Effect)} on {Whom(Aura?.Takes ?? EAffinityFilter.Allies)} within {NumberText.Of(Aura?.Radius)}";
+
         public AuraEntry Aura = new();
         AuraEntry IAuraComponent.Aura => Aura;
     }
@@ -83,6 +86,9 @@ namespace FarEmerald.PlayForge
     [ForgeMenu(Description = "Gives those near the holder an aura's effects while it knows the ability.")]
     public sealed class AuraAbilityComponent : AbstractAbilityComponent, IAuraComponent
     {
+        /// <summary>What it does, in one line (EP-5).</summary>
+        public override string Describe() => $"{NameOf(Aura?.Effect)} on {Whom(Aura?.Takes ?? EAffinityFilter.Allies)} within {NumberText.Of(Aura?.Radius)}";
+
         public AuraEntry Aura = new();
         AuraEntry IAuraComponent.Aura => Aura;
     }
@@ -92,6 +98,9 @@ namespace FarEmerald.PlayForge
     [ForgeMenu(Description = "Gives those near the holder an aura's effects while the item is equipped.")]
     public sealed class AuraItemComponent : AbstractItemComponent, IAuraComponent
     {
+        /// <summary>What it does, in one line (EP-5).</summary>
+        public override string Describe() => $"{NameOf(Aura?.Effect)} on {Whom(Aura?.Takes ?? EAffinityFilter.Allies)} within {NumberText.Of(Aura?.Radius)}";
+
         public AuraEntry Aura = new();
         AuraEntry IAuraComponent.Aura => Aura;
     }
@@ -101,6 +110,9 @@ namespace FarEmerald.PlayForge
     [ForgeMenu(Description = "Gives those near the entity an aura's effects while it lives.")]
     public sealed class AuraEntityComponent : AbstractEntityComponent, IAuraComponent
     {
+        /// <summary>What it does, in one line (EP-5).</summary>
+        public override string Describe() => $"{NameOf(Aura?.Effect)} on {Whom(Aura?.Takes ?? EAffinityFilter.Allies)} within {NumberText.Of(Aura?.Radius)}";
+
         public AuraEntry Aura = new();
         AuraEntry IAuraComponent.Aura => Aura;
     }
