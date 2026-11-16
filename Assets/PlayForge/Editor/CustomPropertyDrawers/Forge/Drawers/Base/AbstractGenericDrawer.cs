@@ -77,7 +77,13 @@ namespace FarEmerald.PlayForge.Extended.Editor
         protected override void Shown(VisualElement root, SerializedProperty property)
         {
             bool fields = HasFields(property);
-            root.Q(name: "CollapseBtn")?.EnableInClassList(InvisibleClass, !fields);
+            // In a list, an arrow keeps its place while its kind has nothing to fold, so the row lines up with its
+            // neighbours, which fold; alone, as an ability's Targeting, it keeps none, so its label lines up with the fields
+            // around it, which have no arrow (EP-4). It kept its place everywhere, the label 18 px to the right of theirs
+            bool inList = property.propertyPath.EndsWith("]");
+            var arrow = root.Q(name: "CollapseBtn");
+            arrow?.EnableInClassList(InvisibleClass, !fields && inList);
+            arrow?.EnableInClassList(HiddenClass, !EnableCollapse || !fields && !inList);
             var summary = root.Q<Label>("Summary");
             if (summary != null) summary.text = EnableSummary && fields ? SummaryOf(property) : "";
             Fold(root, EnableCollapse && fields && DrawerCollapseState.IsCollapsed(property, collapsedByDefault: false));

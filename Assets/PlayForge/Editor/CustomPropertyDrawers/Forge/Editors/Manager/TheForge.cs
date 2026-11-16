@@ -780,10 +780,11 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
             // The contexts it's declared for, which put it in those contexts' pickers as well as its uses' (ED-83)
             var tag = record.Tag;
-            var declared = new ForgeTagContextsField("Declared For", ForgeTagContexts.DeclaredOf(tag))
+            // Those its code declares among them, checked and locked (EP-7)
+            var declared = new ForgeTagContextsField("Declared For", ForgeTagContexts.DeclaredOf(tag), ForgeTagContexts.CodeContextsOf(tag))
             {
                 name = "TagContexts",
-                tooltip = "The contexts the tag is declared for, in the Tag Library: a field of one offers it, whatever uses it",
+                tooltip = "The contexts the tag is declared for, in the Tag Library, and in code: a field of one offers it, whatever uses it",
             };
             declared.Changed += contexts =>
             {

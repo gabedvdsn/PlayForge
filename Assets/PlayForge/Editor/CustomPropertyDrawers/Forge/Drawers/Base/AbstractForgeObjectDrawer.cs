@@ -13,7 +13,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
     /// A reference to a PlayForge asset, or to a Value Pipeline, Crowd Control Rules or Effect Modifier (FN-11), as
     /// Docs/EDITOR_STYLE.md draws one: Unity's object field, with its type's icon,
     /// and beside it a plain button, Open while it names an asset, which shows the asset in a window of its own, or New
-    /// while it's empty, which makes one where The Forge makes its type and uses it. A drawer adds its own actions to the
+    /// while it's empty, which asks for a new one's name in The Forge's New dialog, makes it where The Forge makes its type
+    /// and uses it (EP-8). A drawer adds its own actions to the
     /// field's right-click menu. It was a button that opened a dropdown list of its own, with hover colors and Clear and
     /// Open icon buttons set in C# (ED-38).
     /// </summary>
@@ -55,6 +56,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
             // What the field acts for, kept by name: a list's drawers are drawn again as the list changes
             var host = property.serializedObject.targetObject;
+            var serialized = property.serializedObject;
+            var path = property.propertyPath;
             var label = IsInList(property) ? ForgeAssetTypes.NameOf(typeof(T)) : property.displayName;
             void Show(Object value)
             {
@@ -62,11 +65,20 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 action.text = asset != null ? "Open" : "New";
                 action.tooltip = asset != null
                     ? $"Show {NameOf(asset)} in a window of its own"
-                    : $"Make a new {ForgeAssetTypes.NameOf(typeof(T))} where The Forge makes them, and use it";
+                    : $"Name a new {ForgeAssetTypes.NameOf(typeof(T))}, make it where The Forge makes them, and use it";
                 action.clickable = new Clickable(() =>
                 {
                     if (field.value is T shown) Open(shown);
-                    else if (New(host, $"{NameOf(host)} {label}") is T made) field.value = made;
+                    // The field takes it once it's made, by its property found again: the dialog waits on its name (EP-8)
+                    else New(host, $"{NameOf(host)} {label}", made =>
+                    {
+                        if (serialized.targetObject == null) return;
+                        serialized.Update();
+                        var now = serialized.FindProperty(path);
+                        if (now == null) return;
+                        now.objectReferenceValue = made;
+                        serialized.ApplyModifiedProperties();
+                    });
                 });
             }
             Show(property.objectReferenceValue);
@@ -97,14 +109,21 @@ namespace FarEmerald.PlayForge.Extended.Editor
         protected virtual void Open(T asset) => EditorUtility.OpenPropertyEditor(asset);
 
         /// <summary>
-        /// Makes the asset New uses, named for the asset that holds the field and the field, as in "Goblin Attribute
-        /// Set". One Undo takes back the field's new value; the asset stays.
+        /// Asks for the name of the asset New uses, starting as one for the asset that holds the field and the field, as in
+        /// "Goblin Attribute Set", in The Forge's New dialog, where its folder can change too; then makes it, as The Forge
+        /// does, and hands it to <paramref name="made"/> (EP-8). It made the asset at once, by that name. One Undo takes
+        /// back the field's new value; the asset stays.
         /// </summary>
-        protected virtual T New(Object host, string name) =>
-            typeof(BaseForgeAsset).IsAssignableFrom(typeof(T))
-                ? (T)(ScriptableObject)ForgeAssetCreation.Create(typeof(T), name)
-                // An asset with no name of its own, as a Value Pipeline, is named by its file (FN-11)
-                : (T)ForgeAssetCreation.CreateNew(typeof(T), name);
+        protected virtual void New(Object host, string name, Action<T> made) =>
+            ForgeNewAssetWindow.Show(typeof(T), created =>
+            {
+                if (created is not T asset) return;
+                Made(asset, host);
+                made?.Invoke(asset);
+            }, name: name);
+
+        /// <summary>Called as New's asset is made, before the field takes it, as an effect is linked. Nothing by default.</summary>
+        protected virtual void Made(T asset, Object host) { }
 
         /// <summary>Adds a drawer's own actions to the field's right-click menu. None by default.</summary>
         protected virtual void AddMenuItems(DropdownMenu menu, ObjectField field, Object host) { }

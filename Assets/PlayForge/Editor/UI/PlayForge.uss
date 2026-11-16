@@ -40,6 +40,7 @@
     --pf-type-item: #4AD077;
     --pf-type-attribute: #A8E8E6;
     --pf-type-attribute-set: #88C8D8;
+    --pf-type-playforge: #E07A3F;
 
     --pf-warning: #DBB468;
     --pf-warning-text: #DBB468;
@@ -82,6 +83,7 @@
     --pf-type-item: #1D6033;
     --pf-type-attribute: #1F5F5D;
     --pf-type-attribute-set: #13687E;
+    --pf-type-playforge: #9A3F14;
 
     /* The palette's #83601B is too faint for 12 px text on Light's neutrals */
     --pf-warning: #D9A21B;
@@ -131,6 +133,7 @@
 .pf-root .pf-type-icon--item { color: var(--pf-type-item); }
 .pf-root .pf-type-icon--attribute { color: var(--pf-type-attribute); }
 .pf-root .pf-type-icon--attribute-set { color: var(--pf-type-attribute-set); }
+.pf-root .pf-type-icon--playforge { color: var(--pf-type-playforge); }
 
 .pf-root .pf-glyph--warning {
     color: var(--pf-warning);
@@ -2957,4 +2960,10 @@
     color: var(--pf-text);
     margin: 0;
     padding: 0;
+}
+
+/* A foldout of PlayForge's own whose arrow keeps the column of the lists' arrows beside it, as an effect's Purges: Unity
+   hangs an inspector foldout's arrow 12 px into the margin, to the left of a list's (EP-4) */
+.pf-root.pf-foldout--aligned > .unity-foldout__toggle.unity-foldout__toggle--inspector {
+    margin-left: 0;
 }

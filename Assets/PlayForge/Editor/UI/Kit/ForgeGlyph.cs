@@ -40,6 +40,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
         Attribute,
         AttributeSet,
 
+        // PlayForge's own, an anvil, for an asset type with no glyph of its own (EP-9, Decision 89)
+        PlayForge,
+
         // The Debugger's: a tag, a process, Play Mode, following the selection, and a terminate that's at once
         Tag,
         Process,
@@ -185,6 +188,12 @@ namespace FarEmerald.PlayForge.Extended.Editor
                     pen.RoundedRect(ink, 1.5f, 2, 13, 3, 1);
                     pen.RoundedRect(ink, 1.5f, 6.5f, 13, 3, 1);
                     pen.RoundedRect(ink, 1.5f, 11, 13, 3, 1);
+                    break;
+                case ForgeGlyphShape.PlayForge:
+                    // An anvil: its horn to the left, its face, its waist, its foot (EP-9). Its curves are drawn as short lines
+                    pen.Fill(ink, 1f, 4.5f, 2.03f, 4.41f, 2.88f, 4.19f, 3.53f, 3.87f, 4f, 3.5f, 15f, 3.5f, 15f, 6.5f, 11.5f, 6.5f,
+                        10.84f, 7.08f, 10.38f, 7.78f, 10.09f, 8.58f, 10f, 9.5f, 12f, 11f, 12f, 13f, 4f, 13f, 4f, 11f, 6f, 9.5f, 5.91f,
+                        8.58f, 5.62f, 7.77f, 5.16f, 7.08f, 4.5f, 6.5f, 4f, 6.5f, 3.22f, 6.37f, 2.42f, 5.99f, 1.67f, 5.36f);
                     break;
                 case ForgeGlyphShape.Tag:
                     pen.Outline(ink, 1.2f, 2.5f, 2.5f, 7.7f, 2.5f, 13.7f, 8.5f, 8.5f, 13.7f, 2.5f, 7.7f);
@@ -385,7 +394,10 @@ namespace FarEmerald.PlayForge.Extended.Editor
         public ForgeGlyph Glyph { get; }
     }
 
-    /// <summary>Each asset type's glyph, its class modifier in the style sheet, and its name.</summary>
+    /// <summary>
+    /// Each asset type's glyph, its class modifier in the style sheet, and its name: the six asset types' own, and
+    /// PlayForge's anvil for every other PlayForge asset (EP-9).
+    /// </summary>
     internal static class ForgeAssetTypes
     {
         public static ForgeGlyphShape GlyphOf(Type type) => Describe(type).Glyph;
@@ -401,6 +413,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
             if (typeof(Item).IsAssignableFrom(type)) return (ForgeGlyphShape.Item, "item", "Item");
             if (typeof(AttributeSet).IsAssignableFrom(type)) return (ForgeGlyphShape.AttributeSet, "attribute-set", "Attribute Set");
             if (typeof(Attribute).IsAssignableFrom(type)) return (ForgeGlyphShape.Attribute, "attribute", "Attribute");
+            // Every other PlayForge asset, as Crowd Control Rules or a Value Pipeline, takes PlayForge's anvil (EP-9)
+            if (typeof(ScriptableObject).IsAssignableFrom(type) && type.Assembly == typeof(Tag).Assembly)
+                return (ForgeGlyphShape.PlayForge, "playforge", ObjectNames.NicifyVariableName(type.Name));
             return (ForgeGlyphShape.None, null, ObjectNames.NicifyVariableName(type.Name));
         }
     }

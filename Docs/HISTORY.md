@@ -10,6 +10,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## Toward 1.0.0, since 0.1.0
 
 ### Added
+- PlayForge's icon, an anvil, for every PlayForge asset type without an icon of its own: Scaler assets, Requirement
+  Templates, Value Pipelines, Effect Modifiers, Crowd Control Rules, Forge Projects and Tag Libraries (EP-9).
 - `[ForgeMenu]`, a kind's place in its pickers (EP-2): a path, a slash nesting its submenus, as "Effects/Damage", which
   holds for the classes made from the one that names it; a Name for its picker and its field; and a Description its
   picker's Context says. Every kind PlayForge ships says what it does.
@@ -510,6 +512,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   page, through one table of links in the editor.
 
 ### Changed
+- The Forge's Declared For shows the contexts a tag's code declares, `[ForgeTagExposed(...)]`, checked and locked in its
+  menu (EP-7).
+- An asset field's New asks for the new asset's name first, in The Forge's New dialog, where its folder can change too
+  (EP-8). It made the asset at once.
 - A tag used in a field of several contexts is used in each, alone, so each one's fields offer it, and The Forge says
   it's for each; no set of contexts is a context of its own, as "AssetTag+ContextTag" was (EP-14).
 - Lifesteal (the user's edit, FN-27): the Lifesteal worker heals its **Heals** attribute for its **Receives** attribute's
@@ -894,6 +900,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   Asking whether its sequence was paused took 24 bytes a frame.
 
 ### Fixed
+- Rows out of line in two inspectors (EP-4): an effect's Purges hung its arrow 12 px to the left of the lists' around
+  it, and an ability's Targeting, empty, sat its label 18 px to the right of the fields' around it.
 - The Lifesteal worker heard no hit where its Receives was another attribute than its Heals: it joined its cache under
   the attribute it heals, not the one whose losses count (FN-27).
 - A refusal by an ability system that was off named no ability, though the slot asked for held one (GAS-87).

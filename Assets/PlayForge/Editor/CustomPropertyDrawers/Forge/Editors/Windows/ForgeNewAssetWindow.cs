@@ -21,15 +21,18 @@ namespace FarEmerald.PlayForge.Extended.Editor
         private string folder;
         private Label fileLabel;
 
-        /// <summary>Asks for a new asset's name and folder, then makes it, from a preset where one's given (TW-24).</summary>
-        public static ForgeNewAssetWindow Show(Type type, Action<Object> onCreated, ForgePreset preset = null)
+        /// <summary>
+        /// Asks for a new asset's name and folder, then makes it, from a preset where one's given (TW-24); the name starts as
+        /// the one given, as a field's New gives one for the asset that holds it (EP-8), or else "New" and the type's.
+        /// </summary>
+        public static ForgeNewAssetWindow Show(Type type, Action<Object> onCreated, ForgePreset preset = null, string name = null)
         {
             var window = CreateInstance<ForgeNewAssetWindow>();
             window.type = type;
             window.preset = preset;
             window.created = onCreated;
             string noun = preset?.AssetName ?? ForgeAssetTypes.NameOf(type);
-            window.assetName = $"New {noun}";
+            window.assetName = string.IsNullOrWhiteSpace(name) ? $"New {noun}" : name.Trim();
             // In the active Forge Project (FEAT-34)
             window.folder = ForgeAssetCreation.FolderFor(type);
             window.titleContent = new GUIContent($"New {noun}");

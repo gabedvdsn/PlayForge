@@ -132,12 +132,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         // ═══════════════════════════════════════════════════════════════════════════
 
         // An effect New makes takes its levels from the asset that holds the field, as the + button's did
-        protected override GameplayEffect New(Object host, string name)
-        {
-            var effect = base.New(host, name);
-            Link(effect, host as BaseForgeLevelProvider);
-            return effect;
-        }
+        protected override void Made(GameplayEffect effect, Object host) => Link(effect, host as BaseForgeLevelProvider);
 
         // The field's template, a pick of the effects nothing links, and the named create, which sat beside the field as
         // tinted buttons (Docs/EDITOR_STYLE.md: template import, the link filter and create-linked go in its right-click

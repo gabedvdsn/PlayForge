@@ -188,8 +188,8 @@ string perLevel = impact.FormatTotal();           // "20/30/40/50"
   Clear forgets it. Docked in a
   narrow column, each view's list sits above its detail. The window menu sets how often it reads the game.
 - **Asset fields** — every reference to a PlayForge asset is Unity's object field. **Open** beside it shows the asset
-  in a window of its own; **New**, beside an empty one, makes the asset where Project Settings → PlayForge puts its type, named
-  for the asset that holds the field. An effect field's right-click menu has its template, a pick of the effects
+  in a window of its own; **New**, beside an empty one, asks the new asset's name in The Forge's New dialog, starting as
+  the asset that holds the field and the field's, then makes it where Project Settings → PlayForge puts its type (EP-8). An effect field's right-click menu has its template, a pick of the effects
   nothing links, and New Linked Effect, which names the effect in the New Asset window and links it to the asset.
 - **Import and Clear** — each inspector section's header has Import, Clear and Help. Import opens the Import window:
   choose a source on the left, the type's defaults first, then the assets of the type; the right lists the fields that differ,

@@ -68,6 +68,7 @@ The only other colors:
   | Item | `#4AD077` | `#1D6033` |
   | Attribute | `#A8E8E6` | `#1F5F5D` |
   | Attribute Set | `#88C8D8` | `#13687E` |
+  | PlayForge's anvil, every other PlayForge asset type's (EP-9) | `#E07A3F` | `#9A3F14` |
 
 - **Warning.** The triangle is `#DBB468` in Dark and `#D9A21B` in Light. Warning text is `#DBB468` in Dark and
   `#6B4C10` in Light: the palette's `#83601B` is too faint for 12 px text on Light's neutrals.
@@ -114,13 +115,17 @@ The only other colors:
   entity's policy, which may be Queue; an effect's Proc Coefficient under Own Proc Coefficient; a roll only for a
   chance that can miss; a roll's Luck under Own Luck. A selection whose values differ shows it.
 - **Object fields** are Unity's, showing the type icon. PlayForge's actions on one, New and Open, are plain buttons
-  beside it (Q15). Template import, the link filter and create-linked go in its right-click menu (Q18).
+  beside it (Q15); New asks the new asset's name in The Forge's New dialog first (EP-8). Template import, the link filter and create-linked go in its right-click menu (Q18).
 - **Tag fields** are Unity's fields, their label in the label column, and show a tag's parents in secondary text
   and its leaf in strong text, unless the full-path setting is on. A tag reads by its display name everywhere: a
   unique tag's name is padded with a generated suffix. Pressing one opens PlayForge's dropdown of the tags its
   context offers, with None and New Tag…, its Context the contexts a tag is for; its right-click menu clears it, makes a new tag, makes its tag a
   child of another, or copies its path.
 - **Lists** are Unity's reorderable lists: a header with the count, drag handles, and the + and − footer.
+- **A section's rows start in one column** (EP-4): a list's or a foldout's arrow where Unity draws a list's, 5 px to the
+  left of the fields' labels. A foldout of PlayForge's own keeps that column, `pf-foldout--aligned`, where Unity hangs
+  an inspector foldout's arrow 12 px into the margin; a kind field alone keeps no place for an arrow while its kind has
+  nothing to fold.
 - **Dropdowns** are PlayForge's own (EP-1), as Unity's searchable dropdown looks: a header with the open menu's name
   and Back, the search field, the choices in their submenus, the field's value with a check, the highlighted choice in
   the selection's blue with white text, a choice that can't be picked in secondary text, and, where any choice says
@@ -166,7 +171,8 @@ The only other colors:
   last column for the problem glyph. Rows alternate between the panel and alternate-row colors, and the selected row
   takes Unity's selection blue. A row shows the asset's name alone; its file name is in its header.
 - **The tag view** lists the project's tags, with sortable columns for the tag, what it's for and its uses. A tag's
-  detail declares the contexts it's for in the Tag Library, from a popup whose menu checks them (ED-83).
+  detail declares the contexts it's for in the Tag Library, from a popup whose menu checks them (ED-83); those its code
+  declares show among them, checked and locked (EP-7).
 - **The detail pane** shows the selected asset's inspector, opening on a Summary of what it does and what uses it
   (Q6).
 - **The status bar** holds the asset count and the problem count.

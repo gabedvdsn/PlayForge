@@ -86,6 +86,29 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 .ToList();
         }
 
+        /// <summary>
+        /// The contexts a tag's code declares it for, by <c>[ForgeTagExposed(...)]</c> where it's written, in the menu's
+        /// order; none for a tag no code exposes (EP-7). They're written in code, so no menu takes them away.
+        /// </summary>
+        public static List<string> CodeContextsOf(Tag tag)
+        {
+            if (!tag.IsValid) return new List<string>();
+            var record = ForgeTagRegistry.GetTagUsage(tag);
+            if (record == null) return new List<string>();
+            var order = All();
+            return record.UsageByContext.Values
+                .Where(usage => usage.Usages.Any(each => each.IsSystemDefault))
+                .SelectMany(usage => usage.Context.ContextStrings)
+                .Where(context => !string.IsNullOrWhiteSpace(context))
+                .Distinct()
+                .OrderBy(context =>
+                {
+                    int at = order.IndexOf(context);
+                    return at < 0 ? int.MaxValue : at;
+                })
+                .ToList();
+        }
+
         /// <summary>The contexts a tag is declared for, in the Tag Library that names it; none where none does.</summary>
         public static List<string> DeclaredOf(Tag tag)
         {
