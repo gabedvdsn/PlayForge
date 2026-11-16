@@ -5,7 +5,7 @@ using UnityEngine;
 namespace FarEmerald.PlayForge
 {
     /// <summary>
-    /// A kind of number of your own (FEAT-29): one class with one method. Override <see cref="Evaluate(in NumberContext)"/>
+    /// A kind of number of your own: one class with one method. Override <see cref="Evaluate(in NumberContext)"/>
     /// to work out the kind's value from what the context offers, and <see cref="Describe"/> for the field's one-line
     /// summary. Name it, file it and say what it reads with <see cref="NumberKindAttribute"/>, and the kind menu offers it
     /// in every number field whose context provides what it reads:
@@ -82,11 +82,11 @@ namespace FarEmerald.PlayForge
         /// <summary>What a kind reads where its context lacks what it needs, inside another scaler; 0 by default.</summary>
         protected virtual float Fallback => 0f;
 
-        // What a trace reads of a kind that can't be worked out where it's read (FEAT-32)
+        // What a trace reads of a kind that can't be worked out where it's read
         internal float FallbackValue => Fallback;
 
         /// <summary>
-        /// Adds the kind's parts to a trace of its read (FEAT-32), as a Clamped adds its value and its bounds:
+        /// Adds the kind's parts to a trace of its read, as a Clamped adds its value and its bounds:
         /// <c>trace.Add(Min, context, this, "Min")</c>. A kind with no parts of its own, as most, adds none.
         /// </summary>
         public virtual void Explain(in NumberContext context, NumberTrace trace) { }
@@ -102,7 +102,7 @@ namespace FarEmerald.PlayForge
         protected internal virtual string WhyNot(in NumberContext context) =>
             $"it reads {Reads & ~context.Provides}, which isn't there";
 
-        // A kind reads none of every scaler's parts unless it asks to (ED-51)
+        // A kind reads none of every scaler's parts unless it asks to
         public override EScalerParts Parts => EScalerParts.None;
         public override bool UseScalingOptions() => false;
 
@@ -127,8 +127,8 @@ namespace FarEmerald.PlayForge
     }
 
     /// <summary>
-    /// Names a kind of number in the kind menu and says what it reads of a field's context (FEAT-29). Its place in the menu
-    /// is its <see cref="ForgeMenuAttribute"/>'s, as every kind's is (EP-2): it named a Category of its own. The inspector offers the kind only in fields whose context provides what it reads, and the Problems
+    /// Names a kind of number in the kind menu and says what it reads of a field's context. Its place in the menu
+    /// is its <see cref="ForgeMenuAttribute"/>'s, as every kind's is: it named a Category of its own. The inspector offers the kind only in fields whose context provides what it reads, and the Problems
     /// window flags it where it's found in one that doesn't. Without it, a kind takes its class's name, as a scaler does, and
     /// is offered everywhere.
     /// </summary>
@@ -161,11 +161,11 @@ namespace FarEmerald.PlayForge
 
     /// <summary>
     /// Says what a number field's context provides, which kinds its kind menu then offers, and which the Problems window
-    /// flags (FEAT-29). A targeting task's range has no target yet, as the target is what it looks for:
+    /// flags. A targeting task's range has no target yet, as the target is what it looks for:
     /// <c>[NumberContext(NumberReads.Level | NumberReads.Caster | NumberReads.Caller | NumberReads.LocalData)]</c>. A field
     /// without it offers every kind but one that reads its owner, as an effect's numbers have everything else. An owner
     /// is given only by the code that reads the field, <c>Max.Evaluate(context, this)</c>, so a field whose code gives
-    /// one says so, <c>[NumberContext(NumberReads.All)]</c>, and Relative to a Field joins its menu (NUM-9). It also
+    /// one says so, <c>[NumberContext(NumberReads.All)]</c>, and Relative to a Field joins its menu. It also
     /// takes the field's unit: a field whose unit is "%" stores 0.3 and shows and takes it as 30%.
     /// </summary>
     [AttributeUsage(AttributeTargets.Field)]

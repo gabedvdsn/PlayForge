@@ -4,8 +4,8 @@ using UnityEditor;
 namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
-    /// A scaler's behaviour: its kind, named without "ScalerBehaviour" or "Behaviour", then the kind's own fields (ED-56).
-    /// The picker offers no None: a list's "−" removes a behaviour. An empty slot stays empty as it's drawn (ED-12).
+    /// A scaler's behaviour: its kind, named without "ScalerBehaviour" or "Behaviour", then the kind's own fields.
+    /// The picker offers no None: a list's "−" removes a behaviour. An empty slot stays empty as it's drawn.
     /// </summary>
     [CustomPropertyDrawer(typeof(AbstractScalerBehaviour), true)]
     public class ScalerBehaviourDrawer : AbstractTypeRefDrawer<AbstractScalerBehaviour>

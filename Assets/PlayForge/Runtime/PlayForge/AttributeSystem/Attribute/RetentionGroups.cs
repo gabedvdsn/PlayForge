@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
-    /// <summary>Which of an attribute's retention groups a read takes (TW-3).</summary>
+    /// <summary>Which of an attribute's retention groups a read takes.</summary>
     public enum ERetentionGroupRead
     {
         /// <summary>Every group: the attribute's whole value.</summary>
@@ -18,7 +18,7 @@ namespace FarEmerald.PlayForge
     }
 
     /// <summary>
-    /// Which retention groups' parts an attribute read takes (TW-3, the user's note of 2026-11-11). An attribute's value
+    /// Which retention groups' parts an attribute read takes. An attribute's value
     /// is the sum of its groups' parts: the base its set gives, what items add in their group, what a buff adds in its.
     /// × Attribute, an Attribute condition, a Math worker's Relative To and a Threshold worker read the whole value
     /// unless they say otherwise: only these groups, as a bonus of the items' strength reads their group; or all but

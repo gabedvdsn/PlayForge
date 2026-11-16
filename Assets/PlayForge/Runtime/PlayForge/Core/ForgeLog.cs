@@ -12,7 +12,7 @@ namespace FarEmerald.PlayForge
     ///
     /// <para>Each message is of a system, effects, abilities, workers, numbers, processes and the rest, and a system can
     /// take a level of its own, <see cref="SetLevel"/>, as the Creator Lab's log does; <see cref="Logged"/> hears each
-    /// message let through, with the entity it's about where it names one (LAB-16).</para>
+    /// message let through, with the entity it's about where it names one.</para>
     ///
     /// <para>Deliberately NOT used for: authored debug tools the user invokes on purpose
     /// (TagCache.LogWeights, ThresholdDebuggerEffectWorker, LogAction), ProcessControl's
@@ -32,7 +32,7 @@ namespace FarEmerald.PlayForge
             None = 4,
         }
 
-        /// <summary>The part of PlayForge a message is of, each able to take a level of its own (LAB-16).</summary>
+        /// <summary>The part of PlayForge a message is of, each able to take a level of its own.</summary>
         public enum ESystem
         {
             General,
@@ -58,7 +58,7 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// Raised for each message let through, as it goes to Unity's console, with its system and the entity it's about
-        /// where it names one: the Creator Lab's log hears it (LAB-16).
+        /// where it names one: the Creator Lab's log hears it.
         /// </summary>
         public static event Action<ForgeLogEntry> Logged;
 
@@ -120,7 +120,7 @@ namespace FarEmerald.PlayForge
         }
     }
 
-    /// <summary>One message ForgeLog let through (LAB-16): its level, its system, the message, and whom it's about.</summary>
+    /// <summary>One message ForgeLog let through: its level, its system, the message, and whom it's about.</summary>
     public readonly struct ForgeLogEntry
     {
         public readonly ForgeLog.ELevel Level;

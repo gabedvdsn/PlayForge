@@ -7,7 +7,7 @@ namespace FarEmerald.PlayForge.Editor
     /// session, through domain reloads. A field that holds a [SerializeReference] object keeps it with that object, so
     /// the state follows the object when its list is reordered. The drawers kept it in static dictionaries keyed by
     /// property path alone: collapsing a part on one asset collapsed it on every asset, a domain reload forgot it, and a
-    /// moved worker took the state of the worker that had been in its place (ED-18).
+    /// moved worker took the state of the worker that had been in its place.
     /// </summary>
     internal static class DrawerCollapseState
     {

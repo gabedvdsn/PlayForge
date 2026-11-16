@@ -6,7 +6,7 @@ using UnityEngine.UIElements;
 namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
-    /// A component: its kind, always of some kind, then its fields (FN-14). A kind that allows one is offered while the
+    /// A component: its kind, always of some kind, then its fields. A kind that allows one is offered while the
     /// list it's in holds none of it, the element that holds it still naming it.
     /// </summary>
     public abstract class AbstractComponentDrawer<T> : AbstractWorkerDrawer<T> where T : AbstractForgeComponent
@@ -52,7 +52,7 @@ namespace FarEmerald.PlayForge.Editor
 
     /// <summary>
     /// A field's own fields, drawn where it's held, as a component's own: a field of its whole drew a foldout inside the
-    /// component (FN-14, as FN-17's Death).
+    /// component.
     /// </summary>
     public class InlineFieldsDrawer : PropertyDrawer
     {
@@ -74,14 +74,14 @@ namespace FarEmerald.PlayForge.Editor
         }
     }
 
-    /// <summary>An aura's fields, drawn where it's held, as an Aura component's own (FN-14).</summary>
+    /// <summary>An aura's fields, drawn where it's held, as an Aura component's own.</summary>
     [CustomPropertyDrawer(typeof(AuraEntry))]
     public class AuraEntryDrawer : InlineFieldsDrawer
     {
         protected override string HolderName => "AuraFields";
     }
 
-    /// <summary>An effect's area's fields, drawn where it's held, as an Area component's own (TW-10, FN-14).</summary>
+    /// <summary>An effect's area's fields, drawn where it's held, as an Area component's own.</summary>
     [CustomPropertyDrawer(typeof(EffectArea))]
     public class EffectAreaDrawer : InlineFieldsDrawer
     {

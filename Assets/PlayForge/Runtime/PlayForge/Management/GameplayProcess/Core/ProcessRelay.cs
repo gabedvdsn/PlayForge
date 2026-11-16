@@ -16,11 +16,11 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// The control that holds the process. The relay's calls go there; they went to ProcessControl.Instance,
-        /// whichever control held the process (FEAT-10).
+        /// whichever control held the process.
         /// </summary>
         public ProcessControl Control => _pcb.Control;
 
-        /// <summary>The world that holds the process, which the relay's calls go to (FEAT-10).</summary>
+        /// <summary>The world that holds the process, which the relay's calls go to.</summary>
         public ProcessWorld World => _pcb.World;
         
         public ProcessRelay(ProcessControlBlock pcb)
@@ -49,7 +49,7 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// Completes as the process terminates and is unregistered, in that frame, or at once if it has. Cancelling
         /// <paramref name="token"/> stops the wait, not the process. Polling <see cref="State"/> found the end a frame
-        /// later, and each relay waited on that way added a frame (TS-Z).
+        /// later, and each relay waited on that way added a frame.
         /// </summary>
         public UniTask WhenTerminated(CancellationToken token = default)
         {
@@ -63,7 +63,7 @@ namespace FarEmerald.PlayForge
         /// <param name="runtime">Total runtime in milliseconds</param>
         /// <param name="multiplier">Conversion multiplier (default 1000 for ms)</param>
         /// <param name="unscaled"></param>
-        // Converted, then cut to whole units. Cut first, it lost up to a second (PC-25)
+        // Converted, then cut to whole units. Cut first, it lost up to a second
         public int RemainingRuntime(int runtime, int multiplier = 1000, bool unscaled = false)
             => runtime - (int)((unscaled ? UnscaledLifetime : Lifetime) * multiplier);
         
@@ -91,7 +91,7 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// Runs this process, and optionally its children, where it waits, as one that requires control does until
-        /// it's told. ProcessControl could run a process by its index, and the relay that held it couldn't (FEAT-15).
+        /// it's told. ProcessControl could run a process by its index, and the relay that held it couldn't.
         /// Returns false for a process that can't run from where it is.
         /// </summary>
         public bool Run(bool cascade = false)

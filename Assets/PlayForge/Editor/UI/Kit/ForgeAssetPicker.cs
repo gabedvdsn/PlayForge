@@ -8,7 +8,7 @@ using Object = UnityEngine.Object;
 namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
-    /// A pick of assets (ED-61, EP-1): PlayForge's dropdown of the assets offered, by their names, the one held checked.
+    /// A pick of assets: PlayForge's dropdown of the assets offered, by their names, the one held checked.
     /// Assets in more than one folder sit in a submenu for each folder under the one they share, as Fire and Ice under an
     /// Effects folder; and the dropdown's Context says an asset's description and its file. An asset's template is picked
     /// this way, from the asset menu's Set Template…, and an asset field's in the active Forge Project. It was Unity's

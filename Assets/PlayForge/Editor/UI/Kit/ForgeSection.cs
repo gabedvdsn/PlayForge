@@ -5,9 +5,9 @@ namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
     /// A section of an inspector, as Unity's foldout headers draw one: the arrow, the bold title, a one-line summary
-    /// while it's collapsed, and the section's actions, which always show (Q18). The content under it indents past the
-    /// arrow. It takes its look from the style sheet alone (Decision 20). Its actions appeared only while the pointer
-    /// was over the header, and its colors held in the Dark theme only (ED-20).
+    /// while it's collapsed, and the section's actions, which always show. The content under it indents past the
+    /// arrow. It takes its look from the style sheet alone. Its actions appeared only while the pointer
+    /// was over the header, and its colors held in the Dark theme only.
     /// </summary>
     internal class ForgeSection : VisualElement
     {

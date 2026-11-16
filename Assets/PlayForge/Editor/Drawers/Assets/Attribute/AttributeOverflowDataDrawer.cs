@@ -6,7 +6,7 @@ using UnityEngine.UIElements;
 namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
-    /// An attribute's bounds (ED-49): the policy, then the floor and the ceiling it reads, each indented under it, as a
+    /// An attribute's bounds: the policy, then the floor and the ceiling it reads, each indented under it, as a
     /// field that depends on another is. A bound's right-click menu sets it to no limit. It drew the floor and ceiling with
     /// 10 px labels and buttons in an accent color, from styles set in C#, and showed them 50 ms after it drew.
     /// </summary>

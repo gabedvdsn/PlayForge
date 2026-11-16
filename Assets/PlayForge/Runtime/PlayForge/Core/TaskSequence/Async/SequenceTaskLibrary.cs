@@ -855,7 +855,7 @@ namespace FarEmerald.PlayForge
         /// </summary>
         public static float DeltaTime(CancellationToken token)
         {
-            // The run's owner's time, so a slowed caster's waits last longer (FEAT-7)
+            // The run's owner's time, so a slowed caster's waits last longer
             return IsPaused(token) ? 0f : ForgeTime.DeltaTimeFor(TaskSequenceRuntime.DataOfRun(token));
         }
 

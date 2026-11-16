@@ -9,7 +9,7 @@ namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
     /// A Local Data row: its key, its type and its value, each a column of its own, laid out by the style sheet. It set its
-    /// columns' widths in C#, and drew a separator in a dark gray of its own, in either theme (ED-73).
+    /// columns' widths in C#, and drew a separator in a dark gray of its own, in either theme.
     /// </summary>
     [CustomPropertyDrawer(typeof(DataWrapper))]
     public class DataWrapperDrawer : PropertyDrawer
@@ -17,7 +17,7 @@ namespace FarEmerald.PlayForge.Editor
         public override VisualElement CreatePropertyGUI(SerializedProperty property)
         {
             var root = new VisualElement { name = "DataWrapper" };
-            // The style sheet lays out the row, wherever it's drawn (ED-20, ED-73)
+            // The style sheet lays out the row, wherever it's drawn
             ForgeTheme.Apply(root);
             root.AddToClassList("pf-data-wrapper");
 
@@ -40,7 +40,7 @@ namespace FarEmerald.PlayForge.Editor
             var entityProp = property.FindPropertyRelative("entityValue");
 
             // The row's first column, with no label: under one, as wide as an inspector's label column, the tag's box had
-            // no width left to press (ED-68)
+            // no width left to press
             var keyField = new PropertyField(keyProp, "") { name = "Key" };
             keyField.AddToClassList("pf-data-wrapper__key");
             keyField.BindProperty(keyProp);
@@ -103,7 +103,7 @@ namespace FarEmerald.PlayForge.Editor
                 EDataWrapperType.Ability => CreatePropertyField(abilityProp),
                 EDataWrapperType.Entity => CreatePropertyField(entityProp),
                 EDataWrapperType.Object => CreateObjectField(objectProp, typeof(Object)),
-                // Each edits its own value; they had each other's (ED-30)
+                // Each edits its own value; they had each other's
                 EDataWrapperType.ScriptableObject => CreateObjectField(soProp, typeof(ScriptableObject)),
                 EDataWrapperType.MonoBehaviour => CreateObjectField(monoProp, typeof(MonoBehaviour)),
                 _ => new Label("Select a type")
@@ -138,7 +138,7 @@ namespace FarEmerald.PlayForge.Editor
             return field;
         }
 
-        // A value drawn by its own drawer, with no label: the row's type says what it is (ED-68)
+        // A value drawn by its own drawer, with no label: the row's type says what it is
         private VisualElement CreatePropertyField(SerializedProperty prop)
         {
             var field = new PropertyField(prop, "");

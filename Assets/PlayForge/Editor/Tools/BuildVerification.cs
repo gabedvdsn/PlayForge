@@ -30,7 +30,7 @@ namespace FarEmerald.PlayForge.Editor
                     .ToArray();
 
                 // With none enabled, an empty scene made for the purpose: the build proves the runtime compiles and
-                // links, which needs no content. It built whichever scene the AssetDatabase listed first (SP-12)
+                // links, which needs no content. It built whichever scene the AssetDatabase listed first
                 if (scenes.Length == 0)
                 {
                     madeScene = MadeScenePath;

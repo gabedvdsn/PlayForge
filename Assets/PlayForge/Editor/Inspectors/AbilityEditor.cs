@@ -10,7 +10,7 @@ using Object = UnityEngine.Object;
 namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
-    /// The Ability inspector, in Docs/EDITOR_STYLE.md's terms and the Ability mockup's (ED-37): Identity, Leveling, Tags,
+    /// The Ability inspector: Identity, Leveling, Tags,
     /// the ability's Activation and Stages, Requirements, Workers and Local Data, then Used By. A collapsed section shows
     /// one line, and the inspector takes its look from the style sheet.
     /// </summary>
@@ -21,7 +21,7 @@ namespace FarEmerald.PlayForge.Editor
 
         // Its fields write through the SerializedObject, so it edits a multiple selection, and what acts on one ability
         // steps aside: the name, the asset tag, linking, a linked ability's levels, and the lists each ability keeps of
-        // its own (ED-12)
+        // its own
         protected override bool SupportsMultipleObjects => true;
 
         private TextField nameField;
@@ -31,7 +31,7 @@ namespace FarEmerald.PlayForge.Editor
         private string shownLeveling;
         private PropertyField implicitTagField;
 
-        // Under the cooldown, while no stage applies the usage effects (ED-41)
+        // Under the cooldown, while no stage applies the usage effects
         private HelpBox chargesNote;
 
         private SectionResult levelingSection;
@@ -102,9 +102,9 @@ namespace FarEmerald.PlayForge.Editor
 
         protected override void BuildInspectorContent(VisualElement parent)
         {
-            // The style doc's order: Identity, Leveling, Tags, the ability's own sections, then Requirements, Workers and
+            // The inspectors' order: Identity, Leveling, Tags, the ability's own sections, then Requirements, Workers and
             // Local Data, then what uses the ability. Level Source sat apart from Leveling, under the same section name;
-            // Runtime Behaviour came before Tags; and the tag requirements sat in Tags, apart from the checks (ED-37)
+            // Runtime Behaviour came before Tags; and the tag requirements sat in Tags, apart from the checks
             BuildIdentitySection(parent);
             BuildLevelingSection(parent);
             BuildTagsSection(parent);
@@ -144,7 +144,7 @@ namespace FarEmerald.PlayForge.Editor
                 Title = "Identity",
                 HelpTopic = "abilities/definition",
 
-                // Import and Clear leave the name, which identifies the ability and gives its tag (ED-35)
+                // Import and Clear leave the name, which identifies the ability and gives its tag
                 SerializedObject = serializedObject,
                 PropertyPaths = new[] { DefinitionPath(nameof(AbilityDefinition.Description)), DefinitionPath(nameof(AbilityDefinition.Textures)) },
                 OnImportComplete = OnSectionReplaced,
@@ -157,7 +157,7 @@ namespace FarEmerald.PlayForge.Editor
             nameField = CreateTextField("Name", "Name");
             nameField.AddToClassList(BaseField<string>.alignedFieldUssClassName);
             nameField.value = ability.Definition.Name;
-            // Typing previews the tag; leaving the field stores the name and the tag in one undoable step (ED-12)
+            // Typing previews the tag; leaving the field stores the name and the tag in one undoable step
             nameField.RegisterValueChangedCallback(evt => UpdateAssetTagDisplay(evt.newValue));
             nameField.RegisterCallback<FocusOutEvent>(_ =>
             {
@@ -167,11 +167,11 @@ namespace FarEmerald.PlayForge.Editor
                 SyncAssetTag();
                 UpdateHeader();
                 MarkDirty(ability);
-                // Its file follows its name (ED-70)
+                // Its file follows its name
                 RenameFile(ability, nameField.value);
                 Repaint();
             });
-            // Each ability's tag comes from its own name, so a multiple selection shows the names and can't rename (ED-12)
+            // Each ability's tag comes from its own name, so a multiple selection shows the names and can't rename
             if (IsMultiple)
             {
                 nameField.SetEnabled(false);
@@ -180,12 +180,12 @@ namespace FarEmerald.PlayForge.Editor
             }
             content.Add(nameField);
 
-            // Description binds to its property, so an edit undoes. It wrote straight into the asset, with no Undo (ED-12)
+            // Description binds to its property, so an edit undoes. It wrote straight into the asset, with no Undo
             content.Add(CreateBoundTextField(DefinitionPath(nameof(AbilityDefinition.Description)),
                 "Description", multiline: true, minHeight: 18, name: "Description"));
 
-            // The tag the name gives, under the name, as the mockup places it. It sat at the top of Tags, in a tinted box
-            // (ED-37). Each ability has its own, so a multiple selection doesn't show one (ED-12)
+            // The tag the name gives, under the name. It sat at the top of Tags, in a tinted box.
+            // Each ability has its own, so a multiple selection doesn't show one
             if (!IsMultiple)
             {
                 assetTagField = new ForgeAssetTagField();
@@ -234,25 +234,25 @@ namespace FarEmerald.PlayForge.Editor
             RebuildLevelingContent();
         }
 
-        // Leveling holds what Level Source did (ED-37), so the base editor's two rebuilds are one here
+        // Leveling holds what Level Source did, so the base editor's two rebuilds are one here
         protected override void RebuildLevelSourceContent() => RebuildLevelingContent();
 
         // Link Mode, then the ability's own range, or its provider and the range the provider gives, then Ignore When
         // Level Zero and its cost and cooldown's links. Level Source drew the link state in tinted boxes with colored
-        // borders, under sentences about linking (ED-37)
+        // borders, under sentences about linking
         protected override void RebuildLevelingContent()
         {
             if (levelingContent == null) return;
             levelingContent.Clear();
             shownLeveling = LevelingState();
 
-            // Link Mode binds to its property, so a change undoes, and OnAssetChanged redraws from it (ED-12)
+            // Link Mode binds to its property, so a change undoes, and OnAssetChanged redraws from it
             var linkModeField = new EnumField("Link Mode", ability.LinkMode) { name = "LinkMode", bindingPath = nameof(Ability.LinkMode) };
             linkModeField.AddToClassList(BaseField<System.Enum>.alignedFieldUssClassName);
             levelingContent.Add(linkModeField);
 
             // A provider and a child's link belong to one ability, so a multiple selection sets the mode, and edits the
-            // range when every ability keeps its own; a linked ability's range comes from its provider (ED-12)
+            // range when every ability keeps its own; a linked ability's range comes from its provider
             if (IsMultiple)
             {
                 if (Abilities.All(each => each.LinkMode == EAbilityLinkMode.Standalone)) BuildOwnLevels();
@@ -317,7 +317,7 @@ namespace FarEmerald.PlayForge.Editor
             });
             parent.Add(tagsSection.Section);
 
-            // The granted tags sat in a tinted box with a small heading (ED-37)
+            // The granted tags sat in a tinted box with a small heading
             var content = tagsSection.Content;
             content.Add(CreatePropertyField(serializedObject.FindProperty(TagsPath(nameof(AbilityTags.ContextTags))), "ContextTags", "Context Tags"));
             content.Add(CreatePropertyField(serializedObject.FindProperty(TagsPath(nameof(AbilityTags.PassiveGrantedTags))), "PassiveTags", "Passive Tags"));
@@ -328,9 +328,9 @@ namespace FarEmerald.PlayForge.Editor
         // Activation and Stages Sections: how the ability starts, and what it does
         // ═══════════════════════════════════════════════════════════════════════════
 
-        // When Busy, Activate At Start, Cost, Cooldown and targeting, as the mockup's Activation draws them. Cost and
+        // When Busy, Activate At Start, Cost, Cooldown and targeting. Cost and
         // Cooldown sat in a tinted box at the end of Definition, and the targeting in Runtime Behaviour, under sentences
-        // that explained them (ED-37)
+        // that explained them
         private void BuildActivationSection(VisualElement parent)
         {
             activationSection = CreateSection(new SectionConfig
@@ -356,7 +356,7 @@ namespace FarEmerald.PlayForge.Editor
             var content = activationSection.Content;
 
             // When Busy and Activate At Start bind to their properties, so an edit undoes. They wrote straight into the
-            // asset, with no Undo (ED-12)
+            // asset, with no Undo
             var policy = new EnumField("When Busy", ability.Definition.ActivationPolicy)
             {
                 name = "ActivationPolicy",
@@ -366,7 +366,7 @@ namespace FarEmerald.PlayForge.Editor
             policy.AddToClassList(BaseField<System.Enum>.alignedFieldUssClassName);
             content.Add(policy);
 
-            // The input buffer, which is what When Busy's Queue does: how long a press waits, and which goes first (FEAT-6)
+            // The input buffer, which is what When Busy's Queue does: how long a press waits, and which goes first
             var window = CreatePropertyField(serializedObject.FindProperty(DefinitionPath(nameof(AbilityDefinition.BufferWindow))), "BufferWindow", "Buffer Window");
             window.tooltip = "Under Queue, how long a press that can't start yet waits, in seconds, for the ability to be free";
             content.Add(window);
@@ -374,7 +374,6 @@ namespace FarEmerald.PlayForge.Editor
             priority.tooltip = "Which waiting press fires first: the highest, then the newest of equals";
             content.Add(priority);
             // Queue's alone, which its entity's policy may be: under a policy of its own of another kind, they're hidden
-            // (FN-23)
             bool? Queues(SerializedObject serialized)
             {
                 var chosen = serialized.FindProperty(DefinitionPath(nameof(AbilityDefinition.ActivationPolicy)));
@@ -385,7 +384,7 @@ namespace FarEmerald.PlayForge.Editor
             ForgeShowWhen.Track(window, serializedObject, Queues);
             ForgeShowWhen.Track(priority, serializedObject, Queues);
 
-            // The mockup's Activate When Granted. The runtime tries it only for an entity's Starting Abilities, as its GAS
+            // Activate When Granted. The runtime tries it only for an entity's Starting Abilities, as its GAS
             // starts, so the label says so: an ability an item or code grants later doesn't try it
             var immediately = new Toggle("Activate At Start")
             {
@@ -397,30 +396,30 @@ namespace FarEmerald.PlayForge.Editor
             immediately.AddToClassList(Toggle.alignedFieldUssClassName);
             content.Add(immediately);
 
-            // What sets it off on its own: a gameplay event, or a tag gained (FEAT-4)
+            // What sets it off on its own: a gameplay event, or a tag gained
             var triggers = CreatePropertyField(serializedObject.FindProperty(DefinitionPath(nameof(AbilityDefinition.Triggers))), "Triggers", "Triggers");
             triggers.tooltip = "Gameplay events sent to the entity, and tags it gains, that activate the ability on their own";
             content.Add(triggers);
 
             // Its chance to activate, rolled once for each activation, and how it rolls; and what its effects' hits carry
-            // for on-hit effects (TW-8)
+            // for on-hit effects
             content.Add(CreatePropertyField(serializedObject.FindProperty(DefinitionPath(nameof(AbilityDefinition.ChanceToActivate))), "ChanceToActivate", "Chance to Activate"));
             var roll = CreatePropertyField(serializedObject.FindProperty(DefinitionPath(nameof(AbilityDefinition.ActivationRoll))), "ActivationRoll", "Activation Roll");
             content.Add(roll);
-            // A chance that can't miss has nothing to roll (FN-23)
+            // A chance that can't miss has nothing to roll
             ForgeShowWhen.Track(roll, serializedObject, serialized =>
                 ForgeShowWhen.Rolls(serialized.FindProperty(DefinitionPath(nameof(AbilityDefinition.ChanceToActivate)))));
             content.Add(CreatePropertyField(serializedObject.FindProperty(DefinitionPath(nameof(AbilityDefinition.ProcCoefficient))), "ProcCoefficient", "Proc Coefficient"));
-            // The crowd control it ignores, by its tags, as Avatar ignores Silenced and not a stun (TW-16)
+            // The crowd control it ignores, by its tags, as Avatar ignores Silenced and not a stun
             content.Add(CreatePropertyField(serializedObject.FindProperty(DefinitionPath(nameof(AbilityDefinition.IgnoresCrowdControl))), "IgnoresCrowdControl", "Ignores Crowd Control"));
 
             content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(Ability.Cost)), "Cost", "Cost"));
-            // What it spends of attributes beside its Cost effect, each the attribute or the role it names (TW-29). TW-28's
-            // Mana Cost spent the project's Mana alone
+            // What it spends of attributes beside its Cost effect, each the attribute or the role it names. Its Mana
+            // Cost spent the project's Mana alone
             content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(Ability.AttributeCosts)), "AttributeCosts", "Attribute Costs"));
             content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(Ability.Cooldown)), "Cooldown", "Cooldown"));
 
-            // The targeting is an object each ability keeps of its own, which a multiple selection can't edit safely (ED-12)
+            // The targeting is an object each ability keeps of its own, which a multiple selection can't edit safely
             if (IsMultiple) content.Add(CreateNote("Select one ability to edit its targeting."));
             else content.Add(CreatePropertyField(serializedObject.FindProperty(BehaviourPath(nameof(AbilityBehaviour.Targeting))), "Targeting", "Targeting"));
 
@@ -446,7 +445,7 @@ namespace FarEmerald.PlayForge.Editor
             if (implicitTagField != null) implicitTagField.style.display = shown ? DisplayStyle.Flex : DisplayStyle.None;
         }
 
-        // The note under the components while its charges never run out, in the Problems view's words (TW-17, FN-14)
+        // The note under the components while its charges never run out, in the Problems view's words
         private void ShowCharges()
         {
             if (chargesNote == null) return;
@@ -456,7 +455,7 @@ namespace FarEmerald.PlayForge.Editor
         }
 
         // The asset loaders and the stages: what the ability does as it runs. They sat in Runtime Behaviour, between
-        // dividers and under sentences that explained them (ED-37)
+        // dividers and under sentences that explained them
         private void BuildStagesSection(VisualElement parent)
         {
             stagesSection = CreateSection(new SectionConfig
@@ -477,21 +476,21 @@ namespace FarEmerald.PlayForge.Editor
             parent.Add(stagesSection.Section);
 
             // The asset loaders and the stages are lists each ability keeps of its own, which a multiple selection can't
-            // edit safely: a list of a different length would be cut (ED-12)
+            // edit safely: a list of a different length would be cut
             if (IsMultiple)
             {
                 stagesSection.Content.Add(CreateNote("Select one ability to edit its asset loaders and stages."));
                 return;
             }
             stagesSection.Content.Add(CreatePropertyField(serializedObject.FindProperty(BehaviourPath(nameof(AbilityBehaviour.AssetLoaders))), "AssetLoaders", "Asset Loaders"));
-            // What cancels the ability and what it blocks, in each stage that names none of its own (FEAT-5)
+            // What cancels the ability and what it blocks, in each stage that names none of its own
             var cancelledBy = CreatePropertyField(serializedObject.FindProperty(BehaviourPath(nameof(AbilityBehaviour.CancelledBy))), "DefaultCancelledBy", "Cancelled By");
             cancelledBy.tooltip = "Abilities, by tag, that cancel this one as they activate, in each stage that names none";
             stagesSection.Content.Add(cancelledBy);
             var blocks = CreatePropertyField(serializedObject.FindProperty(BehaviourPath(nameof(AbilityBehaviour.Blocks))), "DefaultBlocks", "Blocks");
             blocks.tooltip = "Abilities, by tag, that can't activate while this one runs, in each stage that names none";
             stagesSection.Content.Add(blocks);
-            // The stages' list removes and moves a stage, and each stage keeps its fold as it does (ED-64, ED-18)
+            // The stages' list removes and moves a stage, and each stage keeps its fold as it does
             var stages = CreatePropertyField(serializedObject.FindProperty(BehaviourPath(nameof(AbilityBehaviour.Stages))), "Stages", "Stages");
             ForgeLists.KeepsStates(stages, serializedObject, BehaviourPath(nameof(AbilityBehaviour.Stages)));
             stagesSection.Content.Add(stages);
@@ -501,8 +500,8 @@ namespace FarEmerald.PlayForge.Editor
         // Requirements Section: the tags and the checks the ability needs
         // ═══════════════════════════════════════════════════════════════════════════
 
-        // The tag requirements, then the caster's and the target's checks, as the mockup's Requirements holds them. The tag
-        // requirements sat in Tags, and the checks in a Validation Rules section of their own (ED-37)
+        // The tag requirements, then the caster's and the target's checks. The tag
+        // requirements sat in Tags, and the checks in a Validation Rules section of their own
         private void BuildRequirementsSection(VisualElement parent)
         {
             requirementsSection = CreateSection(new SectionConfig
@@ -529,7 +528,7 @@ namespace FarEmerald.PlayForge.Editor
             var tagRequirements = serializedObject.FindProperty(TagsPath(nameof(AbilityTags.TagRequirements)));
             if (tagRequirements != null) content.Add(CreatePropertyField(tagRequirements, "TagRequirements", ""));
 
-            // Each ability keeps its own lists of checks, which a multiple selection can't edit safely (ED-12)
+            // Each ability keeps its own lists of checks, which a multiple selection can't edit safely
             if (IsMultiple)
             {
                 content.Add(CreateNote("Select one ability to edit its checks."));
@@ -547,7 +546,7 @@ namespace FarEmerald.PlayForge.Editor
         // Workers, Local Data and Used By Sections
         // ═══════════════════════════════════════════════════════════════════════════
 
-        // Its components: features it carries, each a class with hooks into its life, added from the list's + (FN-14)
+        // Its components: features it carries, each a class with hooks into its life, added from the list's +
         private void BuildComponentsSection(VisualElement parent)
         {
             componentsSection = CreateSection(new SectionConfig
@@ -563,7 +562,7 @@ namespace FarEmerald.PlayForge.Editor
             });
             parent.Add(componentsSection.Section);
 
-            // Each ability keeps its own components, objects a multiple selection can't edit safely (ED-12)
+            // Each ability keeps its own components, objects a multiple selection can't edit safely
             if (IsMultiple)
             {
                 componentsSection.Content.Add(CreateNote("Select one ability to edit its components."));
@@ -571,7 +570,7 @@ namespace FarEmerald.PlayForge.Editor
             }
             componentsSection.Content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(Ability.Components)), "Components", ""));
 
-            // Its charges, a component, with a note under the list where they never run out (TW-17)
+            // Its charges, a component, with a note under the list where they never run out
             chargesNote = new HelpBox("", HelpBoxMessageType.Warning) { name = "ChargesNeverRunOut" };
             componentsSection.Content.Add(chargesNote);
             ShowCharges();
@@ -593,9 +592,9 @@ namespace FarEmerald.PlayForge.Editor
             });
             parent.Add(workersSection.Section);
 
-            // The effects its holder's hits apply (TW-6)
+            // The effects its holder's hits apply
             workersSection.Content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(Ability.OnHit)), "OnHit", "On Hit"));
-            // How it changes other effects, its holder's or those landing on it (TW-7)
+            // How it changes other effects, its holder's or those landing on it
             workersSection.Content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(Ability.Modifiers)), "Modifiers", "Modifiers"));
             workersSection.Content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(Ability.WorkerGroup)), "WorkerGroup", ""));
         }
@@ -618,7 +617,7 @@ namespace FarEmerald.PlayForge.Editor
             localDataSection.Content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(Ability.LocalData)), "LocalData", ""));
         }
 
-        // The assets that use the ability, such as an entity that starts with it or an item that grants it (ED-37)
+        // The assets that use the ability, such as an entity that starts with it or an item that grants it
         private void BuildUsedBySection(VisualElement parent)
         {
             usedBySection = CreateSection(new SectionConfig
@@ -646,7 +645,7 @@ namespace FarEmerald.PlayForge.Editor
         protected override void OnAssetChanged()
         {
             // Leveling is drawn from the link mode and the provider, so it redraws when either changes, an Undo among
-            // them (ED-12)
+            // them
             if (levelingContent != null && LevelingState() != shownLeveling) RebuildLevelingContent();
             // The name field isn't bound, so it follows an Undo here, unless it's being typed in
             if (!IsMultiple && nameField != null && !IsFocused(nameField) && nameField.value != (ability.Definition.Name ?? ""))
@@ -693,14 +692,14 @@ namespace FarEmerald.PlayForge.Editor
         {
             var parts = new List<string> { EnumName(ability.Definition.ActivationPolicy) };
             if (ability.Cost != null) parts.Add(NameOf(ability.Cost));
-            // Each attribute cost, as "30 Mana": its attribute's name, or its role's (TW-29)
+            // Each attribute cost, as "30 Mana": its attribute's name, or its role's
             foreach (var cost in ability.AttributeCosts ?? new List<AttributeCost>())
             {
                 if (cost?.Amount == null || (cost.Amount.Magnitude <= 0f && AbstractScaler.IsNone(cost.Amount.Scaler))) continue;
                 parts.Add(NumberText.Of(cost.Amount, cost.Attribute != null ? cost.Attribute.Name : cost.Role.IsValid ? cost.Role.ToString() : "?"));
             }
             if (ability.Cooldown != null) parts.Add(NameOf(ability.Cooldown));
-            // Its charges, as "3 charges" (TW-17)
+            // Its charges, as "3 charges"
             if (ChargesRule.Counted(ability) && ability.Charges != null)
                 parts.Add(ability.Charges.IsConstant ? CountOf(ability.Charges.Constant, "charge", "charges") : NumberText.Of(ability.Charges, "charges"));
             return string.Join(" · ", parts);
@@ -720,11 +719,11 @@ namespace FarEmerald.PlayForge.Editor
         // Helper Methods
         // ═══════════════════════════════════════════════════════════════════════════
 
-        // Shows the tag a name gives: the stored name's, or the one being typed (ED-12)
+        // Shows the tag a name gives: the stored name's, or the one being typed
         private void UpdateAssetTagDisplay(string name = null) =>
             ShowAssetTag(assetTagField, name ?? ability.Definition.Name, "Ability", ability.Tags.AssetTag, SyncAssetTag);
 
-        // Stores the tag the name gives, then shows it (ED-12)
+        // Stores the tag the name gives, then shows it
         private void SyncAssetTag()
         {
             StoreAssetTag(ability, ability.Definition.Name, "Ability", ability.Tags.AssetTag, tag =>

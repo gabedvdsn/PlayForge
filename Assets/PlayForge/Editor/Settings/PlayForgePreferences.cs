@@ -6,7 +6,7 @@ namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
     /// PlayForge's view toggles, which belong to each user rather than to the project, so they stay in EditorPrefs, as
-    /// Unity's own preferences do, and the Preferences page edits them (Q21). The settings the project shares are
+    /// Unity's own preferences do, and the Preferences page edits them. The settings the project shares are
     /// <see cref="PlayForgeSettings"/>.
     /// </summary>
     public static class PlayForgePreferences
@@ -63,11 +63,11 @@ namespace FarEmerald.PlayForge.Editor
             }
         }
 
-        /// <summary>The widest a PlayForge dropdown grows, a picker's or a field's menu (EP-1).</summary>
+        /// <summary>The widest a PlayForge dropdown grows, a picker's or a field's menu.</summary>
         internal static readonly Number MenuWidth = new("MenuWidth", "Menu Width",
             "The widest a PlayForge dropdown grows, a picker's or a field's menu, in points", 360, 220, 1200);
 
-        /// <summary>The tallest a PlayForge dropdown grows; a longer list scrolls (EP-1).</summary>
+        /// <summary>The tallest a PlayForge dropdown grows; a longer list scrolls.</summary>
         internal static readonly Number MenuHeight = new("MenuHeight", "Menu Height",
             "The tallest a PlayForge dropdown grows, in points; a longer list scrolls", 420, 160, 1600);
 
@@ -79,14 +79,14 @@ namespace FarEmerald.PlayForge.Editor
         internal static readonly Switch GroupTagsByRoot = new("GroupTagsByRoot", "Group Tags by Root",
             "Group the tag picker's tags under their root", true);
 
-        /// <summary>The Forge's switches, in the order the page shows them. It has none since Show File Names (ED-58).</summary>
+        /// <summary>The Forge's switches, in the order the page shows them. It has none since Show File Names.</summary>
         internal static readonly Switch[] ForgeSwitches = { };
 
         /// <summary>The tag fields' switches, in the order the page shows them.</summary>
         internal static readonly Switch[] TagSwitches = { ShowFullTagPath, GroupTagsByRoot };
 
         /// <summary>
-        /// The keys every preference here is kept under, the tables' column widths and hidden columns among them (FN-7).
+        /// The keys every preference here is kept under, the tables' column widths and hidden columns among them.
         /// </summary>
         internal static IEnumerable<string> Keys()
         {
@@ -111,7 +111,7 @@ namespace FarEmerald.PlayForge.Editor
 
     /// <summary>
     /// The tag display preferences, which the tag field, The Forge's tag list and the Preferences page share. Each used to
-    /// keep a default, or a switch, of its own (ED-25).
+    /// keep a default, or a switch, of its own.
     /// </summary>
     internal static class TagDisplaySettings
     {
@@ -131,7 +131,7 @@ namespace FarEmerald.PlayForge.Editor
 
         /// <summary>
         /// A tag's path as it reads: its display name. A tag made unique, as the tag picker makes one, pads its name to a
-        /// fixed length with a generated suffix, and only its display name leaves that out (ED-60).
+        /// fixed length with a generated suffix, and only its display name leaves that out.
         /// </summary>
         public static string PathOf(Tag tag) => tag.IsValid ? tag.ToString() : "";
 

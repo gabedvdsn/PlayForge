@@ -6,9 +6,9 @@ using UnityEngine.UIElements;
 namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
-    /// A kind field that folds, as an attribute set element does (ED-56): a row with the arrow and the kind field, then the
+    /// A kind field that folds, as an attribute set element does: a row with the arrow and the kind field, then the
     /// kind's fields; folded, one line of their values in secondary text, as "Strength 2 · Duration 0.5 · On Each Tick".
-    /// Whether it's folded is kept with the object the field holds, so it follows the object through its list (ED-18). It
+    /// Whether it's folded is kept with the object the field holds, so it follows the object through its list. It
     /// drew colored badges for a folded field's values, and its arrow and its look from styles set in C#.
     /// </summary>
     public abstract class AbstractGenericDrawer<T> : AbstractTypeRefDrawer<T> where T : class
@@ -79,7 +79,7 @@ namespace FarEmerald.PlayForge.Editor
             bool fields = HasFields(property);
             // In a list, an arrow keeps its place while its kind has nothing to fold, so the row lines up with its
             // neighbours, which fold; alone, as an ability's Targeting, it keeps none, so its label lines up with the fields
-            // around it, which have no arrow (EP-4). It kept its place everywhere, the label 18 px to the right of theirs
+            // around it, which have no arrow. It kept its place everywhere, the label 18 px to the right of theirs
             bool inList = property.propertyPath.EndsWith("]");
             var arrow = root.Q(name: "CollapseBtn");
             arrow?.EnableInClassList(InvisibleClass, !fields && inList);
@@ -127,7 +127,7 @@ namespace FarEmerald.PlayForge.Editor
         /// <summary>
         /// One value as a folded field's line shows it: a number or a choice after its name, as "Duration 0.5"; a name alone
         /// for a box that's on, and nothing for one that's off; an asset's name; a Scalable number as its own field sums it
-        /// up, as "Uses 3" (FN-19); or nothing.
+        /// up, as "Uses 3"; or nothing.
         /// </summary>
         protected virtual string GetSummaryText(SerializedProperty prop)
         {

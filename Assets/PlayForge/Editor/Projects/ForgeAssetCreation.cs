@@ -9,8 +9,7 @@ namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
     /// Makes a PlayForge asset where The Forge makes its type: in the folder Project Settings → PlayForge names for the
-    /// type, with its file prefix and suffix, named, and with the asset tag its name gives. A reference field's New uses it
-    /// (ED-38).
+    /// type, with its file prefix and suffix, named, and with the asset tag its name gives. A reference field's New uses it.
     /// </summary>
     internal static class ForgeAssetCreation
     {
@@ -28,7 +27,7 @@ namespace FarEmerald.PlayForge.Editor
         {
             var type = asset.GetType();
             Name(asset, name);
-            // The first asset made makes the default project, which holds it (FEAT-34)
+            // The first asset made makes the default project, which holds it
             ForgeProjects.EnsureActive();
             var folder = FolderFor(type);
             EnsureFolder(folder);
@@ -39,31 +38,30 @@ namespace FarEmerald.PlayForge.Editor
 
         /// <summary>
         /// The folder Project Settings → PlayForge names for a type, or the type's default, within the active Forge
-        /// Project's folder (FEAT-34).
+        /// Project's folder.
         /// </summary>
         public static string FolderFor(Type type) => ForgeProjects.FolderFor(type);
 
         /// <summary>
         /// Makes a new asset of any type The Forge lists, as its Create does: a copy of the type's New Asset default when
         /// Project Settings names one, named, with the tag its name gives, in the folder given or the type's, its file named
-        /// by its name. One factory makes every new asset (Q20); the copy is the default's values, not a link to it
-        /// (Q22).
+        /// by its name. One factory makes every new asset; the copy is the default's values, not a link to it.
         /// </summary>
         public static ScriptableObject CreateNew(Type type, string name, string folder = null) => CreateFrom(type, name, folder, null);
 
-        /// <summary>A new asset as <see cref="CreateNew"/> makes one, filled by a preset or copied from a template first (TW-24).</summary>
+        /// <summary>A new asset as <see cref="CreateNew"/> makes one, filled by a preset or copied from a template first.</summary>
         public static ScriptableObject CreateFrom(Type type, string name, string folder, ForgePreset preset)
         {
             var asset = ScriptableObject.CreateInstance(type);
             var copied = PlayForgeSettings.NewAssetDefault(type);
             if (copied != null) EditorUtility.CopySerialized(copied, asset);
-            // The first asset made makes the default project, which holds it (FEAT-34)
+            // The first asset made makes the default project, which holds it
             ForgeProjects.EnsureActive();
             string own = FolderFor(type);
             folder = string.IsNullOrWhiteSpace(folder) ? own : folder.Trim().TrimEnd('/');
 
             // A preset fills it, or a template it copies, over the type's default, before it takes its own name; the assets
-            // it needs go in their own types' folders, or in the one asked for where that isn't this type's (TW-24)
+            // it needs go in their own types' folders, or in the one asked for where that isn't this type's
             ForgePresetMaking making = null;
             if (preset?.Fill != null)
             {
@@ -132,7 +130,7 @@ namespace FarEmerald.PlayForge.Editor
             return string.IsNullOrEmpty(result) ? ($"{unnamed} {typeName}!", unnamed, true) : (result, string.Join("", words), false);
         }
 
-        // Names an asset and stores the tag its name gives, as its inspector does on a rename (ED-12)
+        // Names an asset and stores the tag its name gives, as its inspector does on a rename
         private static void Name(BaseForgeAsset asset, string name)
         {
             switch (asset)
@@ -188,12 +186,12 @@ namespace FarEmerald.PlayForge.Editor
         /// <summary>
         /// The characters no file name may have on any platform a project opens on: Windows', which take in macOS's and
         /// Linux's own two, the slash and the null character. <c>Path.GetInvalidFileNameChars()</c> gives only the
-        /// platform's, so a name made on a Mac kept a colon Windows can't open (ED-86).
+        /// platform's, so a name made on a Mac kept a colon Windows can't open.
         /// </summary>
         internal static readonly char[] UnportableFileCharacters =
             Enumerable.Range(0, 32).Select(code => (char)code).Concat("\"<>|:*?\\/").ToArray();
 
-        /// <summary>A file name without any character a platform's files can't have (ED-86).</summary>
+        /// <summary>A file name without any character a platform's files can't have.</summary>
         internal static string WithoutUnportableCharacters(string file)
         {
             foreach (var each in UnportableFileCharacters) file = file.Replace(each.ToString(), "");

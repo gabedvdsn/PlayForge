@@ -13,7 +13,7 @@ namespace FarEmerald.PlayForge
     /// Regulation propagates to all members so any captured-attribute change triggers a refresh.
     /// <para>
     /// With no members, or none that holds a kind, it is no kind at all, so its element's side reads its number, as the
-    /// Group does (ED-80, Decision 44). Its Ignore policy threw; it sets overriding members aside (ED-80).
+    /// Group does. Its Ignore policy threw; it sets overriding members aside.
     /// </para>
     /// </summary>
     [ForgeMenu(Description = "Several kept numbers joined as one.")]
@@ -25,10 +25,10 @@ namespace FarEmerald.PlayForge
         [Tooltip("How to handle multiple Override members")]
         public EValueCollisionPolicy OverrideMemberCollisionPolicy = EValueCollisionPolicy.UseMaximum;
 
-        // It reads its members alone (ED-51)
+        // It reads its members alone
         public override EScalerParts Parts => EScalerParts.None;
 
-        /// <summary>With no members that hold a kind, it is no kind at all (ED-80, Decision 44).</summary>
+        /// <summary>With no members that hold a kind, it is no kind at all.</summary>
         public override bool IsEmpty
         {
             get
@@ -96,7 +96,7 @@ namespace FarEmerald.PlayForge
                 value = new AttributeValue(value.CurrentValue * factor.CurrentValue, value.BaseValue * factor.BaseValue);
             }
 
-            // Divided by each member that divides; one that reads 0 divides nothing (TW-9)
+            // Divided by each member that divides; one that reads 0 divides nothing
             foreach (var member in Calculations.Where(m => m.RelativeOperation == EGroupOperation.Divide && !IsNone(m.Calculation)))
             {
                 var divisor = Eval(member.Calculation);

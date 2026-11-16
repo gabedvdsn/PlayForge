@@ -3,7 +3,7 @@ using System;
 namespace FarEmerald.PlayForge
 {
     /// <summary>
-    /// A source of time, which PlayForge's runtime reads instead of Unity's <c>Time</c> (FEAT-13, Decision 30). The
+    /// A source of time, which PlayForge's runtime reads instead of Unity's <c>Time</c>. The
     /// default reads Unity's; a test, a replay or a server puts one of its own in with <see cref="ForgeTime.Use"/>.
     /// </summary>
     public interface IForgeClock
@@ -43,7 +43,7 @@ namespace FarEmerald.PlayForge
     /// <summary>
     /// The clock PlayForge's runtime reads: Unity's, unless <see cref="Use"/> puts another in. The runtime read Unity's
     /// <c>Time</c> in a dozen files, so nothing could step it to a clock of its own, as a deterministic replay, a server
-    /// or a test needs (FEAT-13). A source-scanning test keeps <c>Time</c> out of the runtime.
+    /// or a test needs. A source-scanning test keeps <c>Time</c> out of the runtime.
     /// </summary>
     public static class ForgeTime
     {
@@ -64,7 +64,7 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// The frame's step of an owner's time: an entity's own clock's, its time scale times the game's, or the game's
-        /// for anything else (FEAT-7).
+        /// for anything else.
         /// </summary>
         public static float DeltaTimeFor(object owner) =>
             owner is IGameplayAbilitySystem gas && gas.GetClock() is { } entity ? entity.DeltaTime : clock.DeltaTime;

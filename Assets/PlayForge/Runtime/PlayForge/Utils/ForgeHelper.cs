@@ -25,7 +25,7 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// The texture under a tag, as an asset's Primary icon; else the first that has a texture. The first item was taken,
-        /// with no texture as it might be, and the item under the tag even with none (ED-69).
+        /// with no texture as it might be, and the item under the tag even with none.
         /// </summary>
         public static Texture2D GetTextureItem(IEnumerable<TextureItem> textures, Tag tag)
         {
@@ -43,7 +43,7 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// The texture under exactly a tag, or null where none has a texture under it: no first texture in its place, as
-        /// an effect inheriting its origin's texture keeps its own where the origin has none of that tag (FN-25).
+        /// an effect inheriting its origin's texture keeps its own where the origin has none of that tag.
         /// </summary>
         public static Texture2D TextureUnder(IEnumerable<TextureItem> textures, Tag tag)
         {
@@ -65,7 +65,7 @@ namespace FarEmerald.PlayForge
         #region Sign Related Utils
 
         // One and two magnitudes, the cases every caller has, without the params array and the LINQ sum, which
-        // allocated on every commit and in every sign check a worker made (GAS-P6). Each gives what the params form
+        // allocated on every commit and in every sign check a worker made. Each gives what the params form
         // gives, which sums in double and returns the sum as a float
 
         public static ESignPolicy SignPolicy(float magnitude) => magnitude switch
@@ -362,7 +362,7 @@ namespace FarEmerald.PlayForge
             IEnumerable<Tag> avoid,
             ETagMatchMode matchMode = ETagMatchMode.Exact)
         {
-            // Applied tags already come as a list (the tag cache's own); only other sequences are copied (PF-007)
+            // Applied tags already come as a list (the tag cache's own); only other sequences are copied
             var tagList = tags as List<Tag> ?? tags?.ToList() ?? NoTags;
             
             // Check required tags
@@ -461,7 +461,7 @@ namespace FarEmerald.PlayForge
             if (!ValidateAllQueries(requiredQueries, tags))
                 return false;
             
-            // Avoid queries are inverted - they must all FAIL. A list is walked by index (PF-007)
+            // Avoid queries are inverted - they must all FAIL. A list is walked by index
             if (avoidQueries is List<TagQuery> avoidList)
             {
                 for (int i = 0; i < avoidList.Count; i++)
@@ -527,7 +527,7 @@ namespace FarEmerald.PlayForge
             
             // Applied tags already come as a list (the tag cache's own), and queries as a list: neither is
             // copied, and lists are walked by index, since a foreach over the interface boxes an
-            // enumerator on every requirement check (PF-007)
+            // enumerator on every requirement check
             var tagList = tags as List<Tag> ?? tags?.ToList() ?? NoTags;
 
             if (queries is List<TagQuery> list)
@@ -943,7 +943,7 @@ namespace FarEmerald.PlayForge
                 value *= member.Calculation.Evaluate(deriv);
             }
 
-            // Divided by each member that divides; one that reads 0 divides nothing (TW-9)
+            // Divided by each member that divides; one that reads 0 divides nothing
             foreach (var member in calculations.Where(m => m.RelativeOperation == EGroupOperation.Divide && m.Calculation != null))
             {
                 float divisor = member.Calculation.Evaluate(deriv);

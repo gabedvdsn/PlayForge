@@ -8,8 +8,8 @@ using UnityEngine.UIElements;
 namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
-    /// What can be done to assets, one menu for The Forge's list and an asset's header (ED-71): Show in Project, Open in a
-    /// Window, Rename (FN-8), Duplicate, Move to Project and Copy to Project (FEAT-34), and Move to Trash. A right-click on a
+    /// What can be done to assets, one menu for The Forge's list and an asset's header: Show in Project, Open in a
+    /// Window, Rename, Duplicate, Move to Project and Copy to Project, and Move to Trash. A right-click on a
     /// row of The Forge's list offered these, and the header's three dots its own actions alone.
     /// </summary>
     internal static class ForgeAssetActions
@@ -50,7 +50,7 @@ namespace FarEmerald.PlayForge.Editor
                 }),
                 new("Open in a Window", one, () => EditorUtility.OpenPropertyEditor(first)),
                 Item.Separator,
-                // As its inspector renames it, or its file where it has no name of its own (FN-8)
+                // As its inspector renames it, or its file where it has no name of its own
                 new("Rename…", one && ForgeRenames.CanRename(first), () => ForgeRenameWindow.Show(first)),
                 new("Duplicate", one, () =>
                 {
@@ -59,7 +59,7 @@ namespace FarEmerald.PlayForge.Editor
                 }),
             };
 
-            // Each, into another Forge Project's folder for its type (FEAT-34)
+            // Each, into another Forge Project's folder for its type
             var others = ForgeProjects.All().Where(project => project != ForgeProjects.Active).ToList();
             foreach (var project in others)
             {
@@ -82,7 +82,7 @@ namespace FarEmerald.PlayForge.Editor
                 items.Add(new Item("Move to Project", false, null));
                 items.Add(new Item("Copy to Project", false, null));
             }
-            // Each, as one question names them all (EP-19)
+            // Each, as one question names them all
             items.Add(new Item("Move to Trash", one, () => ForgeAssetDeletion.MoveToTrash(all)));
             return items;
         }

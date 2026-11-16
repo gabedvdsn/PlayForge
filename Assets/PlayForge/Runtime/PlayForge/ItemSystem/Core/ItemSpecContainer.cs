@@ -14,7 +14,7 @@ namespace FarEmerald.PlayForge
         public ItemSpec Spec { get; private set; }
         public int Index;
 
-        // The slot this item's grant took, or -1 when it granted nothing; unequipping takes back only that (GAS-48)
+        // The slot this item's grant took, or -1 when it granted nothing; unequipping takes back only that
         private int grantedAbilityIndex = -1;
         public bool IsEquipped
         {
@@ -22,10 +22,10 @@ namespace FarEmerald.PlayForge
             private set => Spec.IsEquipped = value;
         }
 
-        /// <summary>How many of the item the slot holds, up to its Max Stack Size. It was never set (FEAT-14, GAS-51).</summary>
+        /// <summary>How many of the item the slot holds, up to its Max Stack Size. It was never set.</summary>
         public int ItemStacks => Spec.Stacks;
 
-        /// <summary>Whether the slot has room for another of its item (FEAT-14).</summary>
+        /// <summary>Whether the slot has room for another of its item.</summary>
         public bool HasRoom => Spec.Stacks < Spec.Base.Definition.StackSizeOf(Spec);
 
         /// <summary>
@@ -198,7 +198,7 @@ namespace FarEmerald.PlayForge
             if (Spec.Source.FindAbilitySystem(out var abilitySystem))
             {
                 // Only the copy this item granted. A failed grant took nothing, and the entity keeps a copy it had
-                // already; it lost that copy when the item came off (GAS-48)
+                // already; it lost that copy when the item came off
                 var success = grantedAbilityIndex >= 0
                               && abilitySystem.RemoveAbilityAt(grantedAbilityIndex, Spec.Base.ActiveAbility);
                 grantedAbilityIndex = -1;
@@ -210,10 +210,10 @@ namespace FarEmerald.PlayForge
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
-        // Restore (FEAT-9)
+        // Restore
         // ═══════════════════════════════════════════════════════════════════════════
 
-        // The ability it granted knows it lends it, so a use of it is the item's (FN-14)
+        // The ability it granted knows it lends it, so a use of it is the item's
         private void Lend(AbilitySystemComponent abilitySystem)
         {
             if (grantedAbilityIndex >= 0 && abilitySystem.TryGetAbilityContainer(grantedAbilityIndex, out var lent) && lent?.Spec != null)
@@ -245,10 +245,10 @@ namespace FarEmerald.PlayForge
 
         private ComponentStates componentStates;
 
-        /// <summary>What its item's components keep for this entity's item (FN-14).</summary>
+        /// <summary>What its item's components keep for this entity's item.</summary>
         public ComponentStates ComponentStates => componentStates ??= new ComponentStates();
 
-        // Its item's components, each hearing a moment of it (FN-14)
+        // Its item's components, each hearing a moment of it
         internal void HearGiven() => Hear(component => component.Given(new ItemComponentContext(this)));
         internal void HearRemoved() => Hear(component => component.Removed(new ItemComponentContext(this)));
         internal void HearUsed() => Hear(component => component.Used(new ItemComponentContext(this)));

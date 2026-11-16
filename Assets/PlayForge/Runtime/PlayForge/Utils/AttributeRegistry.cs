@@ -9,13 +9,13 @@ namespace FarEmerald.PlayForge
         private static readonly Dictionary<string, IAttribute> Library = new();
 
         // Statics outlive play mode when domain reload is off, and an attribute registered last session kept its name
-        // from this session's (SP-22). The systems that use attributes register them again as they start
+        // from this session's. The systems that use attributes register them again as they start
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void Clear() => Library.Clear();
 
         /// <summary>
         /// Forgets every attribute registered, as a test's world does as it ends, so the next test registers its own
-        /// afresh (TW-26). TagRegistry.Reset does the same for tags.
+        /// afresh. TagRegistry.Reset does the same for tags.
         /// </summary>
         public static void Reset() => Library.Clear();
 

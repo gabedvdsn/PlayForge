@@ -15,11 +15,11 @@ namespace FarEmerald.PlayForge
 
         public override void Prepare(AbilityDataPacket data)
         {
-            // On each target, as an area ability has several. Only the first took them (GAS-62). In the project's resolve
-            // order, or the targeting's where it's off (TW-31)
+            // On each target, as an area ability has several. Only the first took them. In the project's resolve
+            // order, or the targeting's where it's off
             foreach (var target in ForgeResolveOrder.TargetsOf(data, UseResolveOrder))
             {
-                // With the magnitudes the caller set on the activation's data (FEAT-2)
+                // With the magnitudes the caller set on the activation's data
                 foreach (GameplayEffect effect in Effects)
                 {
                     var spec = target.GenerateEffectSpec(data.EffectOrigin, effect);

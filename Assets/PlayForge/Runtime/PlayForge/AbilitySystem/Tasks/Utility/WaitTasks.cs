@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
-    /// <summary>What a Wait For Tag task waits for: its tag gained, or lost (FN-24).</summary>
+    /// <summary>What a Wait For Tag task waits for: its tag gained, or lost.</summary>
     public enum ETagWait
     {
         /// <summary>The tag on its entity; one it holds already counts.</summary>
@@ -16,7 +16,7 @@ namespace FarEmerald.PlayForge
     }
 
     /// <summary>
-    /// A wait's own: what it waits on, its timeout and what it records where what it waits for comes (FN-24). A wait holds
+    /// A wait's own: what it waits on, its timeout and what it records where what it waits for comes. A wait holds
     /// its stage until what it waits for comes or its timeout runs out, in its caster's time, and with no timeout as long as
     /// its stage runs.
     /// </summary>
@@ -57,7 +57,7 @@ namespace FarEmerald.PlayForge
 
     /// <summary>
     /// Waits for a gameplay event sent to its caster or its target, by its tag or one under it, as a combo's next stage
-    /// waits for its hit to connect (FN-24). The core's own events, as Impact Taken, come while it waits, as the core sends
+    /// waits for its hit to connect. The core's own events, as Impact Taken, come while it waits, as the core sends
     /// them where anything listens.
     /// </summary>
     [Serializable]
@@ -94,7 +94,7 @@ namespace FarEmerald.PlayForge
     }
 
     /// <summary>
-    /// Waits for its caster or its target to gain a tag, or to lose it, as a stage waits for a stun to wear off (FN-24). A
+    /// Waits for its caster or its target to gain a tag, or to lose it, as a stage waits for a stun to wear off. A
     /// tag already held counts as gained, and one not held as lost, so it waits for the state, not a change.
     /// </summary>
     [Serializable]
@@ -123,7 +123,7 @@ namespace FarEmerald.PlayForge
 
     /// <summary>
     /// Waits for an attribute of its caster or its target to cross a value, as a berserk's next stage waits for its Health
-    /// to fall under half (FN-24). The value is read as it starts, at its ability's level; the attribute each step.
+    /// to fall under half. The value is read as it starts, at its ability's level; the attribute each step.
     /// </summary>
     [Serializable]
     [ForgeMenu(Description = "Waits for an attribute of the caster or the target to cross a value.")]

@@ -16,7 +16,7 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// As an effect lands on the target, the activation's data takes this tag, so a later stage can run on a hit and
-        /// another on a miss. None records nothing (TS-7).
+        /// another on a miss. None records nothing.
         /// </summary>
         [Tooltip("As an effect lands, the activation's data takes this tag, for a later stage's condition")]
         [ForgeTagContext(ForgeContext.StageFlag)]
@@ -27,7 +27,7 @@ namespace FarEmerald.PlayForge
 
         public override async UniTask Activate(AbilityDataPacket data, CancellationToken token)
         {
-            // Each target, as an area ability has several. Only the first was struck (GAS-62)
+            // Each target, as an area ability has several. Only the first was struck
             int targets = data.Count(Tags.TARGET_REAL);
             if (targets == 0) return;
             int between = Read(DelayBetweenApplicationMs, data);
@@ -36,20 +36,20 @@ namespace FarEmerald.PlayForge
             {
                 var effect = Effects[e];
 
-                // In the project's resolve order, read as each effect lands, or the targeting's where it's off (TW-31)
+                // In the project's resolve order, read as each effect lands, or the targeting's where it's off
                 var ordered = ForgeResolveOrder.TargetsOf(data, UseResolveOrder);
                 for (int i = 0; i < ordered.Count; i++)
                 {
                     var target = ordered[i];
 
-                    // With the magnitudes the caller set on the activation's data (FEAT-2)
+                    // With the magnitudes the caller set on the activation's data
                     var spec = target.GenerateEffectSpec(data.EffectOrigin, effect);
                     spec?.TakeSetByCaller(data.SetByCallerMagnitudes);
                     bool landed = target.ApplyCarrier(spec);
                     if (landed && RecordLandedAs.IsValid) data.SetPrimary(RecordLandedAs, effect);
                 }
                 // Between effects, where there's a delay: a delay of 0 waited a frame, so a second effect, as a heal's
-                // lockout, landed a frame after the first; and the last waited for nothing to follow (GAS-74)
+                // lockout, landed a frame after the first; and the last waited for nothing to follow
                 if (between > 0 && e < Effects.Count - 1)
                     await SequenceTaskLibrary.Delay(between / 1000f, token);
             }

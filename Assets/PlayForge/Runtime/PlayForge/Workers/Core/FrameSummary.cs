@@ -82,7 +82,7 @@ namespace FarEmerald.PlayForge
         /// Keyed by the ISource that produced the impact.
         /// </summary>
         // Lists handed out for the by-attribute and by-source groupings, kept across frames so a commit
-        // doesn't allocate fresh ones every frame (PF-007)
+        // doesn't allocate fresh ones every frame
         private readonly Stack<List<ImpactData>> _spareLists = new();
 
         private List<ImpactData> RentList() => _spareLists.Count > 0 ? _spareLists.Pop() : new List<ImpactData>();
@@ -341,8 +341,7 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// The snapshot this frame's listeners read: one per summary, refilled each frame, so it holds this frame only
-        /// during the call. A new one each frame copied ten lists, 504 bytes a frame for an entity anyone listened to
-        /// (GAS-P10).
+        /// during the call. A new one each frame copied ten lists, 504 bytes a frame for an entity anyone listened to.
         /// </summary>
         internal FrameSummarySnapshot TakeSnapshot(int executed)
         {
@@ -354,8 +353,8 @@ namespace FarEmerald.PlayForge
 
     /// <summary>
     /// A frame's summary as its listeners read it. The one <see cref="GameplayAbilitySystemCallbacks.OnFrameComplete"/>
-    /// hands a listener is its entity's own and is refilled each frame, so it holds that frame only during the call
-    /// (GAS-P10). <see cref="FrameSummary.CreateSnapshot"/> makes one to keep.
+    /// hands a listener is its entity's own and is refilled each frame, so it holds that frame only during the call.
+    /// <see cref="FrameSummary.CreateSnapshot"/> makes one to keep.
     /// </summary>
     public class FrameSummarySnapshot
     {
@@ -398,7 +397,7 @@ namespace FarEmerald.PlayForge
             Refill(_activatedTagWorkers, summary.ActivatedTagWorkers);
             Refill(_resolvedTagWorkers, summary.ResolvedTagWorkers);
 
-            // The rest of what the frame recorded, which FrameComplete listeners never saw (GAS-39)
+            // The rest of what the frame recorded, which FrameComplete listeners never saw
             Refill(_appliedEffects, summary.AppliedEffects);
             Refill(_removedEffects, summary.RemovedEffects);
             Refill(_deaths, summary.Deaths);

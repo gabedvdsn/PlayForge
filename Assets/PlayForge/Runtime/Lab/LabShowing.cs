@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge.Lab
 {
-    /// <summary>What a stop watches for (LAB-14, Decision 88).</summary>
+    /// <summary>What a stop watches for.</summary>
     public enum ELabStopKind
     {
         /// <summary>An effect lands: the one named, or any.</summary>
@@ -31,7 +31,7 @@ namespace FarEmerald.PlayForge.Lab
     }
 
     /// <summary>
-    /// A stop (LAB-14): what it watches for, on the selected unit or any, and what it names, an effect, an ability, a tag,
+    /// A stop: what it watches for, on the selected unit or any, and what it names, an effect, an ability, a tag,
     /// or an attribute and a value. The lab's world pauses as one fires, and says which.
     /// </summary>
     [Serializable]
@@ -83,7 +83,7 @@ namespace FarEmerald.PlayForge.Lab
     }
 
     /// <summary>
-    /// What the lab watches its units for, and the journals it keeps while it does (LAB-12 to LAB-15, Decision 88): its
+    /// What the lab watches its units for, and the journals it keeps while it does: its
     /// effect journal over every unit, its stops, which pause its world as one fires and say which, and its watches,
     /// sampled over the last minute of its time. The lab steps it after each step of its world.
     /// </summary>
@@ -121,7 +121,7 @@ namespace FarEmerald.PlayForge.Lab
             ForgeLog.Logged += Logged;
         }
 
-        /// <summary>ForgeLog's messages as they were let through while the lab ran, oldest first, its last few hundred (LAB-16).</summary>
+        /// <summary>ForgeLog's messages as they were let through while the lab ran, oldest first, its last few hundred.</summary>
         public List<ForgeLogEntry> Log { get; } = new();
 
         /// <summary>How many messages the log has heard, those it no longer keeps among them.</summary>
@@ -142,13 +142,13 @@ namespace FarEmerald.PlayForge.Lab
             if (Log.Count > MostLogged) Log.RemoveRange(0, Log.Count - MostLogged);
         }
 
-        /// <summary>The effect journal over every unit of the lab, its caster's among them (LAB-12).</summary>
+        /// <summary>The effect journal over every unit of the lab, its caster's among them.</summary>
         public EffectJournal Journal { get; }
 
-        /// <summary>The stops, in the order they were added (LAB-14).</summary>
+        /// <summary>The stops, in the order they were added.</summary>
         public List<LabStop> Stops { get; } = new();
 
-        /// <summary>The watches, in the order they were pinned (LAB-15).</summary>
+        /// <summary>The watches, in the order they were pinned.</summary>
         public List<LabWatch> Watches { get; } = new();
 
         /// <summary>The stop that paused the lab's world last, while it stays paused; null otherwise.</summary>
@@ -400,7 +400,7 @@ namespace FarEmerald.PlayForge.Lab
         }
     }
 
-    /// <summary>What a watch reads (LAB-15).</summary>
+    /// <summary>What a watch reads.</summary>
     public enum ELabWatchKind
     {
         /// <summary>An attribute's current value, or its base.</summary>
@@ -420,7 +420,7 @@ namespace FarEmerald.PlayForge.Lab
     }
 
     /// <summary>
-    /// A watch (LAB-15): a unit's attribute, a tag's count, an effect's stacks or time, or a number read on it, pinned, and
+    /// A watch: a unit's attribute, a tag's count, an effect's stacks or time, or a number read on it, pinned, and
     /// its values over the last minute of the lab's time, one each tenth of a second.
     /// </summary>
     public sealed class LabWatch

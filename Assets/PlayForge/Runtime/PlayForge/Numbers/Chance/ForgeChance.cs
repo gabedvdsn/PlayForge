@@ -6,7 +6,7 @@ using UnityEngine;
 namespace FarEmerald.PlayForge
 {
     /// <summary>
-    /// How a chance rolls (TW-8, Decision 48): pseudo-random, so each miss raises the next roll's odds and a hit starts them
+    /// How a chance rolls: pseudo-random, so each miss raises the next roll's odds and a hit starts them
     /// again, each caster keeping its own streak for the chance; and its luck, the attribute playing the project's Luck role, read on the
     /// caster, unless the chance gives its own.
     /// </summary>
@@ -25,14 +25,14 @@ namespace FarEmerald.PlayForge
     }
 
     /// <summary>
-    /// Every chance PlayForge rolls goes through here (TW-8): a number of the chance, the caster's luck, and, where the
+    /// Every chance PlayForge rolls goes through here: a number of the chance, the caster's luck, and, where the
     /// chance is pseudo-random, the caster's streak for it, kept by the chance's key.
     /// </summary>
     public static class ForgeChance
     {
         /// <summary>
         /// The project's luck, read on the caster where a chance gives none of its own, or null for none: the project's
-        /// Luck role, from its Forge Project (TW-28, TW-29).
+        /// Luck role, from its Forge Project.
         /// </summary>
         public static Attribute ProjectLuck => ForgeRoles.AttributeFor(Tags.ROLE_LUCK);
 
@@ -140,7 +140,7 @@ namespace FarEmerald.PlayForge
     }
 
     /// <summary>
-    /// Holds on a roll of its chance (TW-8): a number, so it can be an attribute, as a critical strike chance, or an item's
+    /// Holds on a roll of its chance: a number, so it can be an attribute, as a critical strike chance, or an item's
     /// stacks through a curve. Read in a hit, it rolls once for the hit and keeps the roll, so a hit read twice, its preview
     /// and its commit, reads the same; read with no hit, it rolls each time. Pseudo-random and luck as its roll says.
     /// </summary>

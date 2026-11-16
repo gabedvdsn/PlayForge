@@ -7,7 +7,7 @@ using UnityEngine;
 namespace FarEmerald.PlayForge
 {
     /// <summary>
-    /// A game's own mover, as the Creator Lab's units are, which PlayForge's movement tasks tell what they do (FN-24): a
+    /// A game's own mover, as the Creator Lab's units are, which PlayForge's movement tasks tell what they do: a
     /// Dash holds it while it moves its entity, and a Blink stops it after it puts its entity elsewhere, so it drops the
     /// path it was on. A component on the entity's object that implements it hears; an entity without one moves as the
     /// task puts it.
@@ -23,7 +23,7 @@ namespace FarEmerald.PlayForge
 
     /// <summary>
     /// Applies effects to each entity within a radius of its caster, its activation's target or its point, of the sides it
-    /// takes, as Volley's arrows, Rallying Cry's armor or Thunderclap's stun (FN-24, from the Demo into the framework). Each
+    /// takes, as Volley's arrows, Rallying Cry's armor or Thunderclap's stun. Each
     /// is found by its position on either hub, or with physics on its layers, and takes the effects from the activation's
     /// origin with its caller's magnitudes, the dead left out.
     /// </summary>
@@ -87,7 +87,7 @@ namespace FarEmerald.PlayForge
 
     /// <summary>
     /// Applies effects to its caster, whatever the ability targets, as the empowerment Shadow Step leaves its caster or the
-    /// untargetable moment of Tumble's roll (FN-24, from the Demo into the framework). An Apply Effects task applies to the
+    /// untargetable moment of Tumble's roll. An Apply Effects task applies to the
     /// ability's targets alone.
     /// </summary>
     [Serializable]
@@ -108,8 +108,8 @@ namespace FarEmerald.PlayForge
     }
 
     /// <summary>
-    /// Moves its caster toward its ability's target, or away from it, over a moment, as Tumble's roll (FN-24, from the Demo
-    /// into the framework). Its distance and duration are read as it starts, at its ability's level; it moves along the
+    /// Moves its caster toward its ability's target, or away from it, over a moment, as Tumble's roll.
+    /// Its distance and duration are read as it starts, at its ability's level; it moves along the
     /// ground by its caster's time, a critical section, holding its caster's own mover, where it has one, while it moves.
     /// A caster with no object in the scene doesn't move.
     /// </summary>
@@ -166,7 +166,7 @@ namespace FarEmerald.PlayForge
 
     /// <summary>
     /// Puts its caster at its ability's target at once, as a blink: at the point, no farther than its reach, or behind the
-    /// entity targeted, as Shadow Step does (FN-24, from the Demo into the framework). Its reach and how far behind are read
+    /// entity targeted, as Shadow Step does. Its reach and how far behind are read
     /// as it starts, at its ability's level; its caster's own mover, where it has one, is stopped after.
     /// </summary>
     [Serializable]
@@ -213,7 +213,7 @@ namespace FarEmerald.PlayForge
 
     /// <summary>
     /// Uses up items its caster holds, as a potion's use does: the Healing Salve's ability ends with it, after its heal, and
-    /// the last one used, the item and its ability go (FN-24, from the Demo into the framework). Its item system's Item
+    /// the last one used, the item and its ability go. Its item system's Item
     /// Consumed hears it, so a game's own bookkeeping, as a shop's stock, follows.
     /// </summary>
     [Serializable]

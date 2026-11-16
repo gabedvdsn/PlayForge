@@ -4,7 +4,7 @@ using UnityEngine.UIElements;
 namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
-    /// Has a kind popup open PlayForge's dropdown in place of Unity's menu (EP-1), as a number field's Kind does: its
+    /// Has a kind popup open PlayForge's dropdown in place of Unity's menu, as a number field's Kind does: its
     /// choices, each in the submenus its menu path names, as "Scaler/Clamped" files Clamped under Scaler, the value checked,
     /// and each one's context where it has one. The popup stays Unity's, its value and its choices, so what binds it and what
     /// reads it are as they were; only its menu changes. That menu was the operating system's, which ran the screen's height.

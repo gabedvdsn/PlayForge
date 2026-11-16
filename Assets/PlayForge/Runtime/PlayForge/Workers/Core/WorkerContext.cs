@@ -23,7 +23,7 @@ namespace FarEmerald.PlayForge
         /// The change value being processed.
         /// Inline workers can modify this via Override/Add/Multiply.
         /// The commit reuses it once it's done, so an inline worker reads it during the call. A deferred worker's
-        /// actions may keep it: a change handed to one is left to them (GAS-P6).
+        /// actions may keep it: a change handed to one is left to them.
         /// </summary>
         public readonly ChangeValue Change;
         
@@ -67,7 +67,7 @@ namespace FarEmerald.PlayForge
     {
         /// <summary>
         /// Whose workers ran: the impact's dealer, as impact workers run for the dealer. The one hit is
-        /// <see cref="ImpactData"/>'s Target (GAS-72).
+        /// <see cref="ImpactData"/>'s Target.
         /// </summary>
         public readonly ISource System;
         public readonly ImpactData ImpactData;
@@ -109,7 +109,7 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// For an instant effect's removal, every impact it made, one per attribute, of which ImpactData is the
-        /// last. Its removal workers saw only that one (GAS-28). Empty otherwise.
+        /// last. Its removal workers saw only that one. Empty otherwise.
         /// </summary>
         public readonly IReadOnlyList<ImpactData> Impacts;
 
@@ -118,7 +118,7 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// The worker's state for this application of its effect (<see cref="GameplayEffectSpec.GetWorkerState{T}"/>);
-        /// null where the carrier isn't an effect's spec (FEAT-29).
+        /// null where the carrier isn't an effect's spec.
         /// </summary>
         public T GetState<T>(AbstractEffectWorker worker) where T : class, new() => Spec?.GetWorkerState<T>(worker);
 

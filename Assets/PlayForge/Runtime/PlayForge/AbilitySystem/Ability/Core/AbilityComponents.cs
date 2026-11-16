@@ -4,14 +4,14 @@ using UnityEngine;
 namespace FarEmerald.PlayForge
 {
     /// <summary>
-    /// Charges: how many uses an ability holds, each spending a charge that comes back as its Recharge says (TW-17,
-    /// FN-14). Without one, an ability has one charge, an ordinary cooldown. An ability holds one at most.
+    /// Charges: how many uses an ability holds, each spending a charge that comes back as its Recharge says.
+    /// Without one, an ability has one charge, an ordinary cooldown. An ability holds one at most.
     /// </summary>
     [Serializable]
     [ForgeMenu(Description = "How many uses the ability holds, each coming back as it recharges.")]
     public sealed class ChargesAbilityComponent : AbstractAbilityComponent
     {
-        /// <summary>What it does, in one line (EP-5).</summary>
+        /// <summary>What it does, in one line.</summary>
         public override string Describe() => $"{NumberText.Of(Charges)} charges, {(Recharge is AllAtOnceRecharge ? "all recharging at once" : "each recharging on its own")}";
 
         [Tooltip("How many uses it holds, each spending a charge that comes back as its Recharge says; 1 is an ordinary " +
@@ -29,14 +29,14 @@ namespace FarEmerald.PlayForge
 
     /// <summary>
     /// Toggle: an effect an ability turns on its caster with one use, paying its cost, and off with the next, starting its
-    /// cooldown (TW-20, FN-14). As its holder forgets the ability, the effect comes off, where it stayed on. An ability
+    /// cooldown. As its holder forgets the ability, the effect comes off, where it stayed on. An ability
     /// holds one at most.
     /// </summary>
     [Serializable]
     [ForgeMenu(Description = "Turns an effect on with one use and off with the next.")]
     public sealed class ToggleAbilityComponent : AbstractAbilityComponent
     {
-        /// <summary>What it does, in one line (EP-5).</summary>
+        /// <summary>What it does, in one line.</summary>
         public override string Describe() => $"Toggles {NameOf(Effect)}";
 
         [Tooltip("The effect it toggles on its caster: used, it puts the effect on, paying its cost; used again, it takes " +
@@ -49,8 +49,8 @@ namespace FarEmerald.PlayForge
     }
 
     /// <summary>
-    /// Cast Range: how far from its caster an ability's target may be, the one range it has, read at its level (FN-14,
-    /// Decision 77). An activation handed a target or a point beyond it is refused as out of range; targeting that picks
+    /// Cast Range: how far from its caster an ability's target may be, the one range it has, read at its level.
+    /// An activation handed a target or a point beyond it is refused as out of range; targeting that picks
     /// one beyond it ends the activation there; a targeting task with a range of its own searches within it, from the
     /// caster; and the lab's bots cast it only once their foe is within it. 0 reaches anywhere. An ability holds one at
     /// most.
@@ -59,7 +59,7 @@ namespace FarEmerald.PlayForge
     [ForgeMenu(Description = "How far from the caster the ability's target may be.")]
     public sealed class CastRangeAbilityComponent : AbstractAbilityComponent
     {
-        /// <summary>What it does, in one line (EP-5).</summary>
+        /// <summary>What it does, in one line.</summary>
         public override string Describe() => $"Range {NumberText.Of(Range)}";
 
         [Tooltip("How far from its caster its target or point may be, read at the ability's level; 0 reaches anywhere")]
@@ -77,7 +77,7 @@ namespace FarEmerald.PlayForge
     }
 
     /// <summary>
-    /// What reads an ability's Cast Range (FN-14): how far it reaches, at the ability's level, and whether a target or a
+    /// What reads an ability's Cast Range: how far it reaches, at the ability's level, and whether a target or a
     /// point lies beyond it, from its caster.
     /// </summary>
     public static class ForgeCastRange

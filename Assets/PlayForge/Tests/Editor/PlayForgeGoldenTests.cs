@@ -8,11 +8,10 @@ using ForgeAttribute = FarEmerald.PlayForge.Attribute;
 namespace FarEmerald.PlayForge.Tests
 {
     /// <summary>
-    /// Golden tests for the impact-model overhaul (Docs/IMPACT_MODEL_REFACTOR.md, Phase 0).
+    /// Golden tests: scenarios that pin what PlayForge's effects, attributes, abilities and processes do.
     ///
     /// Every scenario must pass. RunScenario's targetSemantics flag reports a failure as
-    /// expected-red instead; no scenario uses it, and none may (SP-16 in Docs/REFACTOR_PLAN.md).
-    /// S13 onward carry the tracker ID they pin in their names.
+    /// expected-red instead; no scenario uses it, and none may.
     ///
     /// Run in the Test Runner (GoldenScenarioTests) or headless; RunAll exits batch mode
     /// itself, with 1 on failure:
@@ -20,7 +19,7 @@ namespace FarEmerald.PlayForge.Tests
     ///         -executeMethod FarEmerald.PlayForge.Tests.PlayForgeGoldenTests.RunAll
     ///
     /// The Test Runner also runs each scenario as a case of GoldenScenarioTests (Tests/Golden), so
-    /// -runTests and CI report each one by name (SP-18):
+    /// -runTests and CI report each one by name:
     ///   Unity -batchmode -projectPath &lt;proj&gt; -runTests -testPlatform EditMode
     ///         -assemblyNames FarEmerald.PlayForge.Tests.Golden -testResults &lt;file&gt;
     /// </summary>
@@ -34,7 +33,7 @@ namespace FarEmerald.PlayForge.Tests
         {
             public string Name;
             public bool Passed;
-            public bool TargetSemantics; // red-until-refactor scenarios
+            public bool TargetSemantics; // scenarios reported as expected-red
             public string Detail;
         }
 
@@ -42,7 +41,7 @@ namespace FarEmerald.PlayForge.Tests
         private static Result current;
 
         /// <summary>
-        /// Every scenario, in the order RunAll runs them. GoldenScenarioTests runs each as a test case (SP-18).
+        /// Every scenario, in the order RunAll runs them. GoldenScenarioTests runs each as a test case.
         /// </summary>
         private static readonly (string Name, System.Action Run)[] Scenarios =
         {
@@ -58,19 +57,19 @@ namespace FarEmerald.PlayForge.Tests
             (nameof(S10_ReplaceOldContainer_Idempotent), S10_ReplaceOldContainer_Idempotent),
             (nameof(S11_GroupAttribution_BaseVsBonus), S11_GroupAttribution_BaseVsBonus),
             (nameof(S12_AbilityInspector_PerLevelSeries), S12_AbilityInspector_PerLevelSeries),
-            (nameof(S13_GAS_10_OngoingRequirement_PausesPeriodicTicks), S13_GAS_10_OngoingRequirement_PausesPeriodicTicks),
-            (nameof(S14_GAS_11_AbilitySourceTagRequirements_BlockActivation), S14_GAS_11_AbilitySourceTagRequirements_BlockActivation),
-            (nameof(S15_GAS_02_PreChangeWorkers_AdjustTheCommittedDelta), S15_GAS_02_PreChangeWorkers_AdjustTheCommittedDelta),
-            (nameof(S16_GAS_12_RawDelta_MovesBaseAndCurrentTogether), S16_GAS_12_RawDelta_MovesBaseAndCurrentTogether),
-            (nameof(S17_GAS_P1_IdleFrame_AllocatesNothing), S17_GAS_P1_IdleFrame_AllocatesNothing),
-            (nameof(S18_GAS_P2_TagChecks_AllocateNothing), S18_GAS_P2_TagChecks_AllocateNothing),
-            (nameof(S19_TS_04_BrokenAbility_IsReported), S19_TS_04_BrokenAbility_IsReported),
-            (nameof(S20_PC_01_ThrowingStep_DoesNotStallTheFrame), S20_PC_01_ThrowingStep_DoesNotStallTheFrame),
-            (nameof(S21_TS_03_RepeatedActivation_ReusesItsCompiledBehaviour), S21_TS_03_RepeatedActivation_ReusesItsCompiledBehaviour),
-            (nameof(S22_GAS_13_SystemInitialized_ReachesEarlySubscribers), S22_GAS_13_SystemInitialized_ReachesEarlySubscribers),
-            (nameof(S23_TS_01_Resume_LeavesTimeScaleAlone), S23_TS_01_Resume_LeavesTimeScaleAlone),
-            (nameof(S24_GAS_03_GiveItem_LandsOnTheShelf), S24_GAS_03_GiveItem_LandsOnTheShelf),
-            (nameof(S25_GAS_01_RuntimeGAS_RunsItsEndOfFrame), S25_GAS_01_RuntimeGAS_RunsItsEndOfFrame),
+            (nameof(S13_OngoingRequirement_PausesPeriodicTicks), S13_OngoingRequirement_PausesPeriodicTicks),
+            (nameof(S14_AbilitySourceTagRequirements_BlockActivation), S14_AbilitySourceTagRequirements_BlockActivation),
+            (nameof(S15_PreChangeWorkers_AdjustTheCommittedDelta), S15_PreChangeWorkers_AdjustTheCommittedDelta),
+            (nameof(S16_RawDelta_MovesBaseAndCurrentTogether), S16_RawDelta_MovesBaseAndCurrentTogether),
+            (nameof(S17_IdleFrame_AllocatesNothing), S17_IdleFrame_AllocatesNothing),
+            (nameof(S18_TagChecks_AllocateNothing), S18_TagChecks_AllocateNothing),
+            (nameof(S19_BrokenAbility_IsReported), S19_BrokenAbility_IsReported),
+            (nameof(S20_ThrowingStep_DoesNotStallTheFrame), S20_ThrowingStep_DoesNotStallTheFrame),
+            (nameof(S21_RepeatedActivation_ReusesItsCompiledBehaviour), S21_RepeatedActivation_ReusesItsCompiledBehaviour),
+            (nameof(S22_SystemInitialized_ReachesEarlySubscribers), S22_SystemInitialized_ReachesEarlySubscribers),
+            (nameof(S23_Resume_LeavesTimeScaleAlone), S23_Resume_LeavesTimeScaleAlone),
+            (nameof(S24_GiveItem_LandsOnTheShelf), S24_GiveItem_LandsOnTheShelf),
+            (nameof(S25_RuntimeGAS_RunsItsEndOfFrame), S25_RuntimeGAS_RunsItsEndOfFrame),
         };
 
         /// <summary>Each scenario's name, for the Test Runner's cases.</summary>
@@ -86,7 +85,7 @@ namespace FarEmerald.PlayForge.Tests
 
         /// <summary>
         /// Runs one scenario by name and returns what went wrong, or null when it passed. The Test Runner's cases call
-        /// this, one per scenario (SP-18).
+        /// this, one per scenario.
         /// </summary>
         public static string Run(string name)
         {
@@ -485,7 +484,7 @@ namespace FarEmerald.PlayForge.Tests
 
         /// <summary>
         /// Committed history lands where it was measured, after the % modifiers, so they don't
-        /// scale it (Decision 4, GAS-15): 50 +(instant ×1.2 → +10 committed) → 60; ×1.5 modifier
+        /// scale it: 50 +(instant ×1.2 → +10 committed) → 60; ×1.5 modifier
         /// → 50×1.5 + 10 = 85. It joined the baseline before, and the aura made it 90.
         /// </summary>
         private static void S6_CommittedHistoryLandsAfterModifiers()
@@ -738,9 +737,9 @@ namespace FarEmerald.PlayForge.Tests
         /// Ongoing requirements gate periodic ticks: a regen that avoids a tag stops ticking while
         /// another effect grants that tag, and resumes once it is gone. The granting effect lands AFTER
         /// the regen — the order that used to leave the regen ticking, because ongoing state was
-        /// evaluated before the new effect's tags were compiled (PlayForge log PF-002).
+        /// evaluated before the new effect's tags were compiled.
         /// </summary>
-        private static void S13_GAS_10_OngoingRequirement_PausesPeriodicTicks()
+        private static void S13_OngoingRequirement_PausesPeriodicTicks()
         {
             var attr = MakeAttribute("Poise");
             var gas = MakeGAS(MakeSet(MakeElement(attr, 0, 100)));
@@ -774,9 +773,9 @@ namespace FarEmerald.PlayForge.Tests
         /// <summary>
         /// An ability's own source tag requirements gate activation: avoiding "stunned" blocks it
         /// while the caster has that tag, and allows it again once the tag is gone. These used to be
-        /// authored but never checked (PlayForge log PF-003).
+        /// authored but never checked.
         /// </summary>
-        private static void S14_GAS_11_AbilitySourceTagRequirements_BlockActivation()
+        private static void S14_AbilitySourceTagRequirements_BlockActivation()
         {
             var gas = MakeGAS(MakeSet(MakeElement(MakeAttribute("Unused"), 1, 1)));
             var stunned = Tag.Generate(Unique("Test.Status.Stunned"));
@@ -819,10 +818,9 @@ namespace FarEmerald.PlayForge.Tests
         /// Pre-change workers and the pre-change callback adjust what a commit records. Armor is a
         /// pre-change <see cref="MathAttributeWorker"/> scaling incoming Health loss by (1 − Armor):
         /// it sees the INCOMING delta, the commit clamps after, and history records the clamped
-        /// result. Both used to be silent no-ops — the commit ran from the original value
-        /// (PlayForge log PF-004).
+        /// result. Both used to be silent no-ops — the commit ran from the original value.
         /// </summary>
-        private static void S15_GAS_02_PreChangeWorkers_AdjustTheCommittedDelta()
+        private static void S15_PreChangeWorkers_AdjustTheCommittedDelta()
         {
             var health = MakeAttribute("Health");
             var armor = MakeAttribute("Armor");
@@ -877,7 +875,7 @@ namespace FarEmerald.PlayForge.Tests
             AssertValue(gas, health, "heal after an overkill hit", 50);
 
             // Raw deltas go through the same path. The pre-change callback is the original repro: it
-            // halves a −30 delta to −15. Workers see raw deltas too (Decision 9), so the armor worker
+            // halves a −30 delta to −15. Workers see raw deltas too, so the armor worker
             // then halves what the callback left, and Health falls by 7.5.
             AttributeSystemCallbacks.AttributeChangeDelegate halveLoss = (attribute, change) =>
             {
@@ -897,10 +895,10 @@ namespace FarEmerald.PlayForge.Tests
         /// <summary>
         /// A raw delta that moves Base and Current together lands whole on a pool clamped to its Base.
         /// Raising both (a max-Health bonus that also heals; an enemy's dials) used to lose the
-        /// Current gain: it was clamped against the old Base before the Base rose (PlayForge log
-        /// PF-005). Lowering both still ends with Current inside the new Base.
+        /// Current gain: it was clamped against the old Base before the Base rose.
+        /// Lowering both still ends with Current inside the new Base.
         /// </summary>
-        private static void S16_GAS_12_RawDelta_MovesBaseAndCurrentTogether()
+        private static void S16_RawDelta_MovesBaseAndCurrentTogether()
         {
             var poise = MakeAttribute("Poise");
             var dial = MakeAttribute("Dial");
@@ -925,9 +923,9 @@ namespace FarEmerald.PlayForge.Tests
         /// A GAS with nothing going on costs no garbage per frame. Every fighter's GAS runs its end of
         /// frame each frame, and that used to allocate about 1 KB apiece: the action queue enumerated a
         /// SortedDictionary to learn it was empty, and a frame summary snapshot copied six lists for a
-        /// callback nobody listened to (PlayForge log PF-006).
+        /// callback nobody listened to.
         /// </summary>
-        private static void S17_GAS_P1_IdleFrame_AllocatesNothing()
+        private static void S17_IdleFrame_AllocatesNothing()
         {
             var health = MakeAttribute("Health");
             var gas = MakeGAS(MakeSet(MakeElement(health, 100, 100, EAttributeOverflowPolicy.ZeroToBase)));
@@ -955,9 +953,9 @@ namespace FarEmerald.PlayForge.Tests
         /// they read still follow tags as they come and go. Both run several times for every effect
         /// applied or removed, and they used to allocate about 15 KB per effect between them: the
         /// applied tags were copied into a new list for every check (twice over), the granted tags were
-        /// gathered through iterators, and tag queries counted with LINQ (PlayForge log PF-007).
+        /// gathered through iterators, and tag queries counted with LINQ.
         /// </summary>
-        private static void S18_GAS_P2_TagChecks_AllocateNothing()
+        private static void S18_TagChecks_AllocateNothing()
         {
             var health = MakeAttribute("Health");
             var gas = MakeGAS(MakeSet(MakeElement(health, 100, 100, EAttributeOverflowPolicy.ZeroToBase)));
@@ -1004,10 +1002,10 @@ namespace FarEmerald.PlayForge.Tests
         /// <summary>
         /// An exception thrown while an ability runs is reported, not swallowed. A bare catch around
         /// execution, meant for cancellation, also ate real failures, such as an asset loader that throws
-        /// before any stage starts, so a broken ability looked like one that did nothing (PlayForge log
-        /// PF-008, was PF-B08). Cancellation stays silent.
+        /// before any stage starts, so a broken ability looked like one that did nothing.
+        /// Cancellation stays silent.
         /// </summary>
-        private static void S19_TS_04_BrokenAbility_IsReported()
+        private static void S19_BrokenAbility_IsReported()
         {
             var gas = MakeGAS(MakeSet(MakeElement(MakeAttribute("Unused"), 1, 1)));
             var ability = MakeLoaderAbility("Broken", new ThrowingLoader());
@@ -1063,10 +1061,10 @@ namespace FarEmerald.PlayForge.Tests
         /// <summary>
         /// Activating an ability again reuses the behaviour an earlier activation compiled, once that activation
         /// is over, instead of compiling it anew. Compiling was most of what an activation allocated, about
-        /// 2.8 KB each, and a fighter activates several abilities a second (PlayForge log PF-012, was PF-B09).
+        /// 2.8 KB each, and a fighter activates several abilities a second.
         /// The activations here end at once, on their loader failing, which they do the same way every time.
         /// </summary>
-        private static void S21_TS_03_RepeatedActivation_ReusesItsCompiledBehaviour()
+        private static void S21_RepeatedActivation_ReusesItsCompiledBehaviour()
         {
             var gas = MakeGAS(MakeSet(MakeElement(MakeAttribute("Unused"), 1, 1)));
             var ability = MakeLoaderAbility("Repeated", new ThrowingLoader());
@@ -1108,9 +1106,9 @@ namespace FarEmerald.PlayForge.Tests
         /// after it still step, and a state queued for it, such as a termination, still applies. A throwing
         /// step used to end the whole frame's stepping and skip its own flush, so a fighter despawned on a
         /// frame where something else threw kept stepping its destroyed body for good, throwing every frame
-        /// and starving every process stepped after it (PlayForge log PF-011).
+        /// and starving every process stepped after it.
         /// </summary>
-        private static void S20_PC_01_ThrowingStep_DoesNotStallTheFrame()
+        private static void S20_ThrowingStep_DoesNotStallTheFrame()
         {
             // A process control of its own, so the test steps only its processes
             var previous = ProcessControl.Instance;
@@ -1176,11 +1174,11 @@ namespace FarEmerald.PlayForge.Tests
         }
 
         /// <summary>
-        /// PF-013: a MonoBehaviour GAS raises <c>OnSystemInitialized</c> to a subscriber that attached before it
+        /// A MonoBehaviour GAS raises <c>OnSystemInitialized</c> to a subscriber that attached before it
         /// was registered, once it's ready to use. Its callbacks used to be created partway through
-        /// initialization, just before the event fired, so nobody outside could subscribe in time (PF-C18).
+        /// initialization, just before the event fired, so nobody outside could subscribe in time.
         /// </summary>
-        private static void S22_GAS_13_SystemInitialized_ReachesEarlySubscribers()
+        private static void S22_SystemInitialized_ReachesEarlySubscribers()
         {
             // A process control of its own, as in S20
             var previous = ProcessControl.Instance;
@@ -1209,7 +1207,7 @@ namespace FarEmerald.PlayForge.Tests
             entity.WorkerGroup = new StandardWorkerGroup();
 
             // Hidden but in the scene: a GameObject outside any scene (HideAndDontSave) is cloned on registration
-            // and the clone initialized instead (PF-C19)
+            // and the clone initialized instead
             var body = new GameObject("S22 Body") { hideFlags = HideFlags.HideInHierarchy | HideFlags.DontSaveInEditor };
 
             try
@@ -1294,10 +1292,10 @@ namespace FarEmerald.PlayForge.Tests
         }
 
         /// <summary>
-        /// Resuming a sequence leaves Time.timeScale alone (TS-1, PlayForge log PF-001). Time scale is
+        /// Resuming a sequence leaves Time.timeScale alone. Time scale is
         /// global, so a sequence resuming during a hit-stop or slow motion must not end it.
         /// </summary>
-        private static void S23_TS_01_Resume_LeavesTimeScaleAlone()
+        private static void S23_Resume_LeavesTimeScaleAlone()
         {
             float saved = Time.timeScale;
             try
@@ -1322,10 +1320,10 @@ namespace FarEmerald.PlayForge.Tests
         }
 
         /// <summary>
-        /// A GAS can be given an item (GAS-3). ItemSystemComponent never created its shelf, so GiveItem
+        /// A GAS can be given an item. ItemSystemComponent never created its shelf, so GiveItem
         /// threw a NullReferenceException, and every read of the empty inventory allocated a new list.
         /// </summary>
-        private static void S24_GAS_03_GiveItem_LandsOnTheShelf()
+        private static void S24_GiveItem_LandsOnTheShelf()
         {
             var gas = MakeGAS(MakeSet(MakeElement(MakeAttribute("Unused"), 1, 1)));
             var items = gas.GetItemSystem();
@@ -1341,12 +1339,12 @@ namespace FarEmerald.PlayForge.Tests
         }
 
         /// <summary>
-        /// A runtime GAS registered with ProcessControl runs its end of frame each frame (GAS-1). It stepped
+        /// A runtime GAS registered with ProcessControl runs its end of frame each frame. It stepped
         /// in Update only, so WhenLateUpdate, and with it EndOfFrame (queued actions, tag workers, analysis
         /// workers, death), never ran. The other scenarios call WhenLateUpdate by hand, which is how this
         /// stayed hidden, so this one steps the GAS through a ProcessControl's own loop.
         /// </summary>
-        private static void S25_GAS_01_RuntimeGAS_RunsItsEndOfFrame()
+        private static void S25_RuntimeGAS_RunsItsEndOfFrame()
         {
             // A process control of its own, as in S20, so the test steps only its own process
             var previous = ProcessControl.Instance;

@@ -17,7 +17,7 @@ namespace FarEmerald.PlayForge
         
         /// <summary>
         /// The caster's tags while the ability runs. When they fail, the ability is interrupted, so a stun ends a
-        /// channel, and while they fail, it can't activate. Requirements weren't checked once an ability ran (FEAT-5).
+        /// channel, and while they fail, it can't activate. Requirements weren't checked once an ability ran.
         /// </summary>
         [Tooltip("Caster requirements while the ability runs: when they fail, the ability is interrupted")]
         public AvoidRequireTagGroup WhileActiveRequirements;
@@ -59,7 +59,7 @@ namespace FarEmerald.PlayForge
             return TargetRequirements?.Validate(tags) ?? true;
         }
 
-        /// <summary>Whether the caster's tags pass the While active group, which holds when it asks for nothing (FEAT-5).</summary>
+        /// <summary>Whether the caster's tags pass the While active group, which holds when it asks for nothing.</summary>
         public bool CheckWhileActiveRequirements(TagCache tags)
         {
             return tags == null || WhileActiveRequirements == null || !WhileActiveRequirements.HasAnyRequirements

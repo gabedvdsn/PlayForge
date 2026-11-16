@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
-    /// <summary>Whose workers a Worker number asks (FEAT-29).</summary>
+    /// <summary>Whose workers a Worker number asks.</summary>
     public enum EWorkerNumberFrom
     {
         [Tooltip("The workers of the effect whose number it is, asked about that application of the effect")]
@@ -17,7 +17,7 @@ namespace FarEmerald.PlayForge
     }
 
     /// <summary>
-    /// A value a worker answers under a key (FEAT-29, NUM-12): the number asks, and a worker that implements
+    /// A value a worker answers under a key: the number asks, and a worker that implements
     /// <see cref="INumberWorker"/> answers from what it knows, as how much health its effect's target has lost since the
     /// effect began. So work a number can't do alone goes to a worker, and the number reads the result: a curse whose
     /// every fourth tick deals a share of the damage its target took since it landed is one effect, with one worker.

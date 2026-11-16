@@ -11,8 +11,8 @@ namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
     /// What the effect's impact drawer and its entries' drawer share: the Operation field, which sets the operation and
-    /// the value it changes in one, as the Effect mockup's "Add to Current" does, and how an impact's delivery, magnitude
-    /// and commits read (ED-2, ED-3).
+    /// the value it changes in one, as "Add to Current" does, and how an impact's delivery, magnitude
+    /// and commits read.
     /// </summary>
     internal static class ImpactFields
     {
@@ -52,7 +52,7 @@ namespace FarEmerald.PlayForge.Editor
                 int op = Array.IndexOf(Operations, (ECalculationOperation)operation.intValue);
                 int at = Array.IndexOf(Slots, (EAttributeTarget)slot.intValue);
                 SetValueWithoutNotify(Mathf.Max(0, op) * Slots.Length + Mathf.Max(0, at));
-                // Selected impacts whose operations differ show a mixed value (ED-12)
+                // Selected impacts whose operations differ show a mixed value
                 showMixedValue = operation.hasMultipleDifferentValues || slot.hasMultipleDifferentValues;
             }
 

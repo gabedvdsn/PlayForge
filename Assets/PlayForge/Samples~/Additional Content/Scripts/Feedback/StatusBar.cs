@@ -6,7 +6,7 @@ using UnityEngine.UI;
 namespace FarEmerald.PlayForge.AdditionalContent
 {
     /// <summary>
-    /// A bar of icons over an entity, one for each effect on it that shows (AC-2): the effect's icon, or the first letters
+    /// A bar of icons over an entity, one for each effect on it that shows: the effect's icon, or the first letters
     /// of its name where it has none; its stacks; and a shade that fills as its time runs out. It reads the entity's
     /// effects each frame and leaves out those marked Not Visible, as cooldowns and items' bonuses are. On a world-space
     /// canvas of its own, turned to face the camera.
@@ -123,7 +123,7 @@ namespace FarEmerald.PlayForge.AdditionalContent
                 }
                 if (icons.Count >= MaxIcons) continue;
                 found[effect] = icons.Count;
-                // Its spec's icon, which may be its origin's (FN-25)
+                // Its spec's icon, which may be its origin's
                 icons.Add(new Icon(effect, stacks, left, container.Spec.GetIcon(), Letters(effect.GetName())));
             }
         }

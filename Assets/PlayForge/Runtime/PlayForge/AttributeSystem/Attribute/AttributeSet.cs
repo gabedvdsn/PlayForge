@@ -50,13 +50,13 @@ namespace FarEmerald.PlayForge
             meta.InitializeAttributeSystem(system, this);
 
             // The GAS gives out the set's workers, its subsets' with them, through InitWorkers. Given here too, each
-            // ran twice for whatever it saw (GAS-18)
+            // ran twice for whatever it saw
         }
 
         /// <summary>
         /// This set and every set below it, each once: this set, then each sub-set's in turn, depth first, the order
         /// collisions resolve in. A set that included itself, directly or through another, sent every walk over the
-        /// sub-sets round forever, and one reached by two paths counted twice (GAS-44).
+        /// sub-sets round forever, and one reached by two paths counted twice.
         /// </summary>
         public List<AttributeSet> SelfAndSubSets()
         {
@@ -68,7 +68,7 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// <see cref="SelfAndSubSets"/> into the caller's buffers, passing over any set already in
         /// <paramref name="seen"/>. It allocates nothing once the buffers have grown, for walks that run often, such as
-        /// tag compiling (GAS-P2).
+        /// tag compiling.
         /// </summary>
         public void CollectSelfAndSubSets(List<AttributeSet> into, HashSet<AttributeSet> seen)
         {
@@ -87,7 +87,7 @@ namespace FarEmerald.PlayForge
             foreach (var set in SelfAndSubSets())
             {
                 if (set.Attributes == null) continue;
-                // An element with no attribute gives none, so it isn't counted as one (GAS-54)
+                // An element with no attribute gives none, so it isn't counted as one
                 foreach (var attr in set.Attributes) if (attr?.Attribute != null) attributes.Add(attr.Attribute);
             }
             return attributes;
@@ -189,7 +189,7 @@ namespace FarEmerald.PlayForge
 
         public EMagnitudeOperation RealMagnitude = EMagnitudeOperation.UseMagnitude;
 
-        // A scaling that is no kind, as a Group with no members, reads as none: the number (ED-80)
+        // A scaling that is no kind, as a Group with no members, reads as none: the number
         public bool BypassScaling => AbstractScaler.IsNone(Scaling) || RealMagnitude == EMagnitudeOperation.UseMagnitude;
 
         public void CopyFrom(AttributeMagnitudeSpec other)
@@ -364,13 +364,13 @@ namespace FarEmerald.PlayForge
             foreach (var set in attributeSet.SelfAndSubSets()) HandleAttributeSet(set, owner);
         }
 
-        // One set's elements; the constructor walks the sets, each once (GAS-44)
+        // One set's elements; the constructor walks the sets, each once
         private void HandleAttributeSet(AttributeSet attributeSet, ISource owner)
         {
             foreach (AttributeSetElement element in attributeSet.Attributes)
             {
                 // An element with no attribute, as a list's "+" leaves one, gives nothing. As a dictionary key it threw,
-                // and the entity got none of its attributes (GAS-54)
+                // and the entity got none of its attributes
                 if (element?.Attribute == null) continue;
                 if (!matrix.TryGetValue(element.Attribute, out var table))
                 {
@@ -402,7 +402,7 @@ namespace FarEmerald.PlayForge
                     AttributeBlueprint blueprint = null;
                     if (defaults.Count > 0)
                     {
-                        // The first takes in the others, once each. It took itself, and each of the others twice (GAS-27)
+                        // The first takes in the others, once each. It took itself, and each of the others twice
                         blueprint = defaults[0];
                         for (int i = 1; i < defaults.Count; i++)
                         {
@@ -426,7 +426,7 @@ namespace FarEmerald.PlayForge
                 case EValueCollisionPolicy.UseAverage:
                 {
                     // The elements' resolved values, averaged, with bounds and rounding the first's. It took the first
-                    // alone (GAS-40)
+                    // alone
                     var blueprint = defaults[0];
                     for (int i = 1; i < defaults.Count; i++) blueprint.Average(defaults[i]);
                     system.ProvideAttribute(attribute, blueprint);
@@ -457,7 +457,7 @@ namespace FarEmerald.PlayForge
                     break;
                 }
                 // The values that would override the first are passed by, as a scaler group passes its overrides by, so
-                // the first stands. It fell through to the default and threw (GAS-40)
+                // the first stands. It fell through to the default and threw
                 case EValueCollisionPolicy.Ignore:
                 {
                     system.ProvideAttribute(attribute, defaults.First());

@@ -6,7 +6,7 @@ namespace FarEmerald.PlayForge
     /// <summary>
     /// A threshold on an attribute's ratio, its Current to its Base, as below half its health: the ratio against
     /// Threshold's Current, whatever Target says, as a ratio has no other side. Its Base target compared Base to Base,
-    /// which is always one; and with no Base there's no ratio, so no threshold is met (GAS-84, Decision 86).
+    /// which is always one; and with no Base there's no ratio, so no threshold is met.
     /// </summary>
     public abstract class TargetAttributeRatioThresholdEffectWorker : TargetAttributeThresholdEffectWorker
     {

@@ -48,8 +48,7 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// Files the packets of the targets a targeting task selected under <paramref name="query"/>, in their order and in
         /// place of what was there, so the first is the primary. Each was set as the primary, so each replaced the last,
-        /// and a task that selected several kept only the last of them: an Auto Target of every match kept the farthest
-        /// (GAS-62).
+        /// and a task that selected several kept only the last of them: an Auto Target of every match kept the farthest.
         /// </summary>
         public static void SetTargetingPackets(this ProcessDataPacket data, Tag query, IEnumerable<ITarget> targets)
         {
@@ -85,7 +84,7 @@ namespace FarEmerald.PlayForge
             return true;
         }
 
-        // An effect made from an ability's data, with the magnitudes the caller set on it (FEAT-2)
+        // An effect made from an ability's data, with the magnitudes the caller set on it
         private static GameplayEffectSpec Made(ITarget target, AbilityDataPacket data, GameplayEffect effect)
         {
             var spec = target.GenerateEffectSpec(data.EffectOrigin, effect);
@@ -136,7 +135,7 @@ namespace FarEmerald.PlayForge
                 float time = useUnscaledTime ? ForgeTime.UnscaledTime : ForgeTime.Time;
                 await body();
                 await ForgeTick.Next(timing, token);
-                // Now less then, not the other way round, which made it negative so the loop never ended (PC-25)
+                // Now less then, not the other way round, which made it negative so the loop never ended
                 float elapsed = (useUnscaledTime ? ForgeTime.UnscaledTime : ForgeTime.Time) - time;
                 elapsedDuration += elapsed;
 

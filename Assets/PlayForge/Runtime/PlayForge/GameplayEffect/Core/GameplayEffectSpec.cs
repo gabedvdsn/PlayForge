@@ -12,8 +12,7 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// The application's number on its target, counted from 1 as the target's effects land, or 0 until it lands. An
-        /// application had no ID, so nothing could tell two of one effect apart, as a looping cue or a replay needs
-        /// (FEAT-13).
+        /// application had no ID, so nothing could tell two of one effect apart, as a looping cue or a replay needs.
         /// </summary>
         public int ApplicationId { get; internal set; }
         public ISource Source;
@@ -22,7 +21,7 @@ namespace FarEmerald.PlayForge
         public TrackedImpact TrackedImpact;
 
         /// <summary>
-        /// The last hit's run through a pipeline: each stage's before and after, and a note, as a critical hit (TW-2). Null
+        /// The last hit's run through a pipeline: each stage's before and after, and a note, as a critical hit. Null
         /// until one runs; one is kept for the spec and filled again by each run.
         /// </summary>
         public ValueBreakdown Breakdown { get; private set; }
@@ -45,11 +44,11 @@ namespace FarEmerald.PlayForge
 
         private Dictionary<IScaler, AttributeValue?> SourceCapturedAttributes;
 
-        // Each worker's state for this application, made the first time the worker asks (FEAT-29)
+        // Each worker's state for this application, made the first time the worker asks
         private Dictionary<AbstractEffectWorker, object> workerStates;
         private ComponentStates componentStates;
 
-        /// <summary>What the effect's components keep for this application of it (FN-14).</summary>
+        /// <summary>What the effect's components keep for this application of it.</summary>
         public ComponentStates ComponentStates => componentStates ??= new ComponentStates();
 
         /// <summary>
@@ -57,7 +56,7 @@ namespace FarEmerald.PlayForge
         /// while the application lasts, as a task's state is kept on its activation's data. A worker is one object on
         /// its effect's asset, shared by every application, so what it counts for one of them is kept here: the
         /// target's health as the effect began, how many times it has ticked. A worker that answers numbers reads it
-        /// back as it's asked (FEAT-29).
+        /// back as it's asked.
         /// </summary>
         public T GetWorkerState<T>(AbstractEffectWorker worker) where T : class, new()
         {
@@ -69,20 +68,20 @@ namespace FarEmerald.PlayForge
             return created;
         }
 
-        // Magnitudes the caller set under a tag, which a Set By Caller scaler reads (FEAT-2)
+        // Magnitudes the caller set under a tag, which a Set By Caller scaler reads
         private Dictionary<Tag, float> setByCaller;
         private static readonly Dictionary<Tag, float> NoMagnitudes = new();
 
-        /// <summary>The magnitudes the caller set, by tag, which a Set By Caller scaler reads (FEAT-2).</summary>
+        /// <summary>The magnitudes the caller set, by tag, which a Set By Caller scaler reads.</summary>
         public IReadOnlyDictionary<Tag, float> SetByCallerMagnitudes => setByCaller ?? NoMagnitudes;
 
         /// <summary>
         /// Sets a magnitude under a tag, as Unreal's SetByCaller does, for a Set By Caller scaler to read: code that knows
-        /// the amount as it applies the effect passes it in. Set it before the spec is applied (FEAT-2).
+        /// the amount as it applies the effect passes it in. Set it before the spec is applied.
         /// </summary>
         public void SetByCaller(Tag key, float magnitude) => (setByCaller ??= new Dictionary<Tag, float>())[key] = magnitude;
 
-        /// <summary>The magnitude the caller set under the tag (FEAT-2).</summary>
+        /// <summary>The magnitude the caller set under the tag.</summary>
         public bool TryGetSetByCaller(Tag key, out float magnitude)
         {
             magnitude = 0f;
@@ -91,7 +90,7 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// Takes each magnitude another set, as an effect is made from it: its container's, or an activation's data. One
-        /// set on this spec already gives way (FEAT-2).
+        /// set on this spec already gives way.
         /// </summary>
         public void TakeSetByCaller(IReadOnlyDictionary<Tag, float> magnitudes)
         {
@@ -106,36 +105,36 @@ namespace FarEmerald.PlayForge
         private IReadOnlyList<IAttributeImpacter> cachedImpacters;
 
         /// <summary>
-        /// What modifiers changed of this application (TW-7): its contained effects, its numbers, its overflow, its time,
+        /// What modifiers changed of this application: its contained effects, its numbers, its overflow, its time,
         /// its stacks, its chance and its tags. Null where none did.
         /// </summary>
         public EffectChanges Changes { get; internal set; }
 
-        /// <summary>Whether it landed by another's area, so it spreads no further (TW-10).</summary>
+        /// <summary>Whether it landed by another's area, so it spreads no further.</summary>
         public bool FromArea { get; internal set; }
 
         /// <summary>
         /// How many spreads it is from where its effect first landed: 0 for a landing of its own, 1 for one a Spread
-        /// component made from it, and on (FN-14).
+        /// component made from it, and on.
         /// </summary>
         public int SpreadHop { get; internal set; }
 
-        /// <summary>Whether an aura lent it, which takes it back as its holder goes or the one it's on leaves (FN-16).</summary>
+        /// <summary>Whether an aura lent it, which takes it back as its holder goes or the one it's on leaves.</summary>
         public bool LentByAura { get; internal set; }
 
-        /// <summary>Whether a lasting impact of its fades with it, a barrier's, so its shelf refreshes it as it ticks (TW-12).</summary>
+        /// <summary>Whether a lasting impact of its fades with it, a barrier's, so its shelf refreshes it as it ticks.</summary>
         internal bool Fades { get; private set; }
 
         /// <summary>
         /// Whether it lands as a container of its own, whatever its effect does when it's applied again, as each spent
-        /// charge's cooldown runs alone (TW-17).
+        /// charge's cooldown runs alone.
         /// </summary>
         internal bool OwnContainer { get; set; }
 
-        /// <summary>What its lasting transfers hold on each side, to give back as it ends (TW-20). Null where none holds any.</summary>
+        /// <summary>What its lasting transfers hold on each side, to give back as it ends. Null where none holds any.</summary>
         internal List<LentTransfer> TransfersLent { get; set; }
 
-        // Each Chance condition's roll for this hit, kept so a hit read twice reads the same (TW-8)
+        // Each Chance condition's roll for this hit, kept so a hit read twice reads the same
         private Dictionary<object, bool> rolls;
 
         internal bool TryGetRoll(object key, out bool rolled)
@@ -147,7 +146,7 @@ namespace FarEmerald.PlayForge
         internal void KeepRoll(object key, bool rolled) => (rolls ??= new Dictionary<object, bool>())[key] = rolled;
 
         /// <summary>
-        /// What its hits carry for their on-hit effects (TW-8): its effect's own where it sets one, or else the ability's
+        /// What its hits carry for their on-hit effects: its effect's own where it sets one, or else the ability's
         /// that made it, or 1. On Hit's effects scale their chance and duration by it, and 0 sets nothing off.
         /// </summary>
         public float ProcCoefficient =>
@@ -156,7 +155,7 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// Its icon: its effect's own, or, under its effect's Inherit From Origin, its origin's texture under the effect's
-        /// Origin Texture, the ability, item or entity that applied it, its own where the origin has none of it (FN-25).
+        /// Origin Texture, the ability, item or entity that applied it, its own where the origin has none of it.
         /// </summary>
         public Texture2D GetIcon()
         {
@@ -180,7 +179,7 @@ namespace FarEmerald.PlayForge
             SourceCapturedAttributes = new Dictionary<IScaler, AttributeValue?>();
         }
         
-        // SourcedImpact / AttributeImpact removed (refactor step 9). The spec's
+        // SourcedImpact / AttributeImpact removed. The spec's
         // GetImpacters() pipeline (ScalerImpacter wrapping ImpactSpecification) replaces
         // both — the cached attribute aggregator handles op + target-slot dispatch in
         // one place (CachedAttributeValue.Recompute / ApplyOneShotImpacters), eliminating
@@ -240,7 +239,7 @@ namespace FarEmerald.PlayForge
         public void RunWorkerApplication(EffectWorkerContext ctx)
         {
             foreach (AbstractEffectWorker worker in Base.Workers) Run(worker, worker.OnEffectApplication(ctx), in ctx, EEffectWorkerHook.Application);
-            // Its components hear it, at the moment its workers do (FN-14)
+            // Its components hear it, at the moment its workers do
             if (Base.Components != null)
                 foreach (var component in Base.Components) component?.Land(new EffectComponentContext(ctx));
         }
@@ -248,19 +247,19 @@ namespace FarEmerald.PlayForge
         {
             // A periodic effect's workers are called every frame, with the ticks that frame executes, most frames none
             foreach (var worker in Base.Workers) Run(worker, worker.OnEffectTick(ctx), in ctx, EEffectWorkerHook.Tick);
-            // Its components hear a tick as one executes, at the moment its workers do (FN-14): each call was a tick to
-            // them, so a Spread each tick spread every frame (GAS-79)
+            // Its components hear a tick as one executes, at the moment its workers do: each call was a tick to
+            // them, so a Spread each tick spread every frame
             if (Base.Components != null && ctx.ExecuteTicks > 0)
                 foreach (var component in Base.Components) component?.Tick(new EffectComponentContext(ctx));
         }
         public void RunWorkerRemoval(EffectWorkerContext ctx)
         {
             foreach (AbstractEffectWorker worker in Base.Workers) Run(worker, worker.OnEffectRemoval(ctx), in ctx, EEffectWorkerHook.Removal);
-            // Its components hear it, at the moment its workers do (FN-14)
+            // Its components hear it, at the moment its workers do
             if (Base.Components != null)
                 foreach (var component in Base.Components) component?.End(new EffectComponentContext(ctx));
         }
-        // A worker's actions, queued; and where the entity it ran on is heard, its run told with what it queued (LAB-12). A
+        // A worker's actions, queued; and where the entity it ran on is heard, its run told with what it queued. A
         // tick, which its workers hear every frame and most frames have none of, is told only as one executes or a worker
         // queues something. Its hits run on their dealer's side, the rest on the side it's on
         private void Run(AbstractEffectWorker worker, IEnumerable<IRootAction> actions, in EffectWorkerContext ctx, EEffectWorkerHook hook)
@@ -278,7 +277,7 @@ namespace FarEmerald.PlayForge
             callbacks.EffectWorkerRan(new EffectWorkerRun(this, worker, hook, side, ctx.System, queued));
         }
 
-        /// <summary>Its components hear the one it's on die, while it's on them (FN-14).</summary>
+        /// <summary>Its components hear the one it's on die, while it's on them.</summary>
         internal void RunComponentDeath(EffectWorkerContext ctx)
         {
             if (Base.Components == null) return;
@@ -288,7 +287,7 @@ namespace FarEmerald.PlayForge
         public void RunWorkerImpact(EffectWorkerContext ctx)
         {
             foreach (AbstractEffectWorker worker in Base.Workers) Run(worker, worker.OnEffectImpact(ctx), in ctx, EEffectWorkerHook.Impact);
-            // Its components hear it, at the moment its workers do (FN-14)
+            // Its components hear it, at the moment its workers do
             if (Base.Components != null)
                 foreach (var component in Base.Components) component?.Hit(new EffectComponentContext(ctx));
         }
@@ -306,7 +305,7 @@ namespace FarEmerald.PlayForge
             return GrantedWithChanges();
         }
 
-        // Its own granted tags, then those its modifiers add (TW-7)
+        // Its own granted tags, then those its modifiers add
         private IEnumerable<Tag> GrantedWithChanges()
         {
             if (Base.Tags.GrantedTags != null)
@@ -315,7 +314,7 @@ namespace FarEmerald.PlayForge
         }
 
         // ════════════════════════════════════════════════════════════════════════
-        // Impacter pipeline — entry-driven (Docs/IMPACT_MODEL_REFACTOR.md §3.1)
+        // Impacter pipeline — entry-driven
         //
         // One ScalerImpacter per authored AttributeImpactEntry, built lazily and cached
         // for the spec's lifetime. Entries carry their own attribute target, delivery
@@ -326,7 +325,7 @@ namespace FarEmerald.PlayForge
         private List<(AttributeImpactEntry entry, IAttributeImpacter impacter)> entryImpacters;
 
         // Per delivery, the attributes impacted and each one's impacters, in entry order, built with the entries: the
-        // spec is immutable for its life. Each lookup built a new list or set, on every tick (GAS-P4)
+        // spec is immutable for its life. Each lookup built a new list or set, on every tick
         private static readonly int Deliveries = Enum.GetValues(typeof(EImpactDelivery)).Length;
         private static readonly IReadOnlyList<IAttributeImpacter> NoImpacters = Array.Empty<IAttributeImpacter>();
         private List<IAttribute>[] attributesByDelivery;
@@ -354,7 +353,7 @@ namespace FarEmerald.PlayForge
             {
                 if (entry == null) continue;
 
-                // A lasting barrier of a durational effect fades with it, where its attribute says (TW-12)
+                // A lasting barrier of a durational effect fades with it, where its attribute says
                 bool fades = durational && entry.Delivery == EImpactDelivery.Continuous
                              && entry.AttributeTarget is Attribute { Role: EAttributeRole.Barrier, FadesWithEffect: true };
                 Fades |= fades;
@@ -367,7 +366,7 @@ namespace FarEmerald.PlayForge
                     entry.ResolveGroup(defaultGroup),
                     entry.AddBehaviour,
                     entry.Pipeline,
-                    // The modifiers' stages for its attribute: a lasting entry's on its magnitude, others' as it commits (TW-7)
+                    // The modifiers' stages for its attribute: a lasting entry's on its magnitude, others' as it commits
                     Changes?.StagesFor(entry.AttributeTarget),
                     entry.Delivery == EImpactDelivery.Continuous,
                     fades);
@@ -472,19 +471,19 @@ namespace FarEmerald.PlayForge
                     var contained = packets[i].ContainedEffect;
                     if (packets[i].Policy != phase || contained == null) continue;
 
-                    // On this one's target, or on its caster where it says (TW-14)
+                    // On this one's target, or on its caster where it says
                     var onto = packets[i].LandsOn == EEffectRecipient.Caster ? Origin?.GetSource() as ITarget : Target;
                     if (onto == null) continue;
 
-                    // With this one's magnitudes, as a contained effect takes them (FEAT-2); the rules whose added effect
-                    // this is change it no more (TW-7)
+                    // With this one's magnitudes, as a contained effect takes them; the rules whose added effect
+                    // this is change it no more
                     var made = EffectModifiers.Make(onto, Origin, contained, this, null);
                     made?.TakeSetByCaller(setByCaller);
                     yield return made;
                 }
             }
 
-            // Those its modifiers add, each made with the rule that added it kept from changing it again (TW-7)
+            // Those its modifiers add, each made with the rule that added it kept from changing it again
             if (Changes == null) yield break;
             foreach (var packet in Changes.Packets)
             {
@@ -499,7 +498,7 @@ namespace FarEmerald.PlayForge
 
         // IsSustainedModifier removed — the Mode A/B inference is gone. Each impact entry
         // declares its own delivery (Continuous | OnApply | Periodic); delivery implies
-        // the contribution kind. See AttributeImpactEntry / Docs/IMPACT_MODEL_REFACTOR.md §1.
+        // the contribution kind. See AttributeImpactEntry.
 
         public bool ValidateApplication(ITarget target)
         {

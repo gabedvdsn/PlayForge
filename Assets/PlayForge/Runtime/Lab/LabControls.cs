@@ -5,7 +5,7 @@ using UnityEngine;
 namespace FarEmerald.PlayForge.Lab
 {
     /// <summary>
-    /// A player's controls for one unit, as a MOBA's (LAB-11, Decision 44): right-click the ground to move, right-click a
+    /// A player's controls for one unit, as a MOBA's: right-click the ground to move, right-click a
     /// foe it can target to attack it, Q, W, E and R for its abilities past its attack, 1 to 6 for its items' abilities,
     /// S to stop, Escape to cancel a cast. An ability that needs a target waits for a left-click, as its own click
     /// targeting reads it. It reads PlayForge's input, ForgeInput, so a test or a game's own input stands in, and gives

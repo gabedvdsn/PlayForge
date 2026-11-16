@@ -5,7 +5,7 @@ namespace FarEmerald.PlayForge
     public class NonStackingEffectContainer : AbstractEffectContainer
     {
         // Doubles because a float's rounding grows with its size and every frame adds to it: over five minutes
-        // at 144 fps the duration drifted far enough from the ticks to end before the last one (GAS-33)
+        // at 144 fps the duration drifted far enough from the ticks to end before the last one
         protected double durationRemaining;
         protected double timeUntilPeriodTick;
         
@@ -25,7 +25,7 @@ namespace FarEmerald.PlayForge
             return new NonStackingEffectContainer(spec, ongoing);
         }
 
-        // Its timers in full, for a save (GAS-61)
+        // Its timers in full, for a save
         protected internal override double ExactDurationRemaining => durationRemaining;
         protected internal override double ExactTimeUntilPeriodTick => timeUntilPeriodTick;
         protected internal override void SetExactDurationRemaining(double duration) => durationRemaining = duration;

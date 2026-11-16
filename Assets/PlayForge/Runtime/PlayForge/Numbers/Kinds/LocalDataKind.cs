@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
-    /// <summary>Whose Local Data a Local Data number reads (FEAT-29).</summary>
+    /// <summary>Whose Local Data a Local Data number reads.</summary>
     public enum ELocalDataFrom
     {
         [Tooltip("What the number belongs to: the ability's or the item's asset, or the entity's own Local Data")]
@@ -17,7 +17,7 @@ namespace FarEmerald.PlayForge
     }
 
     /// <summary>
-    /// A value in Local Data, under a key (FEAT-29, NUM-8), as a hero's attack range: in what the number belongs to (the
+    /// A value in Local Data, under a key, as a hero's attack range: in what the number belongs to (the
     /// ability's or the item's asset, or an entity's own Local Data, where the number is the entity's), or in the caster's
     /// or the target's Local Data as the entity holds it at runtime. An entry that holds a float or a whole number reads
     /// as that number; where there's no number under the key, it reads its <see cref="Default"/>.

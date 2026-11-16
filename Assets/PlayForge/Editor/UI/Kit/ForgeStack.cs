@@ -6,7 +6,7 @@ namespace FarEmerald.PlayForge.Editor
     /// Views that take turns in one place, as the Debugger's views and The Forge's two lists do. Each view stays laid out
     /// at the place's size while another shows, and only the one shown is visible. Hidden by display: none, a view was
     /// laid out at 0 px, so its split's fixed pane shrank to nothing, and its tables' columns to their least, and neither
-    /// came back when the view showed again (ED-45, ED-48).
+    /// came back when the view showed again.
     /// </summary>
     internal static class ForgeStack
     {

@@ -5,7 +5,7 @@ namespace FarEmerald.PlayForge
     public class AnalysisWorkerCache : DeferredContextSystem
     {
         private List<AbstractAnalysisWorker> _workers;
-        // How many sources give each worker: one stays until the last takes it back, and runs once (GAS-83)
+        // How many sources give each worker: one stays until the last takes it back, and runs once
         private readonly Dictionary<AbstractAnalysisWorker, int> _given = new();
         
         public AnalysisWorkerCache()
@@ -30,7 +30,7 @@ namespace FarEmerald.PlayForge
         public void ProvideWorker(AbstractAnalysisWorker worker)
         {
             if (worker == null) return;
-            // Given again, as by a second copy of an item, it's counted (GAS-83)
+            // Given again, as by a second copy of an item, it's counted
             _given.TryGetValue(worker, out int given);
             _given[worker] = given + 1;
             if (given == 0 && !_workers.Contains(worker)) _workers.Add(worker);
@@ -39,7 +39,7 @@ namespace FarEmerald.PlayForge
         public void RemoveWorker(AbstractAnalysisWorker worker)
         {
             if (worker == null) return;
-            // It stays while another source still gives it (GAS-83)
+            // It stays while another source still gives it
             if (_given.TryGetValue(worker, out int given) && given > 1)
             {
                 _given[worker] = given - 1;

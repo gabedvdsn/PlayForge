@@ -6,18 +6,18 @@ using Cysharp.Threading.Tasks;
 namespace FarEmerald.PlayForge
 {
     /// <summary>
-    /// The fixed-rate tick (FEAT-7, Decision 30). With ProcessControl's tick rate set, the game steps in ticks, each a fixed
+    /// The fixed-rate tick. With ProcessControl's tick rate set, the game steps in ticks, each a fixed
     /// step of its time, a number of them a frame: every process steps once a tick, its end of frame with it, and a
     /// sequence waits for the next tick where it waited for the next frame. So a run comes out the same at any frame rate.
     /// Off, as it is by default, a wait is Unity's next frame, as it was. A world of its own has a tick of its own, in force
-    /// while it steps or moves a process, so its sequences wait on its steps (FEAT-10).
+    /// while it steps or moves a process, so its sequences wait on its steps.
     /// </summary>
     public static class ForgeTick
     {
         private static readonly ForgeTickSource scene = new();
         private static ForgeTickSource current = scene;
 
-        // Statics outlive play mode when domain reload is off, so each session starts with no ticks and no waits (PC-26)
+        // Statics outlive play mode when domain reload is off, so each session starts with no ticks and no waits
         [UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetTicks()
         {
@@ -56,7 +56,7 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// Waits while the condition holds, asking once a tick where the tick in force ticks, and once a frame, as
         /// UniTask.WaitWhile does, where it doesn't. A wait that asked Unity's loop never saw a world of its own change
-        /// between its steps (FEAT-10).
+        /// between its steps.
         /// </summary>
         public static UniTask WaitWhile(Func<bool> condition, CancellationToken token = default) =>
             current.WaitWhile(condition, PlayerLoopTiming.Update, token);
@@ -90,8 +90,7 @@ namespace FarEmerald.PlayForge
 
     /// <summary>
     /// A tick: the waits for its next one, which it lets go as it ticks, and how many it has run. The scene has one, which
-    /// ProcessControl's tick rate turns on, and each world of its own has its own, which ticks as its owner steps it
-    /// (FEAT-10).
+    /// ProcessControl's tick rate turns on, and each world of its own has its own, which ticks as its owner steps it.
     /// </summary>
     public sealed class ForgeTickSource
     {

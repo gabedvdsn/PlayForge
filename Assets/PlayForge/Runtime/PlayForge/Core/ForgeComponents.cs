@@ -5,7 +5,7 @@ namespace FarEmerald.PlayForge
 {
     /// <summary>
     /// A component of a PlayForge asset: a feature it carries, added in its Components section, a class with hooks into its
-    /// asset's life, each a no-op a kind may override (FN-14, Decision 76). An effect's, an ability's, an entity's and an
+    /// asset's life, each a no-op a kind may override. An effect's, an ability's, an entity's and an
     /// item's components each hear their own asset's moments, beside its workers. A component is its asset's, shared by
     /// every entity the asset reaches, so what it keeps for one of them it keeps through its context's state, never on itself.
     /// </summary>
@@ -20,12 +20,12 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// What the component does, in one line with its numbers, as "Range 600" or "3 charges, each recharging on its own",
-        /// which The Forge's summary and the breakdowns say beside its name (EP-5); null to say its name alone. A
+        /// which The Forge's summary and the breakdowns say beside its name; null to say its name alone. A
         /// component of your own overrides it.
         /// </summary>
         public virtual string Describe() => null;
 
-        /// <summary>A component's name, as its picker and The Forge show it: its [ForgeMenu] name, or its class's (EP-5).</summary>
+        /// <summary>A component's name, as its picker and The Forge show it: its [ForgeMenu] name, or its class's.</summary>
         public static string NameOf(AbstractForgeComponent component) => component == null ? "" : NameOf(component.GetType());
 
         /// <summary>A component kind's name: its [ForgeMenu] name, or its class's without its family's suffix.</summary>
@@ -51,7 +51,7 @@ namespace FarEmerald.PlayForge
         protected static string Whom(EAffinityFilter takes) => System.Text.RegularExpressions.Regex.Replace(takes.ToString(), "(?<=[a-z])(?=[A-Z])", " ").ToLowerInvariant();
     }
 
-    /// <summary>What a holder's components keep for it: an object for each component, made the first time it's asked for (FN-14).</summary>
+    /// <summary>What a holder's components keep for it: an object for each component, made the first time it's asked for.</summary>
     public sealed class ComponentStates
     {
         private Dictionary<AbstractForgeComponent, object> states;
@@ -72,7 +72,7 @@ namespace FarEmerald.PlayForge
     // Effects
     // ═══════════════════════════════════════════════════════════════════════════
 
-    /// <summary>A component of an effect (FN-14): it hears the effect land, tick, hit and end, at the moments its workers do.</summary>
+    /// <summary>A component of an effect: it hears the effect land, tick, hit and end, at the moments its workers do.</summary>
     [Serializable]
     public abstract class AbstractEffectComponent : AbstractForgeComponent
     {
@@ -90,12 +90,12 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// As the one it's on dies, while it's on them, before what the death ends comes off; heard whether the entity
-        /// stays or ends (FN-14).
+        /// stays or ends.
         /// </summary>
         public virtual void Death(EffectComponentContext ctx) { }
     }
 
-    /// <summary>What an effect's component hears a moment of its effect with (FN-14).</summary>
+    /// <summary>What an effect's component hears a moment of its effect with.</summary>
     public readonly struct EffectComponentContext
     {
         /// <summary>The entity of the moment, as the effect's workers have it.</summary>
@@ -126,7 +126,7 @@ namespace FarEmerald.PlayForge
     // Abilities
     // ═══════════════════════════════════════════════════════════════════════════
 
-    /// <summary>How an ability's activation ended (FN-14).</summary>
+    /// <summary>How an ability's activation ended.</summary>
     public enum EAbilityEnd
     {
         /// <summary>It ran to its end.</summary>
@@ -140,7 +140,7 @@ namespace FarEmerald.PlayForge
     }
 
     /// <summary>
-    /// A component of an ability (FN-14): it hears the ability granted and removed, may refuse an activation, and hears an
+    /// A component of an ability: it hears the ability granted and removed, may refuse an activation, and hears an
     /// activation start, commit its cost and cooldown, and end, by how it did.
     /// </summary>
     [Serializable]
@@ -165,7 +165,7 @@ namespace FarEmerald.PlayForge
         public virtual void End(AbilityComponentContext ctx, EAbilityEnd how) { }
     }
 
-    /// <summary>What an ability's component hears a moment of its ability with (FN-14).</summary>
+    /// <summary>What an ability's component hears a moment of its ability with.</summary>
     public readonly struct AbilityComponentContext
     {
         /// <summary>The ability as its entity holds it.</summary>
@@ -191,7 +191,7 @@ namespace FarEmerald.PlayForge
     // Entities
     // ═══════════════════════════════════════════════════════════════════════════
 
-    /// <summary>A component of an entity (FN-14): it hears its entity register, die, revive and end.</summary>
+    /// <summary>A component of an entity: it hears its entity register, die, revive and end.</summary>
     [Serializable]
     public abstract class AbstractEntityComponent : AbstractForgeComponent
     {
@@ -208,7 +208,7 @@ namespace FarEmerald.PlayForge
         public virtual void End(EntityComponentContext ctx) { }
     }
 
-    /// <summary>What an entity's component hears a moment of its entity with (FN-14).</summary>
+    /// <summary>What an entity's component hears a moment of its entity with.</summary>
     public readonly struct EntityComponentContext
     {
         /// <summary>The entity.</summary>
@@ -216,7 +216,7 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// For its death, who killed it: the source of the last loss it took from another, as its Died event names; null at
-        /// any other moment, or for a death no one dealt (FN-14).
+        /// any other moment, or for a death no one dealt.
         /// </summary>
         public readonly ISource Killer;
 
@@ -237,7 +237,7 @@ namespace FarEmerald.PlayForge
     // Items
     // ═══════════════════════════════════════════════════════════════════════════
 
-    /// <summary>A component of an item (FN-14): it hears the item given, equipped, unequipped and removed.</summary>
+    /// <summary>A component of an item: it hears the item given, equipped, unequipped and removed.</summary>
     [Serializable]
     public abstract class AbstractItemComponent : AbstractForgeComponent
     {
@@ -254,12 +254,12 @@ namespace FarEmerald.PlayForge
         public virtual void Removed(ItemComponentContext ctx) { }
 
         /// <summary>
-        /// As its holder's use of the item's ability ends, having paid what it costs: one use of the item (FN-14).
+        /// As its holder's use of the item's ability ends, having paid what it costs: one use of the item.
         /// </summary>
         public virtual void Used(ItemComponentContext ctx) { }
     }
 
-    /// <summary>What an item's component hears a moment of its item with (FN-14).</summary>
+    /// <summary>What an item's component hears a moment of its item with.</summary>
     public readonly struct ItemComponentContext
     {
         /// <summary>The item as its entity holds it.</summary>
@@ -270,7 +270,7 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// Whether the moment comes from a load, which puts back what the component's earlier moments did, as the effects
-        /// it applied (FN-14).
+        /// it applied.
         /// </summary>
         public readonly bool Restoring;
 

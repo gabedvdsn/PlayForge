@@ -7,11 +7,11 @@ using UnityEngine;
 namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
-    /// Keeps each Forge Project's asset catalog current (EP-15, the user's answer to EP-6's), so a save finds every asset
+    /// Keeps each Forge Project's asset catalog current, so a save finds every asset
     /// with no Add Its Assets to run: a PlayForge asset made, copied or moved into a project's folder is named by its GUID
     /// as it lands, in the innermost project whose folder holds it, and a deleted file's entries go from every project. A
     /// project catches up on its own assets it doesn't name yet as it's imported, as a new one or a sample's is, and once
-    /// each editor session, as one kept before EP-15 is. A deleted file is matched by its GUID, so an entry whose asset
+    /// each editor session. A deleted file is matched by its GUID, so an entry whose asset
     /// hasn't loaded yet, as on a fresh import, is never taken for one deleted; and an asset moved out of a project stays
     /// named there, so a save made before still finds it. A project with Keep Catalog Current off is left as it is.
     /// </summary>

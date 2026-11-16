@@ -6,7 +6,7 @@ using UnityEngine;
 namespace FarEmerald.PlayForge
 {
     /// <summary>
-    /// Another number field of the same object (FEAT-29, NUM-9): the number joins it as its Combine says, times it or plus
+    /// Another number field of the same object: the number joins it as its Combine says, times it or plus
     /// it, so a Clamped scaler's Max can be <c>2 × Min</c> and a stack bound's Max <c>Min + 3</c>. The field is a number
     /// (<see cref="ScalableFloat"/> or <see cref="ScalableInt"/>), read in the same context, so a relative Max follows a
     /// Min that scales by level, or a plain float or int.
@@ -85,7 +85,7 @@ namespace FarEmerald.PlayForge
         public static bool IsNumberField(FieldInfo field) => field != null && NumberSibling.KindOf(field.FieldType) != null;
     }
 
-    /// <summary>Marks the string field that names a relative number's sibling, which the inspector picks from a menu (FEAT-29).</summary>
+    /// <summary>Marks the string field that names a relative number's sibling, which the inspector picks from a menu.</summary>
     [AttributeUsage(AttributeTargets.Field)]
     public sealed class NumberSiblingFieldAttribute : PropertyAttribute
     {
@@ -93,7 +93,7 @@ namespace FarEmerald.PlayForge
 
     /// <summary>
     /// How a relative number reads one field of its object: a number, evaluated in the reader's context, or a plain float or
-    /// int. One is made for each type and field and kept (FEAT-29).
+    /// int. One is made for each type and field and kept.
     /// </summary>
     internal sealed class NumberSibling
     {

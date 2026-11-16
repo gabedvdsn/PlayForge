@@ -121,7 +121,7 @@ namespace FarEmerald.PlayForge
             _members.Add(relay.CacheIndex);
             _memberRelays[relay.CacheIndex] = relay;
 
-            // Watch the member so we can clean up when it terminates, with the control that holds it (FEAT-10)
+            // Watch the member so we can clean up when it terminates, with the control that holds it
             relay.World.WatchProcess(relay, this,
                 onUnregister: _ => RemoveMember(relay.CacheIndex));
 
@@ -325,7 +325,7 @@ namespace FarEmerald.PlayForge
             // Synchronous lifecycle - RunProcess is never called.
             // The group stays alive via ProcessControl stepping until terminated.
             processActive = true;
-            // Kept alive tick by tick: in a world of its own, its steps; elsewhere, Unity's frames, as the wait was (FEAT-10)
+            // Kept alive tick by tick: in a world of its own, its steps; elsewhere, Unity's frames, as the wait was
             while (processActive) await ForgeTick.Next(token);
         }
 

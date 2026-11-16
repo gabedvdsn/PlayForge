@@ -13,12 +13,12 @@ namespace FarEmerald.PlayForge
         private Dictionary<IAttribute, List<AbstractAttributeWorker>> _workers = new();
 
         // How many sources give each worker for each attribute: two copies of an item share its workers, so one stays
-        // until the last copy goes, and runs once (GAS-83)
+        // until the last copy goes, and runs once
         private readonly Dictionary<(IAttribute, AbstractAttributeWorker), int> _given = new();
 
         /// <summary>
         /// Add a worker for a specific attribute. A worker given again is counted, not added again, and stays until each
-        /// source that gave it takes it back (GAS-83). True where it's new.
+        /// source that gave it takes it back. True where it's new.
         /// </summary>
         public bool AddWorker(IAttribute attribute, AbstractAttributeWorker worker)
         {
@@ -33,7 +33,7 @@ namespace FarEmerald.PlayForge
         }
 
         /// <summary>
-        /// Remove a worker for a specific attribute: one source's giving of it, the worker going with the last (GAS-83).
+        /// Remove a worker for a specific attribute: one source's giving of it, the worker going with the last.
         /// True where a source gave it.
         /// </summary>
         public bool RemoveWorker(IAttribute attribute, AbstractAttributeWorker worker)
@@ -63,11 +63,10 @@ namespace FarEmerald.PlayForge
         public void RunWorkers(WorkerContext context) => RunWorkers(context, null);
 
         // With a recorder, each worker's step is recorded and told, its change before and after and the actions it queued
-        // (LAB-13)
         internal void RunWorkers(WorkerContext context, ChangeStepRecorder steps)
         {
             if (steps is { Recording: false }) steps = null;
-            // The attribute changed, not its carrier's: an effect's spec carries every impact it makes (GAS-78)
+            // The attribute changed, not its carrier's: an effect's spec carries every impact it makes
             var attribute = context.Change.Attribute ?? context.Change.Value.Carrier?.GetAttribute();
             if (attribute is null) return;
             
@@ -92,7 +91,7 @@ namespace FarEmerald.PlayForge
                         worker.Intercept(context);
                         break;
                         
-                    // A deferred worker's actions run later and may keep the change, so its commit doesn't reuse it (GAS-P6)
+                    // A deferred worker's actions run later and may keep the change, so its commit doesn't reuse it
                     case EWorkerExecution.Deferred:
                         // Queue actions for end-of-frame
                         context.Change.Kept = true;

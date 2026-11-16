@@ -5,7 +5,7 @@ namespace FarEmerald.PlayForge.Lab
 {
     /// <summary>
     /// The effects the lab makes for itself, as an asset's inspector would fill one in: a dummy's mend, where the project
-    /// gives none (LAB-4). Each lives in memory alone and goes with what made it.
+    /// gives none. Each lives in memory alone and goes with what made it.
     /// </summary>
     public static class LabEffects
     {

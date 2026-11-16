@@ -5,7 +5,7 @@ using UnityEngine;
 namespace FarEmerald.PlayForge
 {
     /// <summary>
-    /// Where a type's new assets go. A new asset's file is its name alone: the file prefix and suffix are gone (EP-13).
+    /// Where a type's new assets go. A new asset's file is its name alone: the file prefix and suffix are gone.
     /// </summary>
     [Serializable]
     public sealed class NewAssetSettings
@@ -29,7 +29,7 @@ namespace FarEmerald.PlayForge
     }
 
     /// <summary>
-    /// How The Forge makes a Forge Project's assets (TW-30, Decision 57): where each type's new assets go, each type's
+    /// How The Forge makes a Forge Project's assets: where each type's new assets go, each type's
     /// defaults, and the effects a new Cost or Cooldown copies. They were the whole Unity
     /// project's, in ProjectSettings/PlayForgeSettings.asset; each game keeps its own now. A game's build ignores them.
     /// </summary>

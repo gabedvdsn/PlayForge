@@ -6,7 +6,7 @@ using UnityEngine.UIElements;
 
 namespace FarEmerald.PlayForge.Editor
 {
-    /// <summary>A Crowd Control Rules asset's inspector: the shared header, then its rules (FN-12).</summary>
+    /// <summary>A Crowd Control Rules asset's inspector: the shared header, then its rules.</summary>
     [CustomEditor(typeof(CrowdControlRules))]
     public class CrowdControlRulesEditor : UnityEditor.Editor
     {

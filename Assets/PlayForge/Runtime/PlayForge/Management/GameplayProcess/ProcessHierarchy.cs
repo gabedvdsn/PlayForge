@@ -142,7 +142,7 @@ namespace FarEmerald.PlayForge
         /// </summary>
         /// <summary>
         /// Files a node again under its first ancestor with processes, once its transform has moved. It was filed when
-        /// its first process registered, before WhenInitialize applied a parent, and never again (PC-28, Decision 11).
+        /// its first process registered, before WhenInitialize applied a parent, and never again.
         /// </summary>
         public void Reparent(GameObject go)
         {
@@ -334,7 +334,7 @@ namespace FarEmerald.PlayForge
                 var root = _roots[i];
                 if (root == potentialParent) continue;
 
-                // A root whose object went without its processes ending has no transform to read (PC-26)
+                // A root whose object went without its processes ending has no transform to read
                 if (!root.GameObject) continue;
                 
                 if (IsTransformDescendantOf(root.GameObject.transform, potentialParent.GameObject.transform))

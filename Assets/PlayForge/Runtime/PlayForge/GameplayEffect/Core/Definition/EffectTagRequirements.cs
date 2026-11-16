@@ -56,7 +56,7 @@ namespace FarEmerald.PlayForge
             return OngoingRequirements?.Validate(tags) ?? true;
         }
         
-        /// <summary>Whether its Removal group asks anything (TW-19).</summary>
+        /// <summary>Whether its Removal group asks anything.</summary>
         public bool HasRemovalRequirements => GroupHasRequirements(RemovalRequirements);
 
         /// <summary>

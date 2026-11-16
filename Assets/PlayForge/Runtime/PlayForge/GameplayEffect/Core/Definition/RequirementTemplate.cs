@@ -23,8 +23,8 @@ namespace FarEmerald.PlayForge
         public string Description;
 
         /// <summary>
-        /// The template's category, a tag in a context of its own, so its picker offers the categories templates use
-        /// (ED-79). It was a string, typed anew for each template.
+        /// The template's category, a tag in a context of its own, so its picker offers the categories templates use.
+        /// It was a string, typed anew for each template.
         /// </summary>
         [Tooltip("The template's category, which groups templates; a tag of the Requirement Category context")]
         [ForgeTagContext(ForgeContext.RequirementCategory)]

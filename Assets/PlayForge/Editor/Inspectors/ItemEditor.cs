@@ -9,7 +9,7 @@ using static FarEmerald.PlayForge.Editor.ForgeDrawerStyles;
 namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
-    /// The Item inspector, in Docs/EDITOR_STYLE.md's terms (ED-37): Identity, Leveling, Tags, the item's Effects and
+    /// The Item inspector: Identity, Leveling, Tags, the item's Effects and
     /// Abilities, Workers and Local Data, then Used By. A collapsed section shows one line, and the inspector takes its
     /// look from the style sheet.
     /// </summary>
@@ -21,7 +21,7 @@ namespace FarEmerald.PlayForge.Editor
         private Item item;
 
         // Its fields write through the SerializedObject, so it edits a multiple selection, and what acts on one item steps
-        // aside: the name, the asset tag, linking, and a linked item's levels (ED-12)
+        // aside: the name, the asset tag, linking, and a linked item's levels
         protected override bool SupportsMultipleObjects => true;
 
         private TextField nameField;
@@ -93,8 +93,8 @@ namespace FarEmerald.PlayForge.Editor
 
         protected override void BuildInspectorContent(VisualElement parent)
         {
-            // The style doc's order: Identity, Leveling, Tags, the item's own sections, Workers and Local Data, then what
-            // uses the item. Level Source sat apart from Leveling, after Identity, and Tags came before Leveling (ED-37)
+            // The inspectors' order: Identity, Leveling, Tags, the item's own sections, Workers and Local Data, then what
+            // uses the item. Level Source sat apart from Leveling, after Identity, and Tags came before Leveling
             BuildIdentitySection(parent);
             BuildLevelingSection(parent);
             BuildTagsSection(parent);
@@ -129,7 +129,7 @@ namespace FarEmerald.PlayForge.Editor
                 Title = "Identity",
                 HelpTopic = "items/definition",
 
-                // Import and Clear leave the name, which identifies the item and gives its tag (ED-35)
+                // Import and Clear leave the name, which identifies the item and gives its tag
                 SerializedObject = serializedObject,
                 PropertyPaths = new[]
                 {
@@ -147,7 +147,7 @@ namespace FarEmerald.PlayForge.Editor
             nameField = CreateTextField("Name", "Name");
             nameField.AddToClassList(BaseField<string>.alignedFieldUssClassName);
             nameField.value = item.Definition.Name;
-            // Typing previews the tag; leaving the field stores the name and the tag in one undoable step (ED-12)
+            // Typing previews the tag; leaving the field stores the name and the tag in one undoable step
             nameField.RegisterValueChangedCallback(evt => UpdateAssetTagDisplay(evt.newValue));
             nameField.RegisterCallback<FocusOutEvent>(_ =>
             {
@@ -157,11 +157,11 @@ namespace FarEmerald.PlayForge.Editor
                 SyncAssetTag();
                 UpdateHeader();
                 MarkDirty(item);
-                // Its file follows its name (ED-70)
+                // Its file follows its name
                 RenameFile(item, nameField.value);
                 Repaint();
             });
-            // Each item's tag comes from its own name, so a multiple selection shows the names and can't rename (ED-12)
+            // Each item's tag comes from its own name, so a multiple selection shows the names and can't rename
             if (IsMultiple)
             {
                 nameField.SetEnabled(false);
@@ -171,12 +171,12 @@ namespace FarEmerald.PlayForge.Editor
             content.Add(nameField);
 
             // Description binds to its property, so an edit undoes. It wrote straight into the asset when it lost focus,
-            // with no Undo (ED-12).
+            // with no Undo.
             content.Add(CreateBoundTextField(DefinitionPath(nameof(ItemDefinition.Description)),
                 "Description", multiline: true, minHeight: 18, name: "Description"));
 
-            // The tag the name gives, under the name, as the mockups place it. It sat at the top of Tags, in a tinted box
-            // (ED-37). Each item has its own, so a multiple selection doesn't show one (ED-12)
+            // The tag the name gives, under the name. It sat at the top of Tags, in a tinted box.
+            // Each item has its own, so a multiple selection doesn't show one
             if (!IsMultiple)
             {
                 assetTagField = new ForgeAssetTagField();
@@ -186,7 +186,7 @@ namespace FarEmerald.PlayForge.Editor
 
             content.Add(CreatePropertyField(definition.FindPropertyRelative(nameof(ItemDefinition.Visibility)), "Visibility", "Visibility"));
 
-            // How many one slot holds, which nothing read and the inspector didn't draw (FEAT-14, GAS-51)
+            // How many one slot holds, which nothing read and the inspector didn't draw
             var stackSize = CreatePropertyField(definition.FindPropertyRelative(nameof(ItemDefinition.MaxStackSize)), "MaxStackSize", "Max Stack Size");
             stackSize.tooltip = "How many of the item one slot holds. 1 or less, and each is a slot of its own";
             content.Add(stackSize);
@@ -199,7 +199,7 @@ namespace FarEmerald.PlayForge.Editor
             });
             content.Add(texturesField);
 
-            // No Allow Duplicates toggle: the entity's Allow Duplicate Items decides, and nothing read the item's (GAS-45)
+            // No Allow Duplicates toggle: the entity's Allow Duplicate Items decides, and nothing read the item's
         }
 
         private static string DefinitionPath(string field) => $"{nameof(Item.Definition)}.{field}";
@@ -234,12 +234,11 @@ namespace FarEmerald.PlayForge.Editor
             RebuildLevelingContent();
         }
 
-        // Leveling holds what Level Source did (ED-37), so the base editor's two rebuilds are one here
+        // Leveling holds what Level Source did, so the base editor's two rebuilds are one here
         protected override void RebuildLevelSourceContent() => RebuildLevelingContent();
 
         // Link Mode, then the item's own range, or its provider and the range the provider gives, then its children's
         // links. Level Source drew the link state in tinted boxes with colored borders, under sentences about linking
-        // (ED-37)
         protected override void RebuildLevelingContent()
         {
             if (levelingContent == null) return;
@@ -248,13 +247,13 @@ namespace FarEmerald.PlayForge.Editor
             shownLeveling = LevelingState();
 
             // Link Mode binds to its property, so a change undoes, and OnAssetChanged redraws from it. It wrote the mode
-            // straight into the asset, with no Undo, and redrew only then (ED-12).
+            // straight into the asset, with no Undo, and redrew only then.
             var linkModeField = new EnumField("Link Mode", item.LinkMode) { name = "LinkMode", bindingPath = nameof(Item.LinkMode) };
             linkModeField.AddToClassList(BaseField<System.Enum>.alignedFieldUssClassName);
             levelingContent.Add(linkModeField);
 
             // A provider and a child's link belong to one item, so a multiple selection sets the mode, and edits the range
-            // when every item keeps its own; a linked item's range comes from its provider, which differs by item (ED-12)
+            // when every item keeps its own; a linked item's range comes from its provider, which differs by item
             if (IsMultiple)
             {
                 if (Items.All(each => each.LinkMode == EItemLinkMode.Standalone)) BuildOwnLevels();
@@ -365,7 +364,7 @@ namespace FarEmerald.PlayForge.Editor
         // Workers Section
         // ═══════════════════════════════════════════════════════════════════════════
 
-        // Its components: features it carries, each a class with hooks into its life, added from the list's + (FN-14)
+        // Its components: features it carries, each a class with hooks into its life, added from the list's +
         private void BuildComponentsSection(VisualElement parent)
         {
             componentsSection = CreateSection(new SectionConfig
@@ -381,7 +380,7 @@ namespace FarEmerald.PlayForge.Editor
             });
             parent.Add(componentsSection.Section);
 
-            // Each item keeps its own components, objects a multiple selection can't edit safely (ED-12)
+            // Each item keeps its own components, objects a multiple selection can't edit safely
             if (IsMultiple)
             {
                 componentsSection.Content.Add(CreateNote("Select one item to edit its components."));
@@ -406,9 +405,9 @@ namespace FarEmerald.PlayForge.Editor
             });
             parent.Add(workersSection.Section);
 
-            // The effects its holder's hits apply (TW-6)
+            // The effects its holder's hits apply
             workersSection.Content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(Item.OnHit)), "OnHit", "On Hit"));
-            // How it changes other effects, its holder's or those landing on it (TW-7)
+            // How it changes other effects, its holder's or those landing on it
             workersSection.Content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(Item.Modifiers)), "Modifiers", "Modifiers"));
             workersSection.Content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(Item.WorkerGroup)), "WorkerGroup", ""));
         }
@@ -417,7 +416,7 @@ namespace FarEmerald.PlayForge.Editor
         // Local Data Section
         // ═══════════════════════════════════════════════════════════════════════════
 
-        // Items inherit Local Data, as every asset does, but this inspector drew none, so it couldn't be edited (ED-23)
+        // Items inherit Local Data, as every asset does, but this inspector drew none, so it couldn't be edited
         private void BuildLocalDataSection(VisualElement parent)
         {
             localDataSection = CreateSection(new SectionConfig
@@ -441,7 +440,7 @@ namespace FarEmerald.PlayForge.Editor
         // ═══════════════════════════════════════════════════════════════════════════
 
         // The assets that use the item, such as an entity that starts with it or an effect linked to it, each a row that
-        // selects it, as the Attribute inspector lists its own (ED-15, ED-37)
+        // selects it, as the Attribute inspector lists its own
         private void BuildUsedBySection(VisualElement parent)
         {
             usedBySection = CreateSection(new SectionConfig
@@ -469,7 +468,7 @@ namespace FarEmerald.PlayForge.Editor
         protected override void OnAssetChanged()
         {
             // Leveling is drawn from the link mode and the provider, so it redraws when either changes, an Undo among
-            // them (ED-12)
+            // them
             if (levelingContent != null && LevelingState() != shownLeveling) RebuildLevelingContent();
             // The name field isn't bound, so it follows an Undo here, unless it's being typed in
             if (!IsMultiple && nameField != null && !IsFocused(nameField) && nameField.value != (item.Definition.Name ?? ""))
@@ -508,11 +507,11 @@ namespace FarEmerald.PlayForge.Editor
         // Helper Methods
         // ═══════════════════════════════════════════════════════════════════════════
 
-        // Shows the tag a name gives: the stored name's, or the one being typed (ED-12)
+        // Shows the tag a name gives: the stored name's, or the one being typed
         private void UpdateAssetTagDisplay(string name = null) =>
             ShowAssetTag(assetTagField, name ?? item.Definition?.Name, "Item", item.Tags.AssetTag, SyncAssetTag);
 
-        // Stores the tag the name gives, then shows it (ED-12)
+        // Stores the tag the name gives, then shows it
         private void SyncAssetTag()
         {
             StoreAssetTag(item, item.Definition?.Name, "Item", item.Tags.AssetTag, tag =>

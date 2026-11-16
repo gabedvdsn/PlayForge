@@ -13,7 +13,7 @@ namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
     /// A reference to an effect: Unity's object field, with Open or New beside it, and under it a line that says how the
-    /// effect takes its levels, with Link to make it take them from the asset that holds the field (ED-38). Its
+    /// effect takes its levels, with Link to make it take them from the asset that holds the field. Its
     /// right-click menu holds the field's template, a pick of the effects nothing links, and New Linked Effect. Setting
     /// the field asked in a dialog whether to link the effect, and the template, the link filter and a create button sat
     /// beside the field as tinted buttons.
@@ -24,7 +24,7 @@ namespace FarEmerald.PlayForge.Editor
         public override VisualElement CreatePropertyGUI(SerializedProperty prop)
         {
             var root = new VisualElement { name = "EffectReference" };
-            // The style sheet sizes and colors the kit's glyphs, wherever the drawer is drawn: in Unity's own inspector too (ED-20)
+            // The style sheet sizes and colors the kit's glyphs, wherever the drawer is drawn: in Unity's own inspector too
             ForgeTheme.Apply(root);
             root.Add(base.CreatePropertyGUI(prop));
             var field = root.Q<ObjectField>("Reference");
@@ -35,7 +35,7 @@ namespace FarEmerald.PlayForge.Editor
             root.Add(line);
 
             // The line follows the field, and the effect it names as that effect's link changes, an Undo among them; it
-            // rebuilt every 500 ms for as long as the inspector stayed open (ED-11)
+            // rebuilt every 500 ms for as long as the inspector stayed open
             VisualElement watch = null;
             GameplayEffect watched = null;
             void Refresh(GameplayEffect effect)
@@ -62,7 +62,7 @@ namespace FarEmerald.PlayForge.Editor
 
         // On a line of its own: from the asset that holds the field, from another asset, or from none, with Link to make
         // it take the holder's, as one Undo step. A dialog asked this as the field was set, and again when the effect was
-        // linked elsewhere (ED-38)
+        // linked elsewhere
         private static void ShowLink(VisualElement line, GameplayEffect effect, BaseForgeLevelProvider holder, Action refresh)
         {
             line.Clear();
@@ -134,8 +134,8 @@ namespace FarEmerald.PlayForge.Editor
         protected override void Made(GameplayEffect effect, Object host) => Link(effect, host as BaseForgeLevelProvider);
 
         // The field's template, a pick of the effects nothing links, and the named create, which sat beside the field as
-        // tinted buttons (Docs/EDITOR_STYLE.md: template import, the link filter and create-linked go in its right-click
-        // menu). The template asked in a dialog whether to copy it or use it, and told in another that it wasn't set
+        // tinted buttons, and go in its right-click menu.
+        // The template asked in a dialog whether to copy it or use it, and told in another that it wasn't set
         protected override void AddMenuItems(DropdownMenu menu, ObjectField field, Object host)
         {
             var holder = host as BaseForgeLevelProvider;
@@ -174,8 +174,8 @@ namespace FarEmerald.PlayForge.Editor
             EditorUtility.SetDirty(effect);
         }
 
-        // A new effect, named in The Forge's New Asset window, which takes its levels from the asset that holds the field
-        // (ED-61). A dialog of its own asked for the name, with a tinted link box, colored badges and a green Create, and
+        // A new effect, named in The Forge's New Asset window, which takes its levels from the asset that holds the field.
+        // A dialog of its own asked for the name, with a tinted link box, colored badges and a green Create, and
         // offered the field's template, which the menu's Copy the Template does
         public static ForgeNewAssetWindow NewLinked(ObjectField field, BaseForgeLevelProvider holder) =>
             ForgeNewAssetWindow.Show(typeof(GameplayEffect), created =>
@@ -185,11 +185,11 @@ namespace FarEmerald.PlayForge.Editor
                 field.value = effect;
             });
 
-        // The effects nothing links, to pick from: the link filter that sat beside the field, in its right-click menu
-        // (ED-38), in PlayForge's dropdown, by their folders, each saying its file (EP-1). It was Unity's dropdown
+        // The effects nothing links, to pick from: the link filter that sat beside the field, in its right-click menu,
+        // in PlayForge's dropdown, by their folders, each saying its file. It was Unity's dropdown
         private static void PickUnlinked(ObjectField field)
         {
-            // The active Forge Project's alone (FEAT-34)
+            // The active Forge Project's alone
             var inProject = ForgeProjects.InActive();
             var effects = AssetDatabase.FindAssets($"t:{nameof(GameplayEffect)}")
                 .Select(AssetDatabase.GUIDToAssetPath)

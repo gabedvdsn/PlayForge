@@ -7,8 +7,7 @@ namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
     /// The concrete classes a type allows, by name, kept per type for the editor session; a kind field's picker lists
-    /// them (ED-56). Its own picker window, the field that opened it and the TypeRef it wrote went unused with ED-56,
-    /// and went (ED-61).
+    /// them. Its own picker window, the field that opened it and the TypeRef it wrote went unused, and went.
     /// </summary>
     public static class TypePickerCache
     {

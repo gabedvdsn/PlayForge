@@ -35,7 +35,7 @@
             // Record in frame summary
             _frameSummary?.RecordTagWorkerActivated(_worker);
 
-            // Its callbacks hear it: declared and never raised (GAS-81)
+            // Its callbacks hear it: declared and never raised
             _system.GetCallbacks()?.TagWorkerActivated(_worker);
         }
     }
@@ -75,7 +75,7 @@
             // Record in frame summary
             _frameSummary?.RecordTagWorkerResolved(_worker);
 
-            // Its callbacks hear it: declared and never raised (GAS-81)
+            // Its callbacks hear it: declared and never raised
             _system.GetCallbacks()?.TagWorkerResolved(_worker);
         }
     }

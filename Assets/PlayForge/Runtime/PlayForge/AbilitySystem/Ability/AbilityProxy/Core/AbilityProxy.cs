@@ -56,7 +56,7 @@ namespace FarEmerald.PlayForge
         }
 
         // Whether a stage holds a critical task, by index. It was asked through LINQ on every activation, whose
-        // enumerators allocated (TS-5)
+        // enumerators allocated
         private static bool HasCriticalTask(AbilityTaskBehaviourStage stage)
         {
             var tasks = stage?.Tasks;
@@ -125,20 +125,20 @@ namespace FarEmerald.PlayForge
             }
 
             // A targeting task gives up by throwing, which only ends its own sequence, so the ability hears of
-            // it here. A task set not to break lets the ability go on (TS-C)
+            // it here. A task set not to break lets the ability go on
             if (implicitData.TargetingFailed && Behaviour.Targeting is { BreakRuntimeOnInvalid: true })
             {
                 throw new OperationCanceledException();
             }
 
             // Targeting that didn't get to its end has no target to give, whether it threw or something ended its
-            // sequence first. The ability went on regardless (TS-V)
+            // sequence first. The ability went on regardless
             if (HasCompiledTargeting && !implicitData.TargetingFinished)
             {
                 throw new OperationCanceledException();
             }
 
-            // A target its targeting picked beyond its Cast Range, whichever task picked it, ends it here (FN-14)
+            // A target its targeting picked beyond its Cast Range, whichever task picked it, ends it here
             if (ForgeCastRange.PickedBeyond(implicitData))
             {
                 implicitData.TargetingFailed = true;
@@ -153,8 +153,8 @@ namespace FarEmerald.PlayForge
         {
             var handler = implicitData.EffectOrigin.GetSource();
             // Refused, targeting ends here, and the ability with it. It used to run outside ProcessControl, where no
-            // pause or terminate could reach it (TS-AC)
-            // In the caster's world, so its waits are the world's (FEAT-10)
+            // pause or terminate could reach it
+            // In the caster's world, so its waits are the world's
             if (!ProcessControl.Register(CompiledTargeting).HandledBy(handler).With(implicitData).In(ProcessWorld.Of(handler)).Run(out var relay))
             {
                 throw new OperationCanceledException();
@@ -164,7 +164,7 @@ namespace FarEmerald.PlayForge
 
             try
             {
-                // Done in the frame targeting ends. Polling its relay found that a frame later (TS-Z)
+                // Done in the frame targeting ends. Polling its relay found that a frame later
                 await relay.WhenTerminated(token);
             }
             catch (OperationCanceledException)
@@ -229,8 +229,8 @@ namespace FarEmerald.PlayForge
             // AbilityDataPacket extends SequenceDataPacket, so pass it directly.
             var handler = implicitData.EffectOrigin.GetSource();
             // Refused, the ability ends here. It used to run its stages outside ProcessControl instead, where no
-            // pause or terminate could reach them (TS-AC)
-            // In the caster's world, so its waits are the world's (FEAT-10)
+            // pause or terminate could reach them
+            // In the caster's world, so its waits are the world's
             var registration = ProcessControl.Register(CompiledSequence).HandledBy(handler).With(implicitData).In(ProcessWorld.Of(handler)).Run();
             var relay = registration.Relay;
             if (!registration)
@@ -246,7 +246,7 @@ namespace FarEmerald.PlayForge
             {
                 // Wait for the process to terminate (SelfTerminating lifecycle).
                 // The relay state transitions: Created → Running → Terminated.
-                // Done in the frame it does. Polling the relay found that a frame later (TS-Z)
+                // Done in the frame it does. Polling the relay found that a frame later
                 await relay.WhenTerminated(token);
             }
             catch (OperationCanceledException)

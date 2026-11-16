@@ -10,12 +10,12 @@ using UnityEngine.UIElements;
 namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
-    /// New Tag, which a tag field's picker opens (ED-55): a path, as "Status.Debuff.Burn", its contexts, then Create, which
+    /// New Tag, which a tag field's picker opens: a path, as "Status.Debuff.Burn", its contexts, then Create, which
     /// makes the tag unique, as the tag picker made each new one, and gives it to the field. A path the registry can't take
     /// says why under the field. The picker made a tag from its search text, with a button that read "+". Its contexts
-    /// start as the field's, which its use there gives it; others chosen declare it for them too, so their fields offer it
-    /// (ED-83). A tag's contexts came from its uses alone. A path that is one of PlayForge's own tags' text makes that very
-    /// tag, so it says so as it's typed, and offers the core tag, where it made it with no word (TAG-2, Decision 71).
+    /// start as the field's, which its use there gives it; others chosen declare it for them too, so their fields offer it.
+    /// A tag's contexts came from its uses alone. A path that is one of PlayForge's own tags' text makes that very
+    /// tag, so it says so as it's typed, and offers the core tag, where it made it with no word.
     /// </summary>
     internal sealed class ForgeNewTagWindow : EditorWindow
     {
@@ -31,7 +31,7 @@ namespace FarEmerald.PlayForge.Editor
         /// <summary>Opens New Tag with a path to start from, as the field's tag's parents.</summary>
         public static ForgeNewTagWindow Show(string start, Action<Tag> made) => ShowFor(start, null, made);
 
-        /// <summary>Opens New Tag for a field of the contexts given, which the tag's contexts start as (ED-83).</summary>
+        /// <summary>Opens New Tag for a field of the contexts given, which the tag's contexts start as.</summary>
         public static ForgeNewTagWindow ShowFor(string start, string[] fieldContexts, Action<Tag> made)
         {
             var window = CreateInstance<ForgeNewTagWindow>();
@@ -65,7 +65,7 @@ namespace FarEmerald.PlayForge.Editor
             }, TrickleDown.TrickleDown);
             root.Add(path);
 
-            // The field's contexts, which its use there gives the tag; another chosen declares it for that one too (ED-83)
+            // The field's contexts, which its use there gives the tag; another chosen declares it for that one too
             contexts = new ForgeTagContextsField("Contexts", fieldContexts)
             {
                 name = "TagContexts",
@@ -77,7 +77,7 @@ namespace FarEmerald.PlayForge.Editor
             problem.AddToClassList("pf-hidden");
             root.Add(problem);
 
-            // A path that is a core tag's text makes that very tag: said as it's typed, with the core tag to use (TAG-2)
+            // A path that is a core tag's text makes that very tag: said as it's typed, with the core tag to use
             core = new HelpBox("", HelpBoxMessageType.Warning) { name = "CoreTag" };
             core.AddToClassList("pf-hidden");
             core.Add(new Button(UseCore) { name = "UseCoreTag", text = "Use It", tooltip = "Give the field PlayForge's own tag" });
@@ -114,7 +114,7 @@ namespace FarEmerald.PlayForge.Editor
                 return;
             }
             var tag = Tag.GenerateAsUnique(text);
-            // Contexts other than the field's declare it, so their fields offer it (ED-83)
+            // Contexts other than the field's declare it, so their fields offer it
             var chosen = contexts?.Contexts ?? (IReadOnlyList<string>)fieldContexts;
             if (!new HashSet<string>(chosen).SetEquals(fieldContexts)) ForgeTagContexts.Declare(tag, chosen);
             made?.Invoke(tag);
@@ -141,17 +141,17 @@ namespace FarEmerald.PlayForge.Editor
             Close();
         }
 
-        // PlayForge's own tags by the text each reads as, which a path of that text would make into that very tag (TAG-2)
+        // PlayForge's own tags by the text each reads as, which a path of that text would make into that very tag
         private static Dictionary<string, Tag> coreByText;
 
-        /// <summary>Whether a name is one of PlayForge's own tags', which code writes (FN-9).</summary>
+        /// <summary>Whether a name is one of PlayForge's own tags', which code writes.</summary>
         internal static bool IsCoreName(string name)
         {
             IsCoreText("", out _);
             return !string.IsNullOrEmpty(name) && coreByText.Values.Any(tag => tag.Name == name);
         }
 
-        /// <summary>Whether a path is one of PlayForge's own tags' text, and that tag (TAG-2).</summary>
+        /// <summary>Whether a path is one of PlayForge's own tags' text, and that tag.</summary>
         internal static bool IsCoreText(string text, out Tag found)
         {
             coreByText ??= typeof(Tags).GetProperties(BindingFlags.Public | BindingFlags.Static)
@@ -170,7 +170,7 @@ namespace FarEmerald.PlayForge.Editor
             if (string.IsNullOrWhiteSpace(text)) return "A tag needs a path.";
             if (!TagRegistry.IsValidPath(text)) return "A path is names of letters, numbers and underscores, joined by dots.";
             // A tag's name is its path padded to 64 characters, so a longer one is cut, and two that begin alike are one
-            // tag (TAG-8)
+            // tag
             if (text.Trim().Length >= TagRegistry.TagUtil.rngGenerationBufferSize)
                 return $"A path of {TagRegistry.TagUtil.rngGenerationBufferSize} characters or more would be cut, so it could be another's tag.";
             return null;

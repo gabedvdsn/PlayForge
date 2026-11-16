@@ -7,7 +7,7 @@ namespace FarEmerald.PlayForge
     /// <summary>
     /// Returns values based on level thresholds.
     /// Useful for tier-based progression (e.g., Bronze/Silver/Gold ranks).
-    /// Each tier's value and its default are numbers of any kind, as a share of the caster's attribute (FEAT-29). A tier
+    /// Each tier's value and its default are numbers of any kind, as a share of the caster's attribute. A tier
     /// reads its number where the scaler is read, and the default with the scaler as its owner.
     /// </summary>
     [Serializable]
@@ -51,7 +51,7 @@ namespace FarEmerald.PlayForge
             return matched;
         }
 
-        // The tier the level is in, or the default below them all (FEAT-32)
+        // The tier the level is in, or the default below them all
         public override void Explain(in NumberContext context, NumberTrace trace)
         {
             int matched = Tier(context.Level.CurrentValue);

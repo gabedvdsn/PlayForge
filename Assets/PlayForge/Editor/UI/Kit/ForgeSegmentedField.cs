@@ -4,7 +4,7 @@ using UnityEngine.UIElements;
 namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
-    /// A choice among a few options shown side by side, as a scaler's Values, Per Level or Spread Over Levels (ED-54):
+    /// A choice among a few options shown side by side, as a scaler's Values, Per Level or Spread Over Levels:
     /// Unity's field, its label in the label column, and a button for each option, the chosen one pressed. Its value is
     /// the chosen option's place. A mixed value presses none.
     /// </summary>

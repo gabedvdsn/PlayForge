@@ -4,7 +4,7 @@ using UnityEngine;
 namespace FarEmerald.PlayForge.AdditionalContent
 {
     /// <summary>
-    /// Floats a word over the entity an effect lands on, as "Slowed" or "Shielded", in a color of its own (AC-2): through
+    /// Floats a word over the entity an effect lands on, as "Slowed" or "Shielded", in a color of its own: through
     /// the entity's Floating Numbers where it has them, so the word floats where its numbers do, else from its place.
     /// </summary>
     [Serializable]
@@ -40,7 +40,7 @@ namespace FarEmerald.PlayForge.AdditionalContent
     }
 
     /// <summary>
-    /// Flashes the entity an effect lands on in the cue's own color, as a freeze's blue (AC-2): through its Hit Flash, or
+    /// Flashes the entity an effect lands on in the cue's own color, as a freeze's blue: through its Hit Flash, or
     /// one the cue adds where it has none, which flashes only as cues ask.
     /// </summary>
     [Serializable]

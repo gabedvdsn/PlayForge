@@ -6,7 +6,7 @@ using UnityEngine.UIElements;
 namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
-    /// The field a relative number reads (FEAT-29, NUM-9), picked from a menu of the other number fields of the object
+    /// The field a relative number reads, picked from a menu of the other number fields of the object
     /// that holds the number, each by its name as the inspector writes it. The number's own field and any field that reads
     /// it back stay out, so a loop can't be picked. A name the object no longer has, as after a rename, shows as missing.
     /// </summary>

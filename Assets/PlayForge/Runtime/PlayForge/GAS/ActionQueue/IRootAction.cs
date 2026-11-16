@@ -32,7 +32,7 @@
     }
 
     /// <summary>
-    /// An action the system takes back once the queue has run it, to use again (GAS-P9). A listener handed one reads it
+    /// An action the system takes back once the queue has run it, to use again. A listener handed one reads it
     /// during the call. One the queue invalidates isn't taken back: it stays with the frame summary that records it.
     /// </summary>
     internal interface IReusableAction

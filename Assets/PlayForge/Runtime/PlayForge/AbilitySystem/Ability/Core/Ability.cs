@@ -41,13 +41,13 @@ namespace FarEmerald.PlayForge
         [ForgeEffectTemplate("Cooldown", "Cooldown")]
         public GameplayEffect Cooldown;
 
-        /// <summary>Its charges: its Charges component's, or one, an ordinary cooldown (TW-17, FN-14).</summary>
+        /// <summary>Its charges: its Charges component's, or one, an ordinary cooldown.</summary>
         public ScalableInt Charges => FirstComponent<ChargesAbilityComponent>() is { Charges: { } charges } ? charges : OneCharge;
 
-        /// <summary>How its spent charges come back: its Charges component's, or each on a cooldown of its own (TW-17, FN-14).</summary>
+        /// <summary>How its spent charges come back: its Charges component's, or each on a cooldown of its own.</summary>
         public AbstractChargeRecharge Recharge => FirstComponent<ChargesAbilityComponent>() is { Recharge: { } recharge } ? recharge : EachCharge;
 
-        /// <summary>The effect it toggles on its caster: its Toggle component's, or none, where it doesn't toggle (TW-20, FN-14).</summary>
+        /// <summary>The effect it toggles on its caster: its Toggle component's, or none, where it doesn't toggle.</summary>
         public GameplayEffect Toggles => FirstComponent<ToggleAbilityComponent>()?.Effect;
 
         private static readonly ScalableInt OneCharge = 1;
@@ -64,7 +64,7 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// Whether a stage marked Apply Usage Effects takes its cost and cooldown; where none does, they apply as it starts,
-        /// after its targeting (TW-17).
+        /// after its targeting.
         /// </summary>
         public bool StageTakesUsage
         {
@@ -198,7 +198,7 @@ namespace FarEmerald.PlayForge
         public void UnlinkAllChildren()
         {
             if (Cost && Cost.IsLinkedTo(this)) Cost.Unlink();
-            // The cooldown's own link. This asked the cost's, and threw on an ability with no cost (GAS-30)
+            // The cooldown's own link. This asked the cost's, and threw on an ability with no cost
             if (Cooldown && Cooldown.IsLinkedTo(this)) Cooldown.Unlink();
         }
         

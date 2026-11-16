@@ -7,10 +7,10 @@ using UnityEngine.UIElements;
 namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
-    /// An effect's impact, in Docs/EDITOR_STYLE.md's terms and the Effect mockup's: the attribute, the operation, the
-    /// magnitude, then how the impact is delivered, which the duration gives it, and what a periodic one commits (ED-2).
+    /// An effect's impact: the attribute, the operation, the
+    /// magnitude, then how the impact is delivered, which the duration gives it, and what a periodic one commits.
     /// Then its impact types and who it affects, its additional impacts, each with a
-    /// delivery of its own, with Add Impact (ED-3), and its contained effects. It no longer draws Reverse On Removal, which the impact model removed (ED-2),
+    /// delivery of its own, with Add Impact, and its contained effects. It no longer draws Reverse On Removal, which the impact model removed,
     /// and it takes its look from the style sheet: it drew tinted boxes with colored headings.
     /// </summary>
     [CustomPropertyDrawer(typeof(GameplayEffectImpact))]
@@ -22,7 +22,7 @@ namespace FarEmerald.PlayForge.Editor
         public override VisualElement CreatePropertyGUI(SerializedProperty property)
         {
             var root = new VisualElement { name = "ImpactRoot" };
-            // The style sheet lays out the impact, wherever the drawer is drawn (ED-20)
+            // The style sheet lays out the impact, wherever the drawer is drawn
             ForgeTheme.Apply(root);
 
             var attributeProp    = property.FindPropertyRelative(nameof(GameplayEffectImpact.AttributeTarget));
@@ -43,7 +43,7 @@ namespace FarEmerald.PlayForge.Editor
             root.Add(new PropertyField(attributeProp, "Attribute"));
             var operation = new ImpactFields.OperationField(operationProp, slotProp);
             root.Add(operation);
-            // Shown for Multiply, which it qualifies. It followed a stale copy of the operation every 250 ms (ED-11)
+            // Shown for Multiply, which it qualifies. It followed a stale copy of the operation every 250 ms
             var multiply = new EnumField("Multiply Behaviour")
             {
                 name = "MultiplyBehaviour",
@@ -53,7 +53,7 @@ namespace FarEmerald.PlayForge.Editor
             multiply.AddToClassList("pf-dependent");
             multiply.BindProperty(multiplyProp);
             root.Add(multiply);
-            // Shown for an Add on a Resistance, whose adds diminish, or one that says its own way (TW-1)
+            // Shown for an Add on a Resistance, whose adds diminish, or one that says its own way
             var add = new EnumField("Add Behaviour")
             {
                 name = "AddBehaviour",
@@ -65,11 +65,11 @@ namespace FarEmerald.PlayForge.Editor
             add.BindProperty(addProp);
             root.Add(add);
             root.Add(new PropertyField(magnitudeProp, "Magnitude"));
-            // The calculation each hit goes through as it lands (TW-2)
+            // The calculation each hit goes through as it lands
             root.Add(new PropertyField(property.FindPropertyRelative(nameof(GameplayEffectImpact.Pipeline)), "Pipeline") { name = "Pipeline" });
 
             // How the runtime delivers it, which the duration decides, and how often a periodic one lands. The drawer
-            // didn't say, and drew Reverse On Removal, which nothing reads since commits stay (ED-2)
+            // didn't say, and drew Reverse On Removal, which nothing reads since commits stay
             var delivery = ImpactFields.ValueRow("Delivery", "Delivery", "When the impact lands, which the effect's duration gives it");
             root.Add(delivery);
             var commits = ImpactFields.ValueRow("Commits", "Commits", "How many times a periodic impact lands, at the effect's first level");
@@ -101,7 +101,7 @@ namespace FarEmerald.PlayForge.Editor
             root.Add(affiliations);
             // ─── Additional impacts, each its own entry, then Add Impact ─────────
             // Each effect keeps its own, a list a multiple selection can't edit safely: one of another length would be
-            // cut (ED-12)
+            // cut
             var entries = new VisualElement { name = EntriesName };
             if (multiple)
             {
@@ -146,7 +146,7 @@ namespace FarEmerald.PlayForge.Editor
                 }
             }
 
-            // A multiple selection shows what any selected impact uses (ED-12)
+            // A multiple selection shows what any selected impact uses
             void Show(bool bind)
             {
                 operation.Refresh();
@@ -171,8 +171,8 @@ namespace FarEmerald.PlayForge.Editor
 
         // The first impact's delivery, and how often it lands when it's periodic. Hidden when the first impact changes
         // nothing, as in an effect that only grants tags. A multiple selection shows a mixed value where the selected
-        // effects differ (ED-12)
-        // Add Behaviour matters for an Add on a Resistance, whose adds diminish, or one that says its own way (TW-1)
+        // effects differ
+        // Add Behaviour matters for an Add on a Resistance, whose adds diminish, or one that says its own way
         internal static bool ShowsAdd(SerializedProperty attribute, SerializedProperty add, bool isAdd) =>
             isAdd && ((attribute.objectReferenceValue is FarEmerald.PlayForge.Attribute target && target.Role == EAttributeRole.Resistance)
                       || (EAddBehaviour)add.intValue != EAddBehaviour.AttributeRole);
@@ -252,7 +252,7 @@ namespace FarEmerald.PlayForge.Editor
 
     /// <summary>
     /// A contained effect, on one row: when it's applied, then the effect. It drew a tinted, rounded box with a stripe in
-    /// its policy's color, set 50 ms after it drew (ED-37).
+    /// its policy's color, set 50 ms after it drew.
     /// </summary>
     [CustomPropertyDrawer(typeof(ContainedEffectPacket))]
     public class ContainedEffectPacketDrawer : PropertyDrawer
@@ -276,7 +276,7 @@ namespace FarEmerald.PlayForge.Editor
             effect.AddToClassList("pf-contained-effect__effect");
             row.Add(effect);
 
-            // Whom it lands on: the target, or the caster (TW-14)
+            // Whom it lands on: the target, or the caster
             var landsOn = new EnumField
             {
                 name = "LandsOn",

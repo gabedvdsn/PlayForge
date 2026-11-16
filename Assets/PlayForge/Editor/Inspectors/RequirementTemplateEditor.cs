@@ -6,7 +6,7 @@ using UnityEngine.UIElements;
 
 namespace FarEmerald.PlayForge.Editor
 {
-    /// <summary>A Requirement Template's inspector: the shared header, then its fields (FN-12).</summary>
+    /// <summary>A Requirement Template's inspector: the shared header, then its fields.</summary>
     [CustomEditor(typeof(RequirementTemplate))]
     public class RequirementTemplateEditor : UnityEditor.Editor
     {

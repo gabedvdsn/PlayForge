@@ -4,7 +4,7 @@ using UnityEditor;
 namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
-    /// A proxy stage's policy: its kind, named without "ProxyStagePolicy" or "Policy", always of some kind (ED-56).
+    /// A proxy stage's policy: its kind, named without "ProxyStagePolicy" or "Policy", always of some kind.
     /// </summary>
     [CustomPropertyDrawer(typeof(IAbilityProxyStagePolicy))]
     public class IProxyStagePolicyDrawer : AbstractTypeRefDrawer<IAbilityProxyStagePolicy>

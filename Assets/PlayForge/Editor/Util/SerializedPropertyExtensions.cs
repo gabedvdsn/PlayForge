@@ -14,7 +14,7 @@ namespace FarEmerald.PlayForge.Editor
         /// The field a property is, found along its path. A managed reference on the way holds an object of its own type,
         /// whose fields the path goes on into, as a Group's members under a number's Scaler: the walk took the type the
         /// reference is declared as, which hasn't those fields, so a field inside one was never found, nor its attributes,
-        /// and a Group member's kind menu offered the kinds its field rules out (ED-81).
+        /// and a Group member's kind menu offered the kinds its field rules out.
         /// </summary>
         public static FieldInfo GetFieldInfo(this SerializedProperty prop)
         {

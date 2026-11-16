@@ -6,7 +6,7 @@ using UnityEngine;
 namespace FarEmerald.PlayForge
 {
     /// <summary>
-    /// The processes of one world and how they're stepped (FEAT-10, Decision 30): every process's block, its step groups,
+    /// The processes of one world and how they're stepped: every process's block, its step groups,
     /// the watches, the groups, which processes each GAS owns, the control state and its transitions, and the callbacks.
     /// A scene's ProcessControl wraps one and steps it from Unity's loop, and code can own one and step it itself, as a
     /// headless run does. It was ProcessControl itself, so no process ran without a ProcessControl in a scene.
@@ -28,7 +28,7 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// The world that holds a process, by its relay: an entity's, a runtime process's or a Mono process's. One that no
         /// world holds takes the scene's. An ability's processes run in their caster's world; they ran in the scene's,
-        /// wherever the caster was (FEAT-10).
+        /// wherever the caster was.
         /// </summary>
         public static ProcessWorld Of(object process)
         {
@@ -103,7 +103,7 @@ namespace FarEmerald.PlayForge
             }
         }
 
-        /// <summary>Ticks a second of game time, or 0 to step once a frame (FEAT-7).</summary>
+        /// <summary>Ticks a second of game time, or 0 to step once a frame.</summary>
         public int FixedTickRate
         {
             get => Control is null ? fixedTickRate : Control.FixedTickRate;
@@ -139,22 +139,22 @@ namespace FarEmerald.PlayForge
         
         // Optimized stepping - flat lists per timing type for cache-friendly iteration
         // Empty until Bootstrap fills it, so a ProcessControl nothing bootstrapped steps nothing. Null, it threw in
-        // every Update, LateUpdate and FixedUpdate (PC-23)
+        // every Update, LateUpdate and FixedUpdate
         private Dictionary<EProcessStepTiming, StepGroup> _stepping = new();
 
         // The timing each block joined its step groups by, which is the one it leaves them by. A process's own can
-        // change while it runs, and leaving by that left the block stepping where it had joined (PC-26)
+        // change while it runs, and leaving by that left the block stepping where it had joined
         private Dictionary<int, EProcessStepTiming> _steppedAs = new();
 
         // Blocks whose object wasn't active when they registered. Unity sends no OnDestroy to an object that was never
-        // active, so one destroyed before it woke left its block stepping with nothing behind it (PC-30)
+        // active, so one destroyed before it woke left its block stepping with nothing behind it
         private readonly List<int> _dormant = new();
 
         // Blocks whose process's class declares its own OnDestroy, which hides the base's, so Unity never says when
-        // their object goes. Watched for as long as they run (PC-31)
+        // their object goes. Watched for as long as they run
         private readonly List<int> _unheard = new();
 
-        // Per class, whether it hides AbstractMonoProcess's OnDestroy, so each is looked up, and warned of, once (PC-31)
+        // Per class, whether it hides AbstractMonoProcess's OnDestroy, so each is looked up, and warned of, once
         private readonly Dictionary<Type, bool> _hidesOnDestroy = new();
         
         // Hierarchy management for MonoProcesses
@@ -165,7 +165,7 @@ namespace FarEmerald.PlayForge
 
         // The cache indices, which every world draws from, so a process's is its own among all worlds'. Each world
         // counted its own from 0, so a handler with processes in two worlds, as GameRoot is by default, refused the
-        // second under the first's index (FEAT-10)
+        // second under the first's index
         private static int s_cacheCounter;
 
         private int NextCacheIndex
@@ -202,12 +202,12 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// The processes stepped at one timing, in step order: by priority, lowest first, and within a
         /// priority in the order they arrived. Stepping reads this every frame, so it's kept in order as
-        /// processes come and go. The priority used to be stored and never applied (PC-22).
+        /// processes come and go. The priority used to be stored and never applied.
         ///
         /// A process that goes leaves a <see cref="Hole"/>, found at once by its position, which stepping
         /// passes over as over any index no longer active. Its removal searched the list from the front and
         /// shifted what came after, so ending the newest of 10,000 cost several times what ending the newest of
-        /// 1,000 did, and ending every one of them cost the square of how many there were (PC-34). The holes
+        /// 1,000 did, and ending every one of them cost the square of how many there were. The holes
         /// are swept out, in place, once they outnumber the processes.
         /// </summary>
         private class StepGroup
@@ -332,7 +332,7 @@ namespace FarEmerald.PlayForge
         public void WatchProcess(ProcessRelay toWatch, object caller, Action<ProcessDataPacket> onStartWatching = null, Action<EProcessState, EProcessState, ProcessDataPacket> onStateChange = null,
             Action<ProcessDataPacket> onUnregister = null)
         {
-            // In this control's watchers: it went in Instance's, whichever control held the process (FEAT-10)
+            // In this control's watchers: it went in Instance's, whichever control held the process
             if (!_watchers.TryGetValue(toWatch.CacheIndex, out var watcher))
             {
                 _watchers[toWatch.CacheIndex] = new ProcessWatcher(toWatch, caller, onStateChange, onUnregister);
@@ -432,7 +432,7 @@ namespace FarEmerald.PlayForge
         }
 
         // A world of its own's tick and clock: it ticks once each time its owner steps it, so a sequence in it waits on its
-        // steps, and its clock reads each step's time. A scene's world has the scene's tick and Unity's clock (FEAT-10)
+        // steps, and its clock reads each step's time. A scene's world has the scene's tick and Unity's clock
         private readonly ForgeTickSource ownTick = new() { Ticking = true };
         private WorldClock ownClock;
 
@@ -457,7 +457,7 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// Steps every process the world holds once, as a frame does: Update, then LateUpdate. A world of its own steps by
-        /// Unity's frame time; a scene's, by the clock read now, as its ProcessControl steps it from Unity's loop (FEAT-10).
+        /// Unity's frame time; a scene's, by the clock read now, as its ProcessControl steps it from Unity's loop.
         /// </summary>
         public void Step()
         {
@@ -475,7 +475,7 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// Steps a world of its own by a time its owner gives: its clock reads that time, its tick goes on, so what waits on
         /// it goes on, and every process steps once, Update and then LateUpdate. A loop of steps runs the world through its
-        /// time within one frame, as a headless run does; its waits were Unity's next frame (FEAT-10). A scene's world
+        /// time within one frame, as a headless run does; its waits were Unity's next frame. A scene's world
         /// steps with Unity's loop, so this steps it once by the clock read now.
         /// </summary>
         public void Step(float deltaTime)
@@ -508,11 +508,11 @@ namespace FarEmerald.PlayForge
         /// <summary>Steps the processes that step at the fixed rate, as a physics step does.</summary>
         public void StepFixed() => StepProcesses(EProcessStepTiming.FixedUpdate);
 
-        /// <summary>Enters the start state, after readying that deferred it (PC-29).</summary>
+        /// <summary>Enters the start state, after readying that deferred it.</summary>
         public void EnterStartState() => SetControlState(StartState);
 
-        // Ends the blocks of processes whose objects went with no word: one never awake (PC-30), and one whose class hides
-        // OnDestroy (PC-31)
+        // Ends the blocks of processes whose objects went with no word: one never awake, and one whose class hides
+        // OnDestroy
         internal void SweepDestroyed()
         {
             Sweep(_dormant, untilAwake: true);
@@ -524,7 +524,7 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// Ends the block of each watched process whose object has been destroyed. A dormant one stops being watched once
-        /// it wakes, as its OnDestroy will come then (PC-30); one whose class hides OnDestroy never does (PC-31).
+        /// it wakes, as its OnDestroy will come then; one whose class hides OnDestroy never does.
         /// </summary>
         private void Sweep(List<int> watched, bool untilAwake)
         {
@@ -548,7 +548,7 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// Whether the process's class, or one between it and AbstractMonoProcess, declares its own OnDestroy. Unity calls
-        /// only that one, so AbstractMonoProcess's, which ends the process, never runs (PC-31).
+        /// only that one, so AbstractMonoProcess's, which ends the process, never runs.
         /// </summary>
         private bool HidesOnDestroy(AbstractMonoProcess mono)
         {
@@ -592,7 +592,7 @@ namespace FarEmerald.PlayForge
             _stepSnapshot.Clear();
             _stepSnapshot.AddRange(group.GetIndices());
 
-            // Under its timing's marker in the Profiler, and timed for its counter (FEAT-18)
+            // Under its timing's marker in the Profiler, and timed for its counter
             long started = System.Diagnostics.Stopwatch.GetTimestamp();
             using (ForgeProfiler.StepLoop(timing).Auto())
             {
@@ -608,7 +608,7 @@ namespace FarEmerald.PlayForge
             }
             ForgeCounters.AddStepTime(System.Diagnostics.Stopwatch.GetTimestamp() - started);
 
-            // The scene's levels, as its LateUpdate loop ends (FEAT-18)
+            // The scene's levels, as its LateUpdate loop ends
             if (timing == EProcessStepTiming.LateUpdate && Control is not null)
                 ForgeCounters.SceneLevels(Running, _waiting.Count, _created);
         }
@@ -1014,7 +1014,7 @@ namespace FarEmerald.PlayForge
             pcb.Wrapper.ConfigureWrapper();
 
             // By the live object, which for a prefab is its clone. The prefab is shared, so every clone of it
-            // landed on one node and ending any of them cascaded to the rest (PC-3)
+            // landed on one node and ending any of them cascaded to the rest
             if (pcb.Wrapper.TryGetProcess<AbstractMonoProcess>(out var mono)) _hierarchy.Register(mono, pcb.CacheIndex);
 
             _waiting.Add(pcb.CacheIndex);
@@ -1042,7 +1042,7 @@ namespace FarEmerald.PlayForge
             }
 
             // The process's own code, with the block already in place. A throw goes through the usual
-            // teardown and refuses the process, rather than leaving it half registered (PC-15)
+            // teardown and refuses the process, rather than leaving it half registered
             try
             {
                 pcb.Initialize();
@@ -1055,11 +1055,11 @@ namespace FarEmerald.PlayForge
             }
 
             // WhenInitialize applies the parent the process's data asks for after the hierarchy filed it, so it's filed
-            // again where its transform now is. It stayed no one's child (PC-28)
+            // again where its transform now is. It stayed no one's child
             if (mono) _hierarchy.Reparent(mono.gameObject);
             if (mono)
             {
-                // A class that hides OnDestroy is watched for as long as it runs, one asleep only until it wakes (PC-31)
+                // A class that hides OnDestroy is watched for as long as it runs, one asleep only until it wakes
                 if (HidesOnDestroy(mono)) _unheard.Add(pcb.CacheIndex);
                 else if (!mono.gameObject.activeInHierarchy) _dormant.Add(pcb.CacheIndex);
             }
@@ -1086,7 +1086,7 @@ namespace FarEmerald.PlayForge
             {
                 // Only a pause or the end of one moves anything. Giving every process its default transition
                 // here parked Synchronous processes, started RequiresControl ones and re-ran finished ones,
-                // and closing ended GameRoot and everything it handled (PC-7)
+                // and closing ended GameRoot and everything it handled
                 var pcbs = _active.Values.ToArray();
                 foreach (var pcb in pcbs)
                 {
@@ -1211,7 +1211,7 @@ namespace FarEmerald.PlayForge
             if (state == EProcessState.Created) return;
 
             // A world of its own's tick is in force as a process moves, between its steps as at them: a run that starts
-            // now waits on it (FEAT-10)
+            // now waits on it
             var tick = Control is null ? ForgeTick.Enter(ownTick) : null;
             try
             {
@@ -1228,7 +1228,7 @@ namespace FarEmerald.PlayForge
             ForgeCounters.StateChanges.Value++;
 
             // Reported ahead of acting on it: terminating takes the watchers away, and a run that ends at
-            // once moves the state on again, so afterwards was too late to say this (PC-13)
+            // once moves the state on again, so afterwards was too late to say this
             ReportStateChange(pcb);
 
             // A listener can move the process on itself
@@ -1449,7 +1449,7 @@ namespace FarEmerald.PlayForge
                 (EProcessState.Created, EProcessState.Running, EProcessLifecycle.RunThenWait) => true,
                 (EProcessState.Created, EProcessState.Running, EProcessLifecycle.Synchronous) => true,
                 // The table has the last word on a resume, so what a paused or closed ProcessControl keeps still
-                // stays still. Allowing every resume let Unpause walk a process out of a pause (PC-27)
+                // stays still. Allowing every resume let Unpause walk a process out of a pause
                 (EProcessState.Waiting, EProcessState.Running, _) => GetDefaultTransitionState(pcb) == EProcessState.Running,
                 
                 // Waiting transitions
@@ -1463,7 +1463,7 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// A Mono process's transform has a new parent, so the hierarchy files it again under its new ancestors. It
-        /// heard only where the process registered (PC-28, Decision 11).
+        /// heard only where the process registered.
         /// </summary>
         public void ProcessReparented(ProcessRelay relay)
         {

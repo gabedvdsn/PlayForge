@@ -2,7 +2,7 @@
 {
     /// <summary>
     /// How a stage's tasks end it: the compiler maps each to a sequence's stage policy, Any to the first task's end and
-    /// All to every task's (AbilitySequenceCompiler). The legacy execution that awaited one itself is gone (FN-21).
+    /// All to every task's (AbilitySequenceCompiler). The legacy execution that awaited one itself is gone.
     /// </summary>
     public interface IAbilityProxyStagePolicy
     {

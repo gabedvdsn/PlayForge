@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 namespace FarEmerald.PlayForge
 {
     /// <summary>
-    /// A worker that answers numbers (FEAT-29, NUM-12): a number of the Worker kind, or an Asset Part number's Worker
+    /// A worker that answers numbers: a number of the Worker kind, or an Asset Part number's Worker
     /// Value, asks it for a value under a key, and it answers from what it knows, as how much health its effect's target
     /// has lost since the effect began. Any worker can implement it: an effect's workers answer about their effect, and
     /// an entity's workers, those its worker groups give it, about the entity. Every number field can ask, so a worker
@@ -23,7 +23,7 @@ namespace FarEmerald.PlayForge
     }
 
     /// <summary>
-    /// The workers on each entity that answer numbers, and the way to ask them or an effect's workers (FEAT-29, NUM-12).
+    /// The workers on each entity that answer numbers, and the way to ask them or an effect's workers.
     /// A worker group installs its workers that answer as it gives them to an entity, and takes them back with them; code
     /// that gives an entity a worker of its own can do the same with <see cref="Provide"/>.
     /// </summary>

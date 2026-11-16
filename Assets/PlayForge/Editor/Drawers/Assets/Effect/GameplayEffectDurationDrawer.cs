@@ -6,11 +6,11 @@ using UnityEngine.UIElements;
 namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
-    /// An effect's duration, in Docs/EDITOR_STYLE.md's terms and the Effect mockup's names: Policy, then what the policy
+    /// An effect's duration: Policy, then what the policy
     /// uses: Duration and its ticks for a Durational effect, Tick Every for an Infinite one, then Tick On Application,
     /// execute ticks, the clock, Re-application and Then, and stacking for Stack Existing. It drew its parts in tinted
-    /// boxes with colored headings, under sentences that explained them, and showed or hid them 50 ms after it drew
-    /// (ED-37). It follows the policy as it changes, an Undo among them.
+    /// boxes with colored headings, under sentences that explained them, and showed or hid them 50 ms after it drew.
+    /// It follows the policy as it changes, an Undo among them.
     /// </summary>
     [CustomPropertyDrawer(typeof(GameplayEffectDuration))]
     public class GameplayEffectDurationDrawer : PropertyDrawer
@@ -66,7 +66,7 @@ namespace FarEmerald.PlayForge.Editor
             then.AddToClassList("pf-dependent");
             var stacking = Field(nameof(GameplayEffectDuration.StackPolicy), "Stacking", "Stacking",
                 "How the stacks keep their time");
-            // Each effect keeps its own stack behaviours, objects a multiple selection can't edit safely (ED-12)
+            // Each effect keeps its own stack behaviours, objects a multiple selection can't edit safely
             VisualElement behaviours;
             if (property.serializedObject.isEditingMultipleObjects)
             {
@@ -86,7 +86,7 @@ namespace FarEmerald.PlayForge.Editor
             void Show(VisualElement element, bool shown) =>
                 element.style.display = shown ? DisplayStyle.Flex : DisplayStyle.None;
 
-            // Each part shows while the policy uses it; a multiple selection shows what any selected effect's uses (ED-12)
+            // Each part shows while the policy uses it; a multiple selection shows what any selected effect's uses
             void ShowPolicy()
             {
                 var each = EachAsset.Of(property).Select(own => (

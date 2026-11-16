@@ -24,19 +24,19 @@ namespace FarEmerald.PlayForge
         [SerializeReference] 
         public List<AbstractSetAssetsTask> AssetLoaders = new();
         
-        // Empty, not null: an ability made in code had no list until it was saved and loaded, so adding a stage threw (GAS-63)
+        // Empty, not null: an ability made in code had no list until it was saved and loaded, so adding a stage threw
         public List<AbilityTaskBehaviourStage> Stages = new();
 
         /// <summary>
         /// The abilities, by asset tag or a context tag, or a child of one, that cancel this one as they activate, in
         /// each stage that names none of its own. A critical stage is committed, so nothing cancels it. Nothing
-        /// cancelled an ability but an interrupt by slot (FEAT-5).
+        /// cancelled an ability but an interrupt by slot.
         /// </summary>
         [ForgeTagContext(ForgeContext.AssetTag, ForgeContext.ContextTag)] public List<Tag> CancelledBy = new();
 
         /// <summary>
         /// The abilities, by asset tag or a context tag, or a child of one, that can't activate while this one runs, in
-        /// each stage that names none of its own. Blocking was the claim alone, per activation policy (FEAT-5).
+        /// each stage that names none of its own. Blocking was the claim alone, per activation policy.
         /// </summary>
         [ForgeTagContext(ForgeContext.AssetTag, ForgeContext.ContextTag)] public List<Tag> Blocks = new();
 
@@ -66,26 +66,26 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// When the stage runs: always, or only while a tag is there, or only while it's missing. Two stages that name one
-        /// tag, one wanting it and one wanting it missing, branch: an attack's recovery on a hit and on a miss (TS-7).
+        /// tag, one wanting it and one wanting it missing, branch: an attack's recovery on a hit and on a miss.
         /// </summary>
         public AbilityStageCondition Condition = new();
 
         /// <summary>
         /// The abilities that cancel the ability as they activate while this stage runs, as the ability's Cancelled By
-        /// says; a stage that names none takes the ability's. A critical stage can't be cancelled (FEAT-5).
+        /// says; a stage that names none takes the ability's. A critical stage can't be cancelled.
         /// </summary>
         [ForgeTagContext(ForgeContext.AssetTag, ForgeContext.ContextTag)] public List<Tag> CancelledBy = new();
 
         /// <summary>
         /// The abilities that can't activate while this stage runs, as the ability's Blocks says; a stage that names none
-        /// takes the ability's (FEAT-5).
+        /// takes the ability's.
         /// </summary>
         [ForgeTagContext(ForgeContext.AssetTag, ForgeContext.ContextTag)] public List<Tag> Blocks = new();
 
-        /// <summary>The stage's own Cancelled By, or <paramref name="ability"/>'s when it names none (FEAT-5).</summary>
+        /// <summary>The stage's own Cancelled By, or <paramref name="ability"/>'s when it names none.</summary>
         public List<Tag> CancelledByOr(List<Tag> ability) => CancelledBy is { Count: > 0 } ? CancelledBy : ability;
 
-        /// <summary>The stage's own Blocks, or <paramref name="ability"/>'s when it names none (FEAT-5).</summary>
+        /// <summary>The stage's own Blocks, or <paramref name="ability"/>'s when it names none.</summary>
         public List<Tag> BlocksOr(List<Tag> ability) => Blocks is { Count: > 0 } ? Blocks : ability;
 
         /// <summary>Whether a task in the stage is a critical section, which commits the ability to the stage.</summary>
@@ -104,7 +104,7 @@ namespace FarEmerald.PlayForge
     /// <summary>
     /// When an ability's stage runs: always, or only while a tag is there, or only while it's missing, in the
     /// activation's data, on the caster or on the target. The compiler emitted no branch, so there was no on-hit or
-    /// on-miss stage (TS-7, C12).
+    /// on-miss stage.
     /// </summary>
     [Serializable]
     public class AbilityStageCondition
@@ -137,7 +137,7 @@ namespace FarEmerald.PlayForge
         }
     }
 
-    /// <summary>Where a stage's condition looks for its tag (TS-7).</summary>
+    /// <summary>Where a stage's condition looks for its tag.</summary>
     public enum EAbilityStageConditionSubject
     {
         [InspectorName("The Activation")] Activation,

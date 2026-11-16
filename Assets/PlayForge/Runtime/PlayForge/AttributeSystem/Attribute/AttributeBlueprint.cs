@@ -21,10 +21,10 @@ namespace FarEmerald.PlayForge
         public readonly AttributeSetElement SetElement;
         public readonly SourceAttributeImpact Derivation;
 
-        // The blueprints combined into this one, each resolved on its own and added in (GAS-27, Decision 13)
+        // The blueprints combined into this one, each resolved on its own and added in
         private readonly List<AttributeBlueprint> combined = new();
 
-        // Whether the parts are averaged rather than summed, for a set that settles collisions by UseAverage (GAS-40)
+        // Whether the parts are averaged rather than summed, for a set that settles collisions by UseAverage
         private bool averaged;
 
         /// <summary>This blueprint and those combined into it, each with scalers of its own to regulate.</summary>
@@ -86,12 +86,12 @@ namespace FarEmerald.PlayForge
         {
             // Elements set to Combine add up: each resolves on its own, scalers included, and this blueprint's value is
             // the sum. Bounds, rounding and retention group are this one's. It did nothing, so the first element stood
-            // alone (GAS-27, Decision 13). RootValue stays this element's own, as cached scalers read it per element
+            // alone. RootValue stays this element's own, as cached scalers read it per element
             if (other is null || other == this || combined.Contains(other)) return;
             combined.Add(other);
         }
 
-        /// <summary>Takes in another blueprint to be averaged with this one, for a set that settles collisions by UseAverage (GAS-40).</summary>
+        /// <summary>Takes in another blueprint to be averaged with this one, for a set that settles collisions by UseAverage.</summary>
         public void Average(AttributeBlueprint other)
         {
             Combine(other);

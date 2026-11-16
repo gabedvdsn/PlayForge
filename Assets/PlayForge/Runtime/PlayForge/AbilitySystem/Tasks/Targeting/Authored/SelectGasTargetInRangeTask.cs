@@ -52,7 +52,7 @@ namespace FarEmerald.PlayForge
             var maxDist = reach > 0 ? reach : Mathf.Infinity;
             var owner = data.EffectOrigin.GetSource();
             // From the caster's targeting packet, which every caster has. Through its transform, a runtime caster, which
-            // has none, always failed (GAS-38)
+            // has none, always failed
             var ownerPacket = owner?.GetTargetingPacket();
 
             if (ownerPacket == null)
@@ -62,7 +62,6 @@ namespace FarEmerald.PlayForge
             }
 
             // Handed its target, as an AI's activation hands it, it takes it with no click, if it's valid and in range
-            // (GAS-66)
             if (TakeTargetFromData && TryGetDataTarget(data, out var given))
             {
                 if (TargetIsValid(given) && IsWithinRange(data, ownerPacket, given)) data.SetTargetingPacket(Tags.TARGET, given.GetTargetingPacket());
@@ -100,7 +99,7 @@ namespace FarEmerald.PlayForge
             }
         }
 
-        // Within its range: its ability's Cast Range where it reads it (FN-14), else its own
+        // Within its range: its ability's Cast Range where it reads it, else its own
         private bool IsWithinRange(AbilityDataPacket data, AbstractTargetingPacket caster, ITarget target)
         {
             var targetTransform = target.GetTargetingPacket();

@@ -5,7 +5,7 @@ using UnityEngine.UIElements;
 
 namespace FarEmerald.PlayForge.Editor
 {
-    // The Tags view, as the design canvas's Tags board draws it: every tag the entities hold, as a tree by its path,
+    // The Tags view: every tag the entities hold, as a tree by its path,
     // beside who holds the one selected and what grants it them. The Tag Debugger listed one entity's tags in a window of
     // its own
     public sealed partial class RuntimeDebugger
@@ -158,7 +158,7 @@ namespace FarEmerald.PlayForge.Editor
         }
 
         // The tags the shown hubs hold, as a tree by their paths, each path's parts in natural order. A path is the tag's
-        // display name: a unique tag's name is padded with a generated suffix, which split it from its parents (ED-60)
+        // display name: a unique tag's name is padded with a generated suffix, which split it from its parents
         private List<TagNode> TagRoots(out List<TagNode> all)
         {
             var nodes = new Dictionary<string, TagNode>();
@@ -237,7 +237,7 @@ namespace FarEmerald.PlayForge.Editor
             var head = TableHead(("Entity", "pf-debugger__col-grow"), ("Weight", "pf-debugger__col-60"),
                 ("Granted by", "pf-debugger__col-grow"), ("Source", "pf-debugger__col-grow"));
 
-            // Source is the column a narrow window drops (ED-43)
+            // Source is the column a narrow window drops
             var sourceHead = head[head.childCount - 1];
             sourceHead.AddToClassList(SourceColumnClass);
             sourceHead.EnableInClassList(HiddenClass, narrow);
@@ -337,7 +337,7 @@ namespace FarEmerald.PlayForge.Editor
         }
 
         // What grants an entity a tag, as its compile walks them: its attribute set, its effects, its abilities, its items,
-        // its identity, then the tags granted it directly (GrantedTagCompiler, FEAT-16)
+        // its identity, then the tags granted it directly (GrantedTagCompiler)
         private static List<TagGrant> SourcesOf(IGameplayAbilitySystem gas, Tag tag)
         {
             var grants = new List<TagGrant>();

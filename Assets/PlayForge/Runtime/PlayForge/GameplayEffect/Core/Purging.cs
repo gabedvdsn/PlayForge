@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
-    /// <summary>A tier of a project's purge levels (FN-16): the tag an effect carries to be at it, and whether a death keeps it.</summary>
+    /// <summary>A tier of a project's purge levels: the tag an effect carries to be at it, and whether a death keeps it.</summary>
     [Serializable]
     public class PurgeTier
     {
@@ -16,7 +16,7 @@ namespace FarEmerald.PlayForge
         public bool KeptOnDeath;
     }
 
-    /// <summary>The kinds of effect a death can keep whatever their tiers (FN-16, Decision 80).</summary>
+    /// <summary>The kinds of effect a death can keep whatever their tiers.</summary>
     [Flags]
     public enum EEffectCategory
     {
@@ -38,7 +38,7 @@ namespace FarEmerald.PlayForge
         Own = 8,
     }
 
-    /// <summary>Whom a purge takes the effects of, by who applied each, against the one purged (FN-16, Decision 80).</summary>
+    /// <summary>Whom a purge takes the effects of, by who applied each, against the one purged.</summary>
     [Flags]
     public enum EPurgeRelation
     {
@@ -57,9 +57,9 @@ namespace FarEmerald.PlayForge
     }
 
     /// <summary>
-    /// A project's purge levels (FN-16, Decision 79): tiers of tags, weakest first, an effect at the first whose tag its
+    /// A project's purge levels: tiers of tags, weakest first, an effect at the first whose tag its
     /// asset tag or a context tag matches; a purge of a tier takes the effects at it or under it, and an effect at none is
-    /// never purged, but by death (Decision 80). And the categories a death keeps whatever their tiers.
+    /// never purged, but by death. And the categories a death keeps whatever their tiers.
     /// </summary>
     [Serializable]
     public class PurgeLevels
@@ -92,7 +92,7 @@ namespace FarEmerald.PlayForge
     }
 
     /// <summary>
-    /// A purge (FN-16, Decision 79): its strength, a tier of the project's purge levels, taking the effects at that tier or
+    /// A purge: its strength, a tier of the project's purge levels, taking the effects at that tier or
     /// under it; only those of the kinds it names, by their tags, as Status.Debuff; only those applied by whom it says,
     /// against the one purged; and only those its filters take.
     /// </summary>
@@ -118,7 +118,7 @@ namespace FarEmerald.PlayForge
         public bool Purges => Strength.IsValid;
     }
 
-    /// <summary>What a purge's filter reads an effect with (FN-16).</summary>
+    /// <summary>What a purge's filter reads an effect with.</summary>
     public readonly struct PurgeContext
     {
         /// <summary>The effect as it's on the one purged.</summary>
@@ -138,7 +138,7 @@ namespace FarEmerald.PlayForge
         }
     }
 
-    /// <summary>A purge's filter of a project's own (FN-16): whether the purge takes an effect, beside its strength, kinds and relation.</summary>
+    /// <summary>A purge's filter of a project's own: whether the purge takes an effect, beside its strength, kinds and relation.</summary>
     [Serializable]
     public abstract class AbstractPurgeFilter
     {
@@ -146,7 +146,7 @@ namespace FarEmerald.PlayForge
         public virtual bool Takes(in PurgeContext ctx) => true;
     }
 
-    /// <summary>Spares the effects carrying one of its tags, as their asset tag or a context tag, as a purge that leaves stuns (FN-16).</summary>
+    /// <summary>Spares the effects carrying one of its tags, as their asset tag or a context tag, as a purge that leaves stuns.</summary>
     [Serializable]
     [ForgeMenu(Description = "Spares the effects carrying one of its tags.")]
     public sealed class ExceptTaggedPurgeFilter : AbstractPurgeFilter
@@ -160,7 +160,7 @@ namespace FarEmerald.PlayForge
     }
 
     /// <summary>
-    /// What purges an entity's effects (FN-16, Decision 79): those a purge takes, by the current project's purge levels,
+    /// What purges an entity's effects: those a purge takes, by the current project's purge levels,
     /// each coming off as a removal does.
     /// </summary>
     public static class ForgePurge
@@ -172,9 +172,9 @@ namespace FarEmerald.PlayForge
         private static readonly PurgeLevels NoProject = new();
 
         /// <summary>
-        /// A staying entity's death's purge (FN-16, Decision 79): each of its effects comes off but those its death keeps,
+        /// A staying entity's death's purge: each of its effects comes off but those its death keeps,
         /// the categories it keeps whatever their tiers, and the tiers it keeps, its project's where it keeps what its
-        /// project does and its own; an effect at no tier goes (Decision 80). How many came off.
+        /// project does and its own; an effect at no tier goes. How many came off.
         /// </summary>
         public static int PurgeOnDeath(IGameplayAbilitySystem dead, EntityDeath death)
         {
@@ -184,7 +184,7 @@ namespace FarEmerald.PlayForge
             return effects.Purge(container => !KeptOnDeath(container, dead, death, levels, categories));
         }
 
-        // Whether a death keeps an effect: of a category it keeps, whatever its tier, as a cooldown is (Decision 79); or at
+        // Whether a death keeps an effect: of a category it keeps, whatever its tier, as a cooldown is; or at
         // a tier it keeps, its project's or its own
         private static bool KeptOnDeath(AbstractEffectContainer container, IGameplayAbilitySystem dead, EntityDeath death,
             PurgeLevels levels, EEffectCategory categories)
@@ -202,7 +202,7 @@ namespace FarEmerald.PlayForge
         }
 
         /// <summary>
-        /// The categories an effect on an entity is of (Decision 80): an ability's cooldown; lent, by an equipped item, a set
+        /// The categories an effect on an entity is of: an ability's cooldown; lent, by an equipped item, a set
         /// bonus, an aura, or a passive ability on its holder, one that activates as it's granted; an ability's toggle; and
         /// its own, applied by itself, where it's none of the others.
         /// </summary>
@@ -247,7 +247,7 @@ namespace FarEmerald.PlayForge
         }
 
         // Whether a purge takes an effect: at a tier at or under its strength, of its kinds, applied by whom it takes,
-        // through each of its filters. One at no tier, never (Decision 80)
+        // through each of its filters. One at no tier, never
         private static bool Takes(AbstractEffectContainer container, EffectPurge purge, int strength, PurgeLevels levels,
             IGameplayAbilitySystem purged, ISource purger)
         {
@@ -268,7 +268,7 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// Who applied an effect, against the one it's on: itself; an ally, sharing a side with it; or an enemy, sharing
-        /// none, as one of no sides does (Decision 80).
+        /// none, as one of no sides does.
         /// </summary>
         public static EPurgeRelation RelationOf(AbstractEffectContainer container, IGameplayAbilitySystem on)
         {
@@ -282,7 +282,7 @@ namespace FarEmerald.PlayForge
             return EPurgeRelation.Enemies;
         }
 
-        /// <summary>Whether an effect carries a tag, or a child of it, as its asset tag or a context tag (Decision 80).</summary>
+        /// <summary>Whether an effect carries a tag, or a child of it, as its asset tag or a context tag.</summary>
         public static bool Carries(GameplayEffect effect, Tag tag)
         {
             if (effect == null || !tag.IsValid) return false;

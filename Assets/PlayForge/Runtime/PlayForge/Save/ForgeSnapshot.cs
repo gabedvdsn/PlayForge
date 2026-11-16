@@ -8,7 +8,7 @@ namespace FarEmerald.PlayForge
     /// attributes' permanent commits, its levels, abilities, items and effects, its loose tags and its time scale. Plain
     /// serializable types, so a game writes a save where it likes, through <c>JsonUtility</c> or its own serializer. Assets
     /// are named by their IDs in a <see cref="ForgeAssetCatalog"/> and tags by name, which last across sessions as a
-    /// reference doesn't (FEAT-9).
+    /// reference doesn't.
     /// </summary>
     [Serializable]
     public class ForgeSnapshot
@@ -30,10 +30,10 @@ namespace FarEmerald.PlayForge
         /// <summary>The effects on the entity's shelf, in its order.</summary>
         public List<EffectSave> Effects = new();
 
-        /// <summary>The tags granted to the entity directly, by name (FEAT-16).</summary>
+        /// <summary>The tags granted to the entity directly, by name.</summary>
         public List<string> LooseTags = new();
 
-        /// <summary>How fast the entity's time runs against the game's (FEAT-7).</summary>
+        /// <summary>How fast the entity's time runs against the game's.</summary>
         public float TimeScale = 1f;
     }
 
@@ -114,15 +114,15 @@ namespace FarEmerald.PlayForge
         public float TotalDuration;
         public float PeriodDuration;
         // Each stack's time left and time to its tick, in full, as the effect's timers keep them: a float a hair off
-        // ran a restored effect on apart from one never restored (GAS-61). A save written with floats still loads
+        // ran a restored effect on apart from one never restored. A save written with floats still loads
         public List<double> Remaining = new();
         public List<double> UntilTick = new();
 
-        /// <summary>The magnitudes its caller set, by tag, which a Set By Caller scaler on it reads (FEAT-2).</summary>
+        /// <summary>The magnitudes its caller set, by tag, which a Set By Caller scaler on it reads.</summary>
         public List<MagnitudeSave> SetByCaller = new();
     }
 
-    /// <summary>A magnitude a caller set under a tag (FEAT-2).</summary>
+    /// <summary>A magnitude a caller set under a tag.</summary>
     [Serializable]
     public class MagnitudeSave
     {

@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
-    /// <summary>Where an area search is measured from (TW-10).</summary>
+    /// <summary>Where an area search is measured from.</summary>
     public enum EAreaCentre
     {
         /// <summary>The caster.</summary>
@@ -17,7 +17,7 @@ namespace FarEmerald.PlayForge
     }
 
     /// <summary>
-    /// An effect's area (TW-10, Decision 50): as the effect lands on its target, it lands on each the area takes near that
+    /// An effect's area: as the effect lands on its target, it lands on each the area takes near that
     /// target too, as Storm Hammer stuns everyone near the one it hits. Each is found by its position, on either hub, with
     /// no collider needed; an effect that lands by an area spreads no further.
     /// </summary>

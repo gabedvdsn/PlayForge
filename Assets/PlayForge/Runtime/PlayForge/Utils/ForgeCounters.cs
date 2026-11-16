@@ -4,7 +4,7 @@ namespace FarEmerald.PlayForge
 {
     /// <summary>
     /// PlayForge's counters in Unity's Profiler, in its PlayForge category, which the PlayForge Processes and PlayForge GAS
-    /// modules chart (FEAT-18, Decision 32). A frame's counts start from 0 each frame, and count every world's work, a
+    /// modules chart. A frame's counts start from 0 each frame, and count every world's work, a
     /// headless run's within the frame among them. A level holds until it changes: the scene's ProcessControl gives the
     /// process levels as its LateUpdate loop ends, and the others follow what starts and ends. Unity compiles them out of
     /// release builds, so they count in the editor and development builds. A ProfilerRecorder reads one by its name in the
@@ -94,7 +94,7 @@ namespace FarEmerald.PlayForge
         public static readonly ProfilerCounterValue<int> StagesStarted = new(Category, "Stages Started", ProfilerMarkerDataUnit.Count, PerFrame);
 
         // The levels that follow what starts and ends start from 0 each session: statics outlive play mode when domain
-        // reload is off (PC-26)
+        // reload is off
         [UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetLevels()
         {

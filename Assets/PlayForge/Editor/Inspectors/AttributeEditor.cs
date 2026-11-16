@@ -14,7 +14,7 @@ namespace FarEmerald.PlayForge.Editor
 
         private Attribute attribute;
 
-        // Every field writes through the SerializedObject, so the inspector edits a multiple selection (ED-12)
+        // Every field writes through the SerializedObject, so the inspector edits a multiple selection
         protected override bool SupportsMultipleObjects => true;
 
         // ═══════════════════════════════════════════════════════════════════════════
@@ -82,8 +82,8 @@ namespace FarEmerald.PlayForge.Editor
 
         protected override void BuildInspectorContent(VisualElement parent)
         {
-            // The style doc's order: Identity first, Local Data last among what the asset holds (Q9). Used By then
-            // shows what refers to the attribute (ED-15)
+            // The inspectors' order: Identity first, Local Data last among what the asset holds. Used By then
+            // shows what refers to the attribute
             BuildIdentitySection(parent);
             BuildLocalDataSection(parent);
             BuildUsedBySection(parent);
@@ -136,16 +136,16 @@ namespace FarEmerald.PlayForge.Editor
 
             // Name, Abbreviation and Description bind to their properties. They wrote straight into the asset when they
             // lost focus, with no Undo; now an edit goes through the SerializedObject, so Undo takes it back, it reaches
-            // every selected attribute, and the header follows it (ED-12).
+            // every selected attribute, and the header follows it.
             content.Add(CreateBoundTextField(nameof(Attribute.Name), "Name"));
             content.Add(CreateBoundTextField(nameof(Attribute.Abbreviation), "Abbreviation"));
             content.Add(CreateBoundTextField(nameof(Attribute.Description), "Description", multiline: true, minHeight: 18));
 
-            // What it is, which says how its bonuses add up and how a number reads it (TW-1)
+            // What it is, which says how its bonuses add up and how a number reads it
             var role = CreatePropertyField(serializedObject.FindProperty(nameof(Attribute.Role)), "Role", "Role");
             content.Add(role);
 
-            // As a Barrier: what it absorbs for, how it decays, and whether it fades with its effect (TW-12)
+            // As a Barrier: what it absorbs for, how it decays, and whether it fades with its effect
             var barrier = new VisualElement { name = "BarrierSettings" };
             barrier.Add(CreatePropertyField(serializedObject.FindProperty(nameof(Attribute.AbsorbsFor)), "AbsorbsFor", "Absorbs For"));
             barrier.Add(CreatePropertyField(serializedObject.FindProperty(nameof(Attribute.DecayPerSecond)), "DecayPerSecond", "Decay Per Second"));
@@ -161,10 +161,10 @@ namespace FarEmerald.PlayForge.Editor
             ShowBarrier();
             role.RegisterCallback<SerializedPropertyChangeEvent>(_ => ShowBarrier());
 
-            // What scales the gains to it, as Healing Received scales Health's (TW-15)
+            // What scales the gains to it, as Healing Received scales Health's
             content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(Attribute.GainsScaledBy)), "GainsScaledBy", "Gains Scaled By"));
 
-            // The roles it plays in its project (TW-29), as TW-28's note said which slot it filled
+            // The roles it plays in its project, where a note said which slot it filled
             var part = IsMultiple ? null : ProjectPartOf(attribute);
             var projectPart = CreateNote(part ?? "");
             projectPart.name = "ProjectPart";
@@ -184,7 +184,7 @@ namespace FarEmerald.PlayForge.Editor
 
         /// <summary>
         /// The roles an attribute plays in its project, as "Plays Health in Arena", by their tags, or null where it plays
-        /// none (TW-29).
+        /// none.
         /// </summary>
         internal static string ProjectPartOf(Attribute attribute)
         {
@@ -233,7 +233,7 @@ namespace FarEmerald.PlayForge.Editor
         // ═══════════════════════════════════════════════════════════════════════════
 
         // The assets that use the attribute, each a row that selects it. The section was a list of sentences about where
-        // attributes can go, and a Find All References button that opened a dialog telling the user how to search (ED-15)
+        // attributes can go, and a Find All References button that opened a dialog telling the user how to search
         private void BuildUsedBySection(VisualElement parent)
         {
             usedBySection = CreateSection(new SectionConfig

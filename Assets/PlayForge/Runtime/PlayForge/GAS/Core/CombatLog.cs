@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
-    /// <summary>What an entity's combat log writes (TW-22), as the project subscribes to it.</summary>
+    /// <summary>What an entity's combat log writes, as the project subscribes to it.</summary>
     [Flags]
     public enum ECombatLogRecords
     {
@@ -22,7 +22,7 @@ namespace FarEmerald.PlayForge
     }
 
     /// <summary>
-    /// A project's combat log (TW-22, Decision 62): what each entity's writes, which the project subscribes to, and how
+    /// A project's combat log: what each entity's writes, which the project subscribes to, and how
     /// many entries each keeps, its last.
     /// </summary>
     [Serializable]
@@ -39,7 +39,7 @@ namespace FarEmerald.PlayForge
         public List<Tag> Events = new();
     }
 
-    /// <summary>What a combat log entry is (TW-22).</summary>
+    /// <summary>What a combat log entry is.</summary>
     public enum ECombatLogKind
     {
         /// <summary>A hit the entity took.</summary>
@@ -56,9 +56,9 @@ namespace FarEmerald.PlayForge
     }
 
     /// <summary>
-    /// One entry of an entity's combat log (TW-22): when, what kind, who else, the effect behind it, the attribute, the value
-    /// before and the change, its run through its pipeline (TW-2), its change as made and each step it took to land
-    /// (LAB-13), and, for a hit, whether it killed.
+    /// One entry of an entity's combat log: when, what kind, who else, the effect behind it, the attribute, the value
+    /// before and the change, its run through its pipeline, its change as made and each step it took to land,
+    /// and, for a hit, whether it killed.
     /// </summary>
     public readonly struct CombatLogEntry
     {
@@ -119,20 +119,20 @@ namespace FarEmerald.PlayForge
         /// <summary>The event's tag, for an event.</summary>
         public Tag Event { get; }
 
-        /// <summary>A hit's run through its pipeline, each stage's before and after (TW-2); empty where none ran.</summary>
+        /// <summary>A hit's run through its pipeline, each stage's before and after; empty where none ran.</summary>
         public IReadOnlyList<ValueStep> Steps => steps ?? NoSteps;
 
         /// <summary>Whether this hit killed the entity it struck.</summary>
         public bool Killed { get; }
 
         /// <summary>
-        /// The change as it was made, before any attribute worker, barrier or scaling took a step (LAB-13); what landed,
+        /// The change as it was made, before any attribute worker, barrier or scaling took a step; what landed,
         /// for a change that took no step or a modifier's.
         /// </summary>
         public AttributeValue Made { get; }
 
         /// <summary>
-        /// Each step the change took between being made and landing, in order (LAB-13): each attribute worker's, before its
+        /// Each step the change took between being made and landing, in order: each attribute worker's, before its
         /// commit or after, inline or queued, a barrier's soak, a gain's scaling; empty where none was taken.
         /// </summary>
         public IReadOnlyList<ChangeStep> ChangeSteps => changeSteps ?? NoChangeSteps;
@@ -211,7 +211,7 @@ namespace FarEmerald.PlayForge
     }
 
     /// <summary>
-    /// An entity's combat log (TW-22, Decision 62): the entries the project subscribes to, its last as many as the project
+    /// An entity's combat log: the entries the project subscribes to, its last as many as the project
     /// keeps, oldest first; a test reads it as the game does, and the Debugger shows it.
     /// </summary>
     public sealed class CombatLog
@@ -318,7 +318,7 @@ namespace FarEmerald.PlayForge
             var settings = ForgeCombatLog.Settings;
             if (settings == null) return;
             var dealer = impact.SourcedModifier.Source;
-            // A modifier coming off is a change, not a hit (GAS-85)
+            // A modifier coming off is a change, not a hit
             if (!impact.Ends && impact.SourcedModifier.ImpactIsWorkable && dealer != null && !ReferenceEquals(dealer, self))
             {
                 if ((settings.Records & ECombatLogRecords.HitsTaken) != 0) Write(Of(ECombatLogKind.Taken, dealer, impact), settings.Keep);
@@ -355,7 +355,7 @@ namespace FarEmerald.PlayForge
         }
 
         // An entry for a change: the effect behind it, or what else carried it, and its run through its pipeline, copied,
-        // as its spec keeps one run and fills it again with the next; and its steps, copied from its commit (LAB-13)
+        // as its spec keeps one run and fills it again with the next; and its steps, copied from its commit
         private static CombatLogEntry Of(ECombatLogKind kind, ITarget other, in ImpactData impact)
         {
             var carrier = impact.SourcedModifier.Carrier;
@@ -395,7 +395,7 @@ namespace FarEmerald.PlayForge
         }
     }
 
-    /// <summary>The current project's combat log settings, which each entity's log reads as it writes (TW-22).</summary>
+    /// <summary>The current project's combat log settings, which each entity's log reads as it writes.</summary>
     public static class ForgeCombatLog
     {
         /// <summary>The current project's settings, or null where there's no project.</summary>

@@ -11,9 +11,9 @@ using ProjectSettingsData = FarEmerald.PlayForge.ForgeProjectSettings;
 namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
-    /// PlayForge's two settings pages (Q21, ED-21): Project Settings → PlayForge, for the settings the project shares, and
+    /// PlayForge's two settings pages: Project Settings → PlayForge, for the settings the project shares, and
     /// Preferences → PlayForge, for each user's view toggles. The Forge's Settings tab held both, all in EditorPrefs.
-    /// Each page follows Docs/EDITOR_STYLE.md: Unity's own controls, and its look from the style sheet.
+    /// Each page has Unity's own controls, and its look from the style sheet.
     /// </summary>
     internal static class PlayForgeSettingsPages
     {
@@ -51,7 +51,7 @@ namespace FarEmerald.PlayForge.Editor
         // ═══════════════════════════════════════════════════════════════════════════
 
         /// <summary>
-        /// Builds the project's page in a root: the active Forge Project's settings (TW-30), where each type's new assets go,
+        /// Builds the project's page in a root: the active Forge Project's settings, where each type's new assets go,
         /// each type's defaults, the Cost and Cooldown effects, its roles and its crowd control. Its
         /// fields bind to the project, so an edit undoes, and each edit is saved in its asset. With no Forge Project, a
         /// button makes one. They were the whole Unity project's, in ProjectSettings/PlayForgeSettings.asset.
@@ -61,7 +61,7 @@ namespace FarEmerald.PlayForge.Editor
             var page = Page(root, "PlayForge");
 
             // What PlayForge is and what a Forge Project holds, in two sentences, where a dense note of roles and rules was;
-            // each field's tooltip says the rest (EP-3)
+            // each field's tooltip says the rest
             var description = Note("PlayForge is a gameplay ability system: attributes, effects, abilities, tags and items. A " +
                                    "Forge Project holds one game's assets, in a folder of its own, and the settings on this page.");
             description.name = "PlayForgeDescription";
@@ -73,7 +73,7 @@ namespace FarEmerald.PlayForge.Editor
         }
 
         // The PlayForge Folder, where a new Forge Project goes, each in a folder of its own, and the Bootstrap prefabs: the
-        // Unity project's own setting, kept in ProjectSettings/PlayForge.asset (EP-10, Decision 89)
+        // Unity project's own setting, kept in ProjectSettings/PlayForge.asset
         private static VisualElement FolderSection()
         {
             var row = new VisualElement { name = "PlayForgeFolder" };
@@ -106,12 +106,12 @@ namespace FarEmerald.PlayForge.Editor
             return row;
         }
 
-        // Everything the page shows of a project, bound to it, each edit saved in its asset (TW-30)
+        // Everything the page shows of a project, bound to it, each edit saved in its asset
         private static VisualElement ProjectSettingsPage(ForgeProject project)
         {
             var page = new VisualElement { name = "ProjectSettings" };
 
-            // Its roles and crowd control first, with the project it is, bound on their own (TW-29)
+            // Its roles and crowd control first, with the project it is, bound on their own
             page.Add(ForgeProjectSettings(project));
 
             var serialized = PlayForgeSettings.Serialized(project);
@@ -151,7 +151,7 @@ namespace FarEmerald.PlayForge.Editor
             section.Add(EffectField(authoring, nameof(ForgeAuthoringSettings.CostEffect), "Cost Effect"));
             section.Add(EffectField(authoring, nameof(ForgeAuthoringSettings.CooldownEffect), "Cooldown Effect"));
 
-            // The project's own template assets, which The Forge's Create lists beside PlayForge's presets (TW-24)
+            // The project's own template assets, which The Forge's Create lists beside PlayForge's presets
             Heading(section, "Templates");
             section.Add(Note("Assets of the project's own that a new asset can start as a copy of, listed in The Forge's Create " +
                              "menu under their type, after PlayForge's presets."));
@@ -168,8 +168,8 @@ namespace FarEmerald.PlayForge.Editor
             return page;
         }
 
-        // A row for each type: its name, then its folder within the project's, which it shows first (EP-3), with a button
-        // that picks one. A new asset's file is its name alone: the prefix and suffix columns are gone (EP-13)
+        // A row for each type: its name, then its folder within the project's, which it shows first, with a button
+        // that picks one. A new asset's file is its name alone: the prefix and suffix columns are gone
         private static VisualElement NewAssetsTable(SerializedProperty newAssets, string projectFolder)
         {
             var table = new VisualElement { name = "NewAssets" };
@@ -217,7 +217,7 @@ namespace FarEmerald.PlayForge.Editor
             return table;
         }
 
-        // A folder picked within the active project's folder, kept as a path from it, as "Abilities" (EP-10); the project's
+        // A folder picked within the active project's folder, kept as a path from it, as "Abilities"; the project's
         // folder itself, or one outside it, is refused, as a project's assets stay within its folder
         private static void ChooseFolder(SerializedProperty folder, Type type)
         {
@@ -332,14 +332,14 @@ namespace FarEmerald.PlayForge.Editor
         }
 
         /// <summary>
-        /// A Forge Project's settings, as the page shows the active project's (TW-29): its attributes' roles, by tag, and its
+        /// A Forge Project's settings, as the page shows the active project's: its attributes' roles, by tag, and its
         /// default crowd control, bound to the project, so an edit undoes; and Fill Roles by Name.
         /// </summary>
         internal static VisualElement ForgeProjectSettings(ForgeProject project)
         {
             var section = new VisualElement { name = "ForgeProject" };
             if (project == null) return section;
-            // A heading and a line, each field's tooltip saying what it is, where one note said it all (EP-3)
+            // A heading and a line, each field's tooltip saying what it is, where one note said it all
             Heading(section, "Forge Project");
             section.Add(Note("What the project's game reads as it runs, through its GameRoot."));
 
@@ -354,16 +354,16 @@ namespace FarEmerald.PlayForge.Editor
             section.Add(new PropertyField(settings.FindPropertyRelative(nameof(ProjectSettingsData.Roles)), "Roles") { name = "Roles" });
             section.Add(new PropertyField(settings.FindPropertyRelative(nameof(ProjectSettingsData.CrowdControl)), "Crowd Control") { name = "CrowdControl" });
 
-            // The order an area's effects land on those it takes, by the tags they carry (TW-31)
+            // The order an area's effects land on those it takes, by the tags they carry
             section.Add(new PropertyField(settings.FindPropertyRelative(nameof(ProjectSettingsData.ResolveOrder)), "Resolve Order") { name = "ResolveOrder" });
 
-            // What each entity's combat log writes, and how many entries it keeps (TW-22)
+            // What each entity's combat log writes, and how many entries it keeps
             section.Add(new PropertyField(settings.FindPropertyRelative(nameof(ProjectSettingsData.CombatLog)), "Combat Log") { name = "CombatLog" });
 
-            // Its purge levels, the tiers a purge reaches and what a death keeps (FN-16)
+            // Its purge levels, the tiers a purge reaches and what a death keeps
             section.Add(new PropertyField(settings.FindPropertyRelative(nameof(ProjectSettingsData.PurgeLevels)), "Purge Levels") { name = "PurgeLevels" });
 
-            // The workers every entity in the project has, the Lifesteal worker among them as a project starts (FN-15)
+            // The workers every entity in the project has, the Lifesteal worker among them as a project starts
             section.Add(new PropertyField(settings.FindPropertyRelative(nameof(ProjectSettingsData.Workers)), "Workers") { name = "Workers" });
 
             var buttons = new VisualElement();
@@ -454,7 +454,7 @@ namespace FarEmerald.PlayForge.Editor
                 foreach (var each in PlayForgePreferences.ForgeSwitches) switches.Add((each, Switch(page, each)));
             }
 
-            // The most a PlayForge dropdown grows to, a picker's or a field's menu (EP-1)
+            // The most a PlayForge dropdown grows to, a picker's or a field's menu
             Heading(page, "Menus");
             var numbers = new List<(PlayForgePreferences.Number preference, IntegerField field)>();
             foreach (var each in PlayForgePreferences.MenuNumbers) numbers.Add((each, NumberField(page, each)));

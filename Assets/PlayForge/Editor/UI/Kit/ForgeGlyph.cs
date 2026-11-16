@@ -5,7 +5,7 @@ using UnityEngine.UIElements;
 
 namespace FarEmerald.PlayForge.Editor
 {
-    /// <summary>The glyphs PlayForge draws, from the style mockups' Kit.</summary>
+    /// <summary>The glyphs PlayForge draws.</summary>
     internal enum ForgeGlyphShape
     {
         None,
@@ -40,7 +40,7 @@ namespace FarEmerald.PlayForge.Editor
         Attribute,
         AttributeSet,
 
-        // PlayForge's own, an anvil, for an asset type with no glyph of its own (EP-9, Decision 89)
+        // PlayForge's own, an anvil, for an asset type with no glyph of its own
         PlayForge,
 
         // The Debugger's: a tag, a process, Play Mode, following the selection, and a terminate that's at once
@@ -52,9 +52,9 @@ namespace FarEmerald.PlayForge.Editor
     }
 
     /// <summary>
-    /// An inline vector glyph, drawn in its resolved color, which the style sheet sets (Decision 20). The mark cut
+    /// An inline vector glyph, drawn in its resolved color, which the style sheet sets. The mark cut
     /// into a filled glyph, such as the warning triangle's, takes the style sheet's --pf-glyph-cutout. PlayForge drew
-    /// its icons with emoji and text characters (ED-20).
+    /// its icons with emoji and text characters.
     /// </summary>
     internal class ForgeGlyph : VisualElement
     {
@@ -137,7 +137,7 @@ namespace FarEmerald.PlayForge.Editor
                     pen.Ring(ink, 1.6f, 7, 7, 4.5f);
                     pen.Line(ink, 1.6f, 10.5f, 10.5f, 14, 14);
                     break;
-                // The Forge's back and forward, as a browser's (ED-76)
+                // The Forge's back and forward, as a browser's
                 case ForgeGlyphShape.Back:
                     pen.Line(ink, 1.6f, 10, 3, 5, 8, 10, 13);
                     break;
@@ -190,7 +190,7 @@ namespace FarEmerald.PlayForge.Editor
                     pen.RoundedRect(ink, 1.5f, 11, 13, 3, 1);
                     break;
                 case ForgeGlyphShape.PlayForge:
-                    // An anvil: its horn to the left, its face, its waist, its foot (EP-9). Its curves are drawn as short lines
+                    // An anvil: its horn to the left, its face, its waist, its foot. Its curves are drawn as short lines
                     pen.Fill(ink, 1f, 4.5f, 2.03f, 4.41f, 2.88f, 4.19f, 3.53f, 3.87f, 4f, 3.5f, 15f, 3.5f, 15f, 6.5f, 11.5f, 6.5f,
                         10.84f, 7.08f, 10.38f, 7.78f, 10.09f, 8.58f, 10f, 9.5f, 12f, 11f, 12f, 13f, 4f, 13f, 4f, 11f, 6f, 9.5f, 5.91f,
                         8.58f, 5.62f, 7.77f, 5.16f, 7.08f, 4.5f, 6.5f, 4f, 6.5f, 3.22f, 6.37f, 2.42f, 5.99f, 1.67f, 5.36f);
@@ -396,7 +396,7 @@ namespace FarEmerald.PlayForge.Editor
 
     /// <summary>
     /// Each asset type's glyph, its class modifier in the style sheet, and its name: the six asset types' own, and
-    /// PlayForge's anvil for every other PlayForge asset (EP-9).
+    /// PlayForge's anvil for every other PlayForge asset.
     /// </summary>
     internal static class ForgeAssetTypes
     {
@@ -413,7 +413,7 @@ namespace FarEmerald.PlayForge.Editor
             if (typeof(Item).IsAssignableFrom(type)) return (ForgeGlyphShape.Item, "item", "Item");
             if (typeof(AttributeSet).IsAssignableFrom(type)) return (ForgeGlyphShape.AttributeSet, "attribute-set", "Attribute Set");
             if (typeof(Attribute).IsAssignableFrom(type)) return (ForgeGlyphShape.Attribute, "attribute", "Attribute");
-            // Every other PlayForge asset, as Crowd Control Rules or a Value Pipeline, takes PlayForge's anvil (EP-9)
+            // Every other PlayForge asset, as Crowd Control Rules or a Value Pipeline, takes PlayForge's anvil
             if (typeof(ScriptableObject).IsAssignableFrom(type) && type.Assembly == typeof(Tag).Assembly)
                 return (ForgeGlyphShape.PlayForge, "playforge", ObjectNames.NicifyVariableName(type.Name));
             return (ForgeGlyphShape.None, null, ObjectNames.NicifyVariableName(type.Name));

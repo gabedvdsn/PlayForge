@@ -8,7 +8,7 @@ using UnityEngine.UIElements;
 namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
-    /// A condition field, as a Conditional scaler's When (FEAT-29, Decision 43), drawn as a scaler field is: its name and
+    /// A condition field, as a Conditional scaler's When, drawn as a scaler field is: its name and
     /// its kind, picked from the conditions there are, a project's own among them, its one line, as "Target's Health &lt;
     /// 0.3 × Target's Health (base)", then the condition's own fields on a block under it, each as Unity draws its type,
     /// so its numbers are number fields. It writes nothing while it draws.
@@ -21,7 +21,7 @@ namespace FarEmerald.PlayForge.Editor
         public override VisualElement CreatePropertyGUI(SerializedProperty property)
         {
             var root = new VisualElement { name = "ConditionRoot" };
-            // The style sheet lays out the condition as it does a scaler, wherever it's drawn (ED-20)
+            // The style sheet lays out the condition as it does a scaler, wherever it's drawn
             ForgeTheme.Apply(root);
             root.AddToClassList("pf-scaler-field");
             var label = preferredLabel ?? property.displayName;
@@ -39,7 +39,7 @@ namespace FarEmerald.PlayForge.Editor
                 if (!ScalerFields.Alive(property)) return;
                 root.Clear();
                 line = null;
-                // Selected conditions whose kinds differ show a mixed kind, and neither's fields as both's (ED-12)
+                // Selected conditions whose kinds differ show a mixed kind, and neither's fields as both's
                 mixedKinds = EachAsset.Differ(property, ScalerFields.KindOf);
                 shownType = ScalerFields.KindOf(property);
                 shownId = property.managedReferenceId;
@@ -57,7 +57,7 @@ namespace FarEmerald.PlayForge.Editor
                 kind.AddToClassList("pf-magnitude__kind-labelled");
                 // The menu files a condition under its category, as the kind menu does: "Logic/All Of"
                 kind.formatListItemCallback = ConditionKinds.MenuPath;
-                // PlayForge's dropdown, its conditions under their categories (EP-1)
+                // PlayForge's dropdown, its conditions under their categories
                 ForgePopupDropdown.Use(kind, "Condition", ConditionKinds.ContextOf);
                 kind.showMixedValue = mixedKinds;
                 row.Add(kind);
@@ -86,7 +86,7 @@ namespace FarEmerald.PlayForge.Editor
                     line.AddToClassList("pf-magnitude__summary");
                     root.Add(line);
 
-                    // The condition's fields sit on one block under its kind, as a scaler's do (ED-51, Decision 36)
+                    // The condition's fields sit on one block under its kind, as a scaler's do
                     var content = new VisualElement { name = "ConditionContent" };
                     content.AddToClassList("pf-scaler");
                     content.AddToClassList("pf-scaler-field__content");
@@ -120,7 +120,7 @@ namespace FarEmerald.PlayForge.Editor
                 if (!ScalerFields.Alive(property)) return;
                 bool mixed = EachAsset.Differ(property, ScalerFields.KindOf);
                 // A new kind, or a copy of its own in place of a shared one, draws it again; and the element it shared with,
-                // which no longer shares it (FN-2)
+                // which no longer shares it
                 if (!built || mixed != mixedKinds || ScalerFields.KindOf(property) != shownType || property.managedReferenceId != shownId
                     || ScalerDrawer.SharedWith(property) != sharedWith) Draw();
                 else Show();
@@ -133,7 +133,7 @@ namespace FarEmerald.PlayForge.Editor
     }
 
     /// <summary>
-    /// The conditions the condition menu offers (FEAT-29): every condition class that can be made and saved, a project's
+    /// The conditions the condition menu offers: every condition class that can be made and saved, a project's
     /// own among them. The framework's come first, then a project's by name, then each category's, as Logic's All Of,
     /// Any Of and Not.
     /// </summary>
@@ -162,8 +162,8 @@ namespace FarEmerald.PlayForge.Editor
         }
 
         /// <summary>
-        /// A condition's place in the menu by its name, as "Logic/All Of", by its <see cref="ForgeMenuAttribute"/>'s path
-        /// (EP-2); or its name alone at the top.
+        /// A condition's place in the menu by its name, as "Logic/All Of", by its <see cref="ForgeMenuAttribute"/>'s path;
+        /// or its name alone at the top.
         /// </summary>
         public static string MenuPath(string name)
         {
@@ -172,7 +172,7 @@ namespace FarEmerald.PlayForge.Editor
             return string.IsNullOrEmpty(category) ? name : $"{category}/{name}";
         }
 
-        /// <summary>What the condition menu says of a condition by its name: its description (EP-2).</summary>
+        /// <summary>What the condition menu says of a condition by its name: its description.</summary>
         public static string ContextOf(string name)
         {
             var type = All.FirstOrDefault(each => NumberText.ConditionName(each) == name);

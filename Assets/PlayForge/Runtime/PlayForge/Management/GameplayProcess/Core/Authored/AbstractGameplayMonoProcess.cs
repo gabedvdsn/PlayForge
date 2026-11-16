@@ -6,7 +6,7 @@ namespace FarEmerald.PlayForge
 {
     /// <summary>
     /// A mono process that takes part in gameplay, as a projectile an ability spawns. It knows its origin, the ability
-    /// or entity that spawned it, and it carries attributes of its own (FEAT-24): a projectile's speed is the
+    /// or entity that spawned it, and it carries attributes of its own: a projectile's speed is the
     /// projectile's, set on its prefab, by the level of what spawned it, or from the caster, and its code can change it
     /// as it flies. A role, as ProjectileSpeed, names the attribute a process reads for a purpose.
     /// </summary>
@@ -27,10 +27,10 @@ namespace FarEmerald.PlayForge
         /// <summary>Raised as one of the process's own attributes changes, with the attribute and its new value.</summary>
         public event Action<ProcessAttribute, float> AttributeChanged;
 
-        /// <summary>The data that spawned the process, which its numbers read (FEAT-29).</summary>
+        /// <summary>The data that spawned the process, which its numbers read.</summary>
         internal ProcessDataPacket SpawnData => regData;
 
-        /// <summary>The ability or entity that spawned the process, whose caster and level its numbers read (FEAT-29).</summary>
+        /// <summary>The ability or entity that spawned the process, whose caster and level its numbers read.</summary>
         internal IEffectOrigin SpawnOrigin => Origin;
 
         public override void WhenInitialize()
@@ -47,7 +47,7 @@ namespace FarEmerald.PlayForge
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
-        // Its own attributes (FEAT-24)
+        // Its own attributes
         // ═══════════════════════════════════════════════════════════════════════════
 
         /// <summary>The value of one of the process's own attributes, by the attribute it is.</summary>
@@ -87,7 +87,7 @@ namespace FarEmerald.PlayForge
         /// Gives an effect spec the process applies the set-by-caller magnitudes it should read: those of the data that
         /// spawned it, then each of its own attributes under its role, so an effect scales by what the process carries,
         /// as a fire's burn by its heat. Its own win, as the nearer. Only its caller's reached its effects, so what it
-        /// carried stopped at the process (FEAT-28).
+        /// carried stopped at the process.
         /// </summary>
         public void GiveMagnitudes(GameplayEffectSpec spec)
         {
@@ -129,7 +129,7 @@ namespace FarEmerald.PlayForge
             if (attribute.Value == null) return 0f;
             // Read in the process's context: its origin's caster and level, and the magnitudes its data carries, so a Set By
             // Caller reads what its caller set. The leveler carrier it was read through allocated each time, and read only
-            // the default (FEAT-29)
+            // the default
             return attribute.Value.Evaluate(NumberContext.Of(this));
         }
 
@@ -210,7 +210,7 @@ namespace FarEmerald.PlayForge
     }
 
     /// <summary>
-    /// An attribute a gameplay mono process carries of its own, as a projectile's speed (FEAT-24): the attribute it is,
+    /// An attribute a gameplay mono process carries of its own, as a projectile's speed: the attribute it is,
     /// the role the process reads it by, and where its value starts. It changes as the process runs.
     /// </summary>
     [Serializable]
@@ -230,7 +230,7 @@ namespace FarEmerald.PlayForge
         public ScalableFloat Value = new() { Magnitude = 1f, RealMagnitude = EMagnitudeOperation.UseMagnitude };
     }
 
-    /// <summary>Where a process's own attribute starts (FEAT-24).</summary>
+    /// <summary>Where a process's own attribute starts.</summary>
     public enum EProcessAttributeStart
     {
         [InspectorName("Its Own Value")] Own,

@@ -43,19 +43,19 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// Only meaningful when <see cref="Operation"/> is <see cref="ECalculationOperation.Add"/>: how this add combines with
-        /// the others on the attribute, as its role says, a plain sum, or diminishing (TW-1).
+        /// the others on the attribute, as its role says, a plain sum, or diminishing.
         /// </summary>
         EAddBehaviour AddBehaviour => EAddBehaviour.AttributeRole;
 
         /// <summary>
         /// The calculation its value goes through as it commits, once for each hit: an instant impact's, each tick of a
-        /// periodic one's. None, it lands as it's evaluated (TW-2).
+        /// periodic one's. None, it lands as it's evaluated.
         /// </summary>
         ValuePipeline Pipeline => null;
 
         /// <summary>
         /// The stages its holders' modifiers add, run after its pipeline as it commits and kept in the hit's breakdown; a
-        /// lasting impact runs them on its magnitude itself (TW-7). None by default.
+        /// lasting impact runs them on its magnitude itself. None by default.
         /// </summary>
         IReadOnlyList<AbstractValueStage> Stages => null;
 
@@ -81,7 +81,7 @@ namespace FarEmerald.PlayForge
     /// MultiplyBehaviour decides how DIFFERENT carriers' multiply contributions to the
     /// SAME attribute slot compose.
     /// </summary>
-    /// <summary>How an Add impacter combines with the others on its attribute (TW-1).</summary>
+    /// <summary>How an Add impacter combines with the others on its attribute.</summary>
     public enum EAddBehaviour
     {
         /// <summary>As the attribute's role says: a Resistance's adds diminish, every other role's sum.</summary>

@@ -5,7 +5,7 @@ using UnityEngine.UIElements;
 namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
-    /// A crowd control rule (TW-16): its tag, what it stops, and, where it stops the abilities carrying one of its tags,
+    /// A crowd control rule: its tag, what it stops, and, where it stops the abilities carrying one of its tags,
     /// those tags. A stun stops every ability, so its row names none.
     /// </summary>
     [CustomPropertyDrawer(typeof(CrowdControlRule))]
@@ -25,7 +25,7 @@ namespace FarEmerald.PlayForge.Editor
             };
             rule.Add(abilityTags);
 
-            // The property the tracker hands back, not the one built with, which a list's reorder can leave stale (ED-12)
+            // The property the tracker hands back, not the one built with, which a list's reorder can leave stale
             void Show(SerializedProperty current) => abilityTags.style.display =
                 current.enumValueIndex == (int)ECrowdControlStops.AbilitiesTagged ? DisplayStyle.Flex : DisplayStyle.None;
             Show(stops);

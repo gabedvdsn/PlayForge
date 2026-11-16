@@ -1,6 +1,6 @@
 namespace FarEmerald.PlayForge
 {
-    /// <summary>Why ProcessControl refused a registration, or None when it took the process (FEAT-15).</summary>
+    /// <summary>Why ProcessControl refused a registration, or None when it took the process.</summary>
     public enum EProcessRegistrationRefusal
     {
         /// <summary>ProcessControl took the process.</summary>
@@ -21,13 +21,13 @@ namespace FarEmerald.PlayForge
         /// <summary>A sequence's packet is a <see cref="SequenceDataPacket"/>, and this one isn't.</summary>
         NotASequencePacket,
 
-        /// <summary>The process's WhenInitialize threw, so nothing of it stays (PC-15).</summary>
+        /// <summary>The process's WhenInitialize threw, so nothing of it stays.</summary>
         InitializeThrew,
     }
 
     /// <summary>
     /// What a registration did: the relay of the process ProcessControl took, or why it refused it. It reads as true when
-    /// the process was taken. A refused call returned false and a null relay, and said nothing of why (FEAT-15).
+    /// the process was taken. A refused call returned false and a null relay, and said nothing of why.
     /// </summary>
     public readonly struct ProcessRegistrationResult
     {
@@ -61,10 +61,10 @@ namespace FarEmerald.PlayForge
     /// </code>
     /// What isn't given takes its default. The handler follows the packet's run-time type: an ability's packet hands the
     /// process to its source, and any other to GameRoot, or to none in a world of its own, which reaches for nothing of
-    /// the scene's (FEAT-10). ProcessControl had 28 static Register overloads, and the
+    /// the scene's. ProcessControl had 28 static Register overloads, and the
     /// argument's static type picked the handler, so an ability's packet passed as a SequenceDataPacket filed its
-    /// sequence under GameRoot, and the sequence didn't end with its entity (FEAT-15, GAS-52). Those overloads are
-    /// wrappers of this now, marked obsolete, and go before the first Asset Store submission (Decision 30).
+    /// sequence under GameRoot, and the sequence didn't end with its entity. Those overloads are
+    /// wrappers of this now, marked obsolete, and go before the first Asset Store submission.
     /// </summary>
     public readonly struct ProcessRegistration
     {
@@ -89,7 +89,7 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// What handles the process: what it belongs to, which ends it as it ends. A hub ends its abilities' processes as
-        /// it goes (GAS-52). Null, it has no handler at all.
+        /// it goes. Null, it has no handler at all.
         /// </summary>
         public ProcessRegistration HandledBy(IGameplayProcessHandler processHandler) =>
             new(process, processHandler, true, data, world);
@@ -97,15 +97,14 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// The packet the process carries. A sequence's is a <see cref="SequenceDataPacket"/>. Left out, a MonoBehaviour
         /// process takes the scene root's, which parents it under GameRoot, a runtime process the default, and a
-        /// sequence the scene root's sequence packet. In a world of its own, each takes the default, parented nowhere
-        /// (FEAT-10).
+        /// sequence the scene root's sequence packet. In a world of its own, each takes the default, parented nowhere.
         /// </summary>
         public ProcessRegistration With(ProcessDataPacket packet) => new(process, handler, handlerGiven, packet, world);
 
         /// <summary>The ProcessControl that takes the process. Left out, <see cref="ProcessControl.Instance"/> does.</summary>
         public ProcessRegistration In(ProcessControl processControl) => In(processControl != null ? processControl.World : null);
 
-        /// <summary>The world that takes the process, a world of its own among them (FEAT-10). Left out, the scene's does.</summary>
+        /// <summary>The world that takes the process, a world of its own among them. Left out, the scene's does.</summary>
         public ProcessRegistration In(ProcessWorld processWorld) => new(process, handler, handlerGiven, data, processWorld);
 
         /// <summary>Registers the process and starts it, or says why it can't.</summary>
@@ -117,7 +116,7 @@ namespace FarEmerald.PlayForge
 
             // A world of its own reaches for nothing of the scene's. GameRoot took what it held with no handler given, and
             // kept it for as long as the scene lasted, its world gone or not, and the scene root's packet needed a
-            // GameRoot, so with none a sequence's registration threw (FEAT-10)
+            // GameRoot, so with none a sequence's registration threw
             bool ownWorld = taker.Control is null;
             var by = handlerGiven ? handler : DefaultHandler(data, ownWorld);
             switch (process)

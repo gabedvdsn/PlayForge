@@ -9,7 +9,7 @@ namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
     /// What each attribute an entity built from an attribute set starts at, at each of the set's levels, worked out as the
-    /// runtime works it out (ED-49): a stand-in entity at the level, whose attribute system is set up from the set as the
+    /// runtime works it out: a stand-in entity at the level, whose attribute system is set up from the set as the
     /// GAS sets one up, with the set's sub-sets and collisions, and each element's scalers, bounds and rounding. Nothing
     /// else acts on the stand-in, no worker, effect or item, so a value is the one the set gives before anything changes
     /// it. A set that another holds starts as part of it, so its values can be worked out in each set that holds it, and
@@ -132,7 +132,7 @@ namespace FarEmerald.PlayForge.Editor
             var sets = new Dictionary<AttributeSetElement, AttributeSet>();
             if (root == null) return new Result(null, firstLevel, worked, lastLevel, new List<Start>(), sets, null);
 
-            // Each element, in the order the runtime meets them: the set's, then each sub-set's, depth first (GAS-44)
+            // Each element, in the order the runtime meets them: the set's, then each sub-set's, depth first
             var order = new List<Attribute>();
             var elements = new Dictionary<Attribute, List<AttributeSetElement>>();
             foreach (var set in root.SelfAndSubSets())
@@ -140,7 +140,7 @@ namespace FarEmerald.PlayForge.Editor
                 if (set.Attributes == null) continue;
                 foreach (var element in set.Attributes)
                 {
-                    // An element with no attribute gives nothing (GAS-54)
+                    // An element with no attribute gives nothing
                     if (element?.Attribute == null || sets.ContainsKey(element)) continue;
                     sets[element] = set;
                     if (!elements.TryGetValue(element.Attribute, out var list))

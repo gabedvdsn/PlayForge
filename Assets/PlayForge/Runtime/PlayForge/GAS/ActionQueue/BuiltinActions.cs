@@ -10,7 +10,7 @@ namespace FarEmerald.PlayForge
     
     /// <summary>
     /// Deferred action to modify an attribute. One the system makes for itself, such as a rescale or a lifesteal's heal,
-    /// is used again once the queue has run it, so a listener handed one reads it during the call (GAS-P9).
+    /// is used again once the queue has run it, so a listener handed one reads it during the call.
     /// </summary>
     public class ModifyAttributeAction : IRootAction, IReusableAction
     {
@@ -19,7 +19,7 @@ namespace FarEmerald.PlayForge
 
         public string Description => $"ModifyAttribute({_attribute?.GetName() ?? "null"}, {_value.CurrentValue:F2}/{_value.BaseValue:F2})";
 
-        // Set again each time the system rents one. They were readonly, as each change made a new action (GAS-P9)
+        // Set again each time the system rents one. They were readonly, as each change made a new action
         private ITarget _target;
         private IAttribute _attribute;
         private SourcedModifiedAttributeValue _value;
@@ -49,7 +49,7 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// An action from <paramref name="spares"/>, or a new one when there are none, set to make this change at the
-        /// default priority. It goes back to them once the queue has run it (GAS-P9).
+        /// default priority. It goes back to them once the queue has run it.
         /// </summary>
         internal static ModifyAttributeAction Rent(Stack<ModifyAttributeAction> spares, ITarget target, IAttribute attribute,
             SourcedModifiedAttributeValue value, bool runEvents)

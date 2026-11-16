@@ -527,6 +527,11 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   page, through one table of links in the editor.
 
 ### Changed
+- The package's comments say what its code does and nothing of how it was made (EP-26): no tracker ID, decision or
+  interview question, as "(TW-30)", no doc of the repository's own, as `Docs/EDITOR_STYLE.md`, and no mockup or board
+  of the design.
+- The golden scenarios from S13 on are named for what each pins (EP-26): `S13_OngoingRequirement_PausesPeriodicTicks`
+  was `S13_GAS_10_OngoingRequirement_PausesPeriodicTicks`.
 - Namespaces, each assembly's own name (EP-25): the editor's is `FarEmerald.PlayForge.Editor`, which was
   `FarEmerald.PlayForge.Extended.Editor`, and the inspector attributes, `[ForgeTagContext]` and its kin,
   `ForgeContext`, `[ForgeEffectTemplate]` and `[AvoidRequireTagGroupColor]`, are in `FarEmerald.PlayForge`, which were

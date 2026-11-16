@@ -6,7 +6,7 @@ using Object = UnityEngine.Object;
 namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
-    /// Rename, from an asset's menu in The Forge's list or its header, or F2 on The Forge's list (FN-8): the asset's name,
+    /// Rename, from an asset's menu in The Forge's list or its header, or F2 on The Forge's list: the asset's name,
     /// to type over, then Rename, which renames it as its inspector does (<see cref="ForgeRenames"/>). Enter renames and
     /// Escape cancels.
     /// </summary>

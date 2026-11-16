@@ -7,7 +7,7 @@ using Object = UnityEngine.Object;
 namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
-    /// A way to start a new asset (TW-24, Decision 64): one of PlayForge's presets, which fills the new asset's fields, or
+    /// A way to start a new asset: one of PlayForge's presets, which fills the new asset's fields, or
     /// one of the project's own template assets, which the new asset starts as a copy of.
     /// </summary>
     public sealed class ForgePreset
@@ -42,7 +42,7 @@ namespace FarEmerald.PlayForge.Editor
     }
 
     /// <summary>
-    /// What a preset reaches as it fills a new asset (TW-24): its name, the project, and a way to make the assets it needs,
+    /// What a preset reaches as it fills a new asset: its name, the project, and a way to make the assets it needs,
     /// each saved in its type's folder, or in the one the new asset was asked for where that isn't its type's.
     /// </summary>
     public sealed class ForgePresetMaking
@@ -87,7 +87,7 @@ namespace FarEmerald.PlayForge.Editor
         }
     }
 
-    /// <summary>The presets The Forge's Create menu lists for each type: PlayForge's, then the project's templates (TW-24).</summary>
+    /// <summary>The presets The Forge's Create menu lists for each type: PlayForge's, then the project's templates.</summary>
     public static class ForgePresets
     {
         private static readonly List<ForgePreset> builtIn = new()

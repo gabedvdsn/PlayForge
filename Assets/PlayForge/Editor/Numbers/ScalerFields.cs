@@ -12,13 +12,12 @@ using Object = UnityEngine.Object;
 namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
-    /// What the scaler drawer and the magnitude fields share, in Decision 28's model and the canvas's scaler board
-    /// (ED-33), reworked from the user's list (ED-51 to ED-54, Decision 36): the kinds a field takes, in the Kind menu's
+    /// What the scaler drawer and the magnitude fields share: the kinds a field takes, in the Kind menu's
     /// order; a kind's own fields, whatever their types, a scaler of the user's own among them; the parts of every scaler
     /// the kind reads: its values per level, Per Level or Spread Over Levels, following its asset's level provider, as a
     /// table with the curve beside it, and its behaviours; and a shared scaler's asset, with how many fields share it.
-    /// Nothing here writes while it draws (ED-34): every write follows an edit, through the field's own SerializedObject,
-    /// so it reaches each selected asset and one Undo takes it back (ED-12).
+    /// Nothing here writes while it draws: every write follows an edit, through the field's own SerializedObject,
+    /// so it reaches each selected asset and one Undo takes it back.
     /// </summary>
     internal static class ScalerFields
     {
@@ -36,7 +35,7 @@ namespace FarEmerald.PlayForge.Editor
             var assignment = scaler.GetAttribute<ScalerRootAssignment>();
             bool inAsset = scaler.serializedObject.targetObject is ScalerAsset;
             // A field declared as a narrower type, as a cached Group member's, takes its kinds alone: a kind it can't hold
-            // was offered, and failed to set (ED-81)
+            // was offered, and failed to set
             var declared = DeclaredTypeOf(scaler);
             return TypeCache.GetTypesDerivedFrom<AbstractScaler>()
                 .Where(type => !type.IsAbstract && !type.IsGenericType && type.GetConstructor(Type.EmptyTypes) != null)
@@ -65,7 +64,7 @@ namespace FarEmerald.PlayForge.Editor
 
         /// <summary>
         /// A kind's name in the Kind menu: the name its <see cref="NumberKindAttribute"/> gives, as By Level for a simple
-        /// scaler and Shared for a Scaler asset's (FEAT-29); else its class's name, without "Cached" and "Scaler".
+        /// scaler and Shared for a Scaler asset's; else its class's name, without "Cached" and "Scaler".
         /// </summary>
         internal static string KindName(Type type)
         {
@@ -79,19 +78,19 @@ namespace FarEmerald.PlayForge.Editor
             return name.Length > 0 ? ObjectNames.NicifyVariableName(name) : "Scaler";
         }
 
-        /// <summary>The Kind menu's name for a number by level read exactly, level by level: a Table (TW-27).</summary>
+        /// <summary>The Kind menu's name for a number by level read exactly, level by level: a Table.</summary>
         internal const string TableKind = "Table";
 
-        /// <summary>Whether a kind is a number by level, which the Kind menu offers twice: as a Table, and as By Level (TW-27).</summary>
+        /// <summary>Whether a kind is a number by level, which the Kind menu offers twice: as a Table, and as By Level.</summary>
         internal static bool IsLevelKind(Type type) => type == typeof(SimpleScaler) || type == typeof(CachedSimpleScaler);
 
-        /// <summary>The names the Kind menu gives a kind: a number by level's two, Table first; another's one (TW-27).</summary>
+        /// <summary>The names the Kind menu gives a kind: a number by level's two, Table first; another's one.</summary>
         internal static IEnumerable<string> ChoiceNames(Type type) =>
             IsLevelKind(type) ? new[] { TableKind, KindName(type) } : new[] { KindName(type) };
 
         /// <summary>
         /// A field's kind as the Kind menu shows it: a number by level that reads exactly, level by level, is a Table, and
-        /// one spread over the levels is By Level (TW-27). Null for a field with no scaler.
+        /// one spread over the levels is By Level. Null for a field with no scaler.
         /// </summary>
         internal static string ChoiceOf(SerializedProperty scaler)
         {
@@ -101,7 +100,7 @@ namespace FarEmerald.PlayForge.Editor
 
         /// <summary>
         /// The kind a Kind menu name chooses among these, and for a number by level whether it spreads over the levels: a
-        /// Table doesn't, By Level does (TW-27). Null for a name none of them has.
+        /// Table doesn't, By Level does. Null for a name none of them has.
         /// </summary>
         internal static (Type Type, bool? Spread) Chosen(string name, IEnumerable<Type> kinds)
         {
@@ -116,8 +115,8 @@ namespace FarEmerald.PlayForge.Editor
         /// <summary>
         /// Gives the field a new scaler of a kind, which maps levels exactly and starts with one value: for each selected
         /// asset, the value firstValue reads from that asset's own field. Each asset gets an object of its own, since one
-        /// shared between assets would be one scaler in two places, and a field of that kind keeps its scaler (ED-12), as
-        /// a Table or By Level as <paramref name="spread"/> says where it's given (TW-27). Null takes the scaler away.
+        /// shared between assets would be one scaler in two places, and a field of that kind keeps its scaler, as
+        /// a Table or By Level as <paramref name="spread"/> says where it's given. Null takes the scaler away.
         /// </summary>
         internal static void SetKind(SerializedProperty scaler, Type type, Func<SerializedProperty, float> firstValue, bool? spread = null) =>
             EachAsset.Write(scaler, own =>
@@ -127,7 +126,7 @@ namespace FarEmerald.PlayForge.Editor
                     if (spread.HasValue) SpreadOverLevels(own, spread.Value);
                     return;
                 }
-                // A scaler's name stays, as a Scaler asset's name is its scaler's (ED-74)
+                // A scaler's name stays, as a Scaler asset's name is its scaler's
                 var kept = (own.managedReferenceValue as AbstractScaler)?.Name;
                 var made = Make(type, firstValue(own));
                 if (made != null && !string.IsNullOrEmpty(kept)) made.Name = kept;
@@ -137,7 +136,7 @@ namespace FarEmerald.PlayForge.Editor
 
         /// <summary>
         /// Makes a scaler, as one selected asset's own property, read its values exactly or spread over the levels: a Table
-        /// becomes By Level, or By Level a Table, its values kept (TW-27).
+        /// becomes By Level, or By Level a Table, its values kept.
         /// </summary>
         internal static void SpreadOverLevels(SerializedProperty own, bool spread)
         {
@@ -161,7 +160,7 @@ namespace FarEmerald.PlayForge.Editor
         {
             if (type == null) return null;
             var made = (AbstractScaler)Activator.CreateInstance(type);
-            // A scaler made here maps levels exactly (Decision 28)
+            // A scaler made here maps levels exactly
             made.StretchOverLevels = false;
             made.LevelValues = new[] { firstValue };
             made.Scaling = AbstractScaler.CurveFor(made.LevelValues, made.Interpolation);
@@ -194,7 +193,7 @@ namespace FarEmerald.PlayForge.Editor
 
         /// <summary>
         /// A series' range as a field reads it, as in "6–8 s", or "6 s" when every level reads the same. A range with a
-        /// negative end reads "-25 to -10": a dash between two minus signs read as "-25—10" (ED-51).
+        /// negative end reads "-25 to -10": a dash between two minus signs read as "-25—10".
         /// </summary>
         internal static string RangeText(IReadOnlyList<float> values, string unit)
         {
@@ -209,7 +208,7 @@ namespace FarEmerald.PlayForge.Editor
 
         /// <summary>
         /// Writes the curve a stretched scaler reads, from its values, in the edit that changed them, so they undo as one
-        /// step. Each selected asset's curve comes from its own values (ED-12). Called after an edit, never while drawing.
+        /// step. Each selected asset's curve comes from its own values. Called after an edit, never while drawing.
         /// </summary>
         internal static void KeepCurve(SerializedProperty scaler)
         {
@@ -259,7 +258,7 @@ namespace FarEmerald.PlayForge.Editor
         /// <summary>The class a field takes while its kind's settings leave it out, as a Randomized scaler's Variance while it multiplies.</summary>
         internal const string HiddenClass = "pf-scaler__hidden";
 
-        /// <summary>The class of the block a scaler's fields sit on, under the field they belong to (ED-51, Decision 36).</summary>
+        /// <summary>The class of the block a scaler's fields sit on, under the field they belong to.</summary>
         internal const string BlockClass = "pf-scaler-block";
 
         /// <summary>The class of a scaler's content while its kind has nothing to show.</summary>
@@ -269,7 +268,7 @@ namespace FarEmerald.PlayForge.Editor
         /// A scaler's content: a Shared scaler's asset; otherwise the kind's own fields, then the parts of every scaler the
         /// kind reads (<see cref="AbstractScaler.Parts"/>): its values per level, with their curve, and its behaviours. It
         /// drew the values for every kind but those that hid them, so a Fixed Value showed values it never read, and a
-        /// Randomized scaler hid the values its base comes from (ED-51).
+        /// Randomized scaler hid the values its base comes from.
         /// </summary>
         internal static VisualElement Content(SerializedProperty scaler)
         {
@@ -291,7 +290,7 @@ namespace FarEmerald.PlayForge.Editor
                 kindFields++;
             }
 
-            // A Group whose members multiply, with none that adds, multiplies 0, and says so under its members (ED-80)
+            // A Group whose members multiply, with none that adds, multiplies 0, and says so under its members
             HelpBox multipliesNothing = null;
             if (value is ScalerGroup or CachedScalerGroup)
             {
@@ -341,7 +340,7 @@ namespace FarEmerald.PlayForge.Editor
         internal const string MultipliesNothingText = "No member adds, so the members that multiply or divide work on 0.";
 
         /// <summary>
-        /// Whether a Group's members multiply with none that adds, so they multiply the sum of nothing, 0 (ED-80). Members
+        /// Whether a Group's members multiply with none that adds, so they multiply the sum of nothing, 0. Members
         /// join as the sum of those that add, times each that multiplies, plus each flat bonus, in any order. Where a member
         /// overrides, and the Group doesn't set overriding members aside, it reads the override, and multiplies nothing.
         /// </summary>
@@ -363,7 +362,7 @@ namespace FarEmerald.PlayForge.Editor
                 && members.All(member => member.Joins != EGroupOperation.Add);
         }
 
-        /// <summary>What the selected scalers read of every scaler's parts: what any of them reads (ED-12).</summary>
+        /// <summary>What the selected scalers read of every scaler's parts: what any of them reads.</summary>
         internal static EScalerParts PartsOf(SerializedProperty scaler) => EachAsset.Of(scaler)
             .Select(each => (each.managedReferenceValue as AbstractScaler)?.Parts ?? EScalerParts.None)
             .Aggregate(EScalerParts.None, (all, each) => all | each);
@@ -374,7 +373,7 @@ namespace FarEmerald.PlayForge.Editor
 
         /// <summary>
         /// The fields a kind adds, each as Unity draws its type, from the classes in its chain below the bases every scaler
-        /// shares, a scaler of the user's own and its own abstract bases among them (ED-51). It stopped at the first
+        /// shares, a scaler of the user's own and its own abstract bases among them. It stopped at the first
         /// abstract class, so a scaler built on a base of the user's own lost that base's fields. A field marked Hide in
         /// Inspector stays out, and one marked <see cref="ForgeShowWhenAttribute"/> shows only while the field it names
         /// holds a value that shows it, as a Randomized scaler's multipliers for its Multiplier mode.
@@ -398,10 +397,10 @@ namespace FarEmerald.PlayForge.Editor
                     if (property == null) continue;
                     var field = new PropertyField(property) { name = info.Name };
                     field.BindProperty(property);
-                    // A list's + gives its new element objects of its own, as a Group's member its scaler (FN-2)
+                    // A list's + gives its new element objects of its own, as a Group's member its scaler
                     if (property.isArray && property.propertyType == SerializedPropertyType.Generic)
                         ForgeLists.AddsOwnCopies(field, property.serializedObject, property.propertyPath);
-                    // Every condition a field carries must hold for it to show (FEAT-29)
+                    // Every condition a field carries must hold for it to show
                     var when = info.GetCustomAttributes<ForgeShowWhenAttribute>().ToArray();
                     if (when.Length == 0)
                     {
@@ -473,7 +472,7 @@ namespace FarEmerald.PlayForge.Editor
         /// <summary>
         /// The levels the selected assets' scalers follow, when they're known and agree: an ability's, an item's or an
         /// entity's own, or those of the provider it links to, as a linked effect's are its ability's. An unlinked effect, an
-        /// attribute set or a Scaler asset takes its levels from whatever uses it, so has none known (ED-53).
+        /// attribute set or a Scaler asset takes its levels from whatever uses it, so has none known.
         /// </summary>
         internal static LevelRange LevelsOf(SerializedObject serialized)
         {
@@ -499,7 +498,7 @@ namespace FarEmerald.PlayForge.Editor
 
         /// <summary>
         /// How many levels a scaler's table shows: its level provider's, while its values follow one level by level, or
-        /// else the values it has (ED-53). Quick Fill fills as many.
+        /// else the values it has. Quick Fill fills as many.
         /// </summary>
         internal static int LevelsShown(SerializedProperty scaler)
         {
@@ -521,9 +520,9 @@ namespace FarEmerald.PlayForge.Editor
 
         /// <summary>
         /// A scaler's values per level: Values, Per Level or Spread Over Levels side by side, which the user couldn't tell
-        /// apart as a Stretch Over Levels box (ED-54); the levels they follow, an asset's level provider's unless the
-        /// scaler takes levels of its own (ED-53); the table, with the curve beside it; and, spread, how a level between
-        /// two values reads. Each row follows the asset, and only edits write (ED-34).
+        /// apart as a Stretch Over Levels box; the levels they follow, an asset's level provider's unless the
+        /// scaler takes levels of its own; the table, with the curve beside it; and, spread, how a level between
+        /// two values reads. Each row follows the asset, and only edits write.
         /// </summary>
         internal static VisualElement Values(SerializedProperty scaler, bool readsRange)
         {
@@ -549,7 +548,7 @@ namespace FarEmerald.PlayForge.Editor
                 KeepCurve(scaler);
             });
             // A number by level's kind says how it reads, a Table or By Level, so it has no choice of its own here, and a
-            // Table shows no curve (TW-27)
+            // Table shows no curve
             bool levelKind = IsLevelKind(KindOf(scaler));
             if (!levelKind) root.Add(mode);
 
@@ -642,7 +641,7 @@ namespace FarEmerald.PlayForge.Editor
             int columns = follows ? range.Last : stored;
             var table = Table(scaler, valuesProp, columns, "Level", index => (index + 1).ToString(CultureInfo.InvariantCulture),
                 out var past, out var preview);
-            // A Table reads its values exactly, so it has no curve to show (TW-27)
+            // A Table reads its values exactly, so it has no curve to show
             if (!curve) preview.RemoveFromHierarchy();
             rows.Add(table);
             if (follows && stored > range.Last)
@@ -743,7 +742,7 @@ namespace FarEmerald.PlayForge.Editor
             rows.Add(points);
 
             // The points, numbered: they sit evenly along the levels, mostly between two, which a level such as 1.8 named
-            // as if it were one (ED-62)
+            // as if it were one
             int stored = valuesProp.arraySize;
             var table = Table(scaler, valuesProp, stored, "Point", index => (index + 1).ToString(CultureInfo.InvariantCulture),
                 out _, out var preview, index => $"Point {index + 1} of {stored}");
@@ -762,8 +761,8 @@ namespace FarEmerald.PlayForge.Editor
             });
             rows.Add(between);
 
-            // What each real level reads, as the runtime reads it, while the levels are known (ED-62). The provider's last
-            // level ends a range up to a level that it falls short of (GAS-64)
+            // What each real level reads, as the runtime reads it, while the levels are known. The provider's last
+            // level ends a range up to a level that it falls short of
             var (first, last) = RealLevels(range, config, maxProp.intValue);
             int providerLast = range.Known ? range.Last : maxProp.intValue;
             Label[] reads = null;
@@ -827,8 +826,7 @@ namespace FarEmerald.PlayForge.Editor
         /// <summary>
         /// What a spread scaler reads at each level from the first to the last, as the runtime reads it: its stored curve at
         /// the level's place between the starting level and the last its levels reach, which is the provider's, its own,
-        /// or, up to a level, its own or the provider's, whichever is lower (AbstractScaler.GetEffectiveRelativeLevel,
-        /// GAS-64).
+        /// or, up to a level, its own or the provider's, whichever is lower (AbstractScaler.GetEffectiveRelativeLevel).
         /// </summary>
         internal static float[] ReadsAtLevels(AnimationCurve curve, int first, int last, ELevelConfig config, int ownMax, int providerLast)
         {
@@ -856,7 +854,7 @@ namespace FarEmerald.PlayForge.Editor
 
         /// <summary>
         /// The levels and what each reads, as the table draws its values, read-only: a row of levels over a row of what
-        /// each reads, ten to a row (ED-62).
+        /// each reads, ten to a row.
         /// </summary>
         internal static VisualElement ReadsTable(int first, int last, out Label[] cells)
         {
@@ -897,7 +895,7 @@ namespace FarEmerald.PlayForge.Editor
         }
 
         /// <summary>
-        /// The values as the scaler board's table: a row of heads over a row of values, ten to a row, inside an outline,
+        /// The values as a table: a row of heads over a row of values, ten to a row, inside an outline,
         /// with the curve beside them. A column past the values the scaler has shows the last, which a level past the end
         /// reads; typing there gives that level, and each before it, a value of its own.
         /// </summary>
@@ -938,7 +936,7 @@ namespace FarEmerald.PlayForge.Editor
                         field.tooltip = tipOf?.Invoke(i) ?? $"The value at level {i + 1}";
                         field.BindProperty(valuesProp.GetArrayElementAtIndex(i));
                         // The curve a spread scaler reads follows a typed value, in the same Undo step. Binding sends the
-                        // field change events of its own as it draws, which write nothing (ED-34)
+                        // field change events of its own as it draws, which write nothing
                         field.RegisterValueChangedCallback(_ =>
                         {
                             if (IsTypedInto(field)) KeepCurve(scaler);
@@ -979,7 +977,7 @@ namespace FarEmerald.PlayForge.Editor
             KeepCurve(scaler);
         }
 
-        // The curve beside the table, while the selected scalers agree on their values (ED-12)
+        // The curve beside the table, while the selected scalers agree on their values
         private static void ShowCurve(SerializedProperty scaler, ForgeCurvePreview preview, float[] values, EScalerInterpolation? between)
         {
             bool same = !EachAsset.Differ(scaler, each => string.Join(",", ValuesOf(each)));
@@ -990,7 +988,7 @@ namespace FarEmerald.PlayForge.Editor
         private static string Levels(int count) => count == 1 ? "1 level" : $"{count} levels";
 
         // Sets how many values a scaler has: a new one takes the last value, as a level past the end reads it. Each
-        // selected table takes its own last value, and keeps the values it has (ED-12)
+        // selected table takes its own last value, and keeps the values it has
         private static void Resize(SerializedProperty scaler, SerializedProperty values, int levels)
         {
             if (!Alive(values)) return;
@@ -1007,8 +1005,7 @@ namespace FarEmerald.PlayForge.Editor
         }
 
         /// <summary>
-        /// A Shared scaler's asset, with Open, then the asset's curve, its range and how many fields share it, as the
-        /// scaler board's second step draws them.
+        /// A Shared scaler's asset, with Open, then the asset's curve, its range and how many fields share it.
         /// </summary>
         internal static VisualElement SharedRows(SerializedProperty scaler)
         {
@@ -1056,7 +1053,7 @@ namespace FarEmerald.PlayForge.Editor
 
             void Show()
             {
-                // Selected fields that share different assets show the asset as mixed, and no one curve or count (ED-12)
+                // Selected fields that share different assets show the asset as mixed, and no one curve or count
                 var shared = assetProp.hasMultipleDifferentValues ? null : assetProp.objectReferenceValue as ScalerAsset;
                 open.SetEnabled(shared != null);
                 about.style.display = shared != null ? DisplayStyle.Flex : DisplayStyle.None;

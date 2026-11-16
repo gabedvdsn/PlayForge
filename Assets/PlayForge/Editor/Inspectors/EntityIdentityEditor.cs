@@ -9,7 +9,7 @@ using static FarEmerald.PlayForge.Editor.ForgeDrawerStyles;
 namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
-    /// The Entity inspector, in Docs/EDITOR_STYLE.md's terms and the Entity mockup's (ED-37): Identity, Leveling, Tags, the
+    /// The Entity inspector: Identity, Leveling, Tags, the
     /// entity's Attributes, Abilities and Items, Workers and Local Data, then Used By. A collapsed section shows one line,
     /// and the inspector takes its look from the style sheet.
     /// </summary>
@@ -22,7 +22,7 @@ namespace FarEmerald.PlayForge.Editor
 
         // Its fields write through the SerializedObject, and its Max fields' scalers through each asset's own, so it edits
         // a multiple selection; what acts on one entity steps aside: the name, the asset tag, linking, the attribute table,
-        // and Used By (ED-12)
+        // and Used By
         protected override bool SupportsMultipleObjects => true;
 
         private IEnumerable<EntityIdentity> Entities => targets.Cast<EntityIdentity>();
@@ -104,16 +104,16 @@ namespace FarEmerald.PlayForge.Editor
 
         protected override void BuildInspectorContent(VisualElement parent)
         {
-            // The style doc's order: Identity, Leveling, Tags, the entity's own sections, Workers and Local Data, then what
+            // The inspectors' order: Identity, Leveling, Tags, the entity's own sections, Workers and Local Data, then what
             // uses the entity. Level Source sat apart from Leveling, which was called Level and came after Tags, and the
-            // Attribute Set sat in Definition (ED-37)
+            // Attribute Set sat in Definition
             BuildIdentitySection(parent);
             BuildLevelingSection(parent);
             BuildTagsSection(parent);
             BuildAttributesSection(parent);
             BuildAbilitiesSection(parent);
             BuildItemsSection(parent);
-            // The entity's own, before Workers and Local Data, as the style doc orders them
+            // The entity's own, before Workers and Local Data, as every inspector orders them
             BuildDeathSection(parent);
             BuildComponentsSection(parent);
             BuildWorkersSection(parent);
@@ -144,7 +144,7 @@ namespace FarEmerald.PlayForge.Editor
                 Title = "Identity",
                 HelpTopic = "entities/definition",
 
-                // Import and Clear leave the name, which identifies the entity and gives its tag (ED-35)
+                // Import and Clear leave the name, which identifies the entity and gives its tag
                 SerializedObject = serializedObject,
                 PropertyPaths = new[] { nameof(EntityIdentity.Description), nameof(EntityIdentity.Textures) },
                 OnImportComplete = OnSectionReplaced,
@@ -157,7 +157,7 @@ namespace FarEmerald.PlayForge.Editor
             nameField = CreateTextField("Name", "Name");
             nameField.AddToClassList(BaseField<string>.alignedFieldUssClassName);
             nameField.value = entity.Name;
-            // Typing previews the tag; leaving the field stores the name and the tag in one undoable step (ED-12)
+            // Typing previews the tag; leaving the field stores the name and the tag in one undoable step
             nameField.RegisterValueChangedCallback(evt => UpdateAssetTagDisplay(evt.newValue));
             nameField.RegisterCallback<FocusOutEvent>(_ =>
             {
@@ -167,11 +167,11 @@ namespace FarEmerald.PlayForge.Editor
                 MarkDirty(entity);
                 SyncAssetTag();
                 UpdateHeader();
-                // Its file follows its name (ED-70)
+                // Its file follows its name
                 RenameFile(entity, nameField.value);
                 Repaint();
             });
-            // Each entity's tag comes from its own name, so a multiple selection shows the names and can't rename (ED-12)
+            // Each entity's tag comes from its own name, so a multiple selection shows the names and can't rename
             if (IsMultiple)
             {
                 nameField.SetEnabled(false);
@@ -181,11 +181,11 @@ namespace FarEmerald.PlayForge.Editor
             content.Add(nameField);
 
             // Description binds to its property, so an edit undoes. It wrote straight into the asset when it lost focus,
-            // with no Undo (ED-12).
+            // with no Undo.
             content.Add(CreateBoundTextField(nameof(EntityIdentity.Description), "Description", multiline: true, minHeight: 18));
 
-            // The tag the name gives, under the name, as the mockup places it. It sat at the top of Tags, in a tinted box
-            // (ED-37). Each entity has its own, so a multiple selection doesn't show one (ED-12)
+            // The tag the name gives, under the name. It sat at the top of Tags, in a tinted box.
+            // Each entity has its own, so a multiple selection doesn't show one
             if (!IsMultiple)
             {
                 assetTagField = new ForgeAssetTagField();
@@ -232,12 +232,11 @@ namespace FarEmerald.PlayForge.Editor
             RebuildLevelingContent();
         }
 
-        // Leveling holds what Level Source did (ED-37), so the base editor's two rebuilds are one here
+        // Leveling holds what Level Source did, so the base editor's two rebuilds are one here
         protected override void RebuildLevelSourceContent() => RebuildLevelingContent();
 
         // Link Mode, then the entity's own range, or its provider and the range the provider gives, then its children's
         // links. Level Source drew the link state in tinted boxes with colored borders, under sentences about linking
-        // (ED-37)
         protected override void RebuildLevelingContent()
         {
             if (levelingContent == null) return;
@@ -246,13 +245,13 @@ namespace FarEmerald.PlayForge.Editor
             shownLeveling = LevelingState();
 
             // Link Mode binds to its property, so a change undoes, and OnAssetChanged redraws from it. It wrote the mode
-            // straight into the asset, with no Undo, and redrew only then (ED-12).
+            // straight into the asset, with no Undo, and redrew only then.
             var linkModeField = new EnumField("Link Mode", entity.LinkMode) { name = "LinkMode", bindingPath = nameof(EntityIdentity.LinkMode) };
             linkModeField.AddToClassList(BaseField<System.Enum>.alignedFieldUssClassName);
             levelingContent.Add(linkModeField);
 
             // A provider and a child's link belong to one entity, so a multiple selection sets the mode, and edits the
-            // range when every entity keeps its own; a linked entity's range comes from its provider (ED-12)
+            // range when every entity keeps its own; a linked entity's range comes from its provider
             if (IsMultiple)
             {
                 if (Entities.All(each => each.LinkMode != EItemLinkMode.LinkedToProvider)) BuildOwnLevels();
@@ -274,8 +273,8 @@ namespace FarEmerald.PlayForge.Editor
         private bool IsLinkMode => entity.LinkMode == EItemLinkMode.LinkedToProvider;
 
         // The entity's own range, which it keeps while standalone. Starting and Max Level bind to their properties, so an
-        // edit undoes; they wrote straight into the asset, with no Undo (ED-12). Max Level is on a line of its own: the
-        // Cap At Max toggle that shared its row set a value nothing read (GAS-45)
+        // edit undoes; they wrote straight into the asset, with no Undo. Max Level is on a line of its own: the
+        // Cap At Max toggle that shared its row set a value nothing read
         private void BuildOwnLevels()
         {
             levelingContent.Add(BoundInteger(nameof(EntityIdentity.StartingLevel), entity.StartingLevel, "Starting Level"));
@@ -321,7 +320,7 @@ namespace FarEmerald.PlayForge.Editor
             });
             parent.Add(tagsSection.Section);
 
-            // Affiliation first, as the mockup draws it: an entity's team decides what its effects can reach
+            // Affiliation first: an entity's team decides what its effects can reach
             var content = tagsSection.Content;
             content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(EntityIdentity.Affiliation)), "Affiliation", "Affiliation"));
             content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(EntityIdentity.ContextTags)), "ContextTags", "Context Tags"));
@@ -332,8 +331,8 @@ namespace FarEmerald.PlayForge.Editor
         // Attributes, Abilities and Items Sections: what the entity starts with
         // ═══════════════════════════════════════════════════════════════════════════
 
-        // The set the entity's attributes come from, then the table of what it gives the entity, as the mockup draws them.
-        // The set sat in Definition, and the Attributes section was left out (ED-37)
+        // The set the entity's attributes come from, then the table of what it gives the entity.
+        // The set sat in Definition, and the Attributes section was left out
         private void BuildAttributesSection(VisualElement parent)
         {
             attributesSection = CreateSection(new SectionConfig
@@ -351,10 +350,10 @@ namespace FarEmerald.PlayForge.Editor
 
             attributesSection.Content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(EntityIdentity.AttributeSet)), "AttributeSet", "Attribute Set"));
 
-            // The attribute its time runs at, which a slow or a haste changes (FEAT-22)
+            // The attribute its time runs at, which a slow or a haste changes
             attributesSection.Content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(EntityIdentity.TimeScaleAttribute)), "TimeScaleAttribute", "Time Scale"));
 
-            // The table shows one entity's set (ED-12)
+            // The table shows one entity's set
             if (IsMultiple)
             {
                 attributesSection.Content.Add(CreateNote("Select one entity to see what its set gives."));
@@ -363,7 +362,7 @@ namespace FarEmerald.PlayForge.Editor
             attributeTable = new ForgeAttributeTable();
             attributeTable.Changed += UpdateSummaries;
             attributesSection.Content.Add(attributeTable);
-            // At the entity's levels, as it starts with them (ED-49)
+            // At the entity's levels, as it starts with them
             attributeTable.Show(entity.AttributeSet, entity);
         }
 
@@ -375,7 +374,7 @@ namespace FarEmerald.PlayForge.Editor
                 Title = "Abilities",
                 HelpTopic = "entities/abilities",
 
-                // Import and Clear leave Max Abilities, whose scaler the Import window doesn't copy yet (ED-32, ED-33)
+                // Import and Clear leave Max Abilities, whose scaler the Import window doesn't copy yet
                 SerializedObject = serializedObject,
                 PropertyPaths = new[]
                 {
@@ -395,8 +394,8 @@ namespace FarEmerald.PlayForge.Editor
             var content = abilitiesSection.Content;
 
             // Activation Policy and Allow Duplicates bind to their properties, so an edit undoes. They wrote straight into
-            // the asset, with no Undo (ED-12).
-            // When Busy, as the mockup names it, with its choices by their own names, such as Queue (ED-37)
+            // the asset, with no Undo.
+            // When Busy, with its choices by their own names, such as Queue
             var policyField = new EnumField("When Busy", entity.ActivationPolicy)
             {
                 name = nameof(EntityIdentity.ActivationPolicy),
@@ -407,12 +406,12 @@ namespace FarEmerald.PlayForge.Editor
             content.Add(policyField);
 
             content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(EntityIdentity.StartingAbilities)), "StartingAbilities", "Starting Abilities"));
-            // Each limit by its name, where an empty label left it unnamed (FN-3)
+            // Each limit by its name, where an empty label left it unnamed
             content.Add(new PropertyField(serializedObject.FindProperty(nameof(EntityIdentity.MaxAbilitiesOperation)), "Max Abilities"));
             content.Add(BoundToggle("AllowDuplicates", nameof(EntityIdentity.AllowDuplicateAbilities), entity.AllowDuplicateAbilities,
                 "Allow Duplicates", "Let the entity hold the same ability more than once"));
 
-            // The crowd control rules its abilities follow, or the project's where it names none (TW-16)
+            // The crowd control rules its abilities follow, or the project's where it names none
             content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(EntityIdentity.CrowdControl)), "CrowdControl", "Crowd Control"));
         }
 
@@ -425,7 +424,6 @@ namespace FarEmerald.PlayForge.Editor
                 HelpTopic = "entities/items",
 
                 // Import and Clear leave Max Items and Max Equipped Items, whose scalers the Import window doesn't copy yet
-                // (ED-32, ED-33)
                 SerializedObject = serializedObject,
                 PropertyPaths = new[]
                 {
@@ -440,17 +438,17 @@ namespace FarEmerald.PlayForge.Editor
 
             // Each starting item takes one row, with its Equip checkbox (StartingItemDrawer)
             content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(EntityIdentity.StartingItems)), "StartingItems", "Starting Items"));
-            // Each limit by its name, where an empty label left it unnamed (FN-3)
+            // Each limit by its name, where an empty label left it unnamed
             content.Add(new PropertyField(serializedObject.FindProperty(nameof(EntityIdentity.MaxItemsOperation)), "Max Items"));
             content.Add(new PropertyField(serializedObject.FindProperty(nameof(EntityIdentity.MaxEquippedItemsOperation)), "Max Equipped Items"));
 
-            // The Allow Duplicate toggles bind to their properties, so an edit undoes (ED-12)
+            // The Allow Duplicate toggles bind to their properties, so an edit undoes
             content.Add(BoundToggle("AllowDuplicateItems", nameof(EntityIdentity.AllowDuplicateItems), entity.AllowDuplicateItems,
                 "Allow Duplicates", "Let the inventory hold the same item more than once"));
 
             // An inventory that holds one of each item never has a second copy to equip, so Equipped Too waits for Allow
-            // Duplicates, indented under it, with a note beside it, outside the disabled toggle so it stays legible (ED-37).
-            // It opened showing Allow Duplicate Items' value (ED-29)
+            // Duplicates, indented under it, with a note beside it, outside the disabled toggle so it stays legible.
+            // It opened showing Allow Duplicate Items' value
             equippedTooField = BoundToggle("AllowDuplicateEquippedItems", nameof(EntityIdentity.AllowDuplicateEquippedItems),
                 entity.AllowDuplicateEquippedItems, "Equipped Too", "Let more than one copy of the same item be equipped at once");
             equippedTooField.AddToClassList("pf-dependent");
@@ -472,7 +470,7 @@ namespace FarEmerald.PlayForge.Editor
             return toggle;
         }
 
-        // Equipped Too waits for Allow Duplicates: in a multiple selection, on every entity (ED-12)
+        // Equipped Too waits for Allow Duplicates: in a multiple selection, on every entity
         private void UpdateEquippedToo()
         {
             if (equippedTooField == null) return;
@@ -485,7 +483,7 @@ namespace FarEmerald.PlayForge.Editor
         // Workers Section
         // ═══════════════════════════════════════════════════════════════════════════
 
-        // Its components: features it carries, each a class with hooks into its life, added from the list's + (FN-14)
+        // Its components: features it carries, each a class with hooks into its life, added from the list's +
         private void BuildComponentsSection(VisualElement parent)
         {
             componentsSection = CreateSection(new SectionConfig
@@ -501,7 +499,7 @@ namespace FarEmerald.PlayForge.Editor
             });
             parent.Add(componentsSection.Section);
 
-            // Each entity keeps its own components, objects a multiple selection can't edit safely (ED-12)
+            // Each entity keeps its own components, objects a multiple selection can't edit safely
             if (IsMultiple)
             {
                 componentsSection.Content.Add(CreateNote("Select one entity to edit its components."));
@@ -526,12 +524,12 @@ namespace FarEmerald.PlayForge.Editor
             });
             parent.Add(workersSection.Section);
 
-            // How it changes effects, its own or those landing on it, as long as it lives (TW-7)
+            // How it changes effects, its own or those landing on it, as long as it lives
             workersSection.Content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(EntityIdentity.Modifiers)), "Modifiers", "Modifiers"));
             workersSection.Content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(EntityIdentity.WorkerGroup)), "WorkerGroup", ""));
         }
 
-        // What its death does: End, or Stay with the effects it ends and takes, and its body (TW-4)
+        // What its death does: End, or Stay with the effects it ends and takes, and its body
         private void BuildDeathSection(VisualElement parent)
         {
             deathSection = CreateSection(new SectionConfig
@@ -548,7 +546,7 @@ namespace FarEmerald.PlayForge.Editor
             parent.Add(deathSection.Section);
 
             // Death's own fields stand in the section, each by its name: one field of its whole drew a foldout of its own
-            // inside the section, which opened onto another to open (FN-17)
+            // inside the section, which opened onto another to open
             var death = serializedObject.FindProperty(nameof(EntityIdentity.Death));
             var child = death.Copy();
             var end = death.GetEndProperty();
@@ -586,7 +584,7 @@ namespace FarEmerald.PlayForge.Editor
         // Used By Section
         // ═══════════════════════════════════════════════════════════════════════════
 
-        // The assets that use the entity, such as the abilities and items linked to it, each a row that selects it (ED-37)
+        // The assets that use the entity, such as the abilities and items linked to it, each a row that selects it
         private void BuildUsedBySection(VisualElement parent)
         {
             usedBySection = CreateSection(new SectionConfig
@@ -614,7 +612,7 @@ namespace FarEmerald.PlayForge.Editor
         protected override void OnAssetChanged()
         {
             // Leveling is drawn from the link mode and the provider, so it redraws when either changes, an Undo among
-            // them (ED-12)
+            // them
             if (levelingContent != null && LevelingState() != shownLeveling) RebuildLevelingContent();
             // The name field isn't bound, so it follows an Undo here, unless it's being typed in
             if (!IsMultiple && nameField != null && !IsFocused(nameField) && nameField.value != (entity.Name ?? ""))
@@ -622,7 +620,7 @@ namespace FarEmerald.PlayForge.Editor
             UpdateAssetTagDisplay();
             UpdateEquippedToo();
             // The table follows its set's own changes; here it follows the entity to another set, or to other levels, which
-            // its values are at (ED-49)
+            // its values are at
             if (attributeTable != null && (attributeTable.Set != entity.AttributeSet || attributeTable.Levels != AttributeStartValues.LevelsOf(entity)))
                 attributeTable.Show(entity.AttributeSet, entity);
             UpdateSummaries();
@@ -685,11 +683,11 @@ namespace FarEmerald.PlayForge.Editor
         // Helper Methods
         // ═══════════════════════════════════════════════════════════════════════════
 
-        // Shows the tag a name gives: the stored name's, or the one being typed (ED-12)
+        // Shows the tag a name gives: the stored name's, or the one being typed
         private void UpdateAssetTagDisplay(string name = null) =>
             ShowAssetTag(assetTagField, name ?? entity.Name, "Entity", entity.AssetTag, SyncAssetTag);
 
-        // Stores the tag the name gives, then shows it (ED-12)
+        // Stores the tag the name gives, then shows it
         private void SyncAssetTag()
         {
             StoreAssetTag(entity, entity.Name, "Entity", entity.AssetTag, tag => entity.AssetTag = tag);

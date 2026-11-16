@@ -8,10 +8,10 @@ using Object = UnityEngine.Object;
 namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
-    /// The project's Forge Projects and the active one (FEAT-34, Decision 44). The Forge shows the active project's assets
+    /// The project's Forge Projects and the active one. The Forge shows the active project's assets
     /// alone, and a new asset goes in it: in the folder Project Settings names for its type, within the project's folder.
     /// A project is made in a folder of its own under the PlayForge Folder, as Assets/PlayForge/Arena, with its Game Root
-    /// entity, and the Bootstrap prefabs made where they're missing (EP-10, EP-11, Decision 89). While the Unity project has
+    /// entity, and the Bootstrap prefabs made where they're missing. While the Unity project has
     /// no Forge Project, The Forge asks for one; and the first asset made elsewhere makes one named for the game. Which is
     /// active belongs to each user, so it stays in EditorPrefs, for this Unity project alone.
     /// </summary>
@@ -82,7 +82,7 @@ namespace FarEmerald.PlayForge.Editor
 
         /// <summary>
         /// Whether a tag picker offers a tag in the active project: a default, one no asset uses, and one the project's
-        /// assets or its Tag Library use; a tag only another project uses, it doesn't (the user's point, FEAT-34).
+        /// assets or its Tag Library use; a tag only another project uses, it doesn't.
         /// </summary>
         public static Func<Tag, bool> OffersTag()
         {
@@ -99,7 +99,7 @@ namespace FarEmerald.PlayForge.Editor
 
         /// <summary>
         /// The project an asset is in, the innermost whose folder holds it, which its settings come from in the editor; or
-        /// none, for one in no project or not yet saved (TW-29).
+        /// none, for one in no project or not yet saved.
         /// </summary>
         public static ForgeProject Of(Object asset)
         {
@@ -109,7 +109,7 @@ namespace FarEmerald.PlayForge.Editor
 
         /// <summary>
         /// The active project, made while the Unity project has none: one named for the game, in a folder of its own under
-        /// the PlayForge Folder (EP-10). It was made at the project's root, in no folder of its own.
+        /// the PlayForge Folder. It was made at the project's root, in no folder of its own.
         /// </summary>
         public static ForgeProject EnsureActive()
         {
@@ -132,7 +132,7 @@ namespace FarEmerald.PlayForge.Editor
 
         /// <summary>
         /// Why a project can't take a name, or null where it can: it needs one, and the PlayForge Folder's Bootstrap folder
-        /// isn't a project's (EP-11).
+        /// isn't a project's.
         /// </summary>
         public static string WhyNotName(string name)
         {
@@ -145,14 +145,14 @@ namespace FarEmerald.PlayForge.Editor
 
         /// <summary>
         /// The folder a new asset of a type goes in: the type's folder from Project Settings, within the active project's
-        /// folder, as Abilities is Assets/PlayForge/Arena/Abilities in a project at Assets/PlayForge/Arena (EP-10).
+        /// folder, as Abilities is Assets/PlayForge/Arena/Abilities in a project at Assets/PlayForge/Arena.
         /// </summary>
         public static string FolderFor(Type type) => FolderIn(Active, type);
 
         /// <summary>
         /// The folder an asset of a type goes in, in a project: the type's folder from Project Settings, within the
         /// project's folder, a folder set as "Assets/Data/Abilities" read as "Data/Abilities" there; under the PlayForge
-        /// Folder for no project (EP-10).
+        /// Folder for no project.
         /// </summary>
         public static string FolderIn(ForgeProject project, Type type)
         {
@@ -195,7 +195,7 @@ namespace FarEmerald.PlayForge.Editor
         /// <summary>
         /// A new project, named, made at once in a folder of its own under the PlayForge Folder, as
         /// Assets/PlayForge/Arena/Arena.asset, with its Game Root entity in its GameRoot folder; the Bootstrap prefabs are made
-        /// where they're missing, the Bootstrapper playing it where it plays none. It becomes the active one (EP-10, EP-11).
+        /// where they're missing, the Bootstrapper playing it where it plays none. It becomes the active one.
         /// </summary>
         public static ForgeProject Make(string name)
         {

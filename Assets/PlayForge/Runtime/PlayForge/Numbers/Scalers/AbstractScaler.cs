@@ -58,7 +58,7 @@ namespace FarEmerald.PlayForge
         public EScalerInterpolation Interpolation = EScalerInterpolation.Linear;
 
         /// <summary>
-        /// Off, levels map exactly: level 4 reads the 4th value, and a level past the end reads the last (Decision 28).
+        /// Off, levels map exactly: level 4 reads the 4th value, and a level past the end reads the last.
         /// On, the values spread over the level range <see cref="Configuration"/> names, as every scaler's did. It is on
         /// for the scalers saved before it existed, so they keep how they read; the inspector makes new scalers with it
         /// off.
@@ -87,18 +87,18 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// What the scaler reads of the fields every scaler has: its values per level, the level range they spread over,
         /// and its behaviours. Its inspector draws these parts and no others, as a Fixed Value reads none of them; a
-        /// kind's own fields always draw (ED-51). A kind that reads none of them overrides this.
+        /// kind's own fields always draw. A kind that reads none of them overrides this.
         /// </summary>
         public virtual EScalerParts Parts => UseScalingOptions() ? EScalerParts.All : EScalerParts.Behaviours;
 
         /// <summary>
         /// Whether the scaler is no kind at all, as a Group with no members: a field that holds it reads as one with none
-        /// does, its number, and a slot that holds it, as a Group's member, as an empty one (ED-80, Decision 44). A scaler
+        /// does, its number, and a slot that holds it, as a Group's member, as an empty one. A scaler
         /// of a project's own that holds nothing to read yet overrides this.
         /// </summary>
         public virtual bool IsEmpty => false;
 
-        /// <summary>Whether a scaler slot reads as no kind: it holds no scaler, or one that is empty (ED-80).</summary>
+        /// <summary>Whether a scaler slot reads as no kind: it holds no scaler, or one that is empty.</summary>
         public static bool IsNone(AbstractScaler scaler) => scaler == null || scaler.IsEmpty;
 
         // ═══════════════════════════════════════════════════════════════════════════
@@ -382,7 +382,7 @@ namespace FarEmerald.PlayForge
 
                 // The provider's levels, up to the scaler's own Max Level: the lower of the two ends the range, and a level
                 // past it reads the last value. It took the lower of Max Level and the level being read, so a level always
-                // sat at the range's end, and every level above the first read the last value (GAS-64)
+                // sat at the range's end, and every level above the first read the last value
                 case ELevelConfig.Clamped:
                     int providerMax = source is not null ? source.GetLevel().MaxValue
                         : origin is not null ? origin.GetLevel().MaxValue
@@ -412,7 +412,7 @@ namespace FarEmerald.PlayForge
         
         /// <summary>
         /// The scaler's value at a level: the level's own value, and past the end the last, unless the scaler stretches
-        /// its values over the level range, where it reads its curve at the level's place in the range (Decision 28).
+        /// its values over the level range, where it reads its curve at the level's place in the range.
         /// </summary>
         protected float EvaluateAtLevel(int level, float relativeLevel) =>
             StretchOverLevels ? EvaluateScalingAtRelativeLevel(relativeLevel) : GetValueAtLevel(level);
@@ -434,7 +434,7 @@ namespace FarEmerald.PlayForge
             
             foreach (var behaviour in Behaviours)
             {
-                // An empty slot, which a list's "+" can leave, changes nothing; it threw on every evaluation (ED-12)
+                // An empty slot, which a list's "+" can leave, changes nothing; it threw on every evaluation
                 if (behaviour == null) continue;
                 behaviour.Initialize(spec);
                 m = behaviour.Evaluate(m, spec);

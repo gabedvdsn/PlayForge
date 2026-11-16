@@ -3,7 +3,7 @@ using System;
 namespace FarEmerald.PlayForge
 {
     /// <summary>
-    /// A source of random numbers, which PlayForge's runtime reads instead of <c>UnityEngine.Random</c> (FEAT-13). The
+    /// A source of random numbers, which PlayForge's runtime reads instead of <c>UnityEngine.Random</c>. The
     /// default reads Unity's, so <c>Random.InitState</c> still seeds it; <see cref="SeededRandom"/> is one of its own.
     /// </summary>
     public interface IForgeRandom
@@ -69,7 +69,7 @@ namespace FarEmerald.PlayForge
     /// <summary>
     /// The random numbers PlayForge's runtime draws: Unity's, unless <see cref="Use"/> puts another source in, as
     /// <see cref="SeededRandom"/>. The runtime drew from <c>UnityEngine.Random</c> in five files, so a roll could be
-    /// repeated only by seeding the whole game's random numbers (FEAT-13).
+    /// repeated only by seeding the whole game's random numbers.
     /// </summary>
     public static class ForgeRandom
     {

@@ -16,13 +16,13 @@ namespace FarEmerald.PlayForge
         /// Under the Queue policy, how long a request that can't start yet waits in the input buffer, in seconds of the
         /// caster's time: a press while another ability holds the claim, or while a running stage blocks this one,
         /// fires once it can, if that comes in time. A request can name a window of its own. The Queue policy waited for
-        /// good, behind every earlier press (FEAT-6). Read at the ability's level (FN-19).
+        /// good, behind every earlier press. Read at the ability's level.
         /// </summary>
         [NumberMin(0f)] public ScalableFloat BufferWindow = 0.3f;
 
         /// <summary>
         /// Which buffered request fires first: the highest, then the newest of equals. Each ability holds one slot, which
-        /// a new press refreshes (FEAT-6).
+        /// a new press refreshes.
         /// </summary>
         [Tooltip("Which buffered request fires first: the highest, then the newest of equals. Each ability holds one slot, which a new press refreshes")]
         public ScalableInt BufferPriority = 0;
@@ -32,7 +32,7 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// What activates the ability on its own: a gameplay event sent to its entity, or a tag its entity gains, under the
         /// trigger's tag or one under it. Each tries the ability as a request would, so its checks and its When Busy still
-        /// hold. An ability activated only when code asked for it (FEAT-4).
+        /// hold. An ability activated only when code asked for it.
         /// </summary>
         public List<AbilityTrigger> Triggers = new();
 

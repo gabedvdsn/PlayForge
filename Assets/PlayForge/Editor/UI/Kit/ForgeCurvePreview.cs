@@ -7,8 +7,8 @@ using UnityEngine.UIElements;
 namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
-    /// A read-only line of a scaler's values, one point per level, as every view of a scaler shows beside it (Decision
-    /// 28). The style sheet gives its line and guides their colors, which it reads as it draws: the line takes the
+    /// A read-only line of a scaler's values, one point per level, as every view of a scaler shows beside it.
+    /// The style sheet gives its line and guides their colors, which it reads as it draws: the line takes the
     /// element's color, and the frame its border color. A second series, such as an import's source, draws in the
     /// secondary color.
     /// </summary>

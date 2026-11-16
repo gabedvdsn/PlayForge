@@ -46,7 +46,7 @@ namespace FarEmerald.PlayForge
             else
             {
                 // Each valid target, in order, the first as the primary. Each was set as the primary, so each replaced the
-                // last, and the last alone was kept (GAS-62)
+                // last, and the last alone was kept
                 var found = new List<ITarget>();
                 if (data.TryGetAll<ITarget>(key, out var targets))
                 {

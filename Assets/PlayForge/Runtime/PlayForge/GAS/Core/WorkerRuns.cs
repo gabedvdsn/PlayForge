@@ -5,7 +5,7 @@ using System.Text;
 
 namespace FarEmerald.PlayForge
 {
-    /// <summary>Why an effect didn't land on an entity, as the entity's callbacks tell it (LAB-12).</summary>
+    /// <summary>Why an effect didn't land on an entity, as the entity's callbacks tell it.</summary>
     public enum EEffectRefusal
     {
         /// <summary>The entity is dead, and the effect isn't its own.</summary>
@@ -17,20 +17,20 @@ namespace FarEmerald.PlayForge
         /// <summary>Its application requirements, the target's or the source's, don't hold.</summary>
         Requirements,
 
-        /// <summary>An immunity on the entity names it (FEAT-8).</summary>
+        /// <summary>An immunity on the entity names it.</summary>
         Immunity,
 
-        /// <summary>Its chance to apply missed (FEAT-8).</summary>
+        /// <summary>Its chance to apply missed.</summary>
         Chance,
 
-        /// <summary>A Block or Evade stage stopped it as it landed (TW-12).</summary>
+        /// <summary>A Block or Evade stage stopped it as it landed.</summary>
         Stopped,
 
-        /// <summary>It was asked for again inside its own application, as an effect that contains itself is (GAS-28).</summary>
+        /// <summary>It was asked for again inside its own application, as an effect that contains itself is.</summary>
         Cycle,
     }
 
-    /// <summary>The moment of its effect an effect worker heard (LAB-12).</summary>
+    /// <summary>The moment of its effect an effect worker heard.</summary>
     public enum EEffectWorkerHook
     {
         Application,
@@ -40,7 +40,7 @@ namespace FarEmerald.PlayForge
     }
 
     /// <summary>
-    /// Whose side a worker ran on (LAB-12): the entity its effect is on, or the one that dealt the hit, as an effect's
+    /// Whose side a worker ran on: the entity its effect is on, or the one that dealt the hit, as an effect's
     /// workers hear its hits on their dealer's side and impact workers run for their dealer.
     /// </summary>
     public enum EWorkerSide
@@ -50,7 +50,7 @@ namespace FarEmerald.PlayForge
     }
 
     /// <summary>
-    /// An effect's worker hearing one of its effect's moments, as the entity it ran on tells it (LAB-12). Told only where
+    /// An effect's worker hearing one of its effect's moments, as the entity it ran on tells it. Told only where
     /// something listens, so a worker no one hears costs nothing more.
     /// </summary>
     public readonly struct EffectWorkerRun
@@ -78,7 +78,7 @@ namespace FarEmerald.PlayForge
         }
     }
 
-    /// <summary>One of a hit's dealer's impact workers, run for the hit, as the dealer tells it (LAB-12).</summary>
+    /// <summary>One of a hit's dealer's impact workers, run for the hit, as the dealer tells it.</summary>
     public readonly struct ImpactWorkerRun
     {
         public readonly ImpactData Impact;
@@ -102,21 +102,21 @@ namespace FarEmerald.PlayForge
         }
     }
 
-    /// <summary>What a step of a change to an attribute was (LAB-13).</summary>
+    /// <summary>What a step of a change to an attribute was.</summary>
     public enum EChangeStepKind
     {
         /// <summary>An attribute worker heard it, before its commit or after, and may have changed it.</summary>
         Worker,
 
-        /// <summary>A barrier soaked a loss (TW-12).</summary>
+        /// <summary>A barrier soaked a loss.</summary>
         Barrier,
 
-        /// <summary>A gain was scaled by the attribute its attribute names, as Healing Received scales a heal (TW-15).</summary>
+        /// <summary>A gain was scaled by the attribute its attribute names, as Healing Received scales a heal.</summary>
         Scaled,
     }
 
     /// <summary>
-    /// One step a change to an attribute took between being made and landing (LAB-13): an attribute worker's, before its
+    /// One step a change to an attribute took between being made and landing: an attribute worker's, before its
     /// commit or after it, inline or queued; a barrier's soak; or a gain's scaling; with the change before it and after.
     /// </summary>
     public readonly struct ChangeStep
@@ -215,7 +215,7 @@ namespace FarEmerald.PlayForge
     }
 
     /// <summary>
-    /// The steps of one commit in progress (LAB-13), recorded where the combat log keeps entries or anything listens to
+    /// The steps of one commit in progress, recorded where the combat log keeps entries or anything listens to
     /// its entity's steps, and told to its entity's listeners as each is taken. Each commit's scratch holds one, so its
     /// list is used again.
     /// </summary>

@@ -4,7 +4,7 @@ using UnityEngine;
 namespace FarEmerald.PlayForge.Testing
 {
     /// <summary>
-    /// What must hold after every test, whatever it did (TW-26). <see cref="ForgeTest"/> checks these after each test, so a
+    /// What must hold after every test, whatever it did. <see cref="ForgeTest"/> checks these after each test, so a
     /// test gets them without asking, and a test about something else still catches a leak: every observed entity's
     /// attribute parts sum to its value, what each dealt is what its targets received, and no process is left running.
     /// </summary>

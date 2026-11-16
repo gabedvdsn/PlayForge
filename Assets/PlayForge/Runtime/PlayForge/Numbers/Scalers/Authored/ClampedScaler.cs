@@ -4,7 +4,7 @@ using UnityEngine;
 namespace FarEmerald.PlayForge
 {
     /// <summary>
-    /// A number kept between a floor and a ceiling (FEAT-27, FEAT-29): damage worked out from a target's missing health,
+    /// A number kept between a floor and a ceiling: damage worked out from a target's missing health,
     /// capped. What it clamps and both bounds are numbers of any kind, read with the scaler as their owner, so its
     /// ceiling can be twice its floor, and its floor can scale by level.
     /// </summary>
@@ -40,7 +40,7 @@ namespace FarEmerald.PlayForge
         public override string Describe() =>
             $"{NumberText.Of(Value)}, between {NumberText.Of(MinValue)} and {NumberText.Of(MaxValue)}";
 
-        // What it clamps, and its bounds (FEAT-32)
+        // What it clamps, and its bounds
         public override void Explain(in NumberContext context, NumberTrace trace)
         {
             trace.Add(Value, context, this, "Value");

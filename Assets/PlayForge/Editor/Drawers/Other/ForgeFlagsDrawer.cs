@@ -8,7 +8,7 @@ using UnityEngine.UIElements;
 namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
-    /// A flags field of PlayForge's, which writes only what's picked (ED-85). Unity's own flags field stores a value that
+    /// A flags field of PlayForge's, which writes only what's picked. Unity's own flags field stores a value that
     /// holds every flag as Everything, -1, as it binds: an asset only looked at changed, as every effect's Purges' Applied
     /// By, Any by default; a template's child took the change as an override; and the inspector's SerializedObject moved
     /// while its bindings were still being made, which Unity asserted on (IsInSyncWithParentSerializedObject). This field

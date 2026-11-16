@@ -4,7 +4,7 @@ using UnityEngine;
 namespace FarEmerald.PlayForge.AdditionalContent
 {
     /// <summary>
-    /// Plays a sound as an entity takes a hit (AC-2): one of its clips at random, its pitch varied a little, on each loss
+    /// Plays a sound as an entity takes a hit: one of its clips at random, its pitch varied a little, on each loss
     /// to its attribute, at most once in a short interval, so a burst of hits in one frame plays once. With no clip, a
     /// short click made in code. A Sound cue on an effect plays that effect's own.
     /// </summary>

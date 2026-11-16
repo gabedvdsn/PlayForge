@@ -27,7 +27,7 @@ namespace FarEmerald.PlayForge
         {
             if (system == null) return;
             
-            // Only into a system the source has. "Not found, or found one" always held, so a missing one threw (GAS-27)
+            // Only into a system the source has. "Not found, or found one" always held, so a missing one threw
             if (system.FindAttributeSystem(out var attrSystem) && attrSystem != null)
             {
                 foreach (var worker in AttributeWorkers)
@@ -62,7 +62,7 @@ namespace FarEmerald.PlayForge
                 }
             }
 
-            // Those that answer numbers, so a number can ask the entity's workers (FEAT-29)
+            // Those that answer numbers, so a number can ask the entity's workers
             NumberWorkers.ProvideEach(system, AttributeWorkers);
             NumberWorkers.ProvideEach(system, ImpactWorkers);
             NumberWorkers.ProvideEach(system, TagWorkers);
@@ -76,7 +76,7 @@ namespace FarEmerald.PlayForge
         {
             if (system == null) return;
             
-            // Only from a system the source has, as above (GAS-27)
+            // Only from a system the source has, as above
             if (system.FindAttributeSystem(out var attrSystem) && attrSystem != null)
             {
                 foreach (var worker in AttributeWorkers)

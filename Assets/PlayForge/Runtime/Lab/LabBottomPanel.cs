@@ -8,7 +8,7 @@ using UnityEngine.UIElements;
 namespace FarEmerald.PlayForge.Lab
 {
     /// <summary>
-    /// The lab's bottom panel (LAB-12 to LAB-16, Decision 88), a page for each way it shows its working: the effect journal,
+    /// The lab's bottom panel, a page for each way it shows its working: the effect journal,
     /// the combat log with each hit's steps, the stops with Step Frame and Step Tick, the watches drawn as lines over the
     /// last minute, and ForgeLog's messages by system, each filtered to the selected unit where asked.
     /// </summary>
@@ -502,7 +502,7 @@ namespace FarEmerald.PlayForge.Lab
     }
 
     /// <summary>
-    /// The watches' lines over the last minute of the lab's time (LAB-15): each its own color and scaled to its own range,
+    /// The watches' lines over the last minute of the lab's time: each its own color and scaled to its own range,
     /// so a Health of hundreds and stacks of a few read side by side; the newest at the right.
     /// </summary>
     internal sealed class LabWatchChart : VisualElement

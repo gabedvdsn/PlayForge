@@ -49,11 +49,11 @@ namespace FarEmerald.PlayForge.Editor
     }
 
     /// <summary>
-    /// The Debugger's recorder (FEAT-12, Decision 30): it hears the entities it's given, and keeps each ability's runs,
+    /// The Debugger's recorder: it hears the entities it's given, and keeps each ability's runs,
     /// stage by stage, its refusals, and each effect's time on the shelf, by the game's time, for the Timeline view. The
     /// Debugger gives it the entities it lists as it samples the game, in Play mode, so it records only there. It keeps the
     /// last <see cref="MostSpans"/> of each track. It keeps an effect journal of the same entities too, and an effect's
-    /// refusals as its track's ticks (LAB-17).
+    /// refusals as its track's ticks.
     /// </summary>
     internal sealed class TimelineRecorder : IDisposable
     {
@@ -62,7 +62,7 @@ namespace FarEmerald.PlayForge.Editor
         /// <summary>How many journal entries it keeps, its last.</summary>
         public const int MostJournalled = 1000;
 
-        /// <summary>The effect journal of the entities it hears, while it records (LAB-17).</summary>
+        /// <summary>The effect journal of the entities it hears, while it records.</summary>
         public readonly EffectJournal Journal = new(MostJournalled);
 
         /// <summary>The tracks, in the order their first span came.</summary>
@@ -251,7 +251,7 @@ namespace FarEmerald.PlayForge.Editor
             Add(TrackOf(gas, refusal.Ability, TimelineKind.Ability), new TimelineSpan { Start = now, End = now, Refused = true, Note = reason });
         }
 
-        // An effect refused, as its track's tick, saying why (LAB-17)
+        // An effect refused, as its track's tick, saying why
         private void EffectRefused(IGameplayAbilitySystem gas, GameplayEffectSpec spec, EEffectRefusal refusal)
         {
             if (!Recording || spec?.Base == null) return;

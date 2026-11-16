@@ -6,18 +6,18 @@ using UnityEngine.UIElements;
 namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
-    /// One of an effect's additional impacts, in Docs/EDITOR_STYLE.md's terms: a foldout row with its attribute and a
+    /// One of an effect's additional impacts: a foldout row with its attribute and a
     /// Remove button, and while it's folded one line such as "Mana −10 · Continuous"; open, its operation, magnitude and
     /// delivery, then its order, retention group and impact types. Its Delivery offers what the effect's duration can
     /// make, and a help box says when the one it names can't happen. An impact entry had no drawer, so an effect couldn't
-    /// be given a second impact (ED-3).
+    /// be given a second impact.
     /// </summary>
     [CustomPropertyDrawer(typeof(AttributeImpactEntry))]
     public class AttributeImpactEntryDrawer : PropertyDrawer
     {
         public const string CollapsedClass = "pf-element--collapsed";
 
-        // Kept per asset for the editor session (ED-18)
+        // Kept per asset for the editor session
         private static bool IsCollapsed(SerializedProperty property) =>
             DrawerCollapseState.IsCollapsed(property, collapsedByDefault: false);
         private static void SetCollapsed(SerializedProperty property, bool collapsed) =>
@@ -26,7 +26,7 @@ namespace FarEmerald.PlayForge.Editor
         public override VisualElement CreatePropertyGUI(SerializedProperty property)
         {
             var root = new VisualElement { name = "ImpactEntry" };
-            // The style sheet lays out the entry, wherever the drawer is drawn (ED-20)
+            // The style sheet lays out the entry, wherever the drawer is drawn
             ForgeTheme.Apply(root);
             root.AddToClassList("pf-element");
 
@@ -51,7 +51,7 @@ namespace FarEmerald.PlayForge.Editor
             var attributeField = new PropertyField(attributeProp, "") { name = "Attribute" };
             attributeField.AddToClassList("pf-element__attribute");
             header.Add(attributeField);
-            // Its delivery, named on the right of its row, as EDITOR_STYLE has an entry's (Q19). It named none (ED-50)
+            // Its delivery, named on the right of its row, as EDITOR_STYLE has an entry's. It named none
             var headerDelivery = new Label { name = "HeaderDelivery", tooltip = "When the impact lands" };
             headerDelivery.AddToClassList("pf-element__delivery");
             header.Add(headerDelivery);
@@ -82,7 +82,7 @@ namespace FarEmerald.PlayForge.Editor
             multiply.AddToClassList("pf-dependent");
             multiply.BindProperty(multiplyProp);
             content.Add(multiply);
-            // Shown for an Add on a Resistance, whose adds diminish, or one that says its own way (TW-1)
+            // Shown for an Add on a Resistance, whose adds diminish, or one that says its own way
             var add = new EnumField("Add Behaviour")
             {
                 name = "AddBehaviour",
@@ -94,7 +94,7 @@ namespace FarEmerald.PlayForge.Editor
             add.BindProperty(addProp);
             content.Add(add);
             content.Add(new PropertyField(magnitudeProp, "Magnitude"));
-            // The calculation each hit goes through as it lands (TW-2)
+            // The calculation each hit goes through as it lands
             content.Add(new PropertyField(property.FindPropertyRelative(nameof(AttributeImpactEntry.Pipeline)), "Pipeline") { name = "Pipeline" });
 
             var delivery = new PopupField<EImpactDelivery>("Delivery",
@@ -112,7 +112,7 @@ namespace FarEmerald.PlayForge.Editor
                 deliveryProp.serializedObject.ApplyModifiedProperties();
             });
             content.Add(delivery);
-            // What a periodic entry commits, as the first impact says it (ED-50)
+            // What a periodic entry commits, as the first impact says it
             var commits = ImpactFields.ValueRow("Commits", "EntryCommits", "How many times the impact lands, at the effect's first level");
             content.Add(commits);
             var problem = new HelpBox("", HelpBoxMessageType.Warning) { name = "DeliveryProblem" };

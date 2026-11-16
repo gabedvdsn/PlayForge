@@ -35,14 +35,14 @@ namespace FarEmerald.PlayForge
         #endregion
 
         #region On Item Consumed
-        /// <summary>Items used up, as a Consume Item task's, the item and how many went (FN-24).</summary>
+        /// <summary>Items used up, as a Consume Item task's, the item and how many went.</summary>
         public delegate void ItemConsumedDelegate(Item item, int count);
 
         private ItemConsumedDelegate _onItemConsumed;
 
         /// <summary>
         /// Items used up by <see cref="ItemSystemComponent.ConsumeItem"/>, as a potion's use, so a game's own bookkeeping,
-        /// as a shop's stock, follows; a removal by other means isn't one (FN-24).
+        /// as a shop's stock, follows; a removal by other means isn't one.
         /// </summary>
         public event ItemConsumedDelegate OnItemConsumed
         {

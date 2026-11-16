@@ -14,7 +14,7 @@ namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
     /// Base class for all PlayForge asset inspectors: a header with the asset's name and type, and the content below it.
-    /// The content scrolls in the Inspector's own scroll view, and the header stays at its top (Decision 29).
+    /// The content scrolls in the Inspector's own scroll view, and the header stays at its top.
     /// </summary>
     public abstract class BasePlayForgeEditor : UnityEditor.Editor
     {
@@ -74,8 +74,8 @@ namespace FarEmerald.PlayForge.Editor
         protected virtual void OnEnable()
         {
             // Nothing listens to the editor's update here: an inspector listens only while an object picker is open,
-            // through WaitForPicker. It listened every frame of its life (ED-11)
-            // An Undo of a rename brings the file back with the name (ED-70)
+            // through WaitForPicker. It listened every frame of its life
+            // An Undo of a rename brings the file back with the name
             Undo.undoRedoPerformed += FileFollowsName;
         }
 
@@ -87,7 +87,7 @@ namespace FarEmerald.PlayForge.Editor
         }
 
         // The assets this inspector renamed, whose files follow their names through Undo and Redo. Only these: an asset
-        // whose file never matched its name keeps its file as an unrelated Undo is made (ED-70)
+        // whose file never matched its name keeps its file as an unrelated Undo is made
         private readonly HashSet<Object> renamedHere = new();
 
         // Each renamed asset's file named for its name again, as an Undo or a Redo changes the name
@@ -101,7 +101,7 @@ namespace FarEmerald.PlayForge.Editor
 
         /// <summary>
         /// Renames an asset's file after its name, with its type's prefix and suffix from Project Settings, so the two
-        /// don't drift apart (ED-70, the user's request): a character a file can't have is left out, as a new asset's file
+        /// don't drift apart: a character a file can't have is left out, as a new asset's file
         /// leaves it; a name another file in its folder has takes a number, as Unity's own duplicate does; and an Undo of
         /// the rename brings the file back with the name, for an asset this inspector renamed. An asset not saved yet has no
         /// file to rename.
@@ -111,12 +111,12 @@ namespace FarEmerald.PlayForge.Editor
             var path = AssetDatabase.GetAssetPath(asset);
             if (string.IsNullOrEmpty(path) || !AssetDatabase.IsMainAsset(asset) || string.IsNullOrWhiteSpace(name)) return;
             renamedHere.Add(asset);
-            // As The Forge's Rename renames it (FN-8)
+            // As The Forge's Rename renames it
             ForgeRenames.FileFollows(asset, name);
         }
 
         // The object picker reports its choice only to code that asks, so the inspector asks each frame while one is open
-        // and stops when it closes (ED-11)
+        // and stops when it closes
         private void WaitForPicker()
         {
             _waitingForPicker = true;
@@ -209,7 +209,7 @@ namespace FarEmerald.PlayForge.Editor
         }
 
         // Marks each field the asset overrides of its template, as a prefab instance's are: a field bound to an overridden
-        // path, or to one with an overridden field inside it, outside the drawers that draw it (Q23, ED-13)
+        // path, or to one with an overridden field inside it, outside the drawers that draw it
         private void ShowOverrides()
         {
             if (root == null) return;
@@ -235,7 +235,7 @@ namespace FarEmerald.PlayForge.Editor
             return false;
         }
 
-        // The inspector's sections, in order, whose titles and one-line summaries The Forge's detail pane reads (Q6)
+        // The inspector's sections, in order, whose titles and one-line summaries The Forge's detail pane reads
         private readonly List<SectionResult> sections = new();
 
         /// <summary>The inspector's sections, in the order it shows them.</summary>
@@ -247,26 +247,26 @@ namespace FarEmerald.PlayForge.Editor
         protected virtual bool ShowTemplateButton => true;
 
         /// <summary>
-        /// Whether this inspector edits several assets at once (ED-12). An inspector that writes every edit through its
+        /// Whether this inspector edits several assets at once. An inspector that writes every edit through its
         /// SerializedObject turns this on and carries [CanEditMultipleObjects]; the others still refuse a multiple
         /// selection.
         /// </summary>
         protected virtual bool SupportsMultipleObjects => false;
 
         /// <summary>
-        /// Called after any change to the asset, an Undo or a Redo among them (ED-12). A section drawn from the asset's
+        /// Called after any change to the asset, an Undo or a Redo among them. A section drawn from the asset's
         /// values rather than bound redraws here. Does nothing by default.
         /// </summary>
         protected virtual void OnAssetChanged() { }
 
         // The question a link or unlink asks before it changes assets, answered true to go ahead. Tests replace it, since
-        // a dialog would block their run (ED-12)
+        // a dialog would block their run
         internal static Func<string, string, string, bool> ConfirmLinkChange = (title, message, ok) =>
             EditorUtility.DisplayDialog(title, message, ok, "Cancel");
 
         /// <summary>
         /// Records the assets a link, an unlink or a template change is about to write, so one Undo takes the change back.
-        /// These wrote straight into the assets with no Undo (ED-12).
+        /// These wrote straight into the assets with no Undo.
         /// </summary>
         protected static void RecordLinkChange(string undoName, IEnumerable<Object> touched)
         {
@@ -279,13 +279,13 @@ namespace FarEmerald.PlayForge.Editor
             RecordLinkChange(undoName, (IEnumerable<Object>)touched);
 
         // A multiple selection shows its count in the header, and only the actions that act on every selected asset.
-        // An inspector checks it too, to set aside what acts on one asset (ED-12)
+        // An inspector checks it too, to set aside what acts on one asset
         protected bool IsMultiple => serializedObject.isEditingMultipleObjects;
         private string HeaderName() => IsMultiple ? $"{targets.Length} selected" : GetDisplayName();
 
         /// <summary>
-        /// A text field bound to a property, which writes when an edit is committed rather than on each keystroke
-        /// (ED-12). Binding sends the edit through the SerializedObject, so Undo takes it back, it reaches every selected
+        /// A text field bound to a property, which writes when an edit is committed rather than on each keystroke.
+        /// Binding sends the edit through the SerializedObject, so Undo takes it back, it reaches every selected
         /// asset, and a selection that disagrees shows as mixed.
         /// </summary>
         protected static TextField CreateBoundTextField(string propertyPath, string label, bool multiline = false, int minHeight = 0,
@@ -294,7 +294,7 @@ namespace FarEmerald.PlayForge.Editor
             var field = CreateTextField(name ?? propertyPath, label, multiline, minHeight);
             field.isDelayed = true;
             field.bindingPath = propertyPath;
-            // Its label takes the Inspector's one label column, as a PropertyField's does (Docs/EDITOR_STYLE.md)
+            // Its label takes the Inspector's one label column, as a PropertyField's does
             field.AddToClassList(BaseField<string>.alignedFieldUssClassName);
             return field;
         }
@@ -303,19 +303,19 @@ namespace FarEmerald.PlayForge.Editor
         protected virtual void SetupCollapsibleSections() { }
 
         // ═══════════════════════════════════════════════════════════════════════════
-        // Import: the one Import window, for the whole asset (ED-32, ED-35)
+        // Import: the one Import window, for the whole asset
         // ═══════════════════════════════════════════════════════════════════════════
 
         /// <summary>
         /// Opens the Import window for the whole asset: choose a source, then the fields that differ. The asset keeps its
-        /// name, description, icons, asset tag, template and level link (ED-35). A menu of templates opened, and a dialog
+        /// name, description, icons, asset tag, template and level link. A menu of templates opened, and a dialog
         /// asked before an import that copied every field, the template and the link among them, and showed an error when
         /// no template existed though other assets did.
         /// </summary>
         protected void OpenImportPicker() => ForgeImportWindow.ShowForAsset(serializedObject, Refresh);
 
         // The asset's template, picked from Unity's searchable dropdown of the other assets of its type, under the asset
-        // menu (ED-61). It was the Asset Browser, a window of its own with type badges and an Assign button on each row
+        // menu. It was the Asset Browser, a window of its own with type badges and an Assign button on each row
         protected void ShowTemplatePicker(Rect under)
         {
             if (target is not BaseForgeAsset asset) return;
@@ -334,7 +334,7 @@ namespace FarEmerald.PlayForge.Editor
         {
             if (asset == null) return new List<(BaseForgeAsset, string)>();
             var type = asset.GetType();
-            // The active Forge Project's alone (FEAT-34)
+            // The active Forge Project's alone
             var inProject = ForgeProjects.InActive();
             var candidates = AssetDatabase.FindAssets($"t:{type.Name}")
                 .Select(AssetDatabase.GUIDToAssetPath)
@@ -393,7 +393,7 @@ namespace FarEmerald.PlayForge.Editor
         {
             sections.Clear();
             root = CreateRoot();
-            // PlayForge's style sheet, in the editor's theme (ED-20)
+            // PlayForge's style sheet, in the editor's theme
             ForgeTheme.Apply(root);
 
             if (IsMultiple && !SupportsMultipleObjects)
@@ -401,10 +401,10 @@ namespace FarEmerald.PlayForge.Editor
             if (!AssignLocalAsset())
                 return CreateIneligibleGUI("Critical error: Could not assign local asset.");
 
-            // The header stays at the top of the Inspector while the content scrolls under it (Decision 29). It comes
+            // The header stays at the top of the Inspector while the content scrolls under it. It comes
             // after the content, so it draws over it, and a space holds its place at the top. It follows the Inspector's
-            // own scroll view by its events (ED-36): it used to hide that scroll view and size one of its own by
-            // measuring the window on timers that ran for as long as the inspector was open (ED-11)
+            // own scroll view by its events: it used to hide that scroll view and size one of its own by
+            // measuring the window on timers that ran for as long as the inspector was open
             var header = CreateEditorHeader();
             headerContainer = header;
             var headerSpace = new VisualElement { name = "AssetHeaderSpace" };
@@ -426,7 +426,7 @@ namespace FarEmerald.PlayForge.Editor
             root.Bind(serializedObject);
 
             // The header, and any section drawn from the asset's values rather than bound, follow every change to the
-            // asset, an Undo or a Redo among them (ED-12), and so do the marks on the fields it overrides of its template
+            // asset, an Undo or a Redo among them, and so do the marks on the fields it overrides of its template
             root.TrackSerializedObjectValue(serializedObject, _ =>
             {
                 UpdateHeader();
@@ -458,8 +458,8 @@ namespace FarEmerald.PlayForge.Editor
         
         /// <summary>
         /// Creates the header from the kit: the type icon, the asset's name, its type and asset tag, then Open in The
-        /// Forge, Help and the asset menu (Decision 20). The other actions are in the menu. The header took the type's
-        /// color as a thick border and badge, showed the description, and set its own dark colors (ED-20).
+        /// Forge, Help and the asset menu. The other actions are in the menu. The header took the type's
+        /// color as a thick border and badge, showed the description, and set its own dark colors.
         /// </summary>
         private ForgeAssetHeader CreateEditorHeader()
         {
@@ -468,11 +468,11 @@ namespace FarEmerald.PlayForge.Editor
             _headerNameLabel = header.NameLabel;
             _headerSubtitleLabel = header.Subtitle;
             UpdateHeader();
-            // Its texture follows its Textures as they're edited (ED-69)
+            // Its texture follows its Textures as they're edited
             header.TrackSerializedObjectValue(serializedObject, _ => UpdateHeaderIcon());
 
             // Its one line, as The Forge's list shows it: an ability's numbers by level, an item's what it gives, following
-            // its edits (TW-21)
+            // its edits
             if (!IsMultiple)
             {
                 var line = header.AddLine("HeaderLine");
@@ -486,7 +486,7 @@ namespace FarEmerald.PlayForge.Editor
             }
 
             // How many problems the validator finds in the selection, which follows it and opens the Problems view on the
-            // asset (Q8, ED-15)
+            // asset
             var problems = header.AddProblemCount(() => ForgeProblemsWindow.ShowFor(target));
             void ShowProblems() => header.ShowProblems(targets.Where(each => each != null).SelectMany(each => ForgeValidator.ProblemsOf(each)).ToList());
             problems.RegisterCallback<AttachToPanelEvent>(_ =>
@@ -496,14 +496,14 @@ namespace FarEmerald.PlayForge.Editor
             });
             problems.RegisterCallback<DetachFromPanelEvent>(_ => ForgeValidator.Changed -= ShowProblems);
 
-            // Open in The Forge and the template act on one asset, so a multiple selection leaves them out (ED-12). In The
-            // Forge's own detail pane, the button shows the asset in the Project window instead (Docs/EDITOR_STYLE.md)
+            // Open in The Forge and the template act on one asset, so a multiple selection leaves them out. In The
+            // Forge's own detail pane, the button shows the asset in the Project window instead
             if (!IsMultiple)
             {
                 var open = header.AddButton("Open in The Forge", "Show this asset in The Forge", OnOpenInManager);
                 open.name = "OpenInForge";
                 // There, the asset's file name sits in a row of its own under the actions, as The Forge's list shows its
-                // name alone (ED-58, ED-65)
+                // name alone
                 var file = header.AddLine("HeaderFile");
                 open.RegisterCallback<AttachToPanelEvent>(_ =>
                 {
@@ -529,7 +529,7 @@ namespace FarEmerald.PlayForge.Editor
         }
 
         // The asset's other actions: import, and its template and the push to its children; then what a right-click on its
-        // row in The Forge's list offers, one menu for both (ED-71)
+        // row in The Forge's list offers, one menu for both
         private void ShowAssetMenu(VisualElement under) => AssetMenu(under).DropDown(under.worldBound);
 
         /// <summary>The asset menu, at the header's three dots, as <see cref="ShowAssetMenu"/> opens it.</summary>
@@ -543,7 +543,7 @@ namespace FarEmerald.PlayForge.Editor
                 if (target is BaseForgeAsset asset && asset.HasTemplate)
                     menu.AddItem(new GUIContent($"Unassign Template \"{asset.Template.GetName()}\""), false, () => AssignTemplate(null));
                 // A template's changes reach its children when it's pushed, as one Undo step. Saving it asked in a dialog,
-                // mid-save, and changed them with no Undo (Q23, ED-13)
+                // mid-save, and changed them with no Undo
                 if (target is BaseForgeAsset template)
                 {
                     var children = ForgeTemplatePush.ChildrenOf(template);
@@ -554,7 +554,7 @@ namespace FarEmerald.PlayForge.Editor
                 }
             }
             // Show in Project, Open in a Window, Duplicate, Move or Copy to Project and Move to Trash, as The Forge's list
-            // offers them on a row (ED-71)
+            // offers them on a row
             var assets = targets.OfType<ScriptableObject>().Where(AssetDatabase.Contains).ToList();
             if (menu.GetItemCount() > 0) menu.AddSeparator("");
             ForgeAssetActions.AddTo(menu, ForgeAssetActions.For(assets, ForgeAssetActions.ShowCopy));
@@ -597,12 +597,12 @@ namespace FarEmerald.PlayForge.Editor
             _headerSubtitleLabel.text = string.Join(" · ", parts);
         }
 
-        // The header, whose icon shows the asset's texture where it has one (ED-69)
+        // The header, whose icon shows the asset's texture where it has one
         private ForgeAssetHeader _header;
 
         /// <summary>
         /// Shows the asset's own texture in the header, in the type icon's place: the one under its Primary tag, else its
-        /// first that has a texture (ED-69, the user's request); the type icon where it has none, or for a selection of
+        /// first that has a texture; the type icon where it has none, or for a selection of
         /// several. The Forge's list rows keep the type's icon.
         /// </summary>
         protected void UpdateHeaderIcon()
@@ -628,7 +628,7 @@ namespace FarEmerald.PlayForge.Editor
         protected const string UnnamedAssetTag = "Unnamed";
         protected const string UnknownAssetName = "Error";
         
-        // The tag a name gives, made by the one rule a reference field's New also uses (ED-38)
+        // The tag a name gives, made by the one rule a reference field's New also uses
         protected (string result, string display, bool isUnknown) GenerateAssetTag(string assetName, string typeName) =>
             ForgeAssetCreation.AssetTagFor(assetName, typeName);
 
@@ -637,7 +637,7 @@ namespace FarEmerald.PlayForge.Editor
         /// <summary>
         /// Shows the asset tag a name gives. When the stored tag differs, the label turns amber and an Update button
         /// appears, which calls sync. Showing never writes: each asset editor rewrote the tag every time it built or
-        /// refreshed, with no Undo and no modified mark (ED-12).
+        /// refreshed, with no Undo and no modified mark.
         /// </summary>
         protected void ShowAssetTag(Label valueLabel, string assetName, string typeName, Tag stored, Action sync)
         {
@@ -663,7 +663,7 @@ namespace FarEmerald.PlayForge.Editor
 
         /// <summary>
         /// Shows the asset tag a name gives in the kit's asset tag field. When the stored tag differs, the tag shows in
-        /// warning text and Update calls sync. Showing never writes (ED-12).
+        /// warning text and Update calls sync. Showing never writes.
         /// </summary>
         private protected void ShowAssetTag(ForgeAssetTagField field, string assetName, string typeName, Tag stored, Action sync)
         {
@@ -719,17 +719,17 @@ namespace FarEmerald.PlayForge.Editor
 
         /// <summary>
         /// A Workers section's line: its On Hit entries, then its workers, as in "None", "1 on hit" or "1 on hit, 2
-        /// workers" (TW-6).
+        /// workers".
         /// </summary>
         protected static string WorkersLine(List<OnHitEntry> onHit, int workers) => WorkersLine(onHit, null, workers);
 
         /// <summary>
-        /// A Workers section's line with its modifiers among it: "1 on hit, 2 modifiers, 1 worker", or "None" (TW-7).
+        /// A Workers section's line with its modifiers among it: "1 on hit, 2 modifiers, 1 worker", or "None".
         /// </summary>
         protected static string WorkersLine(List<OnHitEntry> onHit, List<EffectModifierEntry> modifiers, int workers) =>
             WorkersLine(onHit, modifiers, null, workers);
 
-        /// <summary>A Workers section's line with its auras among it: "1 on hit, 2 auras, 1 worker" (TW-10).</summary>
+        /// <summary>A Workers section's line with its auras among it: "1 on hit, 2 auras, 1 worker".</summary>
         protected static string WorkersLine(List<OnHitEntry> onHit, List<EffectModifierEntry> modifiers, List<AuraEntry> auras, int workers)
         {
             var parts = new List<string>();
@@ -750,7 +750,7 @@ namespace FarEmerald.PlayForge.Editor
               (group.TagWorkers?.Count(worker => worker != null) ?? 0) + (group.AnalysisWorkers?.Count(worker => worker != null) ?? 0);
 
         // ═══════════════════════════════════════════════════════════════════════════
-        // Leveling, in the redesigned inspectors: Level Source's link, in Leveling (ED-37)
+        // Leveling, in the redesigned inspectors: Level Source's link, in Leveling
         // ═══════════════════════════════════════════════════════════════════════════
 
         /// <summary>
@@ -796,7 +796,7 @@ namespace FarEmerald.PlayForge.Editor
         /// <summary>
         /// Link and Unlink for the assets that can take this one's levels, such as an item's active ability and granted
         /// effects: plain buttons sharing a row. Each asks first, counting what it changes, and is one Undo step. They sat
-        /// under a divider and a small bold heading, with a sentence about them, and Unlink was tinted red (ED-37). The
+        /// under a divider and a small bold heading, with a sentence about them, and Unlink was tinted red. The
         /// children link to <paramref name="linkTarget"/> when it's given, as an effect's contained effects take its
         /// provider's levels, and to the asset itself otherwise.
         /// </summary>
@@ -822,7 +822,7 @@ namespace FarEmerald.PlayForge.Editor
 
             row.Add(new Button(() =>
             {
-                // Counts the children the unlink would change; it asked IsLinkedTo(this), the editor, so it always said 0 (ED-31)
+                // Counts the children the unlink would change; it asked IsLinkedTo(this), the editor, so it always said 0
                 var linked = childAssets().Count(child => child.IsLinkedTo(linkTarget != null ? linkTarget : src));
                 if (!ConfirmLinkChange($"Confirm Unlink {linkFocus}",
                         $"Are you sure you want to unlink {children}?\n\nThis will affect {linked} {(linked == 1 ? "asset" : "assets")}." +
@@ -838,7 +838,7 @@ namespace FarEmerald.PlayForge.Editor
             return row;
         }
 
-        // Records every asset a link change writes, so one Undo takes it back (ED-12), then makes the change
+        // Records every asset a link change writes, so one Undo takes it back, then makes the change
         private void ChangeChildLinks(string undoName, BaseForgeLevelProvider src, Func<IEnumerable<BaseForgeLevelProvider>> childAssets,
             Action change)
         {
@@ -852,10 +852,10 @@ namespace FarEmerald.PlayForge.Editor
 
         /// <summary>
         /// Stores the tag a name gives, recorded for Undo and marked modified. A rename calls it in the same step as the
-        /// name's own change, so one Undo takes back both (ED-12).
+        /// name's own change, so one Undo takes back both.
         /// </summary>
         protected void StoreAssetTag(Object asset, string assetName, string typeName, Tag stored, Action<Tag> store) =>
-            // What stored its old tag stores the new one, or it finds the asset no more (ED-84); as The Forge's Rename (FN-8)
+            // What stored its old tag stores the new one, or it finds the asset no more; as The Forge's Rename
             ForgeRenames.StoreAssetTag(asset, assetName, typeName, stored, store);
 
         // ═══════════════════════════════════════════════════════════════════════════
@@ -947,8 +947,8 @@ namespace FarEmerald.PlayForge.Editor
         /// The level provider a linked asset takes its levels from, in Unity's object field, with its label in the
         /// Inspector's label column. Choosing a provider links the asset, as one Undo step, unless the link would make a
         /// loop; clearing the field leaves the asset linked to nothing. The field's right-click menu picks a provider of
-        /// one type (Docs/EDITOR_STYLE.md: the link filter goes in its right-click menu). The provider showed as a name in
-        /// a tinted box, under a row of Link to buttons, one per type (ED-37).
+        /// one type. The provider showed as a name in
+        /// a tinted box, under a row of Link to buttons, one per type.
         /// </summary>
         protected ObjectField CreateLevelProviderField(BaseForgeLevelProvider src)
         {

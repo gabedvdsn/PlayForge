@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
-    /// <summary>What a crowd control rule stops (TW-16).</summary>
+    /// <summary>What a crowd control rule stops.</summary>
     public enum ECrowdControlStops
     {
         /// <summary>Every ability, as a stun does.</summary>
@@ -14,7 +14,7 @@ namespace FarEmerald.PlayForge
         AbilitiesTagged,
     }
 
-    /// <summary>One crowd control rule (TW-16): while its holder carries a tag, it can't use what the rule stops.</summary>
+    /// <summary>One crowd control rule: while its holder carries a tag, it can't use what the rule stops.</summary>
     [Serializable]
     public class CrowdControlRule
     {
@@ -31,7 +31,7 @@ namespace FarEmerald.PlayForge
     }
 
     /// <summary>
-    /// Crowd control (TW-16, Decision 54): the rules an entity's abilities follow, each a tag and what it stops, so no
+    /// Crowd control: the rules an entity's abilities follow, each a tag and what it stops, so no
     /// ability has to list Stunned among the tags it avoids. While its holder carries a rule's tag, an ability the rule
     /// stops is refused, and one running is interrupted, as a stun breaks a channel; an ability can ignore a rule by its tag.
     /// An entity names its rules, or takes the project's.

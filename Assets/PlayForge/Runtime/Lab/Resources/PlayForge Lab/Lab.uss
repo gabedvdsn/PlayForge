@@ -1,4 +1,4 @@
-/* The Creator Lab's panels (LAB-5): neutral, docked at the edges, a type's color in its icon alone (Docs/EDITOR_STYLE.md) */
+/* The Creator Lab's panels: neutral, docked at the edges, a type's color in its icon alone */
 
 .lab-root { flex-grow: 1; }
 .lab-overlay { position: absolute; left: 0; top: 0; right: 0; bottom: 0; }

@@ -6,14 +6,14 @@ namespace FarEmerald.PlayForge
 {
     /// <summary>
     /// Area: as its effect lands on its target, it lands on each the area takes near that target too, as Storm Hammer stuns
-    /// everyone near the one it hits (TW-10, FN-14). Without one, an effect lands on its target alone. An effect holds one
+    /// everyone near the one it hits. Without one, an effect lands on its target alone. An effect holds one
     /// at most.
     /// </summary>
     [Serializable]
     [ForgeMenu(Description = "Lands the effect on others near its target too.")]
     public sealed class AreaEffectComponent : AbstractEffectComponent
     {
-        /// <summary>What it does, in one line (EP-5).</summary>
+        /// <summary>What it does, in one line.</summary>
         public override string Describe() => $"Lands on {Whom(Area?.Takes ?? EAffinityFilter.Enemies)} within {NumberText.Of(Area?.Radius)}" + (Area?.MaxTargets is { } most && (most.Magnitude > 0f || !AbstractScaler.IsNone(most.Scaler)) ? $", {NumberText.Of(most)} at most" : "");
 
         [Tooltip("Its area: as its effect lands on its target, it lands on each the area takes near that target too")]
@@ -24,14 +24,14 @@ namespace FarEmerald.PlayForge
 
     /// <summary>
     /// Transfer: moves an amount from an attribute of its effect's caster or target to one of either, as the effect lands,
-    /// each tick, or while it lasts, giving back as it ends; only what the giver has moves (TW-20, FN-14). An effect holds
+    /// each tick, or while it lasts, giving back as it ends; only what the giver has moves. An effect holds
     /// as many as it moves, each its own.
     /// </summary>
     [Serializable]
     [ForgeMenu(Description = "Moves an amount of an attribute from the caster or the target to either.")]
     public sealed class TransferEffectComponent : AbstractEffectComponent
     {
-        /// <summary>What it does, in one line (EP-5).</summary>
+        /// <summary>What it does, in one line.</summary>
         public override string Describe() => $"Moves {NumberText.Of(Transfer?.Amount)} of the {Transfer?.From.ToString().ToLowerInvariant()}'s {NameOf(Transfer?.FromAttribute)} to the {Transfer?.To.ToString().ToLowerInvariant()}'s {NameOf(Transfer?.ToAttribute)}";
 
         [Tooltip("What it moves: when, who gives and of what, who gets and in what, which of the values, and how much")]
@@ -40,7 +40,7 @@ namespace FarEmerald.PlayForge
 
     /// <summary>
     /// Side Change: while its effect lasts, its target's sides are its caster's, as they are as it lands, a mind control,
-    /// or those it names, as a pacify's Neutral (TW-18, FN-26). Of several on one entity, the highest Priority holds, a
+    /// or those it names, as a pacify's Neutral. Of several on one entity, the highest Priority holds, a
     /// tie going to the latest, and the entity's own come back as the last ends. One that interrupts breaks what its
     /// target runs as it changes the side, landing or ending. An Instant effect doesn't last, so it changes nothing. An
     /// effect holds one at most. It was a field of the effect's own, with a switch.
@@ -49,7 +49,7 @@ namespace FarEmerald.PlayForge
     [ForgeMenu(Description = "Changes the target's sides while the effect lasts, as a mind control.")]
     public sealed class SideChangeEffectComponent : AbstractEffectComponent
     {
-        /// <summary>What it does, in one line (EP-5).</summary>
+        /// <summary>What it does, in one line.</summary>
         public override string Describe() => Source == ESideSource.Caster ? "Sides become its caster's" : $"Sides become {(Sides is { Count: > 0 } ? string.Join(", ", Sides) : "none")}";
 
         [Tooltip("Whose sides it gives: its caster's, as a mind control, or those it names")]
@@ -69,7 +69,7 @@ namespace FarEmerald.PlayForge
         public override bool AllowsSeveral => false;
     }
 
-    /// <summary>The moments a Spread component spreads at (FN-14).</summary>
+    /// <summary>The moments a Spread component spreads at.</summary>
     [Flags]
     public enum ESpreadMoment
     {
@@ -91,14 +91,14 @@ namespace FarEmerald.PlayForge
     /// <summary>
     /// Spread: spreads its effect, or another it names, from the one it's on to those near them, at the moments it names:
     /// as it lands, each tick, as it ends, or as the one it's on dies, as a plague jumps from its victim to the enemies
-    /// near it (FN-14, Decision 77). Each it takes gets the effect from the same origin, its caster's, so its modifiers and
+    /// near it. Each it takes gets the effect from the same origin, its caster's, so its modifiers and
     /// its chance to land are its own. A landing by spread spreads on only so far as its Hops allow.
     /// </summary>
     [Serializable]
     [ForgeMenu(Description = "Spreads the effect, or another, from its target to those near it.")]
     public sealed class SpreadEffectComponent : AbstractEffectComponent
     {
-        /// <summary>What it does, in one line (EP-5).</summary>
+        /// <summary>What it does, in one line.</summary>
         public override string Describe() => $"Spreads {(Effect != null ? NameOf(Effect) : "itself")} to {Whom(Takes)}, {NumberText.Of(MaxTargets)} at most";
 
         [Tooltip("When it spreads: as its effect lands, each tick, as it comes off, or as the one it's on dies; any of them")]
@@ -139,7 +139,7 @@ namespace FarEmerald.PlayForge
         public override void Death(EffectComponentContext ctx) { if ((When & ESpreadMoment.Death) != 0) ForgeSpread.Spread(this, ctx); }
     }
 
-    /// <summary>What spreads an effect from the one it's on to those near them, for a Spread component (FN-14).</summary>
+    /// <summary>What spreads an effect from the one it's on to those near them, for a Spread component.</summary>
     internal static class ForgeSpread
     {
         internal static void Spread(SpreadEffectComponent spread, EffectComponentContext ctx)

@@ -21,7 +21,7 @@ namespace FarEmerald.PlayForge.Testing
     }
 
     /// <summary>
-    /// One live PlayForge for one test (TW-26, Decision 66): a real ProcessControl and GameRoot brought up by the real
+    /// One live PlayForge for one test: a real ProcessControl and GameRoot brought up by the real
     /// Bootstrapper, stepped by Unity's player loop a frame at a time. It makes what a test needs, entities on either hub,
     /// from an identity asset or from attributes, and plays them as a game does: <see cref="Hit"/> applies an effect,
     /// <see cref="Cast"/> gives an ability and starts it, <see cref="Use"/> starts one the entity has, and
@@ -90,7 +90,7 @@ namespace FarEmerald.PlayForge.Testing
 
         internal void Bootstrap()
         {
-            // Destroyed singletons aren't null to the Bootstrapper's `is null` checks (PC-26)
+            // Destroyed singletons aren't null to the Bootstrapper's `is null` checks
             ProcessControl.Instance = null;
             GameRoot.Instance = null;
 

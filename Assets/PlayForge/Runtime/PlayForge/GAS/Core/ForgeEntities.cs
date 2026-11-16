@@ -7,7 +7,7 @@ namespace FarEmerald.PlayForge
     /// Every live entity, on both hubs: each joins as its core initializes and leaves as it ends. An area search goes
     /// through it, as Auto Target and Auto Target by Affinity do: with no range they searched the scene for MonoBehaviour
     /// entities alone, so a runtime entity was never found; and with a range they searched with physics alone, which finds
-    /// no runtime entity, as it has no collider (GAS-75).
+    /// no runtime entity, as it has no collider.
     /// </summary>
     public static class ForgeEntities
     {
@@ -16,7 +16,7 @@ namespace FarEmerald.PlayForge
         /// <summary>Every live entity, in the order each joined.</summary>
         public static IReadOnlyList<IGameplayAbilitySystem> Live => live;
 
-        // Each session starts with none, as it did with a domain reload (SP-22)
+        // Each session starts with none, as it did with a domain reload
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void Reset() => live.Clear();
 
@@ -29,7 +29,7 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// Every live entity within <paramref name="radius"/> of <paramref name="centre"/>, by its position, on either hub,
-        /// added to <paramref name="into"/>, with no physics, so an entity needs no collider (TW-10, Decision 50). Flat
+        /// added to <paramref name="into"/>, with no physics, so an entity needs no collider. Flat
         /// leaves height out. A radius of 0 or less takes every live entity. The searcher, <paramref name="owner"/>, only
         /// where <paramref name="includeOwner"/> says; GameRoot, the game's manager, never.
         /// </summary>
@@ -58,7 +58,7 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// Whether <paramref name="target"/> is of the sides <paramref name="filter"/> takes, from <paramref name="sides"/>,
-        /// its searcher's: an ally shares a side, an enemy shares none. A searcher with no sides takes anyone (TW-10).
+        /// its searcher's: an ally shares a side, an enemy shares none. A searcher with no sides takes anyone.
         /// </summary>
         public static bool Takes(EAffinityFilter filter, List<Tag> sides, ITarget target)
         {

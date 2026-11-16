@@ -5,7 +5,7 @@ using UnityEngine;
 namespace FarEmerald.PlayForge
 {
     /// <summary>
-    /// One impact that moves an amount from one attribute to another (TW-20, Decision 59), each side its own: the target's
+    /// One impact that moves an amount from one attribute to another, each side its own: the target's
     /// Agility to the caster's, as Essence Shift steals it, or one entity's Agility to its Strength, as Attribute Shift moves
     /// it. Only what the giver has moves, so nothing is made from nothing. As its Delivery says, it moves once as the effect
     /// lands, each tick, or for as long as the effect lasts, a modifier on both that gives back as it ends.
@@ -39,7 +39,7 @@ namespace FarEmerald.PlayForge
             FromAttribute && ToAttribute && Amount != null && (Amount.Magnitude > 0f || !AbstractScaler.IsNone(Amount.Scaler));
     }
 
-    /// <summary>What a lasting transfer holds while its effect lasts: the amount it read, and a carrier on each side (TW-20).</summary>
+    /// <summary>What a lasting transfer holds while its effect lasts: the amount it read, and a carrier on each side.</summary>
     internal sealed class LentTransfer
     {
         public AttributeTransfer Transfer;
@@ -49,14 +49,14 @@ namespace FarEmerald.PlayForge
     }
 
     /// <summary>
-    /// What moves an effect's transfers (TW-20): its OnApply and Periodic ones as commits, permanent, and its Continuous ones
+    /// What moves an effect's transfers: its OnApply and Periodic ones as commits, permanent, and its Continuous ones
     /// as a modifier on each side that its effect holds and gives back. Each side's change is the system's own, exact: no
     /// worker takes it for a hit, no barrier soaks it and nothing scales it, so the getter gets what the giver gave, as far
     /// as its own bounds let it.
     /// </summary>
     internal static class ForgeTransfers
     {
-        /// <summary>Whether an effect holds a transfer, a Transfer component's (TW-20, FN-14).</summary>
+        /// <summary>Whether an effect holds a transfer, a Transfer component's.</summary>
         internal static bool Any(GameplayEffect effect)
         {
             var components = effect?.Components;
@@ -245,7 +245,7 @@ namespace FarEmerald.PlayForge
             else system.UnregisterModifier(attribute, new SourcedModifiedAttributeValue(carrier, 0f, 0f, false));
         }
 
-        // A delta's Adds, a growing base before the current and a shrinking one after, as a commit's bounds need (PF-005)
+        // A delta's Adds, a growing base before the current and a shrinking one after, as a commit's bounds need
         private static IReadOnlyList<IAttributeImpacter> Impacters(AttributeValue delta)
         {
             var impacters = new List<IAttributeImpacter>(2);

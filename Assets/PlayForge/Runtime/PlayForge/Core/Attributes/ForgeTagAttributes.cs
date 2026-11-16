@@ -4,7 +4,7 @@ namespace FarEmerald.PlayForge
 {
     /// <summary>
     /// The kinds of tag a tag field takes, which its picker offers: one context per kind, as ForgeContext names them, or a
-    /// project's own (TAG-6).
+    /// project's own.
     ///
     /// Usage:
     /// [ForgeTagContext(ForgeContext.Granted, ForgeContext.AssetTag)]
@@ -147,8 +147,8 @@ namespace FarEmerald.PlayForge
 
     /// <summary>
     /// Exposes a tag written in code to the editor's tag pickers, on a static Tag property or field, a project's own as
-    /// PlayForge's in Tags: only a code tag marked so is offered, so a project chooses which of its tags its designers see
-    /// (TAG-5, Decision 73). Its contexts say which fields offer it; with none, it's under Code. It was ForgeContextDefault,
+    /// PlayForge's in Tags: only a code tag marked so is offered, so a project chooses which of its tags its designers see.
+    /// Its contexts say which fields offer it; with none, it's under Code. It was ForgeContextDefault,
     /// which a property alone could carry.
     /// </summary>
     [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = true)]

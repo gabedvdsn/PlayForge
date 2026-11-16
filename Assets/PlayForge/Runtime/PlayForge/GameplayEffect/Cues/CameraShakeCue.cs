@@ -5,7 +5,7 @@ namespace FarEmerald.PlayForge
 {
     /// <summary>
     /// Shakes the camera as the effect lands, and on each tick where set, through the shaker the game gives
-    /// <see cref="ForgeCues.Shaker"/> (FEAT-1).
+    /// <see cref="ForgeCues.Shaker"/>.
     /// </summary>
     [Serializable]
     [ForgeMenu(Description = "Shakes the camera as the effect lands, and on each tick where set.")]
@@ -26,7 +26,7 @@ namespace FarEmerald.PlayForge
             if (OnEachTick) Shake(cue);
         }
 
-        // Its strength and duration, read for the effect as it lands on the cue's entity (FN-19)
+        // Its strength and duration, read for the effect as it lands on the cue's entity
         private void Shake(CueContext cue)
         {
             if (ForgeCues.Shaker == null) return;

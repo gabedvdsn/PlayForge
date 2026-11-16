@@ -3,7 +3,7 @@ using UnityEngine.UIElements;
 namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
-    /// A row of fields as one field (ED-66): Unity's field, its label in the label column when it has one, then its parts
+    /// A row of fields as one field: Unity's field, its label in the label column when it has one, then its parts
     /// side by side, each a field of its own with its name, if it has one, before it in secondary text, as Unity's
     /// two-part fields show X and Y. A tag query's count is its comparison and its number; a level threshold is its
     /// level, its value and its tier. The drawer binds each part.

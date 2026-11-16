@@ -94,7 +94,7 @@ namespace FarEmerald.PlayForge.Editor
     }
 
     /// <summary>
-    /// PlayForge's dropdown, every picker's (EP-1): a title, a search field, its choices in the submenus their paths name,
+    /// PlayForge's dropdown, every picker's: a title, a search field, its choices in the submenus their paths name,
     /// and, where any choice says more of itself, a Context section at its foot, which says it of the choice the pointer or
     /// the keys are on, as a tag's contexts or a kind's description. It's no wider than Preferences → PlayForge's Menu
     /// Width nor taller than its Menu Height, and a longer list scrolls. Each picker was Unity's searchable dropdown, which
@@ -285,7 +285,7 @@ namespace FarEmerald.PlayForge.Editor
 
         /// <summary>
         /// The window's size: as wide as its widest choice, or the field it opened from, and as tall as its longest list,
-        /// each kept within Preferences → PlayForge's Menu Width and Menu Height (EP-1).
+        /// each kept within Preferences → PlayForge's Menu Width and Menu Height.
         /// </summary>
         internal Vector2 SizeFor(float anchorWidth)
         {
@@ -332,7 +332,7 @@ namespace FarEmerald.PlayForge.Editor
     }
 
     /// <summary>
-    /// The dropdown's content, which its window holds and a test can build in any panel (EP-1): a header with the open
+    /// The dropdown's content, which its window holds and a test can build in any panel: a header with the open
     /// menu's name and Back, the search field, the list, and the Context section. The keys move the highlight, Enter or
     /// Right opens a submenu or picks a choice, Left goes back, and Escape closes; typing searches every menu at once.
     /// </summary>

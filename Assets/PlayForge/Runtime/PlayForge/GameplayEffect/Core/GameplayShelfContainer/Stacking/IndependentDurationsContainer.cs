@@ -137,10 +137,10 @@ namespace FarEmerald.PlayForge
             }
         }
 
-        /// <summary>Each stack's own time left and to its tick (FEAT-9).</summary>
+        /// <summary>Each stack's own time left and to its tick.</summary>
         protected internal override void CaptureClock(List<double> remaining, List<double> untilTick)
         {
-            // In full, as the stacks keep them (GAS-61)
+            // In full, as the stacks keep them
             foreach (var packet in Packets)
             {
                 remaining.Add(packet.DurationRemaining);
@@ -148,7 +148,7 @@ namespace FarEmerald.PlayForge
             }
         }
 
-        /// <summary>A stack for each time a save kept, each with its own (FEAT-9).</summary>
+        /// <summary>A stack for each time a save kept, each with its own.</summary>
         protected internal override void RestoreClock(float total, float period, int stacks, IReadOnlyList<double> remaining, IReadOnlyList<double> untilTick)
         {
             base.RestoreClock(total, period, stacks, remaining, untilTick);

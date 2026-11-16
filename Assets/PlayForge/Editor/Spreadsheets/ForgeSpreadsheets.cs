@@ -11,7 +11,7 @@ using Object = UnityEngine.Object;
 
 namespace FarEmerald.PlayForge.Editor
 {
-    /// <summary>One change a sheet makes: a number of an asset, what it reads now, and what it will (TW-27).</summary>
+    /// <summary>One change a sheet makes: a number of an asset, what it reads now, and what it will.</summary>
     public sealed class SpreadsheetChange
     {
         /// <summary>The asset the sheet's row names: the asset whose number changes, or the item whose effect's does.</summary>
@@ -32,7 +32,7 @@ namespace FarEmerald.PlayForge.Editor
         internal Action<SerializedObject> Write;
     }
 
-    /// <summary>What a sheet would change in the project's assets, and what of it can't be read (TW-27).</summary>
+    /// <summary>What a sheet would change in the project's assets, and what of it can't be read.</summary>
     public sealed class SpreadsheetImport
     {
         internal readonly List<SpreadsheetChange> changes = new();
@@ -51,7 +51,7 @@ namespace FarEmerald.PlayForge.Editor
     }
 
     /// <summary>
-    /// Numbers by level and item stats, to and from CSV, so a game is balanced in a spreadsheet (TW-27, Decision 67).
+    /// Numbers by level and item stats, to and from CSV, so a game is balanced in a spreadsheet.
     /// <para>
     /// A sheet of numbers by level has a row for each number of an asset that reads a Table or By Level: the asset's tag
     /// and name, the field as the inspector labels it, its kind, and what it reads at each level, its values times its

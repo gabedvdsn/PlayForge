@@ -7,7 +7,7 @@ namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
     /// How serious a problem is: a Warning is likely a mistake, and an Error stops something working. A Note may be meant,
-    /// as a trigger on an event that code sends (TW-25): the Problems view lists it, and the counts and an inspector's
+    /// as a trigger on an event that code sends: the Problems view lists it, and the counts and an inspector's
     /// header leave it out.
     /// </summary>
     public enum ForgeProblemSeverity
@@ -40,14 +40,14 @@ namespace FarEmerald.PlayForge.Editor
         public string PropertyPath { get; }
 
         /// <summary>
-        /// The rule that found the problem, which the Problems view's By Rule view groups it under (FEAT-25). The validator
+        /// The rule that found the problem, which the Problems view's By Rule view groups it under. The validator
         /// gives it as the rule checks.
         /// </summary>
         public ForgeValidationRule Rule { get; internal set; }
 
         /// <summary>
         /// The one step that fixes the problem, where a simple step can, as the Problems view's Quick Fix; or null where
-        /// fixing it needs a choice, as which stage should apply an ability's usage effects (FEAT-25).
+        /// fixing it needs a choice, as which stage should apply an ability's usage effects.
         /// </summary>
         public ForgeQuickFix Fix { get; set; }
 
@@ -55,7 +55,7 @@ namespace FarEmerald.PlayForge.Editor
     }
 
     /// <summary>
-    /// A problem's quick fix (FEAT-25): what it does, as its button says, and the step itself. The step writes through a
+    /// A problem's quick fix: what it does, as its button says, and the step itself. The step writes through a
     /// SerializedObject, or records Undo, so the Undo step the Problems view opens around it takes it back; and the
     /// validator, which follows each edit, checks the asset again.
     /// </summary>
@@ -76,8 +76,8 @@ namespace FarEmerald.PlayForge.Editor
 
     /// <summary>
     /// A check the validator runs on each PlayForge asset. Derive from it, with a public constructor that takes nothing,
-    /// to add a check of your own: the validator finds every one (Q8). A problem a simple step fixes can carry the step
-    /// as its <see cref="ForgeProblem.Fix"/> (FEAT-25).
+    /// to add a check of your own: the validator finds every one. A problem a simple step fixes can carry the step
+    /// as its <see cref="ForgeProblem.Fix"/>.
     /// </summary>
     public abstract class ForgeValidationRule
     {
@@ -86,7 +86,7 @@ namespace FarEmerald.PlayForge.Editor
 
         /// <summary>
         /// What the rule finds, as the Problems view's By Rule view names its problems' group: by default its class's name,
-        /// spaced out, without "Rule" (FEAT-25).
+        /// spaced out, without "Rule".
         /// </summary>
         public virtual string Name
         {

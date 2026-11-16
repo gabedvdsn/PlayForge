@@ -43,13 +43,13 @@ namespace FarEmerald.PlayForge
 
         protected float ProjectToBinaryTarget(AttributeValue value)
         {
-            // Its current, its base, what's missing or its share (TW-9)
+            // Its current, its base, what's missing or its share
             return AttributeParts.Read(value, CaptureWhat);
         }
 
         public override bool UseScalingOptions() => false;
 
-        // It reads the attribute alone (ED-51)
+        // It reads the attribute alone
         public override EScalerParts Parts => EScalerParts.None;
     }
 }

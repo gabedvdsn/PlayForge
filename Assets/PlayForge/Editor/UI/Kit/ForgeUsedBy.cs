@@ -8,10 +8,10 @@ using Object = UnityEngine.Object;
 namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
-    /// The PlayForge assets whose data refers to an asset, each with its type icon, in name order: what
-    /// Docs/EDITOR_STYLE.md calls "a list that shows what uses what". It follows the project as it changes (Q30), and a
-    /// row opens its asset in The Forge, which it selected in the Project window (the user's request, ED-76). The
-    /// Attribute inspector's Find All References opened a dialog telling the user how to search (ED-15).
+    /// The PlayForge assets whose data refers to an asset, each with its type icon, in name order.
+    /// It follows the project as it changes, and a
+    /// row opens its asset in The Forge, which it selected in the Project window. The
+    /// Attribute inspector's Find All References opened a dialog telling the user how to search.
     /// </summary>
     internal class ForgeUsedBy : VisualElement
     {

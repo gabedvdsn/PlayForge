@@ -11,7 +11,7 @@ namespace FarEmerald.PlayForge
         public static ProcessControl Instance;
 
         // Statics outlive play mode when domain reload is off, so the last session's destroyed ProcessControl was
-        // still Instance when the next began (PC-26)
+        // still Instance when the next began
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ClearInstance() => Instance = null;
 
@@ -42,7 +42,7 @@ namespace FarEmerald.PlayForge
         public AbstractMonoProcessInstantiator CustomInstantiator;
         
         /// <summary>
-        /// The world of processes this ProcessControl steps from Unity's loop (FEAT-10). Its bookkeeping was this class's own,
+        /// The world of processes this ProcessControl steps from Unity's loop. Its bookkeeping was this class's own,
         /// so no process ran without a ProcessControl in a scene; it's a plain class now, which code can own and step too.
         /// </summary>
         public ProcessWorld World => world ??= new ProcessWorld(this);
@@ -102,7 +102,7 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// Makes this the ProcessControl and resets it into StartState, or into Ready when <paramref name="deferStartState"/>
         /// is set, so the framework's own processes can register first; <see cref="EnterStartState"/> then enters it.
-        /// A StartState that refuses processes refused GameRoot too (PC-29).
+        /// A StartState that refuses processes refused GameRoot too.
         /// </summary>
         public void Bootstrap(bool deferStartState)
         {
@@ -123,7 +123,7 @@ namespace FarEmerald.PlayForge
         /// Ticks a second of game time, each a fixed step that steps every process once, its end of frame with it, and
         /// lets each sequence's wait go on; a frame runs as many as its time holds, up to the inspector's most a frame.
         /// 0, the default, steps once a frame. Each process stepped once a frame, by the frame's time, so a run at
-        /// another frame rate came out otherwise (FEAT-7, Decision 30).
+        /// another frame rate came out otherwise.
         /// </summary>
         public int FixedTickRate
         {
@@ -144,7 +144,7 @@ namespace FarEmerald.PlayForge
             else if (ForgeTick.Scene.Ticking) ForgeTick.Scene.Stop();
         }
 
-        /// <summary>Enters the StartState set in the inspector, after a Bootstrap that deferred it (PC-29).</summary>
+        /// <summary>Enters the StartState set in the inspector, after a Bootstrap that deferred it.</summary>
         public void EnterStartState() => World.EnterStartState();
 
         public void DeferredInit()
@@ -153,7 +153,7 @@ namespace FarEmerald.PlayForge
             CollectSceneProcesses();
         }
 
-        // Start, not Awake: a Bootstrapper bootstraps the ProcessControl it makes after that one's Awake (PC-23)
+        // Start, not Awake: a Bootstrapper bootstraps the ProcessControl it makes after that one's Awake
         private void Start()
         {
             if (Instance != this)
@@ -175,7 +175,7 @@ namespace FarEmerald.PlayForge
             // Each tick stepped its own end of frame
             if (fixedTickRate <= 0 || Instance != this) World.StepProcesses(EProcessStepTiming.LateUpdate);
 
-            // The frame's costliest processes go into the Profiler's capture while it records (FEAT-18)
+            // The frame's costliest processes go into the Profiler's capture while it records
             if (Instance == this) ForgeFrameCosts.EndFrame();
         }
 
@@ -234,7 +234,7 @@ namespace FarEmerald.PlayForge
                 }
         
                 // Not SceneRoot's packet, which reparents what it's handed: a scene's processes stay where the
-                // scene put them (PC-20)
+                // scene put them
                 Register(process).With(ProcessDataPacket.Default()).In(this).Run();
             }
     
@@ -267,12 +267,12 @@ namespace FarEmerald.PlayForge
 
         #region Core Registration
 
-        #region Registering (FEAT-15)
+        #region Registering
 
         /// <summary>
         /// Starts a MonoBehaviour process's registration, which <see cref="ProcessRegistration.Run()"/> makes:
         /// <c>ProcessControl.Register(process).HandledBy(gas).With(data).Run()</c>. What isn't given takes its default,
-        /// and a refused registration says why (FEAT-15).
+        /// and a refused registration says why.
         /// </summary>
         public static ProcessRegistration Register(AbstractMonoProcess process) => new(process);
 
@@ -412,7 +412,7 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// A Mono process's transform has a new parent, so the hierarchy files it again under its new ancestors. It
-        /// heard only where the process registered (PC-28, Decision 11).
+        /// heard only where the process registered.
         /// </summary>
         public void ProcessReparented(ProcessRelay relay) => World.ProcessReparented(relay);
 

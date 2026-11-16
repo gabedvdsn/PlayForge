@@ -8,7 +8,7 @@ namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
     /// The shared header for an inspector that isn't a PlayForge asset's own, as a Scaler asset's, a Value Pipeline's or a
-    /// Tag Library's (FN-12, Decision 72): its type's icon, its name as The Forge lists it, its type, its one line where
+    /// Tag Library's: its type's icon, its name as The Forge lists it, its type, its one line where
     /// it has one, its problem count, Open in The Forge for a type The Forge lists, or Show in Project, and the asset menu,
     /// The Forge's row menu. A PlayForge asset's inspector builds its own (<see cref="BasePlayForgeEditor"/>).
     /// </summary>
@@ -36,7 +36,7 @@ namespace FarEmerald.PlayForge.Editor
             Show();
             header.TrackSerializedObjectValue(editor.serializedObject, _ => Show());
 
-            // How many problems the validator finds, which opens the Problems view on the asset (Q8)
+            // How many problems the validator finds, which opens the Problems view on the asset
             var problems = header.AddProblemCount(() => ForgeProblemsWindow.ShowFor(asset));
             void ShowProblems() => header.ShowProblems(editor.targets.Where(each => each != null).SelectMany(each => ForgeValidator.ProblemsOf(each)).ToList());
             problems.RegisterCallback<AttachToPanelEvent>(_ =>
@@ -76,7 +76,7 @@ namespace FarEmerald.PlayForge.Editor
 
         /// <summary>
         /// An inspector of the shared header and the asset's fields, each as Unity draws its type, for an asset with no
-        /// inspector of its own (FN-12).
+        /// inspector of its own.
         /// </summary>
         public static VisualElement Inspector(UnityEditor.Editor editor)
         {

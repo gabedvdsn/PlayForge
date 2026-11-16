@@ -3,7 +3,7 @@ using UnityEditor;
 
 namespace FarEmerald.PlayForge.Editor
 {
-    /// <summary>An Inject task's injection: its kind, named without "Injection", always of some kind (ED-56).</summary>
+    /// <summary>An Inject task's injection: its kind, named without "Injection", always of some kind.</summary>
     [CustomPropertyDrawer(typeof(ISequenceInjection))]
     public class SequenceInjectionDrawer : AbstractGenericDrawer<ISequenceInjection>
     {

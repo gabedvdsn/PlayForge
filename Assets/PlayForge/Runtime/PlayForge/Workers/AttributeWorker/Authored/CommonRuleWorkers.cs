@@ -5,7 +5,7 @@ using UnityEngine;
 namespace FarEmerald.PlayForge
 {
     /// <summary>
-    /// Can't fall below a value (TW-15, Decision 53): a loss that would take its attribute below its Floor takes it to the
+    /// Can't fall below a value: a loss that would take its attribute below its Floor takes it to the
     /// floor, and no further, as Shallow Grave keeps its target at 1 Health while it lasts, in a buff's worker group.
     /// </summary>
     [Serializable]
@@ -37,7 +37,7 @@ namespace FarEmerald.PlayForge
     }
 
     /// <summary>
-    /// Damage return (TW-15, Decision 53): a share of each workable loss its attribute takes from another goes back to the
+    /// Damage return: a share of each workable loss its attribute takes from another goes back to the
     /// one who dealt it, typed Returned, so no return returns it again and no lifesteal heals from it, as Blade Mail.
     /// </summary>
     [Serializable]

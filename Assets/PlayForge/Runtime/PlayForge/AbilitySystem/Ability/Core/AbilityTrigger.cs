@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
-    /// <summary>What sets an ability off on its own (FEAT-4).</summary>
+    /// <summary>What sets an ability off on its own.</summary>
     public enum EAbilityTriggerSource
     {
         /// <summary>A gameplay event sent to the entity under the trigger's tag, or a tag under it.</summary>
@@ -14,7 +14,7 @@ namespace FarEmerald.PlayForge
         TagAdded,
     }
 
-    /// <summary>Which way an impact goes, for a trigger that takes impact events (TW-5).</summary>
+    /// <summary>Which way an impact goes, for a trigger that takes impact events.</summary>
     public enum ETriggerImpactSign
     {
         /// <summary>Either way.</summary>
@@ -27,7 +27,7 @@ namespace FarEmerald.PlayForge
         Gain,
     }
 
-    /// <summary>What an ability a trigger sets off targets (TW-5).</summary>
+    /// <summary>What an ability a trigger sets off targets.</summary>
     public enum ETriggerTarget
     {
         /// <summary>What its own targeting finds, as an area spin finds the enemies around it.</summary>
@@ -42,9 +42,9 @@ namespace FarEmerald.PlayForge
 
     /// <summary>
     /// What activates an ability on its own: a gameplay event sent to its entity, or a tag its entity gains. An ability
-    /// activated only when code asked for it (FEAT-4).
+    /// activated only when code asked for it.
     /// <para>
-    /// The core sends events of its own to an entity where an ability listens for them (TW-5): <see cref="Tags.IMPACT_DEALT"/>
+    /// The core sends events of its own to an entity where an ability listens for them: <see cref="Tags.IMPACT_DEALT"/>
     /// and <see cref="Tags.IMPACT_TAKEN"/> as an impact lands between two entities, <see cref="Tags.KILL"/> to the killer and
     /// <see cref="Tags.DIED"/> to the one who died, and <see cref="Tags.REVIVED"/>. Their data hold the instigator as
     /// <see cref="Tags.SOURCE"/>, the entity it was done to as <see cref="Tags.EVENT_SUBJECT"/>, and an impact's

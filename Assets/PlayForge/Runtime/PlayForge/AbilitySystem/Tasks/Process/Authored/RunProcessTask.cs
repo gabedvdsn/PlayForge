@@ -17,14 +17,14 @@ namespace FarEmerald.PlayForge
         [Tooltip("The longest it waits for its processes, in seconds, read as it starts at its ability's level")]
         [NumberMin(0f)] public ScalableFloat MaxDuration = 999f;
 
-        // Scaled by default: unscaled, a process ran on apart from the game's time scale and its caster's (TS-6)
+        // Scaled by default: unscaled, a process ran on apart from the game's time scale and its caster's
         [Tooltip("Counts its time unscaled, apart from the game's time scale and its caster's")]
         public bool UseUnscaledDeltaTime;
         
         public override bool IsCriticalSection => false;
 
         // The relays are the activation's, so they're kept on its packet. Kept here, they were replaced by the next
-        // activation's, which left the first one's processes running for good (TS-U)
+        // activation's, which left the first one's processes running for good
         public override void Prepare(AbilityDataPacket data)
         {
             var relays = data.GetTaskState<List<ProcessRelay>>(this);
@@ -65,7 +65,7 @@ namespace FarEmerald.PlayForge
 
             foreach (var relay in relays)
             {
-                // Through the relay, to the control that holds the process (FEAT-10)
+                // Through the relay, to the control that holds the process
                 if (relay.ProcessActive) relay.TerminateImmediate();
             }
 

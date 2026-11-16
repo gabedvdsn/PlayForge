@@ -5,8 +5,7 @@ using UnityEngine;
 namespace FarEmerald.PlayForge
 {
     /// <summary>
-    /// Per-attribute runtime state under the two-kind impact model
-    /// (Docs/IMPACT_MODEL_REFACTOR.md §1–§2):
+    /// Per-attribute runtime state under the two-kind impact model:
     ///
     /// <list type="bullet">
     ///   <item><b>Modifiers</b> (transient, derived) — registered via
@@ -21,7 +20,7 @@ namespace FarEmerald.PlayForge
     /// <para>The formula (EFFECT_PIPELINE.md §2.1):
     /// <c>ActiveValue = ConstrainValue( Override( FlatBonus( Multiply( Add( root ) ) ) + Σ committedByGroup ) )</c>.
     /// Committed history lands where it was measured, after the % modifiers, so they don't scale it:
-    /// 50 base × 1.5 aura + 10 tome = 85, and a 30 hit under the aura takes 30 (Decision 4).</para>
+    /// 50 base × 1.5 aura + 10 tome = 85, and a 30 hit under the aura takes 30.</para>
     ///
     /// <para>Reproducibility invariant: <see cref="ActiveValue"/> is always exactly what
     /// <see cref="Recompute"/> produces from current state — every mutation path ends in a
@@ -31,7 +30,7 @@ namespace FarEmerald.PlayForge
     {
         public AttributeValue ActiveValue { get; private set; }
 
-        // The last recompute's value before bounds and rounding, where commits land, so where a rescale aims from (GAS-37)
+        // The last recompute's value before bounds and rounding, where commits land, so where a rescale aims from
         private AttributeValue unconstrained;
 
         /// <summary>
@@ -61,11 +60,11 @@ namespace FarEmerald.PlayForge
 
         private readonly List<ModifierEntry> modifiers = new();
 
-        // Entries a carrier's removal let go, for the next registration to reuse; a refresh built new ones (GAS-P4)
+        // Entries a carrier's removal let go, for the next registration to reuse; a refresh built new ones
         private readonly Stack<ModifierEntry> spareEntries = new();
 
         // Recompute's multipliers that pool their bonus, kept between recomputes: a new list each time allocated on
-        // every recompute, and every tick that commits recomputes (GAS-P4)
+        // every recompute, and every tick that commits recomputes
         private readonly List<(ModifierEntry entry, float curBonus, float baseBonus)> pooled = new();
 
         // ─── Committed history (permanent), attributed per retention group ───────
@@ -116,7 +115,7 @@ namespace FarEmerald.PlayForge
         // RetentionGroup ("base" slice of the pool); generic ones use the group passed in.
         private Tag rootGroup;
 
-        // What the attribute is, which says how its adds combine (TW-1)
+        // What the attribute is, which says how its adds combine
         private EAttributeRole role;
 
         private bool Initialize(IAttribute attribute, IGameplayAbilitySystem source, IReadOnlyDictionary<IAttribute, CachedAttributeValue> cache, Tag retentionGroup,
@@ -176,7 +175,7 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// Takes a carrier's entries off, in one pass that keeps the rest in order, and keeps them spare. A RemoveAll
-        /// lambda captured the carrier, allocating on every call (GAS-P4).
+        /// lambda captured the carrier, allocating on every call.
         /// </summary>
         private int RemoveCarrier(IAttributeImpactCarrier carrier)
         {
@@ -332,7 +331,7 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// The permanent commits: each retention group's total, in the order the groups first committed, as a save keeps
-        /// them (FEAT-9).
+        /// them.
         /// </summary>
         public void GetCommits(List<GroupContribution> into)
         {
@@ -341,7 +340,7 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// Puts back the commits a save kept, in place of these, and recomputes. A restore's, so nothing hears: it tells once
-        /// as it ends (FEAT-9).
+        /// as it ends.
         /// </summary>
         internal void RestoreCommits(IReadOnlyList<GroupContribution> commits, IReadOnlyDictionary<IAttribute, CachedAttributeValue> cache)
         {
@@ -380,7 +379,7 @@ namespace FarEmerald.PlayForge
             float baseV = rootValue.BaseValue;
 
             // ─── Add ─────────────────────────────────────────────────────────────
-            // The sums first; then each add that diminishes, as a Resistance's do, on what's left (TW-1)
+            // The sums first; then each add that diminishes, as a Resistance's do, on what's left
             foreach (var m in modifiers)
             {
                 var imp = m.Impacter;
@@ -476,7 +475,7 @@ namespace FarEmerald.PlayForge
 
             // ─── Committed history ───────────────────────────────────────────────
             // Where a commit was measured, after the modifiers, so it lands as it was taken: a 30 hit under a ×1.5
-            // aura takes 30. Joining the baseline, it went through the multipliers and took 45 (GAS-15, Decision 4).
+            // aura takes 30. Joining the baseline, it went through the multipliers and took 45.
             // Before the override, so an override still pins the value
             foreach (var group in committedOrder)
             {
@@ -526,7 +525,7 @@ namespace FarEmerald.PlayForge
             return ActiveValue;
         }
 
-        // Whether an add combines on what's left: as it says, or as a Resistance's role says (TW-1)
+        // Whether an add combines on what's left: as it says, or as a Resistance's role says
         private bool Diminishes(IAttributeImpacter impacter) =>
             impacter.AddBehaviour == EAddBehaviour.Diminishing
             || (impacter.AddBehaviour == EAddBehaviour.AttributeRole && role == EAttributeRole.Resistance);
@@ -557,7 +556,7 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// The slices of every group that one of <paramref name="groups"/> names, a tag naming the groups under it too,
-        /// summed: what a read of only those groups takes (TW-3). Allocates nothing.
+        /// summed: what a read of only those groups takes. Allocates nothing.
         /// </summary>
         public AttributeValue GetGroupsValue(List<Tag> groups)
         {
@@ -619,7 +618,7 @@ namespace FarEmerald.PlayForge
             return value;
         }
 
-        // A value snapped to its element's Snap Interval, read for its owner as its set's numbers are (FN-19); 0 snaps none
+        // A value snapped to its element's Snap Interval, read for its owner as its set's numbers are; 0 snaps none
         private AttributeValue Snap(AttributeValue value)
         {
             float step = Blueprint.SetElement.Constraints.SnapInterval?.Evaluate(NumberContext.Of(Blueprint.Derivation)) ?? 0f;
@@ -651,15 +650,15 @@ namespace FarEmerald.PlayForge
 
             // A share of Current before the bounds, where the commit lands, so the bounds clamp the result once. Taken
             // from the clamped Current, under ZeroToBase an 80/100 attribute losing half its Base was clamped to 50 and
-            // lost only 25 under the clamp, which held it at 50, not 40 (GAS-37). With nothing clamped, the two are one
+            // lost only 25 under the clamp, which held it at 50, not 40. With nothing clamped, the two are one
             float delta = proportion * unconstrained.CurrentValue;
 
             // The system's own change, so typed DisallowImpact, as the pulse each attribute starts with is. Typed
-            // AllowImpact, it passed every type filter, and a worker taking unworkable impacts acted on it (GAS-35, Decision 9)
+            // AllowImpact, it passed every type filter, and a worker taking unworkable impacts acted on it
             //
             // Carried for whoever changed Base, by a carrier kept for them, and queued in an action this attribute keeps.
-            // Each rescale made a new carrier, its list and a new action (GAS-P9)
-            // On the attribute changed, not its carrier's, which is an effect's first impact's for each of its impacts (GAS-78)
+            // Each rescale made a new carrier, its list and a new action
+            // On the attribute changed, not its carrier's, which is an effect's first impact's for each of its impacts
             var changed = ctx.Change.Value.Carrier;
             var attribute = ctx.Change.Attribute ?? changed.GetAttribute();
             var derivation = RescaleCarriers.For(changed.GetOrigin().GetSource(), attribute,

@@ -7,11 +7,11 @@ namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
     /// A field's menu, as a number field's three-dot button opens it, whose items file under submenus by their paths, as
-    /// "Scaler Assets/Fire Damage" (ED-77). In an editor window it's PlayForge's dropdown (EP-1), searchable, no taller or
+    /// "Scaler Assets/Fire Damage". In an editor window it's PlayForge's dropdown, searchable, no taller or
     /// wider than Preferences sets, its Context saying more of an item where the menu gives it; it was Unity's own menu, the
     /// operating system's, which ran the screen's height. In a runtime panel, where tests draw fields, it's UI Toolkit's
     /// dropdown, which has no submenus in this Unity, so each item there shows its path. Either opens at the button, as wide
-    /// as its items (ED-52).
+    /// as its items.
     /// </summary>
     internal sealed class ForgeFieldMenu
     {
@@ -60,7 +60,7 @@ namespace FarEmerald.PlayForge.Editor
         /// <summary>The items' paths, in order, with whether each can be chosen; separators left out.</summary>
         public IEnumerable<(string Path, bool On)> Items => items.Where(item => !item.Separator).Select(item => (item.Path, item.On));
 
-        /// <summary>The menu as PlayForge's dropdown: each item under its path's submenus, in the order given (EP-1).</summary>
+        /// <summary>The menu as PlayForge's dropdown: each item under its path's submenus, in the order given.</summary>
         public ForgeDropdown ToDropdown()
         {
             var dropdown = new ForgeDropdown(Title) { MenusFirst = false };
@@ -96,7 +96,7 @@ namespace FarEmerald.PlayForge.Editor
                 else if (item.On) dropdown.AddItem(item.Path, item.Checked, item.Action);
                 else dropdown.AddDisabledItem(item.Path, item.Checked);
             }
-            // At the button, as wide as its items: anchored alone, it took the button's 20 px and no item could be read (ED-52)
+            // At the button, as wide as its items: anchored alone, it took the button's 20 px and no item could be read
             dropdown.DropDown(anchor.worldBound, anchor, true, true);
         }
     }

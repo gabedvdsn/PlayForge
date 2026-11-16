@@ -53,6 +53,9 @@ The full review behind it is https://claude.ai/artifact/1GsrCxW3Wff2KvXM6fnai9.
 - Extend base classes directly (for example `AbstractMonoProcess`) when an intermediate class's patterns
   don't apply.
 - Log through `ForgeLog`, which is level-gated. ProcessControl and sequences have their own log gates.
+- **The package's comments and names carry no tracker ID** (EP-26): no "(TW-30)", decision or interview question, and
+  no doc of `Docs/`, which doesn't ship. Say what the code does; cite IDs in commit messages and the plan. Proving
+  Grounds' tests keep their ID names.
 - **Editor UI follows `Docs/EDITOR_STYLE.md`** (Decision 20): Unity's own controls and neutrals, a type's color
   only in its icon, no colored borders or floating cards, and columns that clip their own text.
 

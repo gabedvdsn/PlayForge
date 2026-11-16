@@ -19,11 +19,11 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// The abilities the target has while this effect is on it, each at the level of what applied the effect, and
         /// interrupted, if it's running, as the effect comes off. An instant effect lends none, as it's never on its
-        /// target. An effect couldn't lend an ability, so a buff that lets you cast Fireball needed an item (FEAT-8).
+        /// target. An effect couldn't lend an ability, so a buff that lets you cast Fireball needed an item.
         /// </summary>
         public List<Ability> GrantedAbilities = new();
 
-        /// <summary>Its side change: its Side Change component's, or none (TW-18, FN-26).</summary>
+        /// <summary>Its side change: its Side Change component's, or none.</summary>
         public SideChangeEffectComponent SideChange => FirstComponent<SideChangeEffectComponent>();
 
         [Tooltip("Effects its holder's hits apply, or a kill's, while it lasts, the holder the one it's on")]
@@ -32,11 +32,11 @@ namespace FarEmerald.PlayForge
         [Tooltip("Modifiers of other effects, its holder's own or those landing on it, while it lasts, the holder the one it's on")]
         public List<EffectModifierEntry> Modifiers = new();
 
-        /// <summary>Its area: its Area component's, or none, where it lands on its target alone (TW-10, FN-14).</summary>
+        /// <summary>Its area: its Area component's, or none, where it lands on its target alone.</summary>
         public EffectArea Area => FirstComponent<AreaEffectComponent>()?.Area;
 
         /// <summary>
-        /// Its transfers: each of its Transfer components', in their order, a list read anew each time (TW-20, FN-14). A
+        /// Its transfers: each of its Transfer components', in their order, a list read anew each time. A
         /// <see cref="TransferEffectComponent"/> adds one.
         /// </summary>
         public IReadOnlyList<AttributeTransfer> Transfers
@@ -83,7 +83,7 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// What the effect shows and sounds as it lands, ticks and goes, and while it lasts, apart from what it changes, as
-        /// its workers are listed: a camera shake, a sound, a prefab. An effect showed nothing of its own (FEAT-1).
+        /// its workers are listed: a camera shake, a sound, a prefab. An effect showed nothing of its own.
         /// </summary>
         [SerializeReference]
         public List<AbstractCueHandler> Cues = new();
@@ -227,7 +227,7 @@ namespace FarEmerald.PlayForge
             var spec = new GameplayEffectSpec(this, origin, target);
             ImpactSpecification.ApplyImpactSpecifications(spec);
 
-            // What its source's modifiers and its target's change of it, for this application alone (TW-7)
+            // What its source's modifiers and its target's change of it, for this application alone
             EffectModifiers.Apply(spec);
 
             return spec;
@@ -237,7 +237,7 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// Whether it may land: its tags to apply pass, each of its Apply conditions holds, and its Removal phase isn't met
-        /// already, its tags and conditions together (TW-19).
+        /// already, its tags and conditions together.
         /// </summary>
         public bool ValidateApplicationRequirements(GameplayEffectSpec spec)
         {
@@ -250,7 +250,7 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// Whether it comes off: its Removal tags, where it names any, and its Removal conditions, where it has any, all say
-        /// so; with neither, never. Its tags alone said so before its conditions were (TW-19).
+        /// so; with neither, never. Its tags alone said so before its conditions were.
         /// </summary>
         public bool ValidateRemovalRequirements(GameplayEffectSpec spec)
         {
@@ -262,7 +262,7 @@ namespace FarEmerald.PlayForge
             return !hasConditions || EffectConditions.AllHold(Conditions.Removal, NumberContext.Of(spec));
         }
 
-        /// <summary>Whether it goes on: its Ongoing tags pass, and each of its Ongoing conditions holds (TW-19).</summary>
+        /// <summary>Whether it goes on: its Ongoing tags pass, and each of its Ongoing conditions holds.</summary>
         public bool ValidateOngoingRequirements(GameplayEffectSpec spec)
         {
             return TargetRequirements.CheckOngoingRequirements(spec.Target.GetAppliedTags())
@@ -339,20 +339,20 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// A cleanse: effects on the target tagged with one of these, or a child of one, by their asset tag, a context
-        /// tag or a tag they grant, come off as this effect lands (FEAT-8).
+        /// tag or a tag they grant, come off as this effect lands.
         /// </summary>
         [ForgeTagContext(ForgeContext.AssetTag, ForgeContext.ContextTag, ForgeContext.Granted)] public List<Tag> RemovesEffectsTagged;
 
         /// <summary>
         /// An immunity: while this effect is on the target, an effect tagged with one of these, or a child of one, can't
-        /// land on it (FEAT-8).
+        /// land on it.
         /// </summary>
         [ForgeTagContext(ForgeContext.AssetTag, ForgeContext.ContextTag, ForgeContext.Granted)] public List<Tag> BlocksEffectsTagged;
 
         /// <summary>
         /// Whether an effect is tagged with one of the tags, or a child of one, by its asset tag, a context tag or a tag
-        /// it grants, as Unreal's queries match (Decision 30). A tag it grants counted for nothing, so "whatever makes
-        /// you Burning" needed a context tag on every effect that burns (FEAT-8).
+        /// it grants, as Unreal's queries match. A tag it grants counted for nothing, so "whatever makes
+        /// you Burning" needed a context tag on every effect that burns.
         /// </summary>
         public static bool Names(List<Tag> tags, GameplayEffect effect)
         {
@@ -368,7 +368,7 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// Whether an effect is tagged with the tag, or a child of it, by its asset tag, a context tag or a tag it grants,
-        /// as <see cref="Names(List{Tag}, GameplayEffect)"/> matches each; allocates nothing (FEAT-29).
+        /// as <see cref="Names(List{Tag}, GameplayEffect)"/> matches each; allocates nothing.
         /// </summary>
         public static bool Names(Tag tag, GameplayEffect effect)
         {
@@ -386,7 +386,7 @@ namespace FarEmerald.PlayForge
         }
     }
     
-    // The names the inspector shows say the choice, as the Effect mockup's Stack Existing and Refresh Duration do (ED-37)
+    // The names the inspector shows say the choice, as Stack Existing and Refresh Duration do
     public enum EEffectReApplicationPolicy
     {
         [InspectorName("Do Nothing")] DoNothing,  // Completely ignore new effect

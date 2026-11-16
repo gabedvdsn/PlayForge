@@ -2,7 +2,7 @@ using System;
 
 namespace FarEmerald.PlayForge
 {
-    /// <summary>A condition that always holds (FEAT-29).</summary>
+    /// <summary>A condition that always holds.</summary>
     [Serializable]
     [GameplayCondition("Always")]
     [ForgeMenu(Description = "Always holds.")]
@@ -13,7 +13,7 @@ namespace FarEmerald.PlayForge
         public override string Describe() => "always";
     }
 
-    /// <summary>A condition that never holds (FEAT-29).</summary>
+    /// <summary>A condition that never holds.</summary>
     [Serializable]
     [GameplayCondition("Never")]
     [ForgeMenu(Description = "Never holds.")]

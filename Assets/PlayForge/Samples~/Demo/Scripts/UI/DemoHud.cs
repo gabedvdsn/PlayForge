@@ -377,7 +377,7 @@ namespace FarEmerald.PlayForge.Samples.Demo
                     int stacks = container is AbstractStackingEffectContainer stacking ? stacking.Stacks : 1;
                     int at = shown.FindIndex(each => each.effect == effect);
                     if (at >= 0) shown[at] = (effect, shown[at].stacks + stacks, Mathf.Max(shown[at].left, container.DurationRemaining), shown[at].icon);
-                    // Its spec's icon, which may be its origin's (FN-25)
+                    // Its spec's icon, which may be its origin's
                     else shown.Add((effect, stacks, container.DurationRemaining, container.Spec.GetIcon()));
                 }
             }

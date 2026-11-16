@@ -9,12 +9,12 @@ using UnityEngine.UIElements;
 namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
-    /// The attributes an attribute set gives an entity, its sub-sets' among them, as the Entity mockup's Attributes
+    /// The attributes an attribute set gives an entity, its sub-sets' among them, as the Entity inspector's Attributes
     /// section draws them: a table of each attribute's type icon and name, the value its Current starts at, and the range
     /// the set keeps it in. The values are the runtime's (<see cref="AttributeStartValues"/>): each attribute at each of
     /// the levels, where sets overlap the one the runtime settles on, and in the set the set is previewed in. It follows
     /// the set as it changes, and the sets and scalers it reads. The Attribute Set inspector listed the attributes in a
-    /// dialog, and the Entity inspector showed none of them (ED-37); a value a scaler set read "Scaled" (ED-49).
+    /// dialog, and the Entity inspector showed none of them; a value a scaler set read "Scaled".
     /// </summary>
     internal sealed class ForgeAttributeTable : VisualElement
     {

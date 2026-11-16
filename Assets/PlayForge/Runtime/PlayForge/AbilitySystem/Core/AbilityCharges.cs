@@ -4,7 +4,7 @@ using UnityEngine;
 namespace FarEmerald.PlayForge
 {
     /// <summary>
-    /// An ability's charges on its caster (TW-17, Decision 55): several uses, each spending a charge that comes back as the
+    /// An ability's charges on its caster: several uses, each spending a charge that comes back as the
     /// ability's Recharge says, by default on a cooldown of its own. An ability of 1 charge, with a recharge of PlayForge's
     /// own, is an ordinary cooldown.
     /// </summary>
@@ -58,7 +58,7 @@ namespace FarEmerald.PlayForge
     }
 
     /// <summary>
-    /// How an ability's spent charges come back (TW-17, Decision 55): what's in hand, and what a use spends. Extend it for a
+    /// How an ability's spent charges come back: what's in hand, and what a use spends. Extend it for a
     /// recharge of your own; each hook has a default, so a recharge overrides only what it changes. By default, each spent
     /// charge's cooldown runs alone and holds that charge back.
     /// </summary>
@@ -78,7 +78,7 @@ namespace FarEmerald.PlayForge
         public virtual bool CountsASingleCharge => true;
     }
 
-    /// <summary>Each spent charge comes back on a cooldown of its own, run alongside the others: the default (TW-17).</summary>
+    /// <summary>Each spent charge comes back on a cooldown of its own, run alongside the others: the default.</summary>
     [Serializable]
     [ForgeMenu(Description = "Each spent charge comes back on a cooldown of its own.")]
     public class EachChargeRecharge : AbstractChargeRecharge
@@ -89,7 +89,7 @@ namespace FarEmerald.PlayForge
         public override bool CountsASingleCharge => false;
     }
 
-    /// <summary>No cooldown until the last charge is spent; its end brings every charge back at once (TW-17).</summary>
+    /// <summary>No cooldown until the last charge is spent; its end brings every charge back at once.</summary>
     [Serializable]
     [ForgeMenu(Description = "Every charge comes back at once, after the last one is spent.")]
     public class AllAtOnceRecharge : AbstractChargeRecharge

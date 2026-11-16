@@ -4,7 +4,7 @@ using UnityEngine;
 namespace FarEmerald.PlayForge
 {
     /// <summary>
-    /// One retention group's part of an attribute (FEAT-29, NUM-11), on the caster or the target, current or base: an
+    /// One retention group's part of an attribute, on the caster or the target, current or base: an
     /// attribute's value is the sum of its groups' parts, so <c>2 × Caster's Strength (Bonus)</c> deals more for the
     /// Strength items give and nothing for the hero's own. An entity with no such attribute, or no part in the group,
     /// reads 0.

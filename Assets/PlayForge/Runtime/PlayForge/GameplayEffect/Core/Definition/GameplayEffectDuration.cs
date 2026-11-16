@@ -105,7 +105,7 @@ namespace FarEmerald.PlayForge
         {
             // Scalers first: the duration and its ticks are read from them below, and a scaler reads nothing until
             // it's initialized, so an attribute-backed duration came out as 0. The ticks' scaler was never
-            // initialized at all (GAS-22)
+            // initialized at all
             DurationOperation?.Scaler?.Initialize(container.Spec);
             DeltaTimeScaler?.Initialize(container.Spec);
             TicksOperation?.Scaler?.Initialize(container.Spec);
@@ -125,7 +125,7 @@ namespace FarEmerald.PlayForge
         private void ApplyDurationalSpecs(AbstractEffectContainer container)
         {
             // Apply duration
-            // As its modifiers change it, for this application alone (TW-7)
+            // As its modifiers change it, for this application alone
             float total = GetTotalDuration(container.Spec);
             if (container.Spec.Changes != null) total = container.Spec.Changes.Duration(total);
             container.SetTotalDuration(total);
@@ -160,7 +160,7 @@ namespace FarEmerald.PlayForge
             container.SetTotalDuration(float.MaxValue);
             container.SetDurationRemaining(container.TotalDuration);
             
-            // Through its scaler, which this read past to the bare magnitude (GAS-24)
+            // Through its scaler, which this read past to the bare magnitude
             float interval = GetTickInterval(container.Spec);
             if (EnablePeriodicTicks && interval > 0)
             {
@@ -181,7 +181,7 @@ namespace FarEmerald.PlayForge
 
         public float GetDeltaTime(IAttributeImpactCarrier spec)
         {
-            // The target's own time: a slowed entity's effects, its cooldowns among them, last longer (FEAT-7)
+            // The target's own time: a slowed entity's effects, its cooldowns among them, last longer
             float dt = ForgeTime.DeltaTimeFor(spec?.GetTarget());
             return AbstractScaler.IsNone(DeltaTimeScaler)
                 ? dt 
@@ -270,7 +270,7 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// The stacks an application adds to the container, and the first stack bound the amount would have taken past
-        /// its max, which the bound holds it back from: the effect overflows there (FEAT-8).
+        /// its max, which the bound holds it back from: the effect overflows there.
         /// </summary>
         public int GetStackAmount(AbstractStackingEffectContainer container, out StackBoundsConfig overflowed)
         {
@@ -280,7 +280,7 @@ namespace FarEmerald.PlayForge
             int stacks = AbstractScaler.IsNone(StackAmountOperation.Scaler)
                 ? Mathf.Max(1, StackAmountOperation.Magnitude)
                 : ForgeHelper.MagnitudeAndScalerOperation(StackAmountOperation.Magnitude, StackAmountOperation.Scaler.Evaluate(container), StackAmountOperation.RealMagnitude, StackAmountOperation.Rounding);
-            // More a landing gives, as its modifiers say (TW-7)
+            // More a landing gives, as its modifiers say
             if (container.Spec?.Changes != null) stacks += container.Spec.Changes.StacksPerLanding;
 
             foreach (var behaviour in ConfigsByPriority())
@@ -336,7 +336,7 @@ namespace FarEmerald.PlayForge
         Floor,
         Ceil,
 
-        /// <summary>To the nearest whole number, a half away from zero (FEAT-29).</summary>
+        /// <summary>To the nearest whole number, a half away from zero.</summary>
         Round
     }
 }

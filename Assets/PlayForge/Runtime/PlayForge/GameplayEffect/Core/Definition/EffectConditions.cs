@@ -5,7 +5,7 @@ using UnityEngine;
 namespace FarEmerald.PlayForge
 {
     /// <summary>
-    /// An effect's conditions, beside the tags of each phase of its requirements (TW-19, Decision 58): those that must hold
+    /// An effect's conditions, beside the tags of each phase of its requirements: those that must hold
     /// for it to land, those that keep it going, and those that take it off, as Attribute Shift stops at its floor. A phase
     /// passes only when its tags pass and its conditions all hold; the Ongoing and Removal ones are checked at each frame's
     /// end while it lasts, as no tag needs to change for an attribute a condition reads to.

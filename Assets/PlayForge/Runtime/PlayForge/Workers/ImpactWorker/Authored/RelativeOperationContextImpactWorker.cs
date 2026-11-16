@@ -25,7 +25,7 @@ namespace FarEmerald.PlayForge
         public bool WorkerImpactWorkable = false;
         
         // Both halves do the same work, so InlineAndDeferred runs deferred, the safe default. It did the work twice, and
-        // lifesteal healed double (GAS-41)
+        // lifesteal healed double
         public override EWorkerExecution Execution =>
             ExecutionMode == EWorkerExecution.InlineAndDeferred ? EWorkerExecution.Deferred : ExecutionMode;
         
@@ -37,7 +37,7 @@ namespace FarEmerald.PlayForge
         
         // What the worker keeps for its changes as it runs: a carrier for each source it works for, the actions its
         // deferred half queues, back here once the queue has run them, and the list it hands one back in. Each change
-        // made a new carrier, and the deferred half an iterator and an action as well (GAS-P9)
+        // made a new carrier, and the deferred half an iterator and an action as well
         [NonSerialized] private SourceCarriers carriers;
         [NonSerialized] private Stack<ModifyAttributeAction> spareActions;
         [NonSerialized] private IRootAction[] oneAction;
@@ -94,7 +94,7 @@ namespace FarEmerald.PlayForge
         
         // The value the work is relative to: the Relative Attribute's, on the side With Respect To names. It read the
         // impacted attribute's even with one set, so lifesteal by a Lifesteal share healed the attacker by its own health
-        // times the blow (GAS-57). A worker with none set reads the impacted attribute still, as it did
+        // times the blow. A worker with none set reads the impacted attribute still, as it did
         private bool GetWrtTarget(ImpactData impactData, out AttributeValue value)
         {
             value = default;

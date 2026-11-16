@@ -5,7 +5,7 @@ namespace FarEmerald.PlayForge
 {
     /// <summary>
     /// A field's reference to a shared <see cref="ScalerAsset"/>: it reads the asset's scaler, so an edit to the asset
-    /// reaches every field that uses it, with nothing to propagate (ED-33, Decision 28). It keeps no values of its own;
+    /// reaches every field that uses it, with nothing to propagate. It keeps no values of its own;
     /// the field's Magnitude adjusts what it reads, as in Fire Duration × 1.5.
     /// </summary>
     [Serializable]
@@ -62,7 +62,7 @@ namespace FarEmerald.PlayForge
         // Its values are the asset's, so the field shows no table of its own
         public override bool UseScalingOptions() => false;
 
-        // It reads its asset's scaler alone (ED-51)
+        // It reads its asset's scaler alone
         public override EScalerParts Parts => EScalerParts.None;
     }
 }

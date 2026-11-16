@@ -7,7 +7,7 @@ using UnityEngine;
 namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
-    /// Templates as prefabs work (Q23, ED-13). A template's changes reach its children when it's pushed to them, as an
+    /// Templates as prefabs work. A template's changes reach its children when it's pushed to them, as an
     /// explicit step: each child, and each of theirs, takes the template's fields but those it overrides, and one Undo
     /// takes the push back. An edit to a child's field makes the field the child's own, an override, which its inspector
     /// marks, and Revert to Template takes back. Saving a template opened a dialog in the middle of the save, loaded every
@@ -47,7 +47,7 @@ namespace FarEmerald.PlayForge.Editor
             try
             {
                 // The family from one search of the project: each child's own children were searched for over the project
-                // again, so a push to 2,000 children loaded 2,000 assets 2,000 times (ED-44)
+                // again, so a push to 2,000 children loaded 2,000 assets 2,000 times
                 var family = ForgeTemplatePropagator.ChildrenByTemplate(template.GetType());
                 Push(template, changed, new HashSet<BaseForgeAsset>(), family);
             }
@@ -116,7 +116,7 @@ namespace FarEmerald.PlayForge.Editor
         }
 
         // An edit to a child's field, an inspector's, an Import's or a script's through a SerializedObject, makes the field
-        // the child's own, as a prefab instance's override is (Q23), as Unity flushes the edit's modifications. The
+        // the child's own, as a prefab instance's override is, as Unity flushes the edit's modifications. The
         // overrides were worked out on each save, against the template as it was then
         private static UndoPropertyModification[] MarkOverrides(UndoPropertyModification[] modifications)
         {

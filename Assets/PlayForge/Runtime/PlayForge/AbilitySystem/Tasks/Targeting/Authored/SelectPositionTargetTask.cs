@@ -38,7 +38,7 @@ namespace FarEmerald.PlayForge
             float reach = Read(MaxDistance, data);
             var maxDist = reach > 0 ? reach : Mathf.Infinity;
 
-            // Handed its point, as an AI's activation hands it, it takes it with no click (GAS-66)
+            // Handed its point, as an AI's activation hands it, it takes it with no click
             if (TakeTargetFromData && TryGetDataPoint(data, out var given))
             {
                 if (TargetIsValid(given, out _)) data.SetTargetingPacket(Tags.TARGET, new StaticTargetingPacket(given));

@@ -7,15 +7,15 @@ namespace FarEmerald.PlayForge.Samples.Demo
 {
     /// <summary>
     /// A fire on the ground, as Flame Wall leaves: for its lifetime it applies its effects, each interval, to whoever of
-    /// the other side stands within its radius. Its radius, lifetime, interval and heat are attributes it carries
-    /// (FEAT-24), read by role: its prefab's own values, which the spawning ability's level can raise, as Flame Wall's
+    /// the other side stands within its radius. Its radius, lifetime, interval and heat are attributes it carries,
+    /// read by role: its prefab's own values, which the spawning ability's level can raise, as Flame Wall's
     /// radius and heat grow with its level. Each effect it applies gets what it carries by role, so Burning reads its
-    /// heat (FEAT-28).
+    /// heat.
     /// </summary>
     public class GroundFireProcess : AbstractGameplayMonoProcess
     {
         // Its burning is its run, so it starts Self Terminating, with no step timing, where a mono process starts
-        // Synchronous, which has no run (PC-35)
+        // Synchronous, which has no run
         public GroundFireProcess()
         {
             ProcessLifecycle = EProcessLifecycle.SelfTerminating;
@@ -89,7 +89,7 @@ namespace FarEmerald.PlayForge.Samples.Demo
                     if (effect == null) continue;
                     var spec = target.GenerateEffectSpec(Origin, effect);
                     if (spec == null) continue;
-                    // Its caller's magnitudes, and what it carries by role: Burning reads its heat (FEAT-28)
+                    // Its caller's magnitudes, and what it carries by role: Burning reads its heat
                     GiveMagnitudes(spec);
                     target.ApplyGameplayEffect(spec);
                 }

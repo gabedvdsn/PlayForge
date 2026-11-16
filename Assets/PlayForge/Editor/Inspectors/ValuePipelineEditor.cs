@@ -5,9 +5,9 @@ using UnityEngine.UIElements;
 namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
-    /// A Value Pipeline's inspector (TW-2): what it's for, its stages in order, each of a kind with its fields, and a line
+    /// A Value Pipeline's inspector: what it's for, its stages in order, each of a kind with its fields, and a line
     /// that says them; then its Try section, a value put through its stages at each level, as a Scaler asset's Try reads its
-    /// scaler (EP-23). Unity's own fields, as <c>Docs/EDITOR_STYLE.md</c> has it.
+    /// scaler. Unity's own fields.
     /// </summary>
     [CustomEditor(typeof(ValuePipeline))]
     public class ValuePipelineEditor : UnityEditor.Editor
@@ -17,7 +17,7 @@ namespace FarEmerald.PlayForge.Editor
             var pipeline = (ValuePipeline)target;
             var root = new VisualElement { name = "ValuePipelineRoot" };
             ForgeTheme.Apply(root);
-            // The shared header, as every PlayForge asset's inspector opens with (FN-12)
+            // The shared header, as every PlayForge asset's inspector opens with
             root.Add(ForgeAssetHeaders.For(this));
 
             var description = new TextField("Description")
@@ -43,7 +43,7 @@ namespace FarEmerald.PlayForge.Editor
             root.Add(stages);
 
             // A value through its stages at each level, against a caster, a target and a caller the author gives it, typed
-            // or filled from an entity; it only reads the asset, so it has no Import or Clear (EP-23)
+            // or filled from an entity; it only reads the asset, so it has no Import or Clear
             var tryIt = ForgeDrawerStyles.CreateCollapsibleSection(new ForgeDrawerStyles.SectionConfig
             {
                 Name = "Try",
@@ -67,7 +67,7 @@ namespace FarEmerald.PlayForge.Editor
         }
     }
 
-    /// <summary>A pipeline stage: its kind, always of some kind, then its fields, as a worker is drawn (TW-2).</summary>
+    /// <summary>A pipeline stage: its kind, always of some kind, then its fields, as a worker is drawn.</summary>
     [CustomPropertyDrawer(typeof(AbstractValueStage), true)]
     public class ValueStageDrawer : AbstractGenericDrawer<AbstractValueStage>
     {

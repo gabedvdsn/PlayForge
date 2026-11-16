@@ -78,7 +78,7 @@ namespace FarEmerald.PlayForge
         {
             itemIndex = -1;
 
-            // Into a stack of it with room first, which takes no new slot (FEAT-14)
+            // Into a stack of it with room first, which takes no new slot
             if (item != null && TryStack(item, out var stack))
             {
                 itemIndex = stack.Index;
@@ -93,7 +93,7 @@ namespace FarEmerald.PlayForge
 
             ItemShelf.Add(container);
             container.HearGiven();
-            // Every held item's tag is its holder's, so the tags compile as it comes: they waited for the next (GAS-82)
+            // Every held item's tag is its holder's, so the tags compile as it comes: they waited for the next
             Self.CompileGrantedTags();
 
             Callbacks.ItemGiven(ItemCallbackStatus.Generate(container, this, true));
@@ -105,7 +105,7 @@ namespace FarEmerald.PlayForge
         private bool TryStack(Item item, out ItemSpecContainer stack)
         {
             stack = null;
-            // A slot of it with room, by the stack size of its own level, which 1 or less leaves none (FN-19)
+            // A slot of it with room, by the stack size of its own level, which 1 or less leaves none
             foreach (var container in ItemShelf)
             {
                 if (container.Spec.Base != item || !container.HasRoom) continue;
@@ -118,7 +118,7 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// Gives up to <paramref name="count"/> of the item: into its stacks first, up to its Max Stack Size, then, as
-        /// Allow Duplicate Items lets it, into new slots. How many it took (FEAT-14, Decision 30).
+        /// Allow Duplicate Items lets it, into new slots. How many it took.
         /// </summary>
         public int GiveItem(Item item, int count)
         {
@@ -130,7 +130,7 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// Takes up to <paramref name="count"/> of the item off, from its last slot first; a slot whose last stack comes
-        /// off goes, as <see cref="RemoveItem(int)"/> takes it. How many came off (FEAT-14).
+        /// off goes, as <see cref="RemoveItem(int)"/> takes it. How many came off.
         /// </summary>
         public int RemoveItem(Item item, int count)
         {
@@ -149,7 +149,7 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// Uses up to <paramref name="count"/> of the item, as a potion's use, taken off as <see cref="RemoveItem(Item, int)"/>
-        /// takes them, and tells its callbacks' Item Consumed how many went; how many it used (FN-24).
+        /// takes them, and tells its callbacks' Item Consumed how many went; how many it used.
         /// </summary>
         public int ConsumeItem(Item item, int count)
         {
@@ -258,7 +258,7 @@ namespace FarEmerald.PlayForge
                 ItemShelf[i].Index -= 1;
             }
             container.HearRemoved();
-            // Its tag goes with it: unequipping compiled while it was still held (GAS-82)
+            // Its tag goes with it: unequipping compiled while it was still held
             Self.CompileGrantedTags();
 
             Callbacks.ItemRemoved(ItemCallbackStatus.Generate(container, this, true));
@@ -295,7 +295,7 @@ namespace FarEmerald.PlayForge
             return toRemove.Count;
         }
 
-        /// <summary>Whether a worn item lent the ability in the slot, which comes back with the item (FEAT-9).</summary>
+        /// <summary>Whether a worn item lent the ability in the slot, which comes back with the item.</summary>
         internal bool Lends(int slot)
         {
             if (ItemShelf == null) return false;
@@ -306,7 +306,7 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// Lets go of every item at once, with nothing told. Their effects went with the shelf's, and their abilities with
-        /// the ability system's, as a restore clears them (FEAT-9).
+        /// the ability system's, as a restore clears them.
         /// </summary>
         internal void ClearForRestore()
         {
@@ -322,7 +322,7 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// Puts an item back as a save left it, in the next slot: its level and stacks, and worn where it was, with its
         /// ability and workers. Its effects come back from the save with the rest, so wearing it applies none, and nothing
-        /// is told (FEAT-9).
+        /// is told.
         /// </summary>
         internal ItemSpecContainer Restore(Item item, int level, int stacks, bool equipped)
         {
@@ -342,7 +342,7 @@ namespace FarEmerald.PlayForge
         public void ClearAllItems()
         {
             // From the end, because removing an item moves the ones after it down. Counting up skipped every
-            // other item, and clearing the shelf dropped those with their effects still on (GAS-32)
+            // other item, and clearing the shelf dropped those with their effects still on
             for (int i = ItemShelf.Count - 1; i >= 0; i--)
             {
                 RemoveItem(i);

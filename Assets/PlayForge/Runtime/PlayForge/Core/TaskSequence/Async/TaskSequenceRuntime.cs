@@ -55,7 +55,7 @@ namespace FarEmerald.PlayForge
         private static readonly Dictionary<CancellationToken, TaskSequenceRuntime> RunsByToken = new(TokenComparer.Instance);
 
         // Compares tokens as tokens. The default comparer boxed one on every lookup under Unity's Mono, where a token
-        // isn't IEquatable, so a task waiting in a delay allocated 24 bytes a frame asking whether it was paused (TS-11)
+        // isn't IEquatable, so a task waiting in a delay allocated 24 bytes a frame asking whether it was paused
         private sealed class TokenComparer : IEqualityComparer<CancellationToken>
         {
             public static readonly TokenComparer Instance = new();
@@ -66,7 +66,7 @@ namespace FarEmerald.PlayForge
         }
 
         // A run cut off when play mode ended could stay here into the next session, since statics outlive play mode
-        // when domain reload is off (SP-22)
+        // when domain reload is off
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ClearRuns()
         {
@@ -79,21 +79,21 @@ namespace FarEmerald.PlayForge
         private UniTaskCompletionSource _nextStageSignal;
 
         // The stages left running behind the current one. Each cleans its tasks as it ends, since moving on
-        // cleaned them while they still ran (TS-J)
+        // cleaned them while they still ran
         private readonly HashSet<int> _maintainedStages = new();
         
         // Jump request
         private int? _jumpToStageRequest;
         
         // What this run has done to stages and conditions. Those belong to the definition, which every run
-        // shares, so recording it on them let one run break another's repeat or re-arm its conditions (TS-I)
+        // shares, so recording it on them let one run break another's repeat or re-arm its conditions
         private readonly HashSet<SequenceCondition> _firedConditions = new();
         private readonly HashSet<SequenceStage> _brokenRepeats = new();
         private readonly Dictionary<SequenceStage, int> _repeatCounts = new();
 
         // Where on its packet's path each running stage's iterations start, so a repeat takes off what the last one
         // added; and the path where this run failed, kept for its log, as the failing stage has taken its part off by
-        // then. Each part stayed, so a repeat grew the path for as long as it ran (TS-5)
+        // then. Each part stayed, so a repeat grew the path for as long as it ran
         private readonly Dictionary<SequenceStage, int> _iterationPathDepths = new();
         private string _failurePath;
 
@@ -117,8 +117,8 @@ namespace FarEmerald.PlayForge
         private readonly object _activeTasksLock = new();
         
         // Active stages for condition checking and the critical section, oldest first. A maintained stage ends
-        // under the stages after it, so this can't be a stack: one that ended off the top stayed on it (TS-J).
-        // Each is kept with its id in _stageSources (TS-N)
+        // under the stages after it, so this can't be a stack: one that ended off the top stayed on it.
+        // Each is kept with its id in _stageSources
         private readonly List<(SequenceStage Stage, int Id)> _activeStages = new();
 
         // Sub-stages are kept in _stageSources with the top-level stages, counting down from -2 so that the two
@@ -126,7 +126,7 @@ namespace FarEmerald.PlayForge
         private int _nextSubStageId = -2;
 
         // The stage whose own timer or condition is applying an injection. Injections act on the current stage,
-        // which a maintained stage or a sub-stage isn't, so theirs acted on the wrong one (TS-K)
+        // which a maintained stage or a sub-stage isn't, so theirs acted on the wrong one
         private (SequenceStage Stage, int Id)? _injectionSource;
         
         // ═══════════════════════════════════════════════════════════════════════════
@@ -159,7 +159,7 @@ namespace FarEmerald.PlayForge
         }
 
         /// <summary>True if the token is one a stage gave its tasks, and that stage's run is paused.</summary>
-        /// <summary>The packet of the run a token belongs to, or null, whose owner's clock its waits run by (FEAT-7).</summary>
+        /// <summary>The packet of the run a token belongs to, or null, whose owner's clock its waits run by.</summary>
         public static SequenceDataPacket DataOfRun(CancellationToken token)
         {
             lock (RunsByToken)
@@ -228,11 +228,11 @@ namespace FarEmerald.PlayForge
             else throw new InvalidOperationException(nameof(data));
             
             // A run nested on the same packet, as a task's own sequence can be, gives it back as it found it. It
-            // used to clear it, which left the outer run with no runtime and its packet marked unused (TS-F)
+            // used to clear it, which left the outer run with no runtime and its packet marked unused
             var outerRuntime = Data.Runtime;
             Data.Runtime = this;
 
-            // The run's part of the path comes off as it ends, and each time round starts from it (TS-5)
+            // The run's part of the path comes off as it ends, and each time round starts from it
             int outerPathDepth = Data.PathDepth;
             Data.AppendPath(Definition?.PathPart ?? "Seq[]");
             int runPathDepth = Data.PathDepth;
@@ -254,7 +254,7 @@ namespace FarEmerald.PlayForge
                 int runStartFrame = ForgeTime.FrameCount;
 
                 // The run keeps its own time. The sequence's timers kept it, so a sequence without one read 0
-                // throughout, and one whose timer had fired stopped where it fired (TS-W)
+                // throughout, and one whose timer had fired stopped where it fired
                 RunClock(token).Forget();
                 
                 try
@@ -278,15 +278,15 @@ namespace FarEmerald.PlayForge
                     await ExecuteStagesSequentially(token);
 
                     // Wait for maintained stages to complete, when there are some. The wait took a frame on every
-                    // run, so a sequence ended a frame after its last stage did (TS-Z)
+                    // run, so a sequence ended a frame after its last stage did
                     if (_maintainedStages.Count > 0)
                     {
                         await ForgeTick.WaitUntil(() => _maintainedStages.Count == 0, token);
                     }
 
                     // A run that repeats takes a frame if it took none, or an instant sequence repeats for ever
-                    // inside a frame, as a stage would without TS-M. The wait above took that frame. Here, inside the
-                    // run, an interrupt in that frame still ends it, as it did (TS-Z)
+                    // inside a frame, as a repeating stage once did. The wait above took that frame. Here, inside the
+                    // run, an interrupt in that frame still ends it, as it did
                     if ((Definition.Metadata?.Repeat ?? false) && ForgeTime.FrameCount == runStartFrame)
                     {
                         await ForgeTick.Next(token);
@@ -389,8 +389,8 @@ namespace FarEmerald.PlayForge
         
         /// <summary>
         /// Stops what's still maintained when a run ends early, and waits for it to stop. Each maintained stage
-        /// cleans its tasks as it ends, which mustn't happen under them, and the run's cleanup cleaned them at once
-        /// (TS-J). A normal end has none left.
+        /// cleans its tasks as it ends, which mustn't happen under them, and the run's cleanup cleaned them at once.
+        /// A normal end has none left.
         /// </summary>
         private async UniTask StopMaintainedStages()
         {
@@ -417,7 +417,7 @@ namespace FarEmerald.PlayForge
                 
                 // An interrupt ends the run here, before the next stage or, after the last, before the run counts as a
                 // success: looked for only as a stage began, one in the last stage left the run successful, and a
-                // repeating sequence went round again with it lost (TS-AF)
+                // repeating sequence went round again with it lost
                 token.ThrowIfCancellationRequested();
 
                 if (StageIndex >= Definition.Stages.Count)
@@ -430,7 +430,7 @@ namespace FarEmerald.PlayForge
 
                 // Past the last critical stage with nothing critical running, the critical section ends as this stage
                 // starts. A critical stage that a branch skipped held it to the end of the run, as the end came only as a
-                // critical stage ended (TS-7)
+                // critical stage ended
                 ExitCriticalSectionIfPassed();
                 
                 try
@@ -446,7 +446,7 @@ namespace FarEmerald.PlayForge
                     
                     // Wait for stage to signal completion (or skip). A cancelled stage signals too, once its
                     // tasks have stopped, so this doesn't watch the token: leaving at the moment it cancelled
-                    // ran CleanStage below under tasks that were still unwinding (TS-AA)
+                    // ran CleanStage below under tasks that were still unwinding
                     await _nextStageSignal.Task;
                     
                     // Check if stage had an error that wasn't suppressed
@@ -466,7 +466,7 @@ namespace FarEmerald.PlayForge
                 finally
                 {
                     // Clean all tasks in this stage, unless it's maintained: its tasks are still running, and it
-                    // cleans them itself when it ends (TS-J)
+                    // cleans them itself when it ends
                     if (!_maintainedStages.Contains(StageIndex)) CleanStage(stage);
                     CurrentStage = null;
                 }
@@ -493,7 +493,7 @@ namespace FarEmerald.PlayForge
             }
             else
             {
-                // Nothing waits on a maintained stage, so it cleans its own tasks as it ends (TS-J)
+                // Nothing waits on a maintained stage, so it cleans its own tasks as it ends
                 CleanStage(stage);
 
                 // For maintained stages with errors, we need to cancel the sequence
@@ -520,7 +520,7 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// What every stage does, wherever it is: its callbacks, timers, repeat and error handler, and its place on
         /// the active list for conditions and the critical section. A sub-stage ran its tasks and nothing else, so
-        /// all of that was ignored for one (TS-N). Returns the error that ended the stage, if its handler didn't
+        /// all of that was ignored for one. Returns the error that ended the stage, if its handler didn't
         /// take it.
         /// </summary>
         private async UniTask<Exception> RunStage(SequenceStage stage, int stageId, CancellationToken parentToken)
@@ -540,7 +540,7 @@ namespace FarEmerald.PlayForge
             Exception error = null;
 
             // The stage's part of the path, and whatever its init adds, come off as it ends, and each iteration of a
-            // repeat starts after them (TS-5)
+            // repeat starts after them
             int pathDepth = Data.PathDepth;
             Data.AppendPath(stage.PathPart);
 
@@ -603,18 +603,18 @@ namespace FarEmerald.PlayForge
                 }
                 // If no stage handler, let exception propagate silently to sequence level
 
-                // Where the run failed, for its log: the innermost stage to fail keeps it first (TS-5)
+                // Where the run failed, for its log: the innermost stage to fail keeps it first
                 if (error != null) _failurePath ??= Data.Path;
             }
             finally
             {
-                // The rest of this block has to happen, so a throwing handler can't be let past here (TS-E)
+                // The rest of this block has to happen, so a throwing handler can't be let past here
                 try
                 {
                     var ctx = new SequenceEventContext(Data, this, stage);
 
                     // Cut short as what holds it was interrupted or cancelled, it didn't succeed, though its policy took
-                    // its cancelled tasks as ended: WhenAll did, and said it had (TS-AE)
+                    // its cancelled tasks as ended: WhenAll did, and said it had
                     stage.OnTerminate?.Invoke(ctx, !cancelled && error is null && !parentToken.IsCancellationRequested);
                 }
                 catch (Exception ex)
@@ -626,7 +626,7 @@ namespace FarEmerald.PlayForge
                 PopActiveStage(stage, stageId);
 
                 // Cancelled as well as disposed: a disposed source never cancels, so the stage's timers outlived it
-                // and fired into whatever ran next (TS-AD). The run's cleanup may have done both already
+                // and fired into whatever ran next. The run's cleanup may have done both already
                 if (_stageSources.Remove(stageId))
                 {
                     stageCts.Cancel();
@@ -689,11 +689,11 @@ namespace FarEmerald.PlayForge
         /// Readies a repeating stage for its next iteration. Each iteration is a run of its tasks, so they're
         /// cleaned and prepared again: a task that resets in Prepare otherwise finishes at once from then on.
         /// An iteration that took no frame takes one here, or a stage whose tasks finish without yielding
-        /// repeats for ever inside a frame (TS-M).
+        /// repeats for ever inside a frame.
         /// </summary>
         internal async UniTask RestartStage(SequenceStage stage, int startFrame, CancellationToken token)
         {
-            // What the last iteration added to the path comes off, so each one finds it as the first did (TS-5)
+            // What the last iteration added to the path comes off, so each one finds it as the first did
             if (_iterationPathDepths.TryGetValue(stage, out int pathDepth)) Data.TrimPath(pathDepth);
 
             if (ForgeTime.FrameCount == startFrame) await ForgeTick.Next(token);
@@ -709,7 +709,7 @@ namespace FarEmerald.PlayForge
         internal async UniTask ExecuteStageInternal(SequenceStage stage, SequenceDataPacket data, CancellationToken token,
             CancellationTokenSource stageSource = null)
         {
-            // Handle branch stages. The stage chosen runs as a sub-stage does, its settings with it (TS-N)
+            // Handle branch stages. The stage chosen runs as a sub-stage does, its settings with it
             if (stage is BranchStage branchStage)
             {
                 var selectedBranch = branchStage.Evaluate(data);
@@ -740,7 +740,7 @@ namespace FarEmerald.PlayForge
             // The source the policy is handed, FIRST, so tasks use its token. A policy that stops the tasks still
             // running, as WhenAny and WhenN do, gets one of its own to cancel, so the stage isn't cancelled with them;
             // so does one the runtime doesn't know. One that only waits is handed the stage's own. Every stage made a
-            // second source for its policy, and with its own, a three-stage ability made about 14 (TS-10)
+            // second source for its policy, and with its own, a three-stage ability made about 14
             CancellationTokenSource ownSource = null;
             var policySource = stageSource;
             if (policySource == null || !OnlyWaits(policy))
@@ -758,7 +758,7 @@ namespace FarEmerald.PlayForge
             try
             {
                 // Its start under a marker of its own in the Profiler: its tasks, up to the first that waits. A marker
-                // ends where it began, so it holds only the start (FEAT-18)
+                // ends where it began, so it holds only the start
                 UniTask completion;
                 using (ForgeProfiler.Stage.Auto())
                 {
@@ -776,7 +776,7 @@ namespace FarEmerald.PlayForge
 
                 await completion;
 
-                // A task that doesn't hold can finish during a pause, but its stage ends with the pause (TS-Y)
+                // A task that doesn't hold can finish during a pause, but its stage ends with the pause
                 await HoldWhilePaused(token);
             }
             finally
@@ -844,7 +844,7 @@ namespace FarEmerald.PlayForge
         }
         
         // Fires the critical section's end once, as the run starts a stage past its last critical one with nothing
-        // critical running: there, a critical stage that a branch skipped is behind it (TS-7). At the skip itself the run
+        // critical running: there, a critical stage that a branch skipped is behind it. At the skip itself the run
         // still stands on the skipped stage, so what starts as the claim goes would find it there
         private void ExitCriticalSectionIfPassed()
         {
@@ -858,7 +858,7 @@ namespace FarEmerald.PlayForge
         }
 
         /// <summary>
-        /// Both places this fires are in cleanup that has to finish, and a listener's throw is its own (TS-E).
+        /// Both places this fires are in cleanup that has to finish, and a listener's throw is its own.
         /// </summary>
         private void NotifyCriticalSectionExited()
         {
@@ -1329,15 +1329,15 @@ namespace FarEmerald.PlayForge
         
         internal bool RequestSkipCurrentStage()
         {
-            // The stage applying it, if a stage is, and otherwise the current one (TS-K)
+            // The stage applying it, if a stage is, and otherwise the current one
             return CancelStage(_injectionSource?.Id ?? StageIndex);
         }
         
         internal bool RequestSkipAndMaintain()
         {
             // Only a running stage can be maintained. Past the last one, this counted a stage that nothing would
-            // ever end, and the run waited on it for ever (TS-J). A maintained stage's own timer or condition finds
-            // it maintained already (TS-K)
+            // ever end, and the run waited on it for ever. A maintained stage's own timer or condition finds
+            // it maintained already
             if (CurrentStage == null || _injectionSource is { } source && _maintainedStages.Contains(source.Id)) return false;
 
             _maintainedStages.Add(StageIndex);
@@ -1346,7 +1346,7 @@ namespace FarEmerald.PlayForge
         }
         
         // These choose among the maintained stages alone. They chose among every running stage, the current one
-        // too, and checked an index against how many stages ran rather than which (TS-L)
+        // too, and checked an index against how many stages ran rather than which
 
         internal bool RequestStopMaintainedLast()
         {
@@ -1380,7 +1380,7 @@ namespace FarEmerald.PlayForge
         
         internal bool RequestJumpToStage(int targetIndex)
         {
-            // A maintained stage is still running, and jumping to it ran its tasks again while they ran (TS-J)
+            // A maintained stage is still running, and jumping to it ran its tasks again while they ran
             if (targetIndex < 0 || targetIndex >= Definition.Stages.Count || _maintainedStages.Contains(targetIndex))
                 return false;
             _jumpToStageRequest = targetIndex;
@@ -1396,7 +1396,7 @@ namespace FarEmerald.PlayForge
         internal bool RequestBreakCurrentStageRepeat()
         {
             // The stage applying it, if a stage is, and otherwise the innermost one that repeats: with a maintained
-            // stage or a sub-stage repeating, that needn't be the current one (TS-K)
+            // stage or a sub-stage repeating, that needn't be the current one
             var stage = _injectionSource?.Stage ?? InnermostRepeatingStage() ?? CurrentStage;
             if (stage == null) return false;
             _brokenRepeats.Add(stage);
@@ -1445,7 +1445,7 @@ namespace FarEmerald.PlayForge
             _repeatCounts.Clear();
 
             // Precompute the index of the last stage-level critical stage. A critical sub-stage counts for the stage
-            // it's in, now that it holds the critical section (TS-N)
+            // it's in, now that it holds the critical section
             _lastCriticalStageIndex = -1;
             for (int i = Definition.Stages.Count - 1; i >= 0; i--)
             {
@@ -1492,7 +1492,7 @@ namespace FarEmerald.PlayForge
             _activeStages.Clear();
             _criticalFlagLocks = 0;
             
-            // Cancelled as well as disposed, or the run's own timers go on and fire into its next round (TS-AD)
+            // Cancelled as well as disposed, or the run's own timers go on and fire into its next round
             try { _sequenceCts?.Cancel(); _sequenceCts?.Dispose(); } catch { }
             _sequenceCts = null;
         }

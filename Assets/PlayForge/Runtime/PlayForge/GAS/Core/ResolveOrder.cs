@@ -5,7 +5,7 @@ using UnityEngine;
 namespace FarEmerald.PlayForge
 {
     /// <summary>
-    /// One entry of a project's resolve order (TW-31, Decision 60): those carrying its tag, or one under it, resolve at its
+    /// One entry of a project's resolve order: those carrying its tag, or one under it, resolve at its
     /// Order among an area's hits, lower first.
     /// </summary>
     [Serializable]
@@ -20,7 +20,7 @@ namespace FarEmerald.PlayForge
     }
 
     /// <summary>
-    /// The project's resolve order (TW-31, Decision 60): the order an area's effects land on those it takes, by the tags
+    /// The project's resolve order: the order an area's effects land on those it takes, by the tags
     /// they carry, so specific behaviour can be coded. An ability's Apply Effects and Apply/Remove Effects, an effect's
     /// Area, with its target among those it takes, and an aura's check follow it; code of your own can too.
     /// </summary>

@@ -4,12 +4,12 @@ using UnityEngine.UIElements;
 namespace FarEmerald.PlayForge.Editor
 {
     // ═══════════════════════════════════════════════════════════════════════════════
-    // The tag requirements, as the Effect mockup's table (ED-37)
+    // The tag requirements, as a table
     // ═══════════════════════════════════════════════════════════════════════════════
 
     /// <summary>
-    /// An effect's tag requirements on one side, the target's or the source's, as the Effect mockup's table: Applying,
-    /// While On and Removed By, each with what it requires and what it must not have (ED-37). The drawer drew a tinted box
+    /// An effect's tag requirements on one side, the target's or the source's, as a table: Applying,
+    /// While On and Removed By, each with what it requires and what it must not have. The drawer drew a tinted box
     /// with colored subsections, a type badge, a Name and import buttons of its own, and rebuilt itself as it opened.
     /// </summary>
     [CustomPropertyDrawer(typeof(EffectTagRequirements))]
@@ -24,15 +24,15 @@ namespace FarEmerald.PlayForge.Editor
                     "While it fails, the effect stays, but its ticks don't execute"),
                 new ForgeRequirementsTable.Group("Removed by", nameof(EffectTagRequirements.RemovalRequirements),
                     "When it's met, the effect is removed"));
-            // The style sheet lays out the table, wherever the drawer is drawn (ED-20)
+            // The style sheet lays out the table, wherever the drawer is drawn
             ForgeTheme.Apply(table);
             return table;
         }
     }
 
     /// <summary>
-    /// An ability's tag requirements, as the same table: the caster's, the caster's while the ability runs (FEAT-5), and
-    /// the target's, each with what it requires and what it must not have (ED-37).
+    /// An ability's tag requirements, as the same table: the caster's, the caster's while the ability runs, and
+    /// the target's, each with what it requires and what it must not have.
     /// </summary>
     [CustomPropertyDrawer(typeof(AbilityTagRequirements))]
     public class AbilityTagRequirementsDrawer : PropertyDrawer
@@ -58,7 +58,7 @@ namespace FarEmerald.PlayForge.Editor
     /// <summary>
     /// A requirement group of its own, as a targeting task's or a template's: the same table, of one row named by the
     /// field, with what it requires and what it must not have; a cell opens its list, with the group's name and template
-    /// under it (ED-66). It drew a tinted box with green and red stripes, colored count badges, a Name and an Import of
+    /// under it. It drew a tinted box with green and red stripes, colored count badges, a Name and an Import of
     /// its own, and rebuilt itself as it opened.
     /// </summary>
     [CustomPropertyDrawer(typeof(AvoidRequireTagGroup))]

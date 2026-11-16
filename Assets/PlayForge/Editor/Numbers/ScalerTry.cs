@@ -9,7 +9,7 @@ using Object = UnityEngine.Object;
 namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
-    /// A scaler tried in the editor (LVL-5, Decision 82): read at each level of a range against stand-ins for its caster
+    /// A scaler tried in the editor: read at each level of a range against stand-ins for its caster
     /// and its target, which hold the values typed for them or filled from an entity's attribute set, and with the values
     /// a caller sets. A read finds what the scaler asks for, each attribute on its side and each caller's key, and adds a
     /// row for each the first time, filled from its side's entity where it has one. A row it lacks reads as an entity
@@ -265,7 +265,7 @@ namespace FarEmerald.PlayForge.Editor
 
         /// <summary>
         /// The try kept under a session key, as it was left this session, or a new one; with none, one kept nowhere. A Value
-        /// Pipeline's try keeps its numbers in one (EP-23).
+        /// Pipeline's try keeps its numbers in one.
         /// </summary>
         internal static ScalerTry ForKey(string key)
         {
@@ -336,7 +336,7 @@ namespace FarEmerald.PlayForge.Editor
     }
 
     /// <summary>
-    /// A caster or a target for a read in the editor (LVL-5): an entity with no body, effects, items, tags or Local Data,
+    /// A caster or a target for a read in the editor: an entity with no body, effects, items, tags or Local Data,
     /// holding the attributes its side of a try gives, and asking the try for each one a read asks it for.
     /// </summary>
     internal sealed class NumberStandIn : ISource
@@ -430,7 +430,7 @@ namespace FarEmerald.PlayForge.Editor
         public LevelCallbackStatus ModifyLevel(Tag key, IntValuePair delta) => default;
     }
 
-    /// <summary>A try's caller values, which a read asks by key, the try adding a row for each key the first time (LVL-5).</summary>
+    /// <summary>A try's caller values, which a read asks by key, the try adding a row for each key the first time.</summary>
     internal sealed class CallerValues : IReadOnlyDictionary<Tag, float>
     {
         private readonly ScalerTry tried;

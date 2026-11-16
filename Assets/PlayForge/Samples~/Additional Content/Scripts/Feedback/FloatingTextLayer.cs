@@ -28,7 +28,7 @@ namespace FarEmerald.PlayForge.AdditionalContent
     }
 
     /// <summary>
-    /// The world-space canvas words float on (AC-2): one a scene, made as the first word floats where the scene has none,
+    /// The world-space canvas words float on: one a scene, made as the first word floats where the scene has none,
     /// holding TextMeshPro texts it reuses. Each word rises and fades over its lifetime, turned to face the camera.
     /// </summary>
     [DisallowMultipleComponent]

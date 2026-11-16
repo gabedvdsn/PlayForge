@@ -11,17 +11,17 @@ using Object = UnityEngine.Object;
 namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
-    /// The Forge, PlayForge's main window, in Docs/EDITOR_STYLE.md's terms (Q5): a list of the project's PlayForge assets
-    /// beside a detail pane that holds the selected asset's inspector, under a summary of what it does and what uses it
-    /// (Q6). The toolbar holds Create, the type filters, Tags, the search and the problem count; the status bar holds the
-    /// counts. It follows the project, with no Refresh and no timer (Q30), and the validator's problems with it (Q8,
-    /// ED-15). One click selects a row and shows its asset (ED-27). It had Create, View, Analysis and Settings tabs: the
-    /// Analysis tab's power scores stay hidden until Items and Entities score too (Q7), and the Settings tab's settings
-    /// are on the two settings pages (ED-21).
+    /// The Forge, PlayForge's main window: a list of the project's PlayForge assets
+    /// beside a detail pane that holds the selected asset's inspector, under a summary of what it does and what uses it.
+    /// The toolbar holds Create, the type filters, Tags, the search and the problem count; the status bar holds the
+    /// counts. It follows the project, with no Refresh and no timer, and the validator's problems with it.
+    /// One click selects a row and shows its asset. It had Create, View, Analysis and Settings tabs: the
+    /// Analysis tab's power scores stay hidden until Items and Entities score too, and the Settings tab's settings
+    /// are on the two settings pages.
     /// </summary>
     public sealed class TheForge : EditorWindow, IHasCustomMenu
     {
-        // The title is the menu item's name. It said "PlayForge Manager" (ED-19)
+        // The title is the menu item's name. It said "PlayForge Manager"
         private const string WindowTitle = "The Forge";
         internal const string PREFS_PREFIX = PlayForgePreferences.Prefix;
         private const string HiddenClass = "pf-forge__hidden";
@@ -50,7 +50,7 @@ namespace FarEmerald.PlayForge.Editor
         private readonly Dictionary<string, ToolbarToggle> typeToggles = new();
         private ToolbarMenu moreMenu;
 
-        // The types the toolbar shows as toggles: the PlayForge assets; the rest are under More (FN-12, Decision 72)
+        // The types the toolbar shows as toggles: the PlayForge assets; the rest are under More
         private static bool IsCommon(Type type) => typeof(BaseForgeAsset).IsAssignableFrom(type);
         private List<ScriptableObject> allAssets = new();
 
@@ -61,14 +61,14 @@ namespace FarEmerald.PlayForge.Editor
         private UnityEditor.Editor detailEditor;
         private Object shownInDetail;
 
-        // Back and forward over the assets the detail pane has shown, as a browser's, which a domain reload keeps (ED-76)
+        // Back and forward over the assets the detail pane has shown, as a browser's, which a domain reload keeps
         [SerializeField] private List<Object> backHistory = new();
         [SerializeField] private List<Object> forwardHistory = new();
         private ToolbarButton backButton;
         private ToolbarButton forwardButton;
         private const int MostHistory = 50;
 
-        // The active Forge Project, whose assets the list shows, and the others to switch to (FEAT-34)
+        // The active Forge Project, whose assets the list shows, and the others to switch to
         private ToolbarMenu projectMenu;
 
         /// <summary>The asset the detail pane shows.</summary>
@@ -78,11 +78,11 @@ namespace FarEmerald.PlayForge.Editor
         // Opening
         // ═══════════════════════════════════════════════════════════════════════════
 
-        // Under Window, where the Asset Store expects a package's menu (rule 2.5.1.a, ED-19)
+        // Under Window, where the Asset Store expects a package's menu (rule 2.5.1.a)
         [MenuItem("Window/PlayForge/" + WindowTitle, false, 0)]
         public static void ShowWindow() => Open();
 
-        // A shortcut, rebindable in Edit → Shortcuts, opens The Forge with its search focused (Q29)
+        // A shortcut, rebindable in Edit → Shortcuts, opens The Forge with its search focused
         [Shortcut("PlayForge/The Forge", KeyCode.F, ShortcutModifiers.Alt | ShortcutModifiers.Shift)]
         private static void OpenToSearch()
         {
@@ -102,7 +102,7 @@ namespace FarEmerald.PlayForge.Editor
 
         /// <summary>
         /// Opens The Forge on an asset, its type's filter on, with the asset selected, as an inspector's Open in The Forge
-        /// does. It filtered by the asset's name, and showed the tab as it was (ED-27).
+        /// does. It filtered by the asset's name, and showed the tab as it was.
         /// </summary>
         public static void OpenToAsset(Object asset)
         {
@@ -123,7 +123,7 @@ namespace FarEmerald.PlayForge.Editor
             menu.AddItem(new GUIContent("Project Settings…"), false, PlayForgeSettingsPages.OpenProjectSettings);
             menu.AddItem(new GUIContent("Preferences…"), false, PlayForgeSettingsPages.OpenPreferences);
 
-            // Numbers by level and item stats, to a spreadsheet and back: the project's, or the selected assets' (TW-27)
+            // Numbers by level and item stats, to a spreadsheet and back: the project's, or the selected assets'
             menu.AddSeparator("");
             var chosen = SelectedAssets();
             var items = chosen.OfType<Item>().ToList();
@@ -218,16 +218,16 @@ namespace FarEmerald.PlayForge.Editor
         private void CreateGUI()
         {
             var root = rootVisualElement;
-            // PlayForge's style sheet, in the editor's theme. It painted the window a hard-coded dark gray (ED-20)
+            // PlayForge's style sheet, in the editor's theme. It painted the window a hard-coded dark gray
             ForgeTheme.Apply(root);
             root.AddToClassList("pf-forge");
             root.Add(BuildToolbar());
 
-            // The list as wide as the user left it; its columns' widths are kept as well (ED-48, ED-72)
+            // The list as wide as the user left it; its columns' widths are kept as well
             var split = new TwoPaneSplitView(0, ListWidth, TwoPaneSplitViewOrientation.Horizontal) { name = "Split" };
             split.AddToClassList("pf-forge__split");
             // The asset list and the tag list take turns in one place, each laid out while the other shows, so each keeps
-            // its columns' widths (ED-48)
+            // its columns' widths
             var lists = ForgeStack.Make(new VisualElement { name = "Lists" });
             lists.AddToClassList("pf-forge__lists");
             lists.RegisterCallback<GeometryChangedEvent>(change =>
@@ -247,7 +247,7 @@ namespace FarEmerald.PlayForge.Editor
             split.Add(scroll);
             root.Add(split);
 
-            // Where the Unity project has no Forge Project, The Forge asks for one in place of its list (EP-10)
+            // Where the Unity project has no Forge Project, The Forge asks for one in place of its list
             root.Add(FirstProject());
 
             status = new Label { name = "ForgeStatus" };
@@ -255,7 +255,7 @@ namespace FarEmerald.PlayForge.Editor
             root.Add(status);
 
             // Alt+Left and Alt+Right, and the mouse's back and forward buttons, go back and forward, but in a text field,
-            // where the keys move the cursor (ED-76)
+            // where the keys move the cursor
             root.RegisterCallback<KeyDownEvent>(key =>
             {
                 if (!key.altKey || key.keyCode is not (KeyCode.LeftArrow or KeyCode.RightArrow)) return;
@@ -277,23 +277,23 @@ namespace FarEmerald.PlayForge.Editor
         private Toolbar BuildToolbar()
         {
             var toolbar = new Toolbar { name = "ForgeToolbar" };
-            // Back and forward over the assets shown, as a browser's (ED-76)
+            // Back and forward over the assets shown, as a browser's
             backButton = new ToolbarButton(GoBack) { name = "Back", tooltip = "Back to the asset shown before (Alt+Left)" };
             backButton.Add(new ForgeGlyph(ForgeGlyphShape.Back));
             toolbar.Add(backButton);
             forwardButton = new ToolbarButton(GoForward) { name = "Forward", tooltip = "Forward to the asset gone back from (Alt+Right)" };
             forwardButton.Add(new ForgeGlyph(ForgeGlyphShape.Forward));
             toolbar.Add(forwardButton);
-            // The active Forge Project, whose assets the list shows (FEAT-34)
+            // The active Forge Project, whose assets the list shows
             projectMenu = new ToolbarMenu { name = "Project", tooltip = "The Forge Project whose assets The Forge shows" };
             toolbar.Add(projectMenu);
             var create = new ToolbarMenu { name = "Create", text = "Create", tooltip = "Make a new asset where Project Settings puts its type" };
             FillCreate(create);
-            // Again as it opens, so the project's templates are as they are now (TW-24)
+            // Again as it opens, so the project's templates are as they are now
             create.RegisterCallback<PointerDownEvent>(_ => FillCreate(create), TrickleDown.TrickleDown);
             toolbar.Add(create);
 
-            // The common types as toggles, the rest under More, which says the one chosen (FN-12, Decision 72)
+            // The common types as toggles, the rest under More, which says the one chosen
             foreach (var type in Types.Where(IsCommon))
             {
                 var name = ForgeAssetTypes.NameOf(type);
@@ -356,7 +356,7 @@ namespace FarEmerald.PlayForge.Editor
             {
                 name = "Assets",
                 fixedItemHeight = 20,
-                // A selection moves or copies into another project at once; the first shows in the detail (FEAT-34)
+                // A selection moves or copies into another project at once; the first shows in the detail
                 selectionType = SelectionType.Multiple,
                 showAlternatingRowBackgrounds = AlternatingRowBackground.ContentOnly,
                 sortingMode = ColumnSortingMode.Custom,
@@ -375,7 +375,7 @@ namespace FarEmerald.PlayForge.Editor
                     cell.Add(name);
                     return cell;
                 },
-                // The asset's name alone: its file name is in the selected asset's header, under Show in Project (ED-58)
+                // The asset's name alone: its file name is in the selected asset's header, under Show in Project
                 bindCell = (cell, index) =>
                 {
                     var asset = shownAssets[index];
@@ -387,7 +387,7 @@ namespace FarEmerald.PlayForge.Editor
             list.columns.Add(TextColumn("Type", "Type", 100, asset => ForgeAssetTypes.NameOf(asset.GetType())));
             list.columns.Add(TextColumn("AssetTag", "Asset Tag", 130, AssetTagOf));
             list.columns.Add(TextColumn("Levels", "Levels", 56, LevelsOf));
-            // Each asset's one line, as its header shows it, clipped, the whole of it in the cell's tooltip (TW-21)
+            // Each asset's one line, as its header shows it, clipped, the whole of it in the cell's tooltip
             list.columns.Add(new Column
             {
                 name = "Summary", title = "Summary", width = 220, sortable = true,
@@ -418,7 +418,7 @@ namespace FarEmerald.PlayForge.Editor
                 },
             });
             ForgeColumnWidths.Remember(list.columns, "Forge.Assets");
-            // The sort the window keeps through a domain reload shows in the header again (ED-59)
+            // The sort the window keeps through a domain reload shows in the header again
             list.sortColumnDescriptions.Add(new SortColumnDescription(sortColumn, sortAscending ? SortDirection.Ascending : SortDirection.Descending));
             list.columnSortingChanged += () =>
             {
@@ -437,8 +437,8 @@ namespace FarEmerald.PlayForge.Editor
             };
             list.itemsChosen += chosen => ShowInProject(chosen.OfType<Object>().FirstOrDefault());
             list.AddManipulator(new ContextualMenuManipulator(AssetMenu));
-            // F2 renames the selected asset, as in the Project window (FN-8); Delete, or Command-Backspace on a Mac, moves the
-            // selection to the trash, asking first, as the menu's Move to Trash does (EP-19)
+            // F2 renames the selected asset, as in the Project window; Delete, or Command-Backspace on a Mac, moves the
+            // selection to the trash, asking first, as the menu's Move to Trash does
             list.RegisterCallback<KeyDownEvent>(key =>
             {
                 bool delete = key.keyCode == KeyCode.Delete || key.keyCode == KeyCode.Backspace && key.commandKey;
@@ -453,7 +453,7 @@ namespace FarEmerald.PlayForge.Editor
         }
 
         // Create's items: each type, and under one with presets, Blank first, then PlayForge's presets, then the project's
-        // templates after a line (TW-24)
+        // templates after a line
         private void FillCreate(ToolbarMenu create)
         {
             create.menu.MenuItems().Clear();
@@ -494,7 +494,7 @@ namespace FarEmerald.PlayForge.Editor
         };
 
         // The tags: each one, by its full path or its leaf as the tag preferences say, what it's for, and how many assets
-        // use it, each a column that sorts (ED-59)
+        // use it, each a column that sorts
         private MultiColumnListView BuildTagList()
         {
             var list = new MultiColumnListView
@@ -525,7 +525,7 @@ namespace FarEmerald.PlayForge.Editor
                 selectedTag = record.Tag.Name;
                 ShowDetail();
             };
-            // Rename… on a tag's row, as F2 on the list, renames it and the tags under it, everywhere they're stored (FN-9)
+            // Rename… on a tag's row, as F2 on the list, renames it and the tags under it, everywhere they're stored
             list.AddManipulator(new ContextualMenuManipulator(menu =>
             {
                 var tag = SelectedTag();
@@ -545,7 +545,7 @@ namespace FarEmerald.PlayForge.Editor
         // The tag the Tags view has selected, or none
         private Tag SelectedTag() => shownTags.FirstOrDefault(each => each.Tag.Name == selectedTag)?.Tag ?? default;
 
-        /// <summary>Asks for a tag's new path, then renames it and the tags under it, everywhere they're stored (FN-9).</summary>
+        /// <summary>Asks for a tag's new path, then renames it and the tags under it, everywhere they're stored.</summary>
         internal void RenameTag(Tag tag)
         {
             if (!tag.IsValid) return;
@@ -576,7 +576,7 @@ namespace FarEmerald.PlayForge.Editor
         // Reads the project's assets again, then shows what the filters let through
         /// <summary>
         /// What The Forge shows where the Unity project has no Forge Project: what one is, a name, and Create, which makes it
-        /// in a folder of its own under the PlayForge Folder, with its Game Root and the Bootstrap prefabs (EP-10).
+        /// in a folder of its own under the PlayForge Folder, with its Game Root and the Bootstrap prefabs.
         /// </summary>
         internal static VisualElement FirstProject()
         {
@@ -607,7 +607,7 @@ namespace FarEmerald.PlayForge.Editor
             return first;
         }
 
-        // The first project's ask in place of the list and the detail, while the Unity project has none (EP-10)
+        // The first project's ask in place of the list and the detail, while the Unity project has none
         private void ShowFirstProject()
         {
             bool none = ForgeProjects.All().Count == 0;
@@ -618,7 +618,7 @@ namespace FarEmerald.PlayForge.Editor
         private void Reload()
         {
             ShowFirstProject();
-            // The active Forge Project's assets alone; every asset, while the project has none (FEAT-34)
+            // The active Forge Project's assets alone; every asset, while the project has none
             inActive = ForgeProjects.InActive();
             allAssets = ForgeValidator.ProjectAssets().Where(asset => inActive(asset)).ToList();
             ShowProject();
@@ -665,7 +665,7 @@ namespace FarEmerald.PlayForge.Editor
             ShowCounts();
         }
 
-        // The project menu: each project, the active one checked, then New Project and the active one's file (FEAT-34)
+        // The project menu: each project, the active one checked, then New Project and the active one's file
         private void ShowProject()
         {
             if (projectMenu == null) return;
@@ -713,7 +713,7 @@ namespace FarEmerald.PlayForge.Editor
             var listed = tagsShown
                 ? (shownTags.Count == tags ? CountOf(shownTags.Count, "tag", "tags") : $"{shownTags.Count} of {CountOf(tags, "tag", "tags")}")
                 : (shownAssets.Count == allAssets.Count ? CountOf(allAssets.Count, "asset", "assets") : $"{shownAssets.Count} of {CountOf(allAssets.Count, "asset", "assets")}");
-            // The Forge Project the assets and the tags are of (FEAT-34, EP-20)
+            // The Forge Project the assets and the tags are of
             var project = ForgeProjects.Active;
             var where = project != null ? $" in {project.name}" : "";
             status.text = $"{listed}{where} · {(problems.Count == 0 ? "no problems" : CountOf(problems.Count, "problem", "problems"))}";
@@ -762,7 +762,7 @@ namespace FarEmerald.PlayForge.Editor
             var title = new Label("Summary");
             title.AddToClassList("pf-forge__summary-title");
             summary.Add(title);
-            // A Scaler asset's and a Requirement Template's description too, as text to read (ED-78)
+            // A Scaler asset's and a Requirement Template's description too, as text to read
             var description = ForgeSummaries.DescriptionOf(asset);
             if (!string.IsNullOrWhiteSpace(description))
             {
@@ -779,7 +779,7 @@ namespace FarEmerald.PlayForge.Editor
                     summary.Add(Row(section.Title, line));
                 }
             }
-            // An inspector with no sections, as a Scaler asset's, said nothing here (ED-74)
+            // An inspector with no sections, as a Scaler asset's, said nothing here
             else
             {
                 foreach (var (label, line) in ForgeSummaries.LinesOf(asset)) summary.Add(Row(label, line));
@@ -814,7 +814,7 @@ namespace FarEmerald.PlayForge.Editor
             var summary = new VisualElement { name = "Summary" };
             summary.AddToClassList("pf-forge__summary");
             // Its own name, its leaf, and under it its whole path where the path says more, as a tag's parents or an asset
-            // tag's type (FN-9); the name a unique tag pads, which only tells tags apart, on hover (ED-60)
+            // tag's type; the name a unique tag pads, which only tells tags apart, on hover
             var path = record.Tag.Path;
             var primary = record.Tag.GetLeafName();
             var title = new Label(primary) { name = "TagName", tooltip = record.Tag.Name != path ? record.Tag.Name : "" };
@@ -830,9 +830,9 @@ namespace FarEmerald.PlayForge.Editor
             summary.Add(Row("Uses", CountOf(UsesOf(record), "asset", "assets")));
             detail.Add(summary);
 
-            // The contexts it's declared for, which put it in those contexts' pickers as well as its uses' (ED-83)
+            // The contexts it's declared for, which put it in those contexts' pickers as well as its uses'
             var tag = record.Tag;
-            // Those its code declares among them, checked and locked (EP-7)
+            // Those its code declares among them, checked and locked
             var declared = new ForgeTagContextsField("Declared For", ForgeTagContexts.DeclaredOf(tag), ForgeTagContexts.CodeContextsOf(tag))
             {
                 name = "TagContexts",
@@ -847,7 +847,7 @@ namespace FarEmerald.PlayForge.Editor
 
             var users = new VisualElement { name = "TagUsers" };
             users.AddToClassList("pf-forge__users");
-            // The active project's assets alone, as its uses count them (EP-20)
+            // The active project's assets alone, as its uses count them
             var usages = record.UsageByContext.Values.SelectMany(usage => usage.Usages)
                 .Where(usage => usage.Asset != null && inActive(usage.Asset))
                 .GroupBy(usage => usage.Asset)
@@ -878,7 +878,7 @@ namespace FarEmerald.PlayForge.Editor
         }
 
         // How wide the list is, which a user's drag of the split sets, kept for each user as the columns' widths are. It
-        // opened 360 wide each time (ED-72)
+        // opened 360 wide each time
         private static string ListWidthKey => PlayForgePreferences.Prefix + "Forge.Split";
 
         internal static float ListWidth
@@ -889,13 +889,13 @@ namespace FarEmerald.PlayForge.Editor
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
-        // Back and forward (ED-76)
+        // Back and forward
         // ═══════════════════════════════════════════════════════════════════════════
 
-        /// <summary>Whether there's an asset to go back to (ED-76).</summary>
+        /// <summary>Whether there's an asset to go back to.</summary>
         internal bool CanGoBack => backHistory.Any(asset => asset != null);
 
-        /// <summary>Whether there's an asset to go forward to (ED-76).</summary>
+        /// <summary>Whether there's an asset to go forward to.</summary>
         internal bool CanGoForward => forwardHistory.Any(asset => asset != null);
 
         // A new asset shown: the one before goes on the way back, and the way forward is gone, as a browser's
@@ -911,10 +911,10 @@ namespace FarEmerald.PlayForge.Editor
             ShowHistory();
         }
 
-        /// <summary>Shows the asset shown before, as a browser's Back (ED-76).</summary>
+        /// <summary>Shows the asset shown before, as a browser's Back.</summary>
         internal void GoBack() => Step(backHistory, forwardHistory);
 
-        /// <summary>Shows the asset gone back from, as a browser's Forward (ED-76).</summary>
+        /// <summary>Shows the asset gone back from, as a browser's Forward.</summary>
         internal void GoForward() => Step(forwardHistory, backHistory);
 
         // The last asset one way, passing over any deleted since, shown, and the one it replaces put on the other way. Its
@@ -950,8 +950,8 @@ namespace FarEmerald.PlayForge.Editor
         // The selected asset's actions, in its right-click menu
         private void AssetMenu(ContextualMenuPopulateEvent menu) => FillAssetMenu(menu.menu);
 
-        // The selected assets' actions, one menu with an asset header's three dots (ED-71): the first's alone, and the
-        // selection's into another Forge Project (FEAT-34)
+        // The selected assets' actions, one menu with an asset header's three dots: the first's alone, and the
+        // selection's into another Forge Project
         internal void FillAssetMenu(DropdownMenu menu) =>
             ForgeAssetActions.AddTo(menu, ForgeAssetActions.For(SelectedAssets(), copy => OpenToAsset(copy)));
 
@@ -980,7 +980,7 @@ namespace FarEmerald.PlayForge.Editor
         {
             null => "",
             BaseForgeAsset forge when !string.IsNullOrWhiteSpace(forge.GetName()) => forge.GetName(),
-            // The name its inspector gives it, as menus list it (ED-74)
+            // The name its inspector gives it, as menus list it
             ScalerAsset scaler => scaler.DisplayName,
             RequirementTemplate template => template.DisplayName,
             _ => asset.name,
@@ -1001,8 +1001,8 @@ namespace FarEmerald.PlayForge.Editor
         }
 
         /// <summary>
-        /// A tag, by its full path or by its leaf, as the tag preferences say (ED-25), from its display name: a unique
-        /// tag's name is padded with a generated suffix (ED-60).
+        /// A tag, by its full path or by its leaf, as the tag preferences say, from its display name: a unique
+        /// tag's name is padded with a generated suffix.
         /// </summary>
         internal static string TagText(Tag tag)
         {
@@ -1017,7 +1017,7 @@ namespace FarEmerald.PlayForge.Editor
 
         /// <summary>
         /// The tags the tag view shows: the active Forge Project's, as the tag picker offers them, those its assets use and
-        /// those no asset uses, as a default; a tag only another project's assets use, it showed (EP-20, the user's report).
+        /// those no asset uses, as a default; a tag only another project's assets use, it showed.
         /// </summary>
         private IEnumerable<ForgeTagRegistry.TagUsageRecord> ProjectTags()
         {
@@ -1025,19 +1025,19 @@ namespace FarEmerald.PlayForge.Editor
             return ForgeTagRegistry.GetAllTagRecords().Where(record => offers(record.Tag));
         }
 
-        // How many of the active project's assets use a tag, which its Uses column and its detail say (EP-20)
+        // How many of the active project's assets use a tag, which its Uses column and its detail say
         private int UsesOf(ForgeTagRegistry.TagUsageRecord record) => record.UsageByContext.Values
             .SelectMany(usage => usage.Usages).Select(usage => usage.Asset)
             .Where(asset => asset != null && inActive(asset)).Distinct().Count();
 
         /// <summary>
         /// The tags in a column's order: by the tag as the list shows it, by what it's for, or by its uses as a number,
-        /// each compared in natural order, then by the tag (ED-59).
+        /// each compared in natural order, then by the tag.
         /// </summary>
         internal static List<ForgeTagRegistry.TagUsageRecord> SortedTags(IEnumerable<ForgeTagRegistry.TagUsageRecord> records, string column, bool ascending,
             Func<ForgeTagRegistry.TagUsageRecord, int> uses = null)
         {
-            // A tag's uses, the active project's alone where the view gives them, else all (EP-20)
+            // A tag's uses, the active project's alone where the view gives them, else all
             uses ??= record => record.TotalAssetCount;
             Func<ForgeTagRegistry.TagUsageRecord, string> key = column switch
             {
@@ -1052,7 +1052,7 @@ namespace FarEmerald.PlayForge.Editor
 
         /// <summary>
         /// The assets in a column's order: each column's text, compared in natural order, so 9 comes before 10, then by
-        /// name (ED-7).
+        /// name.
         /// </summary>
         internal static List<ScriptableObject> Sorted(IEnumerable<ScriptableObject> assets, string column, bool ascending)
         {
@@ -1061,7 +1061,7 @@ namespace FarEmerald.PlayForge.Editor
                 "Type" => asset => ForgeAssetTypes.NameOf(asset.GetType()),
                 "AssetTag" => AssetTagOf,
                 "Levels" => LevelsOf,
-                // By each asset's one line (TW-21)
+                // By each asset's one line
                 "Summary" => ForgeAssetLines.Kept,
                 "Problems" => asset => ForgeValidator.ProblemsOf(asset).Count.ToString(),
                 _ => NameOf,

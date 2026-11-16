@@ -9,7 +9,7 @@ using UnityEngine.UIElements;
 namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
-    /// A sequence reference (ED-57, FN-24): a field as a kind field is, the sequence's name in its box, which opens a
+    /// A sequence reference: a field as a kind field is, the sequence's name in its box, which opens a
     /// searchable dropdown of the project's sequences, the static methods marked [TaskSequenceMethod] that take nothing and
     /// return a sequence, by their names, None first, each class's under its name where more than one class holds them. A
     /// pick is one Undo step. A method the reference names that the project no longer has shows as missing until another
@@ -82,7 +82,7 @@ namespace FarEmerald.PlayForge.Editor
 
             var entries = Entries();
             var root = new VisualElement { name = "SequenceReference" };
-            // The style sheet lays out the field, wherever it's drawn, as a kind field's (ED-20)
+            // The style sheet lays out the field, wherever it's drawn, as a kind field's
             ForgeTheme.Apply(root);
             var field = new ForgeTypeField(preferredLabel ?? property.displayName)
             {
@@ -116,7 +116,7 @@ namespace FarEmerald.PlayForge.Editor
 
             field.Opened += opened =>
             {
-                // The sequence referenced checked; none where the selection's differ (EP-1)
+                // The sequence referenced checked; none where the selection's differ
                 var held = Fresh();
                 var current = held == null || held.hasMultipleDifferentValues ? "\u0001" : NameOf(held);
                 new ForgeSequencePicker(entries, picked =>
@@ -135,7 +135,7 @@ namespace FarEmerald.PlayForge.Editor
 
         /// <summary>
         /// Points a sequence reference at a sequence method, or at none for null, as one Undo step: what a pick in its
-        /// picker does (FN-24).
+        /// picker does.
         /// </summary>
         public static void Pick(SerializedProperty reference, MethodInfo method)
         {

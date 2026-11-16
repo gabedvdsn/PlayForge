@@ -5,8 +5,8 @@ using UnityEngine.UIElements;
 namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
-    /// An effect's Purges (FN-16), a foldout of its fields, its arrow in line with the lists' around it in the Tags section
-    /// (EP-4). Unity hangs an inspector foldout's arrow 12 px into the margin, to the left of a list's arrow; this one
+    /// An effect's Purges, a foldout of its fields, its arrow in line with the lists' around it in the Tags section.
+    /// Unity hangs an inspector foldout's arrow 12 px into the margin, to the left of a list's arrow; this one
     /// keeps the lists' column, as <c>pf-foldout--aligned</c> sets in PlayForge.uss.
     /// </summary>
     [CustomPropertyDrawer(typeof(EffectPurge))]

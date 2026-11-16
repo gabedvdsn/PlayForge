@@ -81,8 +81,8 @@ namespace FarEmerald.PlayForge
     }
 
     /// <summary>
-    /// What an attribute is, which sets how bonuses to it add up and how a number reads it by default (TW-1, Decision 46):
-    /// the user's question of 2026-11-11, how several effects' Damage Amplification adds up and how an attack's scaler
+    /// What an attribute is, which sets how bonuses to it add up and how a number reads it by default,
+    /// as how several effects' Damage Amplification adds up and how an attack's scaler
     /// reads it. An effect's impact can add up its own way, and a number can read it its own way.
     /// </summary>
     public enum EAttributeRole
@@ -107,7 +107,7 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// A barrier, as a shield before Health: it absorbs for the attribute it names, each workable loss to that one taken
-        /// from it first, and it can decay, by a rate or with the effect that gave it (TW-12).
+        /// from it first, and it can decay, by a rate or with the effect that gave it.
         /// </summary>
         Barrier,
     }

@@ -6,8 +6,8 @@ namespace FarEmerald.PlayForge
 {
     /// <summary>
     /// An attribute set's reference to a shared <see cref="ScalerAsset"/> whose scaler is one of the cached kinds: it reads
-    /// the asset's scaler as the entity's values change, so an edit to the asset reaches every element that uses it
-    /// (ED-33). It keeps no values of its own.
+    /// the asset's scaler as the entity's values change, so an edit to the asset reaches every element that uses it.
+    /// It keeps no values of its own.
     /// </summary>
     [Serializable]
     [ForgeMenu("", Description = "A shared Scaler asset's number, for an attribute set.")]
@@ -62,7 +62,7 @@ namespace FarEmerald.PlayForge
         // Its values are the asset's, so the field shows no table of its own
         public override bool UseScalingOptions() => false;
 
-        // It reads its asset's scaler alone (ED-51)
+        // It reads its asset's scaler alone
         public override EScalerParts Parts => EScalerParts.None;
     }
 }

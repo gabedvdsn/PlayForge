@@ -12,14 +12,14 @@ namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
     /// The Debugger: one window for the game as it plays, in place of the GAS Debugger, Process Control and the Tag
-    /// Debugger (Q4), drawn as the design canvas's boards have it (version 21). Its Entities view lists the hubs
-    /// ProcessControl registers, of either kind (Q28), beside one hub's attributes, effects, abilities and tags, which it
-    /// can change (Q27, ED-40). Its Processes view lists every process, with what it's doing and how long its steps take
-    /// (ED-5), and its Tags view every tag the entities hold, as a tree, beside who holds the one selected. Its Timeline
-    /// view shows what the entities' abilities and effects did over time, as a recorder heard it (FEAT-12). The lists follow
+    /// Debugger. Its Entities view lists the hubs
+    /// ProcessControl registers, of either kind, beside one hub's attributes, effects, abilities and tags, which it
+    /// can change. Its Processes view lists every process, with what it's doing and how long its steps take,
+    /// and its Tags view every tag the entities hold, as a tree, beside who holds the one selected. Its Timeline
+    /// view shows what the entities' abilities and effects did over time, as a recorder heard it. The lists follow
     /// ProcessControl as processes join and leave, and the values change in place, at the rate the window menu sets,
-    /// while the game plays (Q30). Outside Play mode it offers Play Mode. The GAS Debugger scanned the scene for
-    /// MonoBehaviour hubs and rebuilt its details every 0.25 s (ED-4); Process Control and the Tag Debugger were IMGUI
+    /// while the game plays. Outside Play mode it offers Play Mode. The GAS Debugger scanned the scene for
+    /// MonoBehaviour hubs and rebuilt its details every 0.25 s; Process Control and the Tag Debugger were IMGUI
     /// windows of their own.
     /// </summary>
     public sealed partial class RuntimeDebugger : EditorWindow, IHasCustomMenu
@@ -87,7 +87,7 @@ namespace FarEmerald.PlayForge.Editor
         private Label frameStatus;
         private ToolbarSpacer toolbarSpacer;
 
-        // A narrow window, as a docked column, and the views' splits it lays out (ED-43)
+        // A narrow window, as a docked column, and the views' splits it lays out
         private const float NarrowWidth = 720f;
         private const float NarrowListHeight = 240f;
         private const string NarrowClass = "pf-debugger--narrow";
@@ -104,7 +104,7 @@ namespace FarEmerald.PlayForge.Editor
         // Opening
         // ═══════════════════════════════════════════════════════════════════════════
 
-        // Under Window, where the Asset Store expects a package's menu (rule 2.5.1.a, ED-19)
+        // Under Window, where the Asset Store expects a package's menu (rule 2.5.1.a)
         [MenuItem("Window/PlayForge/" + WindowTitle, false, 10)]
         public static void ShowWindow() => Open();
 
@@ -117,7 +117,7 @@ namespace FarEmerald.PlayForge.Editor
             return window;
         }
 
-        // The window menu holds the rate: the boards leave it off the toolbar (Q30)
+        // The window menu holds the rate, which stays off the toolbar
         public void AddItemsToMenu(GenericMenu menu)
         {
             foreach (var rate in Rates)
@@ -146,7 +146,7 @@ namespace FarEmerald.PlayForge.Editor
 
         private void OnPlayModeChanged(PlayModeStateChange change) => ShowState();
 
-        // Live, the views follow the game; outside Play mode, the prompt offers it (Q28)
+        // Live, the views follow the game; outside Play mode, the prompt offers it
         private void ShowState()
         {
             if (views == null) return;
@@ -155,7 +155,7 @@ namespace FarEmerald.PlayForge.Editor
             ForgeStack.Show(views, live);
             statusBar.EnableInClassList(HiddenClass, !live);
             searchField.SetEnabled(live);
-            // The Timeline records afresh each time the game starts playing, and stops hearing as it ends (FEAT-12)
+            // The Timeline records afresh each time the game starts playing, and stops hearing as it ends
             if (live && !timelineLive) StartTimeline();
             if (!live) StopTimeline();
             timelineLive = live;
@@ -247,7 +247,7 @@ namespace FarEmerald.PlayForge.Editor
 
         private void OnProcessesChanged(ProcessRelay relay, ProcessDataPacket data) => listsStale = true;
 
-        // What ProcessControl holds: every process, and the hubs among them, of either kind (Q28)
+        // What ProcessControl holds: every process, and the hubs among them, of either kind
         private void ReadLists()
         {
             listsStale = false;
@@ -293,7 +293,7 @@ namespace FarEmerald.PlayForge.Editor
             root.Add(BuildToolbar());
 
             // The prompt and the views take turns in one place, as the views do among themselves: each stays laid out
-            // while another shows, so a view's split and columns keep their sizes (ED-45, ED-48)
+            // while another shows, so a view's split and columns keep their sizes
             var body = ForgeStack.Make(new VisualElement { name = "Body" });
             prompt = BuildPrompt();
             body.Add(prompt);
@@ -436,7 +436,7 @@ namespace FarEmerald.PlayForge.Editor
         private const string AllStates = "All states";
 
         // A listed process is running or waiting: one that terminates leaves ProcessControl as it does, so Process
-        // Control's Terminated filter never matched (ED-5)
+        // Control's Terminated filter never matched
         private static readonly string[] Filters = { AllStates, "Running", "Waiting" };
 
         private static readonly (EProcessControlState State, string Text)[] ControlStates =
@@ -449,7 +449,7 @@ namespace FarEmerald.PlayForge.Editor
             (EProcessControlState.TerminatedImmediately, "Terminated Immediately"),
         };
 
-        // Outside Play mode, Play Mode, where the game runs (Q28)
+        // Outside Play mode, Play Mode, where the game runs
         private static VisualElement BuildPrompt()
         {
             var box = new VisualElement { name = "Prompt" };
@@ -503,7 +503,7 @@ namespace FarEmerald.PlayForge.Editor
             if (statusBar == null) return;
             frameLabel.text = $"Frame {Grouped(Time.frameCount)}";
 
-            // A narrow window's status bar holds the frame count, and counts without their parts (ED-43)
+            // A narrow window's status bar holds the frame count, and counts without their parts
             frameStatus.text = frameLabel.text;
             frameStatus.EnableInClassList(HiddenClass, !narrow);
             controlStatus.EnableInClassList(HiddenClass, narrow);
@@ -534,7 +534,7 @@ namespace FarEmerald.PlayForge.Editor
         /// Lays the window out for its width, as EDITOR_STYLE's Debugger section has it. Below 720 px, as a docked column,
         /// each view's list sits above its detail, the toolbar's views take a row of their own, the frame count moves to
         /// the status bar, the Processes list keeps ID, Process, State and Step, and Held By drops Source. The window kept
-        /// its wide layout at any width, so a docked one squeezed its lists and details side by side (ED-43).
+        /// its wide layout at any width, so a docked one squeezed its lists and details side by side.
         /// </summary>
         internal void Fit(float width)
         {
@@ -586,7 +586,7 @@ namespace FarEmerald.PlayForge.Editor
 
         /// <summary>
         /// An entity's name: a MonoBehaviour hub's GameObject's, which tells two of one asset apart, as "Goblin Raider
-        /// (2)", or a runtime hub's own (GAS-S1).
+        /// (2)", or a runtime hub's own.
         /// </summary>
         internal static string NameOf(IGameplayAbilitySystem gas)
         {
@@ -628,7 +628,7 @@ namespace FarEmerald.PlayForge.Editor
             return note;
         }
 
-        // A list column of text, which clips its own (Docs/EDITOR_STYLE.md)
+        // A list column of text, which clips its own
         private static Column TextColumn(string name, string title, float width, Func<int, string> text, bool stretch = false,
             bool number = false) => new()
         {
@@ -644,7 +644,7 @@ namespace FarEmerald.PlayForge.Editor
         };
 
         // ═══════════════════════════════════════════════════════════════════════════
-        // Details: a header, sections, tables and facts, as the boards draw them
+        // Details: a header, sections, tables and facts
         // ═══════════════════════════════════════════════════════════════════════════
 
         // A detail's header: the 32 px icon, the name, a line of what it is, then its buttons
@@ -728,7 +728,7 @@ namespace FarEmerald.PlayForge.Editor
             row.Insert(0, cell);
         }
 
-        // A fact whose value is None, in secondary text, as the boards draw it
+        // A fact whose value is None, in secondary text
         private static void ShowNone(Label value) => value.EnableInClassList("pf-debugger__fact-value--none", value.text == "None");
 
         // A row a click selects, which the table's own actions then act on

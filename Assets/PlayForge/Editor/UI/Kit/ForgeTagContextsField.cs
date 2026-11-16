@@ -7,9 +7,9 @@ namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
     /// A tag's contexts, as a choice: the contexts in its box, as "Granted, Universal", or None, which opens a menu of every
-    /// context with those chosen checked; choosing one adds it, or takes it away (ED-83). Contexts the tag's code declares,
-    /// by <c>[ForgeTagExposed]</c>, show among them, checked in the menu and locked, as they're written in code (EP-7). It
-    /// looks as Unity's popup does, as a choice does in the style (Docs/EDITOR_STYLE.md), and says each change through
+    /// context with those chosen checked; choosing one adds it, or takes it away. Contexts the tag's code declares,
+    /// by <c>[ForgeTagExposed]</c>, show among them, checked in the menu and locked, as they're written in code. It
+    /// looks as Unity's popup does, as a choice does in the style, and says each change through
     /// <see cref="Changed"/>.
     /// </summary>
     internal sealed class ForgeTagContextsField : BaseField<string>
@@ -24,7 +24,7 @@ namespace FarEmerald.PlayForge.Editor
         /// <summary>The contexts chosen, in the menu's order; those the tag's code declares aren't among them.</summary>
         public IReadOnlyList<string> Contexts => chosen;
 
-        /// <summary>The contexts the tag's code declares, which the field shows checked and locked (EP-7).</summary>
+        /// <summary>The contexts the tag's code declares, which the field shows checked and locked.</summary>
         public IReadOnlyList<string> Locked => locked;
 
         /// <param name="label">The field's label.</param>
@@ -59,7 +59,7 @@ namespace FarEmerald.PlayForge.Editor
 
         /// <summary>
         /// Adds a context the field hasn't chosen, or takes away one it has, as its menu does; one the tag's code declares
-        /// stays (EP-7).
+        /// stays.
         /// </summary>
         internal void Toggle(string context)
         {
@@ -96,7 +96,7 @@ namespace FarEmerald.PlayForge.Editor
 
         /// <summary>
         /// The field's menu: every context, those chosen checked, and those the tag's code declares checked and locked,
-        /// saying so (EP-7); then New Context….
+        /// saying so; then New Context….
         /// </summary>
         internal ForgeFieldMenu Menu()
         {
@@ -108,13 +108,13 @@ namespace FarEmerald.PlayForge.Editor
                     menu.AddDisabledItem(each, true, "Declared in code, by [ForgeTagExposed] where the tag is written, so it stays");
                 else menu.AddItem(each, chosen.Contains(each), () => Toggle(each));
             }
-            // A context of the project's own (FN-9, Decision 70)
+            // A context of the project's own
             menu.AddSeparator("");
             menu.AddItem("New Context…", false, NewContext);
             return menu;
         }
 
-        /// <summary>Asks for a new context's name, makes it, and chooses it here (FN-9).</summary>
+        /// <summary>Asks for a new context's name, makes it, and chooses it here.</summary>
         internal void NewContext() =>
             ForgeNameWindow.Show("New Tag Context", "Name", "", "Make", ForgeTagContexts.WhyNotContext, name =>
             {

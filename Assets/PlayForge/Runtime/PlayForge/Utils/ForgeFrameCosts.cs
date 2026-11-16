@@ -8,7 +8,7 @@ namespace FarEmerald.PlayForge
 {
     /// <summary>
     /// One of a frame's costliest processes in the Profiler's capture: its process ID, and the time its steps took in the
-    /// frame, every timing's (FEAT-18).
+    /// frame, every timing's.
     /// </summary>
     [Serializable]
     public struct ForgeProcessCost
@@ -22,7 +22,7 @@ namespace FarEmerald.PlayForge
 
     /// <summary>
     /// A frame's costliest processes, which go into the Profiler's capture as the frame's metadata while the Profiler
-    /// records, for the PlayForge Processes module to list (FEAT-18, Decision 32). The costs go under <see cref="Tag"/>,
+    /// records, for the PlayForge Processes module to list. The costs go under <see cref="Tag"/>,
     /// the costliest first, and each one's type's name, in UTF-8, under the tags after it in the same order, so a saved
     /// capture still names them. The scene's ProcessControl puts them in as its frame ends; while the Profiler doesn't
     /// record, nothing is timed for them.

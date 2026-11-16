@@ -4,7 +4,7 @@ namespace FarEmerald.PlayForge
     public class SingleDurationEffectContainer : AbstractStackingEffectContainer
     {
         // Doubles because a float's rounding grows with its size and every frame adds to it: over five minutes
-        // at 144 fps the duration drifted far enough from the ticks to end before the last one (GAS-33)
+        // at 144 fps the duration drifted far enough from the ticks to end before the last one
         protected double durationRemaining;
         protected double timeUntilPeriodTick;
         
@@ -20,7 +20,7 @@ namespace FarEmerald.PlayForge
         public override float DurationRemaining => (float)durationRemaining;
         public override float NextDurationRemaining => (float)durationRemaining;
         public override float TimeUntilPeriodTick => (float)timeUntilPeriodTick;
-        // Its timers in full, for a save (GAS-61)
+        // Its timers in full, for a save
         protected internal override double ExactDurationRemaining => durationRemaining;
         protected internal override double ExactTimeUntilPeriodTick => timeUntilPeriodTick;
         protected internal override void SetExactDurationRemaining(double duration) => durationRemaining = duration;

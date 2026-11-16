@@ -7,8 +7,8 @@ namespace FarEmerald.PlayForge.Editor
     /// The asset tag an asset's name gives, as the Identity section shows it: Unity's text field, read-only, with its
     /// label in the Inspector's one label column and the tag in secondary text, so it can be selected and copied. When the
     /// stored tag differs from the one the name gives, the tag shows in warning text and Update stores the new one. It
-    /// takes its look from the style sheet (Decision 20). The tag sat in a tinted, bordered box, in bold italics, beside
-    /// "(auto)" in 9 px text (ED-37).
+    /// takes its look from the style sheet. The tag sat in a tinted, bordered box, in bold italics, beside
+    /// "(auto)" in 9 px text.
     /// </summary>
     internal sealed class ForgeAssetTagField : TextField
     {

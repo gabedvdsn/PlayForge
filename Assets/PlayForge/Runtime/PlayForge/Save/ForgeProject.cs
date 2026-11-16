@@ -5,10 +5,10 @@ using UnityEngine;
 namespace FarEmerald.PlayForge
 {
     /// <summary>
-    /// A Forge Project: a set of PlayForge assets of its own, those under the folder its asset is in (FEAT-34, Decision 44).
+    /// A Forge Project: a set of PlayForge assets of its own, those under the folder its asset is in.
     /// The Forge shows the active project's assets alone, and makes new assets in it. A project's folder can hold another
     /// project's, and an asset is in the innermost project whose folder holds it. It's an asset catalog too, of its own
-    /// assets, for saves (FEAT-9), which it keeps current as they're made, moved in and deleted (EP-15); Add Its Assets
+    /// assets, for saves, which it keeps current as they're made, moved in and deleted; Add Its Assets
     /// names them by hand.
     /// </summary>
     [CreateAssetMenu(menuName = "PlayForge/Forge Project", fileName = "Forge Project", order = 0)]
@@ -39,7 +39,7 @@ namespace FarEmerald.PlayForge
         private static void ClearUsed() => used = null;
 
         /// <summary>
-        /// The project a running game reads its settings from (TW-29): the one code uses, or else its GameRoot's; or null,
+        /// The project a running game reads its settings from: the one code uses, or else its GameRoot's; or null,
         /// where neither names one. The editor's active project isn't among them, so play mode reads what a build does.
         /// </summary>
         public static ForgeProject Current

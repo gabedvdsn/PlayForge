@@ -5,7 +5,7 @@ namespace FarEmerald.PlayForge
 {
     /// <summary>
     /// A scaler kept as an asset of its own, which scaler fields reference through a <see cref="SharedScaler"/>. Editing
-    /// it changes every field that uses it, so nothing propagates (ED-33, Decision 28); a field adjusts it only through
+    /// it changes every field that uses it, so nothing propagates; a field adjusts it only through
     /// its own Magnitude, as in Fire Duration × 1.5. It was the Scaler Template, whose link code had no callers, so reuse
     /// meant copying a scaler into each field and propagating edits by hand.
     /// </summary>

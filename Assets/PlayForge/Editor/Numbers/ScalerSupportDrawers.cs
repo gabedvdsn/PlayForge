@@ -5,9 +5,9 @@ using UnityEngine.UIElements;
 namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
-    /// A Threshold scaler's threshold (ED-66): the level it holds from and the tier's name on one row, Unity's fields bound
-    /// to them, so an Undo shows in them, and under them what the scaler reads from there, a number field of any kind
-    /// (FEAT-29). In a list it needs no label of its own. It drew a tinted row with "Lv" in blue and an arrow as text,
+    /// A Threshold scaler's threshold: the level it holds from and the tier's name on one row, Unity's fields bound
+    /// to them, so an Undo shows in them, and under them what the scaler reads from there, a number field of any kind.
+    /// In a list it needs no label of its own. It drew a tinted row with "Lv" in blue and an arrow as text,
     /// and its fields wrote as they changed and followed nothing after.
     /// </summary>
     [CustomPropertyDrawer(typeof(LevelThreshold))]
@@ -17,7 +17,7 @@ namespace FarEmerald.PlayForge.Editor
         {
             var inList = property.propertyPath.EndsWith("]");
             var root = new VisualElement { name = "LevelThreshold" };
-            // The style sheet lays out the row, wherever the threshold is drawn (ED-20)
+            // The style sheet lays out the row, wherever the threshold is drawn
             ForgeTheme.Apply(root);
             var row = new ForgePartsField(inList ? null : preferredLabel ?? property.displayName) { name = "Row" };
             root.Add(row);
@@ -36,7 +36,7 @@ namespace FarEmerald.PlayForge.Editor
     }
 
     /// <summary>
-    /// A Scaler Group's member, cached or not, as Unity's fields (ED-66): how its result combines with the members'
+    /// A Scaler Group's member, cached or not, as Unity's fields: how its result combines with the members'
     /// before it, then its scaler, whose own drawer shows its kind and its settings. It drew a stripe and a symbol in the
     /// operation's color, the scaler's kind beside them, and, for a cached member, a "CACHED" badge.
     /// </summary>

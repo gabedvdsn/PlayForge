@@ -31,7 +31,7 @@ namespace FarEmerald.PlayForge
         public AbstractMonoProcessInstantiator CustomInstantiator;
 
         // The path's parts, joined only when the path is read: it's a debugging breadcrumb, read when a
-        // sequence fails, and joining on every append cost about 1 KB per ability activation (PF-007)
+        // sequence fails, and joining on every append cost about 1 KB per ability activation
         private List<string> _pathParts;
         private string _path;
 
@@ -63,13 +63,13 @@ namespace FarEmerald.PlayForge
             _path = null;
         }
 
-        /// <summary>How many parts the path has, for a run or a stage to take it back to as it ends (TS-5).</summary>
+        /// <summary>How many parts the path has, for a run or a stage to take it back to as it ends.</summary>
         internal int PathDepth => _pathParts?.Count ?? (string.IsNullOrEmpty(_path) ? 0 : 1);
 
         /// <summary>
         /// Takes the path back to its first <paramref name="depth"/> parts. A run or a stage takes off what it added as it
         /// ends: each part stayed, so a sequence that repeated added its stages again every time round, and its path
-        /// grew for as long as it ran (TS-5).
+        /// grew for as long as it ran.
         /// </summary>
         internal void TrimPath(int depth)
         {
@@ -102,27 +102,27 @@ namespace FarEmerald.PlayForge
         }
 
         // Magnitudes the caller sets for the effects an ability applies, which each effect made from this data takes as
-        // it's made (FEAT-2)
+        // it's made
         private Dictionary<Tag, float> _setByCaller;
         private static readonly Dictionary<Tag, float> NoMagnitudes = new();
 
-        /// <summary>The magnitudes set for the effects made from this data, by tag (FEAT-2).</summary>
+        /// <summary>The magnitudes set for the effects made from this data, by tag.</summary>
         public IReadOnlyDictionary<Tag, float> SetByCallerMagnitudes => _setByCaller ?? NoMagnitudes;
 
         /// <summary>
         /// Sets a magnitude under a tag for each effect an ability applies with this data, which a Set By Caller scaler
-        /// reads: the damage a caller knows as it casts. Each effect takes it as it's made (FEAT-2).
+        /// reads: the damage a caller knows as it casts. Each effect takes it as it's made.
         /// </summary>
         public void SetByCaller(Tag key, float magnitude) => (_setByCaller ??= new Dictionary<Tag, float>())[key] = magnitude;
 
-        /// <summary>The magnitude set under the tag (FEAT-2).</summary>
+        /// <summary>The magnitude set under the tag.</summary>
         public bool TryGetSetByCaller(Tag key, out float magnitude)
         {
             magnitude = 0f;
             return _setByCaller != null && _setByCaller.TryGetValue(key, out magnitude);
         }
 
-        /// <summary>Takes each magnitude another set (FEAT-2).</summary>
+        /// <summary>Takes each magnitude another set.</summary>
         public void TakeSetByCaller(IReadOnlyDictionary<Tag, float> magnitudes)
         {
             if (magnitudes == null || magnitudes.Count == 0) return;
@@ -283,7 +283,7 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// The entry at <paramref name="index"/> under a key, if it's a <typeparamref name="T"/>. With <see cref="Count"/>,
-        /// a way through every entry that builds no list, as an ability's tasks go through its targets (GAS-62).
+        /// a way through every entry that builds no list, as an ability's tasks go through its targets.
         /// </summary>
         public bool TryGetAt<T>(Tag key, int index, out T value)
         {

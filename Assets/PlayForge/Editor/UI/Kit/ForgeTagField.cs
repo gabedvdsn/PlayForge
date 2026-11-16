@@ -4,7 +4,7 @@ using UnityEngine.UIElements;
 namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
-    /// A tag as a field shows it (ED-55, Docs/EDITOR_STYLE.md): Unity's field, its label in the label column, and the tag in
+    /// A tag as a field shows it: Unity's field, its label in the label column, and the tag in
     /// a field's box, its parents in secondary text and its leaf in strong text, or its whole path in strong text while the
     /// full-path setting is on, then a popup's arrow. Pressing the box, or Enter on the field, opens its tag picker. Its
     /// value is the tag's name, which a multiple selection whose tags differ shows as mixed.

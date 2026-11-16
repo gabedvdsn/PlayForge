@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
-    /// <summary>Whom a Send Event task sends to: its caster, or each of its activation's targets (FN-24).</summary>
+    /// <summary>Whom a Send Event task sends to: its caster, or each of its activation's targets.</summary>
     public enum EEventRecipient
     {
         Caster,
@@ -15,7 +15,7 @@ namespace FarEmerald.PlayForge
 
     /// <summary>
     /// Sends a gameplay event to its caster, or to each of its activation's targets, as a combo's hit tells its next stage it
-    /// connected, or as an ability sets off another's trigger (FN-24). The event's data holds its caster as Source and the
+    /// connected, or as an ability sets off another's trigger. The event's data holds its caster as Source and the
     /// one it's sent to as Event Subject, with the activation's caller's magnitudes; it's sent at once, and the abilities it
     /// triggers try to activate as a trigger's do.
     /// </summary>
@@ -63,7 +63,7 @@ namespace FarEmerald.PlayForge
 
     /// <summary>
     /// Grants tags to its caster or its target while its stage runs, as a charge's State.Charging: on as it starts, off as
-    /// the stage ends, however it ends (FN-24). Each is a loose tag, counted as a grant is, so two runs at once each give
+    /// the stage ends, however it ends. Each is a loose tag, counted as a grant is, so two runs at once each give
     /// and take back their own.
     /// </summary>
     [Serializable]
@@ -111,7 +111,7 @@ namespace FarEmerald.PlayForge
     /// <summary>
     /// Cancels its caster's running abilities by tag, as a dodge cancels a cast: each running ability tagged with one of
     /// its tags, or a child of one, by its asset tag or a context tag, is interrupted, but a run in a critical stage, which
-    /// is committed (Decision 30), and never the ability it runs in (FN-24).
+    /// is committed, and never the ability it runs in.
     /// </summary>
     [Serializable]
     [ForgeMenu("Events and Tags", Description = "Cancels the caster's running abilities tagged with one of its tags.")]

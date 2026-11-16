@@ -9,8 +9,8 @@ namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
     /// Deletes PlayForge assets the one way The Forge and the asset browser share: it names the assets that use them,
-    /// asks once, and moves them to the trash, where they can be restored. Both deleted for good, without looking (ED-8).
-    /// The Forge deletes its whole selection, from its menu or with the Delete key (EP-19).
+    /// asks once, and moves them to the trash, where they can be restored. Both deleted for good, without looking.
+    /// The Forge deletes its whole selection, from its menu or with the Delete key.
     /// </summary>
     internal static class ForgeAssetDeletion
     {
@@ -26,8 +26,7 @@ namespace FarEmerald.PlayForge.Editor
         public static bool MoveToTrash(Object asset) => MoveToTrash(new[] { asset }) == 1;
 
         /// <summary>
-        /// Asks once, naming the assets that use any of them, then moves each asset to the trash. Returns how many went
-        /// (EP-19).
+        /// Asks once, naming the assets that use any of them, then moves each asset to the trash. Returns how many went.
         /// </summary>
         public static int MoveToTrash(IReadOnlyList<Object> assets)
         {

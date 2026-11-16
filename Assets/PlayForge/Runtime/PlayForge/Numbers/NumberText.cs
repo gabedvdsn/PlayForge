@@ -5,7 +5,7 @@ using System.Text;
 namespace FarEmerald.PlayForge
 {
     /// <summary>
-    /// A number's one-line summary, as its field shows it under its row (FEAT-29): "0.3 × Target's Health (base)", "Fire
+    /// A number's one-line summary, as its field shows it under its row: "0.3 × Target's Health (base)", "Fire
     /// Duration + 2", "the caller's Data.Damage". A kind of your own gives its part through <see cref="NumberKind.Describe"/>.
     /// A field whose unit is "%" reads its numbers as percentages: "30% × Target's Health (base)".
     /// </summary>
@@ -25,7 +25,7 @@ namespace FarEmerald.PlayForge
             bool percent = unit == "%";
             string suffix = percent || string.IsNullOrEmpty(unit) ? "" : $" {unit}";
             string number = Number(magnitude, percent);
-            // A kind that is none, as a Group with no members, reads as no kind: the number (ED-80)
+            // A kind that is none, as a Group with no members, reads as no kind: the number
             if (AbstractScaler.IsNone(kind) || combine == EMagnitudeOperation.UseMagnitude)
                 return kind == null && combine is EMagnitudeOperation.UseScaler or EMagnitudeOperation.MultiplyWithScaler
                     ? $"{Number(0f, percent)}{suffix}"
@@ -64,7 +64,7 @@ namespace FarEmerald.PlayForge
                     var name = attribute.CaptureAttribute != null ? attribute.CaptureAttribute.GetName() : "attribute";
                     var groups = RetentionGroups.Describe(attribute.Groups);
                     var read = $"{side} {name}{groups}{AttributeParts.Suffix(attribute.CaptureWhat)}";
-                    // As its role or its own choice reads it: "(1 + Caster's Damage Amplification)" (TW-1)
+                    // As its role or its own choice reads it: "(1 + Caster's Damage Amplification)"
                     return AttributeBackedScaler.Resolve(attribute.ReadAs, attribute.CaptureAttribute) switch
                     {
                         EAttributeRead.AsMultiplier => $"(1 + {read})",
@@ -86,7 +86,7 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// A scaler's kind's name, as the kind menu shows it: a number by level that reads its values exactly, level by
-        /// level, is a Table, and one spread over the levels By Level (TW-27).
+        /// level, is a Table, and one spread over the levels By Level.
         /// </summary>
         public static string KindName(AbstractScaler scaler) =>
             scaler is SimpleScaler or CachedSimpleScaler && !scaler.StretchOverLevels ? "Table" : KindName(scaler?.GetType());
@@ -136,7 +136,7 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// What a number reads, by name, as a sentence ends: "the target", "the caster and the target", "a level". Null
-        /// for none (FEAT-32).
+        /// for none.
         /// </summary>
         public static string Reads(NumberReads reads)
         {

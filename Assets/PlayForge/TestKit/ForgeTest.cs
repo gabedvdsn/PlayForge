@@ -9,7 +9,7 @@ using UnityEngine.TestTools;
 namespace FarEmerald.PlayForge.Testing
 {
     /// <summary>
-    /// The base of a test that plays PlayForge content (TW-26, Decision 66): a live <see cref="ForgeTestWorld"/> before
+    /// The base of a test that plays PlayForge content: a live <see cref="ForgeTestWorld"/> before
     /// each test, and after it the world's invariants audited and the world ended. A test is a PlayMode
     /// <c>[UnityTest]</c> whose body runs through <see cref="Live"/>, from a frame's end:
     /// <code>

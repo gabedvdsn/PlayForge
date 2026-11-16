@@ -12,13 +12,13 @@ namespace FarEmerald.PlayForge
     {
         private readonly IGameplayAbilitySystem owner;
 
-        /// <summary>The hub this core is, which a save reads it through (FEAT-20).</summary>
+        /// <summary>The hub this core is, which a save reads it through.</summary>
         internal IGameplayAbilitySystem Owner => owner;
         private readonly LocalDataStructure localData = new();
         private List<Tag> affiliation;
         private bool pendingDestruction;
 
-        // A staying entity's death, run at its frame's end, and its body while it has one (TW-4)
+        // A staying entity's death, run at its frame's end, and its body while it has one
         private bool pendingDeath;
         private ProcessRelay bodyRelay;
         private AbstractMonoProcess body;
@@ -31,32 +31,32 @@ namespace FarEmerald.PlayForge
         public TagCache TagCache { get; }
         public GameplayAbilitySystemCallbacks Callbacks { get; }
 
-        /// <summary>The modifiers the entity holds now: its own, its items', its abilities' and its effects' (TW-7).</summary>
+        /// <summary>The modifiers the entity holds now: its own, its items', its abilities' and its effects'.</summary>
         public EffectModifierSet EffectModifiers { get; } = new();
 
-        /// <summary>The auras the entity runs, its items', abilities', effects' and its own (TW-10).</summary>
+        /// <summary>The auras the entity runs, its items', abilities', effects' and its own.</summary>
         public AuraSet Auras { get; } = new();
 
-        /// <summary>The side changes it's under, which go over its own sides while they last (TW-18).</summary>
+        /// <summary>The side changes it's under, which go over its own sides while they last.</summary>
         public SideSet Sides { get; } = new();
 
-        /// <summary>Its combat log, which writes what the project subscribes to (TW-22).</summary>
+        /// <summary>Its combat log, which writes what the project subscribes to.</summary>
         public CombatLog CombatLog { get; } = new();
 
-        /// <summary>The crowd control rules its abilities follow: its identity's, or else the project's (TW-16).</summary>
+        /// <summary>The crowd control rules its abilities follow: its identity's, or else the project's.</summary>
         public CrowdControlRules CrowdControl => Identity?.CrowdControl is { } own && own ? own : ProjectCrowdControl;
 
-        // The current project's, where it names any (TW-29)
+        // The current project's, where it names any
         private static CrowdControlRules ProjectCrowdControl =>
             ForgeProject.Current is { } project && project.Settings?.CrowdControl is { } rules && rules ? rules : null;
 
         /// <summary>The entity's settings as this GAS uses them, or null for a hub given none.</summary>
         public RuntimeEntityIdentity Identity { get; private set; }
 
-        // What its identity's components keep for it (FN-14)
+        // What its identity's components keep for it
         private readonly ComponentStates componentStates = new();
 
-        // Its identity's components, each hearing a moment of it, its killer's for its death (FN-14)
+        // Its identity's components, each hearing a moment of it, its killer's for its death
         private void HearComponents(System.Action<AbstractEntityComponent, EntityComponentContext> moment, ISource killer = null)
         {
             var components = Identity?.Components;
@@ -66,7 +66,7 @@ namespace FarEmerald.PlayForge
                 if (component != null) moment(component, ctx);
         }
 
-        /// <summary>The entity's own time, its time scale times the game's (FEAT-7).</summary>
+        /// <summary>The entity's own time, its time scale times the game's.</summary>
         public EntityClock Clock { get; } = new();
 
         public ActionQueue ActionQueue { get; private set; }
@@ -76,7 +76,7 @@ namespace FarEmerald.PlayForge
         public bool IsDead { get; private set; }
 
         /// <param name="owner">The hub, which the subsystems, workers and callbacks see as this GAS.</param>
-        /// <param name="callbacks">The hub's, made with it so a caller can subscribe before it initializes (PF-013).</param>
+        /// <param name="callbacks">The hub's, made with it so a caller can subscribe before it initializes.</param>
         public GASCore(IGameplayAbilitySystem owner, GameplayAbilitySystemCallbacks callbacks)
         {
             this.owner = owner;
@@ -89,14 +89,14 @@ namespace FarEmerald.PlayForge
             LevelSystem = new SystemLevelsComponent();
             TagCache = new TagCache(owner);
 
-            // A running ability's While active group is checked again once the tags change (FEAT-5)
+            // A running ability's While active group is checked again once the tags change
             TagCache.TagChanged += AbilitySystem.HearTagChange;
 
-            // An effect's side change goes over its sides while it lasts (TW-18)
+            // An effect's side change goes over its sides while it lasts
             Sides.Changed = SidesChanged;
 
-            // An effect that reads a level reads it again as it changes (GAS-58)
-            // A max's change raises Level Changed too, so the core hears it once (GAS-81)
+            // An effect that reads a level reads it again as it changes
+            // A max's change raises Level Changed too, so the core hears it once
             LevelSystem.Callbacks.OnLevelChanged += LevelChanged;
         }
 
@@ -111,13 +111,13 @@ namespace FarEmerald.PlayForge
             Identity = identity;
             localData.Init(identity);
 
-            // Live, for an area search on either hub, until it ends (GAS-75)
+            // Live, for an area search on either hub, until it ends
             ForgeEntities.Add(owner);
 
             if (identity is null) return;
 
             // This entity's sides: the registration data's, or else a copy of the identity's. They were written onto the
-            // identity, which every entity of this kind shares, so one turncoat moved them all (GAS-47)
+            // identity, which every entity of this kind shares, so one turncoat moved them all
             affiliation = registered ?? (identity.Affiliation != null ? new List<Tag>(identity.Affiliation) : null);
 
             AbilitySystem.Setup(identity.ActivationPolicy, identity.AllowDuplicateAbilities, identity.MaxAbilitiesOperation);
@@ -130,7 +130,6 @@ namespace FarEmerald.PlayForge
             if (identity.AttributeSet) identity.AttributeSet.InitWorkers(owner);
 
             // Its project's workers, which every entity has, after its own, so the first of a kind that runs once is its own
-            // (FN-15)
             ForgeProject.Current?.Settings?.Workers?.ProvideWorkersTo(owner);
 
             LevelSystem.Register(identity.AssetTag, new IntValuePairClamped(identity.GetStartingLevel(), identity.GetMaxLevel()));
@@ -142,13 +141,13 @@ namespace FarEmerald.PlayForge
 
             CompileGrantedTags();
 
-            // Once attributes, items and tags exist, so the rules can check them (GAS-49)
+            // Once attributes, items and tags exist, so the rules can check them
             AbilitySystem.ActivateImmediateAbilities();
 
-            // Its body, where it is (TW-4)
+            // Its body, where it is
             SpawnBody();
 
-            // Its components hear it register, its systems set up (FN-14)
+            // Its components hear it register, its systems set up
             HearComponents((component, ctx) => component.Register(ctx));
 
             Callbacks?.SystemInitialized();
@@ -184,7 +183,7 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// Whether the entity is part way through its step or its end of frame, whose loops a load would pull the effects
-        /// and actions out from under. A load waits for the step to end (FEAT-9).
+        /// and actions out from under. A load waits for the step to end.
         /// </summary>
         internal bool Stepping { get; private set; }
 
@@ -198,26 +197,26 @@ namespace FarEmerald.PlayForge
                 Clock.Step();
                 EffectSystem.Tick();
 
-                // Heard as the tags change; checked here too, after the effects, for a change heard while a check ran (FEAT-5)
+                // Heard as the tags change; checked here too, after the effects, for a change heard while a check ran
                 AbilitySystem.CheckWhileActive();
 
-                // The input buffer's windows count down by the entity's own time (FEAT-6)
+                // The input buffer's windows count down by the entity's own time
                 AbilitySystem.StepBuffer(Clock.DeltaTime);
 
-                // Its auras check who's near by its own time too (TW-10)
+                // Its auras check who's near by its own time too
                 Auras.Step(Clock.DeltaTime);
 
-                // And a revive its Respawn waits on counts down by it (FN-14)
+                // And a revive its Respawn waits on counts down by it
                 StepRevive(Clock.DeltaTime);
 
-                // And its barriers decay by it (TW-12)
+                // And its barriers decay by it
                 AttributeSystem.StepBarriers(Clock.DeltaTime);
 
-                // Its shelf, for the Effects Active counter (FEAT-18)
+                // Its shelf, for the Effects Active counter
                 CountEffects();
 
                 // Tag workers tick once a frame, at its end, once their activations are settled. Ticked here as well,
-                // they ran at twice their rate (GAS-19)
+                // they ran at twice their rate
             }
             finally
             {
@@ -230,7 +229,7 @@ namespace FarEmerald.PlayForge
         /// it queued in turn, then the frame's summary. True once the entity has died, for its hub to end it.
         /// </summary>
         // The entity's time runs at its time-scale attribute's current value, read as each step begins, where its identity
-        // names one, so an effect on that attribute slows or hastes it. Only its game's code could set it (FEAT-22)
+        // names one, so an effect on that attribute slows or hastes it. Only its game's code could set it
         private void FollowTimeScale()
         {
             var attribute = Identity?.TimeScaleAttribute;
@@ -269,22 +268,22 @@ namespace FarEmerald.PlayForge
 
             AnalysisCache.Analyze(owner);
 
-            // The attribute playing the project's Health role, where its own workers watch for no death (TW-28, TW-29)
+            // The attribute playing the project's Health role, where its own workers watch for no death
             WatchProjectHealth();
 
-            // Its lasting effects' Ongoing and Removal conditions, which no tag change asks for (TW-19)
+            // Its lasting effects' Ongoing and Removal conditions, which no tag change asks for
             EffectSystem.CheckConditions();
 
             // Actions queued by analysis workers
             totalExecuted += ActionQueue.ProcessAll(owner);
 
-            // The snapshot copies ten lists, so it's built only for someone listening (PF-006), and into lists it keeps:
-            // a new one each frame allocated them all again (GAS-P10)
+            // The snapshot copies ten lists, so it's built only for someone listening, and into lists it keeps:
+            // a new one each frame allocated them all again
             if (Callbacks != null && Callbacks.HasFrameCompleteListeners) Callbacks.FrameComplete(FrameSummary.TakeSnapshot(totalExecuted));
 
             FrameSummary.Clear();
 
-            // A staying entity dies here, once the frame's work is done, and stays; one with a body follows it (TW-4)
+            // A staying entity dies here, once the frame's work is done, and stays; one with a body follows it
             if (pendingDeath)
             {
                 pendingDeath = false;
@@ -294,7 +293,7 @@ namespace FarEmerald.PlayForge
 
             if (!pendingDestruction) return false;
 
-            // Told once: one stepped by hand kept it set and told it again at every end of frame after (GAS-80)
+            // Told once: one stepped by hand kept it set and told it again at every end of frame after
             pendingDestruction = false;
             Callbacks?.SystemDisabled();
             return true;
@@ -302,24 +301,24 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// The entity's process is ending. Its ability system takes no more activations, so none starts as the abilities
-        /// still running end with the process, nor after it (GAS-52).
+        /// still running end with the process, nor after it.
         /// </summary>
         public void WhenTerminate()
         {
-            // Its components hear it end, before what it holds goes (FN-14)
+            // Its components hear it end, before what it holds goes
             HearComponents((component, ctx) => component.End(ctx));
 
-            // Its auras' effects come off each they held them on (TW-10)
+            // Its auras' effects come off each they held them on
             Auras.Clear();
 
-            // What its effects' lasting transfers hold, given back, as they go with it (TW-20)
+            // What its effects' lasting transfers hold, given back, as they go with it
             EffectSystem.GiveBackTransfers();
             Sides.Clear();
             AbilitySystem.ShutDown();
             ForgeEntities.Remove(owner);
             EndBody();
 
-            // Its effects leave the Effects Active counter with it (FEAT-18)
+            // Its effects leave the Effects Active counter with it
             ForgeCounters.EffectsActive.Value -= countedEffects;
             countedEffects = 0;
         }
@@ -355,10 +354,10 @@ namespace FarEmerald.PlayForge
             Callbacks?.EntityDied(owner);
             FrameSummary?.RecordDeath(owner);
 
-            // Died to itself, with its killer; Kill to the killer (TW-5)
+            // Died to itself, with its killer; Kill to the killer
             var killer = Killer();
 
-            // The blow that killed it, in its combat log and its killer's (TW-22)
+            // The blow that killed it, in its combat log and its killer's
             if (killer != null)
             {
                 CombatLog.MarkKilling(ECombatLogKind.Taken, killer);
@@ -367,17 +366,17 @@ namespace FarEmerald.PlayForge
             Send(owner, Tags.DIED, EventData(killer, owner));
             if (killer is IGameplayAbilitySystem slayer) Send(slayer, Tags.KILL, EventData(killer, owner));
 
-            // Its components hear it die, and who killed it, then its effects' (FN-14)
+            // Its components hear it die, and who killed it, then its effects'
             HearComponents((component, ctx) => component.Death(ctx), killer);
             EffectSystem.HearDeath();
 
-            // One that stays dies at its frame's end and stays; any other ends there, as it always did (TW-4)
+            // One that stays dies at its frame's end and stays; any other ends there, as it always did
             if (EntityDeath.Stays(Identity?.Death)) pendingDeath = true;
             else pendingDestruction = true;
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
-        // Staying dead, reviving, and the body (TW-4)
+        // Staying dead, reviving, and the body
         // ═══════════════════════════════════════════════════════════════════════════
 
         /// <summary>The body it follows, while it has one: the MonoBehaviour process its identity's death names.</summary>
@@ -400,19 +399,19 @@ namespace FarEmerald.PlayForge
             Callbacks?.EntityRevived(owner);
             Send(owner, Tags.REVIVED, EventData(null, owner));
 
-            // Its components hear it revive (FN-14)
+            // Its components hear it revive
             HearComponents((component, ctx) => component.Revive(ctx));
             return true;
         }
 
         // A revive a Respawn waits on: the time left, by the entity's own clock, and where; none waits while it's NaN. A
-        // revive before its time, as a buyback, ends the wait (FN-14)
+        // revive before its time, as a buyback, ends the wait
         private float reviveIn = float.NaN;
         private UnityEngine.Vector3? reviveAt;
 
         /// <summary>
         /// Revives the entity, where it stays dead, once <paramref name="seconds"/> of its own time pass, at
-        /// <paramref name="at"/> or where it is, at the end of that frame (FN-14).
+        /// <paramref name="at"/> or where it is, at the end of that frame.
         /// </summary>
         internal void ReviveIn(float seconds, UnityEngine.Vector3? at)
         {
@@ -434,7 +433,7 @@ namespace FarEmerald.PlayForge
         // frame, whether it revived or not, 40 bytes an entity
         private void QueueRevive(UnityEngine.Vector3? at) => QueueAction(new LambdaAction(_ => Revive(at), "Respawn"));
 
-        /// <summary>The core a hub forwards to, or null for another kind of entity (FN-14).</summary>
+        /// <summary>The core a hub forwards to, or null for another kind of entity.</summary>
         internal static GASCore Of(IGameplayAbilitySystem gas) => gas switch
         {
             GameplayAbilitySystem mono => mono.Core,
@@ -443,7 +442,7 @@ namespace FarEmerald.PlayForge
         };
 
         /// <summary>
-        /// Gives the entity a body at runtime, one that isn't its identity's Body (FN-18, Decision 78): a MonoBehaviour
+        /// Gives the entity a body at runtime, one that isn't its identity's Body: a MonoBehaviour
         /// process, running already or registered for it here, which a runtime entity follows and which ends as the entity
         /// dies, as its identity's Body does; a revive spawns the identity's Body, where it has one. The body it had ends
         /// first, and null lets go of the one it has, ending it. False for a dead entity, which has none.
@@ -469,7 +468,7 @@ namespace FarEmerald.PlayForge
             return true;
         }
 
-        // A staying entity's death: its purge, all but what it keeps (FN-16), its body gone, the effects it takes, as a
+        // A staying entity's death: its purge, all but what it keeps, its body gone, the effects it takes, as a
         // respawn timer
         private void Die()
         {
@@ -519,9 +518,9 @@ namespace FarEmerald.PlayForge
         {
             FrameSummary?.RecordImpactDealt(impact);
             Callbacks?.ImpactDealt(impact);
-            // In its combat log, where the project writes the hits it deals (TW-22)
+            // In its combat log, where the project writes the hits it deals
             CombatLog.WriteDealt(impact, owner);
-            // A modifier coming off deals no hit (GAS-85)
+            // A modifier coming off deals no hit
             if (!impact.Ends) SendImpactEvent(Tags.IMPACT_DEALT, impact, owner, impact.Target);
         }
 
@@ -530,14 +529,14 @@ namespace FarEmerald.PlayForge
             ForgeCounters.Impacts.Value++;
             FrameSummary?.RecordImpactReceived(impact);
             Callbacks?.ImpactReceived(impact);
-            // In its combat log, where the project writes the hits it takes or its other changes (TW-22)
+            // In its combat log, where the project writes the hits it takes or its other changes
             CombatLog.WriteReceived(impact, owner);
-            // A modifier coming off is no hit taken (GAS-85)
+            // A modifier coming off is no hit taken
             if (!impact.Ends) SendImpactEvent(Tags.IMPACT_TAKEN, impact, impact.SourcedModifier.Source, owner);
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
-        // The core's gameplay events (TW-5)
+        // The core's gameplay events
         // ═══════════════════════════════════════════════════════════════════════════
 
         // An impact between two entities, as an event to this one, where an ability listens: a system's own impact, and
@@ -574,7 +573,6 @@ namespace FarEmerald.PlayForge
 
         // Who killed it: the source of the last workable loss it took this frame from another; of the attribute playing
         // the Health role where the project has one, so a loss after the blow, to another attribute, doesn't take the kill
-        // (TW-28, TW-29)
         private ISource Killer()
         {
             var received = FrameSummary?.ImpactsReceived;
@@ -598,7 +596,7 @@ namespace FarEmerald.PlayForge
             return null;
         }
 
-        // The Health role's attribute (TW-28, TW-29): an entity whose analysis workers watch for no death of their own, and whose Death
+        // The Health role's attribute: an entity whose analysis workers watch for no death of their own, and whose Death
         // doesn't say otherwise, dies as its Health reaches 0. One without the attribute doesn't
         private void WatchProjectHealth()
         {
@@ -617,14 +615,14 @@ namespace FarEmerald.PlayForge
         // Tags and affiliation
         // ═══════════════════════════════════════════════════════════════════════════
 
-        /// <summary>Its sides: those the side change it's under gives, or else its own (TW-18).</summary>
+        /// <summary>Its sides: those the side change it's under gives, or else its own.</summary>
         public List<Tag> GetAffiliation() => Sides.Current ?? OwnAffiliation;
 
         /// <summary>Its own sides: those its registration or code set, or else its identity's; a side change goes over them.</summary>
         public List<Tag> OwnAffiliation => affiliation ?? Identity?.Affiliation;
 
         /// <summary>
-        /// Sets its own sides, as its registration data does or the game as it runs (TW-18), in place of its identity's; its
+        /// Sets its own sides, as its registration data does or the game as it runs, in place of its identity's; its
         /// tags follow. A side change it's under still goes over them.
         /// </summary>
         public void SetAffiliation(List<Tag> sides)
@@ -634,7 +632,7 @@ namespace FarEmerald.PlayForge
         }
 
         // Its sides where a side change came or went: its tags follow, and what runs is interrupted where the change says
-        // so; where its sides are as they were, as under a change of higher priority, neither (TW-18)
+        // so; where its sides are as they were, as under a change of higher priority, neither
         private void SidesChanged(List<Tag> before, List<Tag> after, bool interrupts)
         {
             if (SameSides(before ?? OwnAffiliation, after ?? OwnAffiliation)) return;
@@ -652,7 +650,7 @@ namespace FarEmerald.PlayForge
             return true;
         }
 
-        // A rebuild of the tags from their sources, which tells, as it ends, only what it changed (FEAT-3)
+        // A rebuild of the tags from their sources, which tells, as it ends, only what it changed
         public void CompileGrantedTags()
         {
             using var sample = ForgeProfiler.TagCompile.Auto();
@@ -663,7 +661,7 @@ namespace FarEmerald.PlayForge
                 GrantedTagCompiler.Compile(TagCache, Identity.AttributeSet, EffectSystem, AbilitySystem, ItemSystem);
 
                 // The identity's own, as EntityIdentity.GetGrantedTags yields them. The runtime hub left out the
-                // affiliation (GAS-S1)
+                // affiliation
                 TagCache.AddTag(Identity.AssetTag);
                 GrantedTagCompiler.AddAll(TagCache, GetAffiliation());
                 GrantedTagCompiler.AddAll(TagCache, Identity.GrantedTags);
@@ -677,7 +675,7 @@ namespace FarEmerald.PlayForge
 
         // Tags granted to the entity directly, by its game's code or the Debugger, with no effect, ability or item
         // behind them, as Unreal's loose gameplay tags are. Each grant counts, and the compile includes them, so they last
-        // until they're taken back; a tag added straight to the cache went at the next compile (FEAT-16)
+        // until they're taken back; a tag added straight to the cache went at the next compile
         private readonly List<Tag> looseTags = new();
 
         public IReadOnlyList<Tag> LooseTags => looseTags;
@@ -695,7 +693,7 @@ namespace FarEmerald.PlayForge
             return true;
         }
 
-        /// <summary>The loose tags a save left, in place of these, which the restore's one compile counts (FEAT-9).</summary>
+        /// <summary>The loose tags a save left, in place of these, which the restore's one compile counts.</summary>
         internal void RestoreLooseTags(IEnumerable<Tag> tags)
         {
             looseTags.Clear();
@@ -704,7 +702,7 @@ namespace FarEmerald.PlayForge
 
         public bool QueryTags(TagQuery query)
         {
-            // The cache, which has the weights. The list counted each tag once, however often it was granted (GAS-16)
+            // The cache, which has the weights. The list counted each tag once, however often it was granted
             return query.Validate(TagCache);
         }
 

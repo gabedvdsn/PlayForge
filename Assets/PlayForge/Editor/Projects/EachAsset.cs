@@ -9,8 +9,8 @@ namespace FarEmerald.PlayForge.Editor
     /// A property across a multiple selection, one selected asset at a time, each through a SerializedObject of its own.
     /// A property of a multiple selection reads the first asset, and a write through it gives every asset the same
     /// value, so what is worked out from an asset's own values, such as a scaler's first value or its curve, is read and
-    /// written per asset (ED-12). With one asset selected, each call uses the property found again by its path, since one
-    /// a field kept since it was built can point into a managed reference an Undo has since put back (ED-49).
+    /// written per asset. With one asset selected, each call uses the property found again by its path, since one
+    /// a field kept since it was built can point into a managed reference an Undo has since put back.
     /// </summary>
     internal static class EachAsset
     {
@@ -21,7 +21,7 @@ namespace FarEmerald.PlayForge.Editor
             var serialized = property.serializedObject;
             if (!serialized.isEditingMultipleObjects)
             {
-                // Found again by its path, as Write finds it (ED-49)
+                // Found again by its path, as Write finds it
                 var fresh = serialized.FindProperty(property.propertyPath);
                 if (fresh != null) yield return fresh;
                 yield break;
@@ -49,7 +49,7 @@ namespace FarEmerald.PlayForge.Editor
             if (!serialized.isEditingMultipleObjects)
             {
                 // Found again by its path: a property a field kept since it was built can point into a managed reference
-                // an Undo has since put back, and resizing an array through it crashed the editor (ED-49)
+                // an Undo has since put back, and resizing an array through it crashed the editor
                 var fresh = serialized.FindProperty(property.propertyPath);
                 if (fresh == null) return;
                 write(fresh);

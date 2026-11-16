@@ -31,7 +31,7 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// True while a call to <see cref="ActivateAbility"/> runs, nested or not: as long as the activation runs before
         /// it first waits, which is all of it for an instant ability. Asked for again meanwhile, the ability starts next
-        /// frame (TS-8).
+        /// frame.
         /// </summary>
         internal bool IsActivating => _activating > 0;
 
@@ -41,7 +41,7 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// The stage the ability's first active run is in, counted from 0, or -1 while none is running or started. The
-        /// Debugger shows it as "Stage 2/3" (ED-4).
+        /// Debugger shows it as "Stage 2/3".
         /// </summary>
         public int ActiveStageIndex
         {
@@ -57,7 +57,7 @@ namespace FarEmerald.PlayForge
         public int CompiledProxies { get; private set; }
 
         // Compiled behaviours waiting for the next activation. Compiling is most of what an activation costs, so a
-        // proxy is compiled once and comes back here when its activation is over (PF-012). An activation that finds
+        // proxy is compiled once and comes back here when its activation is over. An activation that finds
         // none idle, such as one starting while an earlier activation of this ability still runs, compiles another.
         private readonly List<AbilityProxy> _idleProxies = new();
 
@@ -113,7 +113,7 @@ namespace FarEmerald.PlayForge
         private async UniTaskVoid AwaitAbility(AbilityActivationHandle handle)
         {
             bool targetingCancelled = false;
-            // How it ends, which its components hear (FN-14)
+            // How it ends, which its components hear
             var how = EAbilityEnd.Done;
             try
             {
@@ -128,7 +128,7 @@ namespace FarEmerald.PlayForge
             catch (Exception e)
             {
                 // Anything else went past targeting without the handle being cleaned, and the activation held its
-                // place for good (TS-V)
+                // place for good
                 Debug.LogError($"[Ability] {Spec.Base.GetName()} failed in targeting: {e}");
                 targetingCancelled = true;
                 how = EAbilityEnd.Failed;
@@ -137,7 +137,7 @@ namespace FarEmerald.PlayForge
             {
                 handle.IsTargeting = false;
 
-                // Targeting leaves a packet, and what reads a target asks for the entity it points at (GAS-46)
+                // Targeting leaves a packet, and what reads a target asks for the entity it points at
                 handle.Data.ResolveTarget(Spec.Base.Behaviour.ImplicitTag);
 
                 if (handle.Data.TryGetFirstTarget(out var target) && !Spec.ValidateAllActivationRequirements(target, handle.Data))
@@ -159,7 +159,7 @@ namespace FarEmerald.PlayForge
                 handle.IsExecuting = true;
 
                 // Its cost and cooldown, as it starts, after its targeting, where no stage marked Apply Usage Effects takes
-                // them: an author who sets a cost expects it paid, and they applied only from such a stage (TW-17)
+                // them: an author who sets a cost expects it paid, and they applied only from such a stage
                 if (!Spec.Base.StageTakesUsage && !handle.Data.UsageEffectsApplied)
                 {
                     handle.Data.UsageEffectsApplied = true;
@@ -185,7 +185,7 @@ namespace FarEmerald.PlayForge
 
                 await handle.Proxy.Activate(handle.Cts.Token, handle.Data);
 
-                // An interrupt ends a run through its sequence, with nothing thrown: its token says it was cancelled (FN-14)
+                // An interrupt ends a run through its sequence, with nothing thrown: its token says it was cancelled
                 if (handle.Cts != null && handle.Cts.IsCancellationRequested) how = EAbilityEnd.Cancelled;
             }
             catch (OperationCanceledException)
@@ -196,7 +196,7 @@ namespace FarEmerald.PlayForge
             catch (Exception e)
             {
                 // Anything else is a broken ability. Report it, rather than leave it looking like one that
-                // did nothing (PF-008)
+                // did nothing
                 Debug.LogError($"[Ability] {Spec.Base.GetName()} failed: {e}");
                 how = EAbilityEnd.Failed;
             }
@@ -229,7 +229,7 @@ namespace FarEmerald.PlayForge
             }
         }
 
-        // The stage a run is in, or null while it targets, before its first stage starts (FEAT-5)
+        // The stage a run is in, or null while it targets, before its first stage starts
         private AbilityTaskBehaviourStage StageOf(AbilityActivationHandle handle)
         {
             var stages = Spec.Base.Behaviour?.Stages;
@@ -239,7 +239,7 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// Whether a run of this ability is in a stage that keeps <paramref name="incoming"/> from activating: one whose
-        /// Blocks names it, or, naming none, whose ability's Blocks does. Blocking was the claim alone (FEAT-5).
+        /// Blocks names it, or, naming none, whose ability's Blocks does. Blocking was the claim alone.
         /// </summary>
         internal bool Blocks(Ability incoming)
         {
@@ -256,7 +256,7 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// Interrupts each run of this ability in a stage that <paramref name="incoming"/> cancels as it activates: one
         /// whose Cancelled By names it, or, naming none, whose ability's does. A critical stage is committed, so nothing
-        /// cancels it (Decision 30). Nothing cancelled an ability but an interrupt by slot (FEAT-5).
+        /// cancels it. Nothing cancelled an ability but an interrupt by slot.
         /// </summary>
         internal void CancelFor(Ability incoming)
         {
@@ -276,8 +276,8 @@ namespace FarEmerald.PlayForge
         }
 
         /// <summary>
-        /// Interrupts each run of this ability but one in a critical stage, which is committed (Decision 30), as a task that
-        /// cancels abilities by tag does (FN-24).
+        /// Interrupts each run of this ability but one in a critical stage, which is committed, as a task that
+        /// cancels abilities by tag does.
         /// </summary>
         public void Cancel()
         {

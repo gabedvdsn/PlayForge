@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
-    /// <summary>What an entity's death does (TW-4).</summary>
+    /// <summary>What an entity's death does.</summary>
     public enum EDeathPolicy
     {
         /// <summary>It ends, as an entity always did: its hub ends it at its frame's end.</summary>
@@ -18,11 +18,11 @@ namespace FarEmerald.PlayForge
     }
 
     /// <summary>
-    /// What an entity does as it dies and as it revives (TW-4, the user's request of 2026-11-11): a MOBA hero, or anyone
+    /// What an entity does as it dies and as it revives: a MOBA hero, or anyone
     /// who dies and comes back, keeps its entity while its body goes. Where it stays: the effects its death ends, by tag,
     /// as buffs; the effects it takes as it dies, as a respawn timer; the effects it takes as it revives, as its health
     /// back; and its body, a MonoBehaviour process it spawns where it is, as it starts and as it revives, and ends as it
-    /// dies. A runtime entity takes its position from its body (Decision 46).
+    /// dies. A runtime entity takes its position from its body.
     /// </summary>
     [Serializable]
     public class EntityDeath

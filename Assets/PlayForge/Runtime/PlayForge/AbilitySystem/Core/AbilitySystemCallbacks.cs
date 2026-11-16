@@ -34,7 +34,7 @@ namespace FarEmerald.PlayForge
         
         #region On Ability End
         // When the activation is over. This fired when the claim was let go, which for an ability with no critical
-        // stage is as it starts (TS-9)
+        // stage is as it starts
         private AbilitySystemCallbackDelegate _onAbilityEnd;
         public event AbilitySystemCallbackDelegate OnAbilityEnd
         {
@@ -56,7 +56,7 @@ namespace FarEmerald.PlayForge
         #endregion
 
         #region On Gameplay Event
-        /// <summary>A gameplay event the entity was sent, with its data (FEAT-4).</summary>
+        /// <summary>A gameplay event the entity was sent, with its data.</summary>
         public delegate void GameplayEventDelegate(Tag eventTag, ProcessDataPacket data);
 
         // Before the abilities it triggers try to activate
@@ -73,7 +73,7 @@ namespace FarEmerald.PlayForge
         #endregion
 
         #region On Ability Refused
-        /// <summary>A refused activation, with why it was refused (FEAT-17).</summary>
+        /// <summary>A refused activation, with why it was refused.</summary>
         public delegate void AbilityRefusedDelegate(ActivationRefusal refusal);
 
         // A request refused as it was asked for. A request waiting in the input buffer isn't told again as it's retried
@@ -88,7 +88,7 @@ namespace FarEmerald.PlayForge
         }
         public void AbilityRefused(ActivationRefusal refusal)
         {
-            // Counted as it's told (FEAT-18)
+            // Counted as it's told
             ForgeCounters.RefusedActivations.Value++;
             _onAbilityRefused?.Invoke(refusal);
         }

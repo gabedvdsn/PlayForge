@@ -7,8 +7,8 @@ using UnityEngine.UIElements;
 namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
-    /// A Forge Project's inspector: the shared header, then its settings (FN-12); its catalog a line saying how many assets
-    /// it names for saves and how it keeps them (EP-15), where it drew each entry, a list of GUIDs as long as the project.
+    /// A Forge Project's inspector: the shared header, then its settings; its catalog a line saying how many assets
+    /// it names for saves and how it keeps them, where it drew each entry, a list of GUIDs as long as the project.
     /// </summary>
     [CustomEditor(typeof(ForgeProject))]
     public class ForgeProjectEditor : UnityEditor.Editor

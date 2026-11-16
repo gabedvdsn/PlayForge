@@ -5,11 +5,11 @@ using UnityEngine;
 namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
-    /// The picker a kind field opens (ED-56, EP-1): PlayForge's dropdown of the kinds a field can hold, by their names, None
+    /// The picker a kind field opens: PlayForge's dropdown of the kinds a field can hold, by their names, None
     /// first where the field may be empty, and the kind it holds checked. Each kind sits under the submenus its
     /// <see cref="ForgeMenuAttribute"/> names, or a class it's made from names, submenus first in name order, then the
-    /// kinds; its search finds any kind whatever its submenu, and its Context says a kind's description (EP-2). It was
-    /// Unity's searchable dropdown, a group of one level for ability tasks alone (FN-24), and before that a list drawn under
+    /// kinds; its search finds any kind whatever its submenu, and its Context says a kind's description. It was
+    /// Unity's searchable dropdown, a group of one level for ability tasks alone, and before that a list drawn under
     /// the field in tinted boxes, from styles set in C#.
     /// </summary>
     internal sealed class ForgeTypePicker

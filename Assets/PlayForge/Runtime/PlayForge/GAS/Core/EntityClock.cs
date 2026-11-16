@@ -4,7 +4,7 @@ namespace FarEmerald.PlayForge
 {
     /// <summary>
     /// An entity's own time: the game's, as <see cref="ForgeTime"/> reads it, scaled by the entity's
-    /// <see cref="TimeScale"/>, which a slow or a haste sets (FEAT-7, Decision 30). The entity's effects tick by it, its
+    /// <see cref="TimeScale"/>, which a slow or a haste sets. The entity's effects tick by it, its
     /// cooldowns among them, and so do its abilities' sequences and waits. Every entity ran on Unity's one clock, so
     /// nothing could slow one entity and not the rest. A scale of 0 holds the entity's time still; it isn't a pause,
     /// which ProcessControl's is, and processes keep their own bookkeeping on the game's clock.

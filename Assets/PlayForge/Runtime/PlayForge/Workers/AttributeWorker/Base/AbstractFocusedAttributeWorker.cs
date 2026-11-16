@@ -54,7 +54,7 @@ namespace FarEmerald.PlayForge
         
         public override bool PreValidateWorkFor(ChangeValue change)
         {
-            // Fast check: is this the right attribute? The one changed, not its carrier's (GAS-78)
+            // Fast check: is this the right attribute? The one changed, not its carrier's
             var attribute = change.Attribute ?? change.Value.Carrier?.GetAttribute();
             return attribute != null && attribute.Equals(TargetAttribute);
         }

@@ -6,11 +6,11 @@ using UnityEngine.UIElements;
 namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
-    /// Tag requirements as the Effect mockup's table draws them (ED-37): a row for each group, such as Applying, While On
+    /// Tag requirements as a table: a row for each group, such as Applying, While On
     /// and Removed By, with what it requires and what it must not have, each a cell that lists its tags. A cell opens its
     /// list under the table to edit, with its group's template; opening it again closes it. The table follows the asset
     /// as it changes, an Undo among its changes. It replaces a tinted box with colored subsections and a type badge.
-    /// A group with no field is the requirements themselves, as a lone requirement group's table of one row (ED-66).
+    /// A group with no field is the requirements themselves, as a lone requirement group's table of one row.
     /// </summary>
     internal sealed class ForgeRequirementsTable : VisualElement
     {
@@ -175,7 +175,7 @@ namespace FarEmerald.PlayForge.Editor
             if (group == null || list == null) return;
             var column = requires ? "Requires" : "Must Not Have";
             editor.Add(new PropertyField(list, $"{row.Group.Label}: {column}") { name = "Tags" });
-            // The group's name, which tells it apart where it's imported; the drawer showed it, and the table didn't (ED-66)
+            // The group's name, which tells it apart where it's imported; the drawer showed it, and the table didn't
             var groupName = new TextField("Name")
             {
                 name = "RequirementName",

@@ -6,7 +6,7 @@ using UnityEngine.UIElements;
 namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
-    /// A stage's condition (ED-64): its tag, a tag field in the label column, and, once it names one, where the stage looks
+    /// A stage's condition: its tag, a tag field in the label column, and, once it names one, where the stage looks
     /// for it and whether it runs while the tag is missing instead, each indented under it. With no tag, the stage always
     /// runs, and Unity's foldout showed all three.
     /// </summary>
@@ -46,7 +46,7 @@ namespace FarEmerald.PlayForge.Editor
             root.Add(missing);
 
             // Where it looks, and When Missing, show once the condition names a tag. The tag is found again by its path,
-            // as a list's elements move (ED-49)
+            // as a list's elements move
             var serialized = property.serializedObject;
             var tagPath = tagProp.propertyPath;
             void Show()
@@ -65,7 +65,7 @@ namespace FarEmerald.PlayForge.Editor
                 on.EnableInClassList(Hidden, !named);
                 missing.EnableInClassList(Hidden, !named);
             }
-            // The asset is followed, not the tag, which a removed stage takes with it (ED-64)
+            // The asset is followed, not the tag, which a removed stage takes with it
             root.TrackSerializedObjectValue(serialized, _ => Show());
             Show();
             return root;

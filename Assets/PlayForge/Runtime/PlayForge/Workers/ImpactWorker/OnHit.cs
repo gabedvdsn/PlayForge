@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
-    /// <summary>Whom an On Hit's effects land on (TW-6).</summary>
+    /// <summary>Whom an On Hit's effects land on.</summary>
     public enum EOnHitTo
     {
         /// <summary>The one hit.</summary>
@@ -15,7 +15,7 @@ namespace FarEmerald.PlayForge
     }
 
     /// <summary>
-    /// Effects that an item, an ability or an effect applies as its holder's hits land, or on the hit that kills (TW-6):
+    /// Effects that an item, an ability or an effect applies as its holder's hits land, or on the hit that kills:
     /// Desolator's armor, a dagger's bleed, a boon's Weak, a barrier on a kill. A hit is a loss to its Attribute, as Health,
     /// that the holder deals another entity: only of its impact types, where it names any, so a bleed's ticks, typed
     /// apart from attacks, set off nothing; and only while its condition holds. Each effect's own Chance to Apply rolls as
@@ -46,14 +46,14 @@ namespace FarEmerald.PlayForge
 
         [NonSerialized] private OnHitImpactWorker worker;
 
-        /// <summary>The attribute its hits lower: its own, or else the Health role's in the project, or null for none (TW-29).</summary>
+        /// <summary>The attribute its hits lower: its own, or else the Health role's in the project, or null for none.</summary>
         public Attribute HitAttribute => Attribute ? Attribute : ForgeRoles.AttributeFor(Tags.ROLE_HEALTH);
 
         // The impact worker that runs it for its holder's hits, one for the entry, whoever holds it
         internal OnHitImpactWorker Worker => worker ??= new OnHitImpactWorker(this);
     }
 
-    /// <summary>Gives a holder the On Hits it has, and takes them back (TW-6).</summary>
+    /// <summary>Gives a holder the On Hits it has, and takes them back.</summary>
     public static class OnHits
     {
         /// <summary>Gives <paramref name="holder"/> each entry's worker, which runs for the hits it deals.</summary>
@@ -73,13 +73,13 @@ namespace FarEmerald.PlayForge
         }
     }
 
-    /// <summary>The impact worker an On Hit gives its holder: it runs for the hits the holder deals (TW-6).</summary>
+    /// <summary>The impact worker an On Hit gives its holder: it runs for the hits the holder deals.</summary>
     [ForgeMenu(Description = "Lands an On Hit's effects on the hits its holder deals.")]
     internal sealed class OnHitImpactWorker : AbstractImpactWorker
     {
         private readonly OnHitEntry entry;
 
-        // The attribute each cache took it under, so it leaves the one it joined, though the project's Health role change (TW-28)
+        // The attribute each cache took it under, so it leaves the one it joined, though the project's Health role change
         private readonly Dictionary<ImpactWorkerCache, Attribute> joined = new();
 
         public OnHitImpactWorker(OnHitEntry entry) => this.entry = entry;
@@ -92,7 +92,7 @@ namespace FarEmerald.PlayForge
             var dealer = impactData.SourcedModifier.Source;
             if (dealer == null || ReferenceEquals(dealer, impactData.Target)) return false;
 
-            // A hit whose proc coefficient is 0 sets nothing off (TW-8)
+            // A hit whose proc coefficient is 0 sets nothing off
             if (impactData.SourcedModifier.Carrier is GameplayEffectSpec hit && hit.ProcCoefficient <= 0f) return false;
             if (impactData.RealImpact.CurrentValue >= 0f) return false;
 
@@ -119,7 +119,7 @@ namespace FarEmerald.PlayForge
             if (holder == null || onto == null) return actions;
             var origin = IEffectOrigin.GenerateSourceDerivation(holder);
 
-            // Their chance and duration scale by the hit's proc coefficient (TW-8)
+            // Their chance and duration scale by the hit's proc coefficient
             float proc = (ctx.ImpactData.SourcedModifier.Carrier as GameplayEffectSpec)?.ProcCoefficient ?? 1f;
             foreach (var effect in entry.Effects)
             {

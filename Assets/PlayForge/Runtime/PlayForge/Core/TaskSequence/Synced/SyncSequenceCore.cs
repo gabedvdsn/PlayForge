@@ -170,7 +170,7 @@ namespace FarEmerald.PlayForge
 
             _elapsedTime += deltaTime;
 
-            // So that a task can break its stage's repeat through the packet, as it would in an async sequence (TS-Q)
+            // So that a task can break its stage's repeat through the packet, as it would in an async sequence
             if (data != null) data.SyncRunner = this;
 
             while (_stageIndex < _stages.Count)
@@ -185,7 +185,7 @@ namespace FarEmerald.PlayForge
 
                 bool stageComplete = stage.Step(data, deltaTime);
 
-                // A task can end the sequence from inside its step, and the stage it was in is cleaned already (TS-P)
+                // A task can end the sequence from inside its step, and the stage it was in is cleaned already
                 if (_state == ERunnerState.Interrupted) return true;
 
                 if (stageComplete)
@@ -240,7 +240,7 @@ namespace FarEmerald.PlayForge
         public bool Interrupt(SequenceDataPacket data)
         {
             // One that hasn't stepped yet is stopped too: it would otherwise start on its next step as if nothing
-            // had happened (TS-P)
+            // had happened
             if (_state is ERunnerState.Completed or ERunnerState.Interrupted) return false;
 
             bool started = _state == ERunnerState.Running;

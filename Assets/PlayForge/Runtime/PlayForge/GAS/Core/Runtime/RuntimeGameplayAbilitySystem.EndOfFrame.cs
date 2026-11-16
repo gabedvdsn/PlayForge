@@ -45,13 +45,13 @@ namespace FarEmerald.PlayForge
         /// </summary>
         public void MarkDead() => core.MarkDead();
 
-        /// <summary>Brings it back where it stays, as its death says (TW-4).</summary>
+        /// <summary>Brings it back where it stays, as its death says.</summary>
         public bool Revive(UnityEngine.Vector3? at = null) => core.Revive(at);
 
-        /// <summary>The body it follows, while it has one (TW-4).</summary>
+        /// <summary>The body it follows, while it has one.</summary>
         public AbstractMonoProcess GetBody() => core.Body;
 
-        /// <summary>Gives it a body of its own at runtime, as <see cref="IGameplayAbilitySystem.UseBody"/> says (FN-18).</summary>
+        /// <summary>Gives it a body of its own at runtime, as <see cref="IGameplayAbilitySystem.UseBody"/> says.</summary>
         public bool UseBody(AbstractMonoProcess body) => core.UseBody(body);
 
         /// <summary>
@@ -61,8 +61,8 @@ namespace FarEmerald.PlayForge
         protected virtual void HandleDestruction()
         {
             // Through its relay, it ends where it's held: through the scene's control by its cache index, one in a world of
-            // its own ended whatever the scene held under that index, and ran on itself (FEAT-10). One stepped by hand,
-            // outside ProcessControl, has no relay, so it ends itself: it threw (GAS-42), then never ended (GAS-80)
+            // its own ended whatever the scene held under that index, and ran on itself. One stepped by hand,
+            // outside ProcessControl, has no relay, so it ends itself: it threw, then never ended
             if (Relay != null) Relay.Terminate();
             else WhenTerminate();
         }

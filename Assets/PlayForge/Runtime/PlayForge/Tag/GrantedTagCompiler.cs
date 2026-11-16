@@ -9,7 +9,7 @@ namespace FarEmerald.PlayForge
     ///
     /// It walks the sources' tag lists directly, following the same rules as their GetGrantedTags
     /// iterators, because those iterators allocate and compiling runs twice for every effect applied or
-    /// removed (PF-007). Items keep their iterator: their equip rules live there, and items are rarer.
+    /// removed. Items keep their iterator: their equip rules live there, and items are rarer.
     /// </summary>
     internal static class GrantedTagCompiler
     {
@@ -40,14 +40,14 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// An effect on the shelf: its asset tag and the tags it grants. The effect system counts a container's this way
-        /// as it shelves it, so an application needs no rebuild (GAS-P3).
+        /// as it shelves it, so an application needs no rebuild.
         /// </summary>
         public static void AddEffect(TagCache cache, GameplayEffectSpec spec)
         {
             cache.AddTag(spec.Base.Tags.AssetTag);
             if (spec.Base.GetGrantedTags() is List<Tag> granted) AddAll(cache, granted);
             else foreach (var t in spec.Base.GetGrantedTags()) cache.AddTag(t);
-            // And those its modifiers add (TW-7)
+            // And those its modifiers add
             if (spec.Changes != null) AddAll(cache, spec.Changes.GrantedTags);
         }
 
@@ -63,7 +63,7 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// A set's asset tag, then its subsets' in turn, each set once, as <see cref="AttributeSet.GetGrantedTags"/>
-        /// yields them (GAS-44).
+        /// yields them.
         /// </summary>
         private static void AddAttributeSet(TagCache cache, AttributeSet set)
         {

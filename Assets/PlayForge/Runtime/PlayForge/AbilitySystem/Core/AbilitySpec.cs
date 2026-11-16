@@ -9,7 +9,7 @@ namespace FarEmerald.PlayForge
     {
         public Ability Base;
         
-        /// <summary>Its charges on its caster: how many it holds, how many are in hand, and what its recharge counts (TW-17).</summary>
+        /// <summary>Its charges on its caster: how many it holds, how many are in hand, and what its recharge counts.</summary>
         public AbilityCharges Charges { get; }
 
         public AbilitySpec(ISource source, Ability ability, int level) : base(source, new IntValuePairClamped(level, ability.StartingLevel, ability.MaxLevel), ability.Tags.AssetTag)
@@ -20,10 +20,10 @@ namespace FarEmerald.PlayForge
 
         private ComponentStates componentStates;
 
-        /// <summary>What its ability's components keep for this entity's ability (FN-14).</summary>
+        /// <summary>What its ability's components keep for this entity's ability.</summary>
         public ComponentStates ComponentStates => componentStates ??= new ComponentStates();
 
-        // Its ability's components, each hearing a moment of it (FN-14)
+        // Its ability's components, each hearing a moment of it
         internal void HearGranted() => Hear(component => component.Granted(new AbilityComponentContext(this)));
         internal void HearRemoved() => Hear(component => component.Removed(new AbilityComponentContext(this)));
         internal void HearStart(ProcessDataPacket data)
@@ -47,7 +47,7 @@ namespace FarEmerald.PlayForge
             Hear(component => component.Commit(new AbilityComponentContext(this, data)));
         }
 
-        /// <summary>The item that lends it, while one does, whose components hear each use of it (FN-14).</summary>
+        /// <summary>The item that lends it, while one does, whose components hear each use of it.</summary>
         internal ItemSpecContainer LentBy { get; set; }
 
         // Whether the activation running paid what it costs
@@ -62,11 +62,11 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// Applies the ability's cooldown and cost to its caster, each with the magnitudes the caller set on the
-        /// activation's data, so a caller can size them as it sizes the ability's other effects (FEAT-2).
+        /// activation's data, so a caller can size them as it sizes the ability's other effects.
         /// </summary>
         public void ApplyUsageEffects(ProcessDataPacket data = null)
         {
-            // One that toggles an effect turns it on or off in their place (TW-20)
+            // One that toggles an effect turns it on or off in their place
             if (Base.Toggles is not null)
             {
                 Toggle(data);
@@ -79,22 +79,22 @@ namespace FarEmerald.PlayForge
             HearCommit(data);
         }
 
-        // A charge spent, as its Recharge says, where its charges are counted; or else its cooldown (TW-17)
+        // A charge spent, as its Recharge says, where its charges are counted; or else its cooldown
         private void SpendCooldown(ProcessDataPacket data)
         {
             if (Charges.Counted) Charges.Spend(data);
             else ApplyCooldown(data, ownContainer: false);
         }
 
-        // Its Cost effect, and beside it each of its attribute costs (TW-29)
+        // Its Cost effect, and beside it each of its attribute costs
         private void PayCosts(ProcessDataPacket data)
         {
             if (Base.Cost is not null) Source.ApplyCarrier(Usage(Base.Cost, data));
             PayAttributeCosts(data);
         }
 
-        /// <summary>Whether the effect it toggles is on its caster, put there by it (TW-20).</summary>
-        /// <summary>Takes its toggled effect off its caster, where it's on: as its holder forgets the ability (FN-14).</summary>
+        /// <summary>Whether the effect it toggles is on its caster, put there by it.</summary>
+        /// <summary>Takes its toggled effect off its caster, where it's on: as its holder forgets the ability.</summary>
         internal void ToggleOff()
         {
             if (IsToggledOn) Source.ToGAS()?.GetEffectSystem()?.RemoveGameplayEffect(Base.Toggles, this);
@@ -103,7 +103,7 @@ namespace FarEmerald.PlayForge
         public bool IsToggledOn =>
             Base.Toggles is { } toggles && Source?.ToGAS()?.GetEffectSystem() is { } effects && effects.CountFrom(toggles, this) > 0;
 
-        // On, with the activation's magnitudes, paying its cost; or off, paying nothing and starting its cooldown (TW-20)
+        // On, with the activation's magnitudes, paying its cost; or off, paying nothing and starting its cooldown
         private void Toggle(ProcessDataPacket data)
         {
             if (IsToggledOn)
@@ -118,7 +118,7 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// Applies its Cooldown to its caster, with the activation's magnitudes; as a container of its own where a spent
-        /// charge's runs alone (TW-17). Nothing, where it has no Cooldown.
+        /// charge's runs alone. Nothing, where it has no Cooldown.
         /// </summary>
         internal void ApplyCooldown(ProcessDataPacket data, bool ownContainer)
         {
@@ -134,14 +134,14 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// What an attribute cost comes to for an activation, at the ability's level, read in the activation's data where
-        /// it's given; never under 0 (TW-29).
+        /// it's given; never under 0.
         /// </summary>
         public float AmountOf(AttributeCost cost, ProcessDataPacket data = null) =>
             cost?.Amount == null ? 0f : Mathf.Max(0f, Read(cost.Amount, data));
 
         /// <summary>
         /// What a number of the ability comes to, at its level, read in an activation's data where it's given, as its
-        /// Cast Range (FN-14) and its attribute costs read; 0 for none.
+        /// Cast Range and its attribute costs read; 0 for none.
         /// </summary>
         public float Read(ScalableFloat number, ProcessDataPacket data = null)
         {
@@ -155,7 +155,7 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// Whether its caster can pay its attribute costs: one that comes to 0 asks nothing, and the rest need their
         /// attribute found, their own or their role's in the project, with as much of it on the caster as all of them that
-        /// spend it come to (TW-29).
+        /// spend it come to.
         /// </summary>
         public bool CanPayAttributeCosts(ProcessDataPacket data = null)
         {
@@ -176,7 +176,7 @@ namespace FarEmerald.PlayForge
             return true;
         }
 
-        // Each attribute cost, spent from its caster's attribute as a change of the caster's own (TW-29)
+        // Each attribute cost, spent from its caster's attribute as a change of the caster's own
         private void PayAttributeCosts(ProcessDataPacket data)
         {
             var costs = Base.AttributeCosts;
@@ -202,7 +202,7 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// What of the caster refuses the activation, or None: its tags against the ability's source requirements, then
-        /// each caster check, which a cooldown, a cost or a death names, and any other by its name (FEAT-17).
+        /// each caster check, which a cooldown, a cost or a death names, and any other by its name.
         /// </summary>
         internal EActivationRefusal SourceRefusal(AbilityDataPacket data, out string rule)
         {
@@ -214,7 +214,7 @@ namespace FarEmerald.PlayForge
             if (!(Base.Tags?.TagRequirements?.CheckSourceRequirements(owner.GetAppliedTags()) ?? true)) return EActivationRefusal.Requirements;
 
             // The crowd control its caster is under, as a stun stops every ability and Silenced a spell; the refusal
-            // names the rule's tag (TW-16)
+            // names the rule's tag
             if (owner is IGameplayAbilitySystem gas && gas.GetCrowdControl() is { } crowdControl
                 && crowdControl.Stopping(Base, owner.GetTagCache()) is { } stopping)
             {
@@ -222,7 +222,7 @@ namespace FarEmerald.PlayForge
                 return EActivationRefusal.CrowdControl;
             }
 
-            // An empty rule slot, which a list's "+" can leave, asks nothing; it threw (ED-12)
+            // An empty rule slot, which a list's "+" can leave, asks nothing; it threw
             foreach (var check in Base.SourceActivationRules)
             {
                 if (check == null || check.Validate(data, () => owner, out _)) continue;
@@ -237,7 +237,7 @@ namespace FarEmerald.PlayForge
                 }
             }
 
-            // Its components, any of which may refuse it, named by its reason (FN-14)
+            // Its components, any of which may refuse it, named by its reason
             if (Base.Components != null)
             {
                 foreach (var component in Base.Components)

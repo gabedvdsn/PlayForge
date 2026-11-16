@@ -24,7 +24,7 @@ namespace FarEmerald.PlayForge
         {
             int minIndex = 0;
             // The search starts above every value. It started at the lowest float, so nothing was below it and the first
-            // always won: Use Minimum took the first element (GAS-55)
+            // always won: Use Minimum took the first element
             float minValue = float.MaxValue;
             for (int i = 0; i < list.Count; i++)
             {

@@ -177,7 +177,7 @@ namespace FarEmerald.PlayForge
         /// </summary>
         public bool BreakStageRepeat()
         {
-            // A sync sequence's repeating stages had no other way to stop (TS-Q)
+            // A sync sequence's repeating stages had no other way to stop
             return Runtime?.RequestBreakCurrentStageRepeat() ?? SyncRunner?.BreakStageRepeat() ?? false;
         }
         

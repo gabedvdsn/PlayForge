@@ -107,16 +107,16 @@ namespace FarEmerald.PlayForge
         public bool IsDynamic;
         public string DynamicReason;
 
-        /// <summary>The impact's number as its field's summary reads it, as "−0.1 × Target's Health (base)" (FEAT-32).</summary>
+        /// <summary>The impact's number as its field's summary reads it, as "−0.1 × Target's Health (base)".</summary>
         public string Line;
 
         /// <summary>
-        /// The number's read at each level, explained: each part, what it read and what it gave (FEAT-32). Set by the
+        /// The number's read at each level, explained: each part, what it read and what it gave. Set by the
         /// read against a caster and a target, <see cref="AbilityInspector.BuildEffectSeries(GameplayEffect, int, int, ISource, ITarget)"/>.
         /// </summary>
         public NumberTrace[] Parts;
 
-        /// <summary>What the number reads that the read wasn't given, as "the target"; null where it had all it reads (FEAT-32).</summary>
+        /// <summary>What the number reads that the read wasn't given, as "the target"; null where it had all it reads.</summary>
         public string Needs;
 
         public string FormatMagnitude(string format = "0.##") => FormatSeries(Magnitude, format);
@@ -152,17 +152,17 @@ namespace FarEmerald.PlayForge
         public List<ImpactSeries> Impacts = new();
         public string FormatDuration(string format = "0.##") => ImpactSeries.FormatSeries(Duration, format);
 
-        /// <summary>Its chance to apply at each level, 1 where it always does (FEAT-32).</summary>
+        /// <summary>Its chance to apply at each level, 1 where it always does.</summary>
         public float[] Chance;
 
-        /// <summary>The time between its ticks at each level, for an infinite effect that ticks (FEAT-32).</summary>
+        /// <summary>The time between its ticks at each level, for an infinite effect that ticks.</summary>
         public float[] Interval;
 
-        /// <summary>The effects it contains, each read the same way, with when it lands (FEAT-32).</summary>
+        /// <summary>The effects it contains, each read the same way, with when it lands.</summary>
         public List<ContainedSeries> Contained = new();
 
         /// <summary>
-        /// What the effect does at a level, an impact to a line, then its contained effects (FEAT-32): "−15 Health each
+        /// What the effect does at a level, an impact to a line, then its contained effects: "−15 Health each
         /// tick, 12 ticks over 12 s", "+20 Armor while it lasts, 5 s", "and Crit as it lands, 15% of the time: −225 Health".
         /// A number that reads what the read wasn't given says so: "(needs the target)".
         /// </summary>
@@ -215,7 +215,7 @@ namespace FarEmerald.PlayForge
         }
     }
 
-    /// <summary>An effect another contains, read level by level, with when it lands (FEAT-32).</summary>
+    /// <summary>An effect another contains, read level by level, with when it lands.</summary>
     public class ContainedSeries
     {
         public EApplyTickRemove Policy;
@@ -276,20 +276,20 @@ namespace FarEmerald.PlayForge
         public List<SequenceInfo> Sequences = new();
 
         /// <summary>
-        /// The ability's components, each its name and what it does with its numbers, as ("Cast Range", "Range 600") (EP-5).
+        /// The ability's components, each its name and what it does with its numbers, as ("Cast Range", "Range 600").
         /// A component that says nothing more has a null line.
         /// </summary>
         public List<(string Name, string Line)> Components = new();
 
-        /// <summary>What sets it off on its own: at its entity's start, and each trigger, as "Gameplay Event: Impact Taken" (EP-5).</summary>
+        /// <summary>What sets it off on its own: at its entity's start, and each trigger, as "Gameplay Event: Impact Taken".</summary>
         public List<string> Activation = new();
 
-        /// <summary>Its chance to activate, as its field's summary reads it, or null where it always activates (EP-5).</summary>
+        /// <summary>Its chance to activate, as its field's summary reads it, or null where it always activates.</summary>
         public string Chance;
 
         /// <summary>
         /// What it spends of its entity's attributes as it activates, its Attribute Costs, each the attribute's name and the
-        /// amount, as ("Mana", "20/25/30") (EP-5). Its Cost effect is its usages'.
+        /// amount, as ("Mana", "20/25/30"). Its Cost effect is its usages'.
         /// </summary>
         public List<(string Attribute, string Amount)> AttributeCosts = new();
 
@@ -317,7 +317,7 @@ namespace FarEmerald.PlayForge
                 lines.Add($"Targeting: {TargetingTaskType}");
             }
 
-            // Its components, as its Cast Range, and what sets it off on its own (EP-5)
+            // Its components, as its Cast Range, and what sets it off on its own
             foreach (var (name, line) in Components) lines.Add(string.IsNullOrEmpty(line) ? name : $"{name}: {line}");
             foreach (var each in Activation) lines.Add($"Activates: {each}");
             if (!string.IsNullOrEmpty(Chance)) lines.Add($"Chance to activate: {Chance}");
@@ -434,7 +434,7 @@ namespace FarEmerald.PlayForge
                 HasImplicitSelfTarget = ability.Behaviour?.UseImplicitTargeting ?? false,
             };
 
-            // Its components, what sets it off on its own, and its chance to activate (EP-5)
+            // Its components, what sets it off on its own, and its chance to activate
             if (ability.Components != null)
                 foreach (var component in ability.Components)
                     if (component != null) breakdown.Components.Add((AbstractForgeComponent.NameOf(component), component.Describe()));
@@ -633,7 +633,7 @@ namespace FarEmerald.PlayForge
         }
 
         /// <summary>
-        /// One effect across a level range, read against a caster and a target, either of which may be null (FEAT-32):
+        /// One effect across a level range, read against a caster and a target, either of which may be null:
         /// its duration, ticks, tick interval and chance at each level; each impact's number at each level, with its line,
         /// its parts explained (<see cref="NumberTrace"/>), and what it needs that it wasn't given, as "the target"; and its
         /// contained effects, each read the same way. A number that reads the target, read with none, gives what its field

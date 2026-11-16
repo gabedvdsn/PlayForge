@@ -31,7 +31,7 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// Whether the worker is evaluated at the end of every frame, as every worker was. Off, as it is by default, it's
         /// evaluated at the end of a frame in which the entity's tags changed, since <see cref="ValidateWorkFor"/> reads
-        /// them. A worker whose validity reads more than the tags turns it on. Read as the worker is provided (FEAT-3).
+        /// them. A worker whose validity reads more than the tags turns it on. Read as the worker is provided.
         /// </summary>
         public virtual bool EvaluateEveryFrame => false;
 

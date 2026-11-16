@@ -38,13 +38,13 @@ namespace FarEmerald.PlayForge
         /// </summary>
         public void MarkDead() => core?.MarkDead();
 
-        /// <summary>Brings it back where it stays, as its death says (TW-4).</summary>
+        /// <summary>Brings it back where it stays, as its death says.</summary>
         public bool Revive(Vector3? at = null) => core?.Revive(at) ?? false;
 
-        /// <summary>The body it follows, while it has one (TW-4).</summary>
+        /// <summary>The body it follows, while it has one.</summary>
         public AbstractMonoProcess GetBody() => core?.Body;
 
-        /// <summary>Gives it a body of its own at runtime, as <see cref="IGameplayAbilitySystem.UseBody"/> says (FN-18).</summary>
+        /// <summary>Gives it a body of its own at runtime, as <see cref="IGameplayAbilitySystem.UseBody"/> says.</summary>
         public bool UseBody(AbstractMonoProcess body) => core != null && core.UseBody(body);
 
         /// <summary>
@@ -52,8 +52,8 @@ namespace FarEmerald.PlayForge
         /// </summary>
         private void HandleDestruction()
         {
-            // As the runtime hub's: one with no process to end is destroyed outright (GAS-42)
-            // Through its relay, where it's held (FEAT-10)
+            // As the runtime hub's: one with no process to end is destroyed outright
+            // Through its relay, where it's held
             if (Relay != null && Relay.TerminateImmediate()) return;
 
             Destroy(gameObject);

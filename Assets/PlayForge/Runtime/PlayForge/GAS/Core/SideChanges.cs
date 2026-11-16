@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
-    /// <summary>Whose sides a side-changing effect gives its target (TW-18).</summary>
+    /// <summary>Whose sides a side-changing effect gives its target.</summary>
     public enum ESideSource
     {
         /// <summary>Its caster's, as they are when it lands: a mind control.</summary>
@@ -15,7 +15,7 @@ namespace FarEmerald.PlayForge
     }
 
     /// <summary>
-    /// The side changes an entity is under (TW-18), each from an effect that lasts: the sides the highest Priority gives, a
+    /// The side changes an entity is under, each from an effect that lasts: the sides the highest Priority gives, a
     /// tie to the latest, or none, where its own hold.
     /// </summary>
     public sealed class SideSet

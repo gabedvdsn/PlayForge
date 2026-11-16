@@ -11,13 +11,13 @@ namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
     /// Clears a section's properties to a new asset's values, and empties its lists. Each field took its type's default,
-    /// 0 or the first choice, so a cleared Impact allowed no target and had no chance to apply (ED-42).
+    /// 0 or the first choice, so a cleared Impact allowed no target and had no chance to apply.
     /// </summary>
     public static class SectionClearUtility
     {
         /// <summary>
         /// Clears the section's properties to their defaults at once, as one Undo step. It asked first, in a modal dialog;
-        /// Undo takes a Clear back instead (Decision 28).
+        /// Undo takes a Clear back instead.
         /// </summary>
         public static void Clear(
             SerializedObject targetObject, 

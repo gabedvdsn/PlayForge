@@ -4,7 +4,7 @@ using UnityEngine.Rendering;
 namespace FarEmerald.PlayForge.AdditionalContent
 {
     /// <summary>
-    /// The camera PlayForge's Camera Shake cue shakes (AC-2). On a camera, it's the project's shaker while it's enabled,
+    /// The camera PlayForge's Camera Shake cue shakes. On a camera, it's the project's shaker while it's enabled,
     /// and it moves the camera off its place by a noise that fades over each shake, only while the camera renders, so
     /// whatever else moves the camera keeps doing so. A shake asked during another takes the stronger of the two.
     /// </summary>

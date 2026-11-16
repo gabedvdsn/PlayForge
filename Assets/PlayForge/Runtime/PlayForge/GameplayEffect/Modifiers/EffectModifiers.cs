@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
-    /// <summary>Which effects a modifier changes: those its holder applies, those landing on it, or both (TW-7).</summary>
+    /// <summary>Which effects a modifier changes: those its holder applies, those landing on it, or both.</summary>
     public enum EModifierDirection
     {
         /// <summary>The holder's own effects, as it applies them, on another or itself.</summary>
@@ -18,7 +18,7 @@ namespace FarEmerald.PlayForge
     }
 
     /// <summary>
-    /// What a modifier changes, and of which effects (TW-7, Decision 47): the effects it picks, by tag, its direction and
+    /// What a modifier changes, and of which effects: the effects it picks, by tag, its direction and
     /// a condition, and its changes to each effect as it's made, which last as long as that application does.
     /// </summary>
     [Serializable]
@@ -59,7 +59,7 @@ namespace FarEmerald.PlayForge
     }
 
     /// <summary>
-    /// A modifier an item, an ability, an effect or an entity holds (TW-7): its own rule, or a shared Effect Modifier's,
+    /// A modifier an item, an ability, an effect or an entity holds: its own rule, or a shared Effect Modifier's,
     /// which it names in place of its own.
     /// </summary>
     [Serializable]
@@ -75,7 +75,7 @@ namespace FarEmerald.PlayForge
     }
 
     /// <summary>
-    /// One change a modifier makes to an effect as it's made (TW-7). Each writes into the application's
+    /// One change a modifier makes to an effect as it's made. Each writes into the application's
     /// <see cref="EffectChanges"/>, which the effect's own reads take in; a project adds its own by deriving one.
     /// </summary>
     [Serializable]
@@ -247,7 +247,7 @@ namespace FarEmerald.PlayForge
     }
 
     /// <summary>
-    /// What modifiers changed of one application (TW-7): the effect's own reads take these in, its contained effects, its
+    /// What modifiers changed of one application: the effect's own reads take these in, its contained effects, its
     /// impacts' numbers, its overflow, its time, its stacks, its chance and its granted tags. Null on a spec no modifier
     /// changed, so an effect nothing modifies costs nothing more.
     /// </summary>
@@ -259,7 +259,7 @@ namespace FarEmerald.PlayForge
             public readonly GameplayEffect Effect;
             public readonly EffectModifierRule AddedBy;
 
-            /// <summary>Whom it lands on: the effect's target, or its caster (TW-14).</summary>
+            /// <summary>Whom it lands on: the effect's target, or its caster.</summary>
             public readonly EEffectRecipient LandsOn;
 
             public Packet(EApplyTickRemove when, GameplayEffect effect, EffectModifierRule addedBy, EEffectRecipient landsOn = EEffectRecipient.Target)
@@ -323,7 +323,7 @@ namespace FarEmerald.PlayForge
     }
 
     /// <summary>
-    /// The modifiers an entity holds now (TW-7): its own, its items' while they're equipped, its abilities' while it
+    /// The modifiers an entity holds now: its own, its items' while they're equipped, its abilities' while it
     /// knows them, and its effects' while they last. Each holds as often as it's given, as two of an item modify twice.
     /// </summary>
     public sealed class EffectModifierSet
@@ -349,7 +349,7 @@ namespace FarEmerald.PlayForge
         public void Clear() => entries.Clear();
     }
 
-    /// <summary>Gives a holder the modifiers it has, takes them back, and applies them to each effect as it's made (TW-7).</summary>
+    /// <summary>Gives a holder the modifiers it has, takes them back, and applies them to each effect as it's made.</summary>
     public static class EffectModifiers
     {
         // The rules whose added effects are being made now, which don't change them: an effect one adds that it would

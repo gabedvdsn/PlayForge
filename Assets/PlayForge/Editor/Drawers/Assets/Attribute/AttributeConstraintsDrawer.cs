@@ -5,7 +5,7 @@ using UnityEngine.UIElements;
 namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
-    /// An attribute's constraints (ED-49): Auto Clamp, Scale With Base and Rounding, Unity's fields in the label column,
+    /// An attribute's constraints: Auto Clamp, Scale With Base and Rounding, Unity's fields in the label column,
     /// with Snap Interval indented under Rounding while it snaps. They sat in a tinted, rounded box with a yellow left
     /// border, under a 10 px bold heading with colored letter badges, from styles set in C#.
     /// </summary>
@@ -47,7 +47,7 @@ namespace FarEmerald.PlayForge.Editor
             rounding.BindProperty(roundingProp);
             root.Add(rounding);
 
-            // A number of any kind, as each of an attribute set's numbers is (FN-19)
+            // A number of any kind, as each of an attribute set's numbers is
             var snap = new PropertyField(snapProp, "Snap Interval") { name = "SnapInterval", tooltip = "The step values snap to, as 0.5" };
             snap.AddToClassList("pf-dependent");
             root.Add(snap);

@@ -4,7 +4,7 @@ using UnityEngine;
 namespace FarEmerald.PlayForge
 {
     /// <summary>
-    /// Whether the caster or the target holds a tag (FEAT-29): counted by weight, so a tag granted twice counts twice,
+    /// Whether the caster or the target holds a tag: counted by weight, so a tag granted twice counts twice,
     /// on either side. It reads the side it looks at, so a target's tag doesn't hold where there's no target.
     /// </summary>
     [Serializable]
@@ -23,7 +23,7 @@ namespace FarEmerald.PlayForge
         protected override bool Evaluate(in NumberContext context) =>
             Query != null && (context.EntityOn(On)?.QueryTags(Query) ?? false);
 
-        // How many of the tag the side holds, by weight (FEAT-32)
+        // How many of the tag the side holds, by weight
         public override void Explain(in NumberContext context, NumberTrace trace)
         {
             if (Query == null) return;

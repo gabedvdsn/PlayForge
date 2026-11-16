@@ -6,7 +6,7 @@ using UnityEngine.UIElements;
 namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
-    /// An ability's behaviour drawn whole, as an asset or a component of the user's own holds one (ED-66): Unity's
+    /// An ability's behaviour drawn whole, as an asset or a component of the user's own holds one: Unity's
     /// foldout of the fields the ability inspector shows of it, its targeting, its asset loaders, what cancels it and
     /// what it blocks, and its stages. The lists are Unity's, where a new loader starts empty and each stage keeps its
     /// fold as one is removed or dragged; Implicit Tag shows under Use Implicit Targeting while it's on. It drew colored
@@ -24,7 +24,7 @@ namespace FarEmerald.PlayForge.Editor
                 // Unity's foldout of a field keeps whether it's open on the field, as it does for its own
                 bindingPath = property.propertyPath,
             };
-            // The style sheet lays out the fields, wherever the behaviour is drawn (ED-20)
+            // The style sheet lays out the fields, wherever the behaviour is drawn
             ForgeTheme.Apply(root);
 
             var serialized = property.serializedObject;

@@ -4,10 +4,10 @@ using UnityEngine.UIElements;
 namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
-    /// PlayForge's one style sheet, and the editor's theme on each PlayForge window and inspector (Decision 20). A
+    /// PlayForge's one style sheet, and the editor's theme on each PlayForge window and inspector. A
     /// root takes the sheet and a theme class, .pf-theme-dark or .pf-theme-light, which set the sheet's variables, so
     /// every control under it reads the theme's colors. The windows and inspectors drew in hard-coded dark colors,
-    /// whatever the theme (ED-20).
+    /// whatever the theme.
     /// </summary>
     internal static class ForgeTheme
     {

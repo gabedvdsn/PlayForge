@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge.Lab
 {
-    /// <summary>What a unit is made from, and where it stands (LAB-2).</summary>
+    /// <summary>What a unit is made from, and where it stands.</summary>
     public sealed class LabUnitSpec
     {
         /// <summary>The entity it stands for; or else <see cref="Set"/>, made into an entity of its own.</summary>
@@ -39,7 +39,7 @@ namespace FarEmerald.PlayForge.Lab
 
         /// <summary>
         /// Whether it stays as it dies, to be revived, whatever its entity says: a dummy's, which the lab revives where it
-        /// falls (LAB-4).
+        /// falls.
         /// </summary>
         public bool Stays;
 
@@ -48,7 +48,7 @@ namespace FarEmerald.PlayForge.Lab
     }
 
     /// <summary>
-    /// A unit in the lab, and the Demo's hero (LAB-2): a GameplayAbilitySystem on a body of its own, which walks where it's
+    /// A unit in the lab, and the Demo's hero: a GameplayAbilitySystem on a body of its own, which walks where it's
     /// sent, attacks what it's set on, casts its abilities and its items', and holds its items. Its attributes, tags,
     /// levels and Local Data are the GAS's; this is the space's side of it. Movement is the lab's, a straight line on the
     /// ground at its speed, as a project's own body would be for a game.
@@ -275,7 +275,7 @@ namespace FarEmerald.PlayForge.Lab
                 : fallback;
 
         /// <summary>
-        /// How near it must stand to attack: its attack's Cast Range where it has one (FN-14), else its Local Data's or its
+        /// How near it must stand to attack: its attack's Cast Range where it has one, else its Local Data's or its
         /// rules'.
         /// </summary>
         public float AttackRange => AttackAbility is { } attack && ForgeCastRange.TryRead(Gas, attack, out float cast) ? cast

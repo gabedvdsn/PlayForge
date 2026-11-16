@@ -12,15 +12,15 @@ namespace FarEmerald.PlayForge
             error = "";
             if (data.EffectOrigin is not AbilitySpec ability) return false;
 
-            // A toggle turning off pays nothing, so it asks nothing (TW-20)
+            // A toggle turning off pays nothing, so it asks nothing
             if (ability.IsToggledOn) return true;
 
-            // Its attribute costs, each paid beside its Cost effect (TW-29)
+            // Its attribute costs, each paid beside its Cost effect
             if (!ability.CanPayAttributeCosts(data)) return false;
             if (ability.Base.Cost is null) return true;
 
             // Generating the spec rebuilds the cost's impacts, and each attribute it spends is checked: a cost can spend
-            // more than one, and only the first was (ED-3). The caster must have each attribute
+            // more than one, and only the first was. The caster must have each attribute
             var spec = ability.Source.GenerateEffectSpec(ability, ability.Base.Cost);
             var impacts = ability.Base.Cost.ImpactSpecification.Entries;
             if (impacts.Count == 0) return false;
@@ -30,7 +30,7 @@ namespace FarEmerald.PlayForge
                 if (!ability.Source.TryGetAttributeValue(impact.AttributeTarget, out var attrVal)) return false;
 
                 // A cost's magnitude is the signed change it makes, so what matters is what that leaves. Comparing
-                // the value with the magnitude itself passed every cost, as a cost is negative (GAS-7)
+                // the value with the magnitude itself passed every cost, as a cost is negative
                 float change = impact.Magnitude?.Evaluate(spec) ?? 0f;
                 if (attrVal.CurrentValue + change < 0f) return false;
             }
@@ -50,10 +50,10 @@ namespace FarEmerald.PlayForge
             error = "";
             if (data.EffectOrigin is not AbilitySpec ability) return false;
 
-            // A toggle can always turn off; its cooldown starts as it does (TW-20)
+            // A toggle can always turn off; its cooldown starts as it does
             if (ability.IsToggledOn) return true;
 
-            // With its charges counted, it's refused only with none in hand, whatever else carries its cooldown's tag (TW-17)
+            // With its charges counted, it's refused only with none in hand, whatever else carries its cooldown's tag
             if (ability.Charges.Counted) return ability.Charges.InHand > 0;
             return !ability.OnCooldown;
         }
@@ -90,7 +90,7 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// Compares the attribute's share of its base, from 0 to 1, in place of its value: "a target below half its
-        /// health" whatever its health. It compared the value alone, right for one entity and wrong for the next (FEAT-26).
+        /// health" whatever its health. It compared the value alone, right for one entity and wrong for the next.
         /// </summary>
         [Tooltip("Compare the attribute's share of its base, from 0 to 1, in place of its value")]
         public bool ShareOfBase;
@@ -104,7 +104,7 @@ namespace FarEmerald.PlayForge
             if (!source.TryGetAttributeValue(Attribute, out var attrVal))
                 return false;
 
-            // Its share of its base, where the rule asks for one (FEAT-26)
+            // Its share of its base, where the rule asks for one
             float value = !ShareOfBase ? attrVal.CurrentValue
                 : attrVal.BaseValue > 0f ? attrVal.CurrentValue / attrVal.BaseValue : 0f;
             float compared = Value?.Evaluate(NumberContext.Of(data)) ?? 0f;
@@ -169,7 +169,7 @@ namespace FarEmerald.PlayForge
             if (!data.TryGetTarget(EDataTarget.Primary, out var targetObj)) return false;
 
             // From the targeting packets, which both hubs have. From their GameObjects, a runtime GAS at either end,
-            // which has none, failed every check (GAS-29)
+            // which has none, failed every check
             var target = targetObj?.GetTargetingPacket();
             if (target is null) return false;
 

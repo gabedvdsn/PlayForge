@@ -7,14 +7,14 @@ using UnityEngine.UIElements;
 namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
-    /// A Mono Process's inspector, in Docs/EDITOR_STYLE.md's terms (ED-61): a Process section of Unity's fields, its
+    /// A Mono Process's inspector: a Process section of Unity's fields, its
     /// lifecycle, its timing, how it's ordered as it steps, how it's made, and whether it follows its siblings, each
     /// choice saying what it does in its field's tooltip; then the component's own fields. Priority Method shows while
     /// the process steps, and Priority under it while the method is Manual. It drew a tinted box, a gray hint in 10 px
     /// under each field, set 50 ms after it drew, and a gray rule.
     /// <para>
     /// Every field is a PropertyField bound to its property, so a multiple selection edits each process, and a prefab
-    /// instance's edits show as overrides. Without [CanEditMultipleObjects] the Inspector never offered one (ED-12).
+    /// instance's edits show as overrides. Without [CanEditMultipleObjects] the Inspector never offered one.
     /// </para>
     /// </summary>
     [CustomEditor(typeof(AbstractMonoProcess), true), CanEditMultipleObjects]
@@ -52,7 +52,7 @@ namespace FarEmerald.PlayForge.Editor
         public override VisualElement CreateInspectorGUI()
         {
             var root = new VisualElement { name = "MonoProcess" };
-            // The style sheet lays out the section, wherever the inspector is drawn (ED-20)
+            // The style sheet lays out the section, wherever the inspector is drawn
             ForgeTheme.Apply(root);
 
             var section = new ForgeSection("Process", "Process", true);

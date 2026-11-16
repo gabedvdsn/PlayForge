@@ -3,7 +3,7 @@ using FarEmerald.PlayForge.Lab;
 namespace FarEmerald.PlayForge.Samples.Demo
 {
     /// <summary>
-    /// The training dummy: the Creator Lab's test dummy (LAB-7), which stands and counts what it takes and mends after a
+    /// The training dummy: the Creator Lab's test dummy, which stands and counts what it takes and mends after a
     /// few seconds left alone, by the roster's mend effect. It never dies, since no death watcher is in its worker group.
     /// The panel shows its damage per second and the last blow, colored by its damage type, which this keeps.
     /// </summary>

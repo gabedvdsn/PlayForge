@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace FarEmerald.PlayForge
 {
     /// <summary>
-    /// What a number field's context provides (FEAT-29): what a site has for its numbers to read, which
+    /// What a number field's context provides: what a site has for its numbers to read, which
     /// <see cref="NumberContext.Has"/> tests, what a kind needs (<see cref="NumberKindAttribute.Reads"/>), and what a field
     /// declares (<see cref="NumberContextAttribute"/>).
     /// </summary>
@@ -48,7 +48,7 @@ namespace FarEmerald.PlayForge
     }
 
     /// <summary>
-    /// What a number is read against (FEAT-29): what its site has. A kind of number reads it; it is the whole of a kind's
+    /// What a number is read against: what its site has. A kind of number reads it; it is the whole of a kind's
     /// API, so adding to it later breaks no kind. It offers the caster, the target and the level; the carrier, where there
     /// is one, and what it has dealt; the caller's magnitudes and Local Data, each by key; an attribute's value or a
     /// retention group's part of it, on either side, and through <see cref="SystemOf"/> the effects there; the activation's
@@ -157,7 +157,7 @@ namespace FarEmerald.PlayForge
             if (carrier == null) return default;
             if (carrier is NumberBridge bridge) return bridge.Context;
             // A kind inside a plain scaler reads the context its number was read in, and not one made again from the
-            // carrier, which has no owner, no data and none of what the reader set (NUM-16)
+            // carrier, which has no owner, no data and none of what the reader set
             if (readingDepth > 0 && ReferenceEquals(Reading[readingDepth - 1].Carrier, carrier)) return Reading[readingDepth - 1];
             var origin = carrier.GetOrigin();
             var magnitudes = carrier is GameplayEffectSpec spec ? spec.SetByCallerMagnitudes : null;
@@ -222,7 +222,7 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// The context of an item as its holder has it: its holder as the caster, at the item's level, with the item's
-        /// Local Data and no target, as its stack size reads it (FN-19).
+        /// Local Data and no target, as its stack size reads it.
         /// </summary>
         public static NumberContext Of(ItemSpec item) =>
             item == null ? default : new NumberContext(item.GetSource(), null, item.GetLevel(), true, item, localData: LocalDataOf(item));
@@ -388,7 +388,7 @@ namespace FarEmerald.PlayForge
             return entity != null && attribute != null && entity.TryGetAttributeValue(attribute, out value);
         }
 
-        /// <summary>The part of an attribute on one side that <paramref name="groups"/> reads, all of it where none (TW-3).</summary>
+        /// <summary>The part of an attribute on one side that <paramref name="groups"/> reads, all of it where none.</summary>
         public bool TryGetAttribute(NumberSide side, IAttribute attribute, RetentionGroups groups, out AttributeValue value) =>
             RetentionGroups.TryRead(groups, EntityOn(side), attribute, out value);
 
@@ -433,15 +433,14 @@ namespace FarEmerald.PlayForge
         /// A scaler's value in a context: a <see cref="NumberKind"/> reads the context, and a Group joins its
         /// members in it; another scaler evaluates against
         /// the context's carrier, or a reusable carrier the context fills, which it is initialized against first, as a
-        /// spec's scalers are as it's made. A kind such a scaler holds reads this context, whichever carrier it is given
-        /// (NUM-16).
+        /// spec's scalers are as it's made. A kind such a scaler holds reads this context, whichever carrier it is given.
         /// </summary>
         internal static float ReadScaler(AbstractScaler scaler, in NumberContext context)
         {
-            // A kind that is none, as a Group with no members, joins nothing (ED-80)
+            // A kind that is none, as a Group with no members, joins nothing
             if (AbstractScaler.IsNone(scaler)) return 0f;
             if (scaler is NumberKind kind) return kind.Read(in context);
-            // A group joins its members in the context itself, so each reads all the context gives (NUM-14)
+            // A group joins its members in the context itself, so each reads all the context gives
             if (scaler is ScalerGroup { HasMembers: true } group) return group.Read(in context);
             if (context.Carrier != null)
             {
@@ -471,7 +470,7 @@ namespace FarEmerald.PlayForge
         }
 
         // The contexts plain scalers are being read in against their carriers, the innermost last. A kind inside one
-        // reads the context its number was read in, with its owner and its data (NUM-16)
+        // reads the context its number was read in, with its owner and its data
         private static readonly NumberContext[] Reading = new NumberContext[NumberBridge.MostDepth];
         private static int readingDepth;
 

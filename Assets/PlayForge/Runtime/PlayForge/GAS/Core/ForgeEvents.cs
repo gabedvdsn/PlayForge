@@ -1,7 +1,7 @@
 namespace FarEmerald.PlayForge
 {
     /// <summary>
-    /// Sends a gameplay event to an entity as the core sends its own (TW-5, TW-12): only where an ability of the entity
+    /// Sends a gameplay event to an entity as the core sends its own: only where an ability of the entity
     /// listens for it, queued for its frame's end where it has a queue, its data the source and the subject given.
     /// </summary>
     public static class ForgeEvents

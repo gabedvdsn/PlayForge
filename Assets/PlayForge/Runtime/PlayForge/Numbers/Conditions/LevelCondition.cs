@@ -4,7 +4,7 @@ using UnityEngine;
 namespace FarEmerald.PlayForge
 {
     /// <summary>
-    /// Whether the level compares with a number (FEAT-29): the level itself, or how far up its range it is, from 0 at
+    /// Whether the level compares with a number: the level itself, or how far up its range it is, from 0 at
     /// its least to 1 at its most.
     /// </summary>
     [Serializable]
@@ -29,7 +29,7 @@ namespace FarEmerald.PlayForge
 
         public override void Initialize(IAttributeImpactCarrier carrier) => Value?.Initialize(carrier);
 
-        // The level, and the number it was compared with (FEAT-32)
+        // The level, and the number it was compared with
         public override void Explain(in NumberContext context, NumberTrace trace)
         {
             trace.Add(Relative ? "relative level" : "level", Relative ? context.Level.Ratio : context.Level.CurrentValue, "Level");

@@ -10,20 +10,20 @@ using Object = UnityEngine.Object;
 namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
-    /// A reference to a PlayForge asset, or to a Value Pipeline, Crowd Control Rules or Effect Modifier (FN-11), as
-    /// Docs/EDITOR_STYLE.md draws one: Unity's object field, with its type's icon,
+    /// A reference to a PlayForge asset, or to a Value Pipeline, Crowd Control Rules or Effect Modifier:
+    /// Unity's object field, with its type's icon,
     /// and beside it a plain button, Open while it names an asset, which shows the asset in a window of its own, or New
     /// while it's empty, which asks for a new one's name in The Forge's New dialog, makes it where The Forge makes its type
-    /// and uses it (EP-8). A drawer adds its own actions to the
+    /// and uses it. A drawer adds its own actions to the
     /// field's right-click menu. It was a button that opened a dropdown list of its own, with hover colors and Clear and
-    /// Open icon buttons set in C# (ED-38).
+    /// Open icon buttons set in C#.
     /// </summary>
     public abstract class AbstractForgeObjectDrawer<T> : PropertyDrawer where T : ScriptableObject
     {
         public override VisualElement CreatePropertyGUI(SerializedProperty property)
         {
             var row = new VisualElement { name = "ReferenceRow" };
-            // The style sheet lays out the row, wherever the drawer is drawn: in Unity's own inspector too (ED-20)
+            // The style sheet lays out the row, wherever the drawer is drawn: in Unity's own inspector too
             ForgeTheme.Apply(row);
             row.AddToClassList("pf-reference");
 
@@ -38,7 +38,7 @@ namespace FarEmerald.PlayForge.Editor
             field.BindProperty(property);
             row.Add(field);
             // Its picker offers the active Forge Project's assets alone, where Unity's offers every asset of the type, while
-            // the project has a Forge Project (FEAT-34)
+            // the project has a Forge Project
             void PickInProject(EventBase down, int button)
             {
                 if (button != 0 || ForgeProjects.All().Count == 0) return;
@@ -69,7 +69,7 @@ namespace FarEmerald.PlayForge.Editor
                 action.clickable = new Clickable(() =>
                 {
                     if (field.value is T shown) Open(shown);
-                    // The field takes it once it's made, by its property found again: the dialog waits on its name (EP-8)
+                    // The field takes it once it's made, by its property found again: the dialog waits on its name
                     else New(host, $"{NameOf(host)} {label}", made =>
                     {
                         if (serialized.targetObject == null) return;
@@ -89,7 +89,7 @@ namespace FarEmerald.PlayForge.Editor
 
         /// <summary>
         /// Shows the picker of the active Forge Project's assets of the field's type, None first and the one it holds checked,
-        /// in PlayForge's dropdown, under the field (FEAT-34, EP-1).
+        /// in PlayForge's dropdown, under the field.
         /// </summary>
         internal static void ShowProjectPicker(ObjectField field)
         {
@@ -98,7 +98,7 @@ namespace FarEmerald.PlayForge.Editor
             new ForgeAssetPicker(assets, ForgeAssetTypes.NameOf(typeof(T)), "None", picked => field.value = picked, field.value).Show(field.worldBound);
         }
 
-        /// <summary>The active Forge Project's assets of the field's type, by name, as its picker offers them (FEAT-34).</summary>
+        /// <summary>The active Forge Project's assets of the field's type, by name, as its picker offers them.</summary>
         internal static List<Object> ProjectAssets() => ForgeProjects.AssetsOf(typeof(T))
             .OrderBy(NameOf, StringComparer.OrdinalIgnoreCase).ToList();
 
@@ -111,7 +111,7 @@ namespace FarEmerald.PlayForge.Editor
         /// <summary>
         /// Asks for the name of the asset New uses, starting as one for the asset that holds the field and the field, as in
         /// "Goblin Attribute Set", in The Forge's New dialog, where its folder can change too; then makes it, as The Forge
-        /// does, and hands it to <paramref name="made"/> (EP-8). It made the asset at once, by that name. One Undo takes
+        /// does, and hands it to <paramref name="made"/>. It made the asset at once, by that name. One Undo takes
         /// back the field's new value; the asset stays.
         /// </summary>
         protected virtual void New(Object host, string name, Action<T> made) =>
@@ -141,7 +141,7 @@ namespace FarEmerald.PlayForge.Editor
         };
 
         // Whether the field is a list's row itself. A field inside a list's element, as a scaler's attribute inside an
-        // attribute set's element, keeps its label: it dropped it, as the tag field did (ED-49, ED-55)
+        // attribute set's element, keeps its label: it dropped it, as the tag field did
         private static bool IsInList(SerializedProperty property) => property.propertyPath.EndsWith("]");
     }
 }

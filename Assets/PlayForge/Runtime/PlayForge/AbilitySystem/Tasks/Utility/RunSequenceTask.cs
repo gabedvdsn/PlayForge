@@ -13,7 +13,7 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// A sequence made in code, as an ability a game builds as it runs makes one with <see cref="TaskSequenceBuilder"/>.
         /// Set, each activation runs a fresh sequence from it, in place of the one <see cref="Sequence"/>'s method makes.
-        /// Run Sequence ran only a sequence a static method made, by name (FEAT-21).
+        /// Run Sequence ran only a sequence a static method made, by name.
         /// </summary>
         [System.NonSerialized] public TaskSequenceDefinition Definition;
 
@@ -31,7 +31,7 @@ namespace FarEmerald.PlayForge
 
         public override async UniTask Activate(AbilityDataPacket data, CancellationToken token)
         {
-            // A fresh one from the definition made in code, or the one the method makes (FEAT-21)
+            // A fresh one from the definition made in code, or the one the method makes
             var seq = Definition != null ? new TaskSequence(Definition) : Sequence.GetActiveSequence();
             if (seq is null) return;
 
@@ -60,7 +60,7 @@ namespace FarEmerald.PlayForge
                 // the runtime is always visible and manageable. Previously the async+critical path
                 // started the sequence via .Forget() outside ProcessControl, producing an orphaned
                 // runtime that kept running after the outer ability tore down.
-                // In the caster's world, as its ability's own sequence is (FEAT-10)
+                // In the caster's world, as its ability's own sequence is
                 var registration = ProcessControl.Register(taskSeq).With(data).In(ProcessWorld.Of(data.EffectOrigin?.GetSource())).Run();
                 var relay = registration.Relay;
                 if (!registration)
@@ -78,7 +78,7 @@ namespace FarEmerald.PlayForge
                     // genuinely finished.
                     //
                     // Done in the frame it ends. Polling the relay found that a frame later, so each sequence nested
-                    // this way added a frame (TS-Z)
+                    // this way added a frame
                     await relay.WhenTerminated(token);
                 }
                 catch (System.OperationCanceledException)
@@ -86,7 +86,7 @@ namespace FarEmerald.PlayForge
                     // External cancellation (e.g., the outer ability was interrupted). End the inner
                     // sequence so it tears down cleanly rather than being left behind as an orphaned
                     // runtime. Through its relay, because an interrupt can be refused by a critical
-                    // section, and can't reach a run that hasn't started (TS-G).
+                    // section, and can't reach a run that hasn't started.
                     relay.TerminateImmediate();
                     throw;
                 }

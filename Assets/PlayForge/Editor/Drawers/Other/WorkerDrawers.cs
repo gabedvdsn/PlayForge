@@ -5,7 +5,7 @@ using UnityEngine.UIElements;
 namespace FarEmerald.PlayForge.Editor
 {
 
-    /// <summary>A worker: its kind, always of some kind, then its fields, folding to a line of their values (ED-56).</summary>
+    /// <summary>A worker: its kind, always of some kind, then its fields, folding to a line of their values.</summary>
     public abstract class AbstractWorkerDrawer<T> : AbstractGenericDrawer<T> where T : class
     {
         protected override bool AcceptClear(SerializedProperty prop) => false;
@@ -125,7 +125,7 @@ namespace FarEmerald.PlayForge.Editor
             policyField.BindProperty(policyProp);
             container.Add(policyField);
             
-            // Weight field: a number of any kind, as each authored number is (FN-19)
+            // Weight field: a number of any kind, as each authored number is
             var weightProp = property.FindPropertyRelative("RequiredWeight");
             var weightField = new PropertyField(weightProp, "")
             {

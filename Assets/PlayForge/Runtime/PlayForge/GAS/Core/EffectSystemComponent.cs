@@ -11,7 +11,7 @@ namespace FarEmerald.PlayForge
     /// <see cref="GameplayAbilitySystem"/> (the twin-drift class of bugs ends here; the
     /// GAS classes keep only thin delegating wrappers).
     ///
-    /// <para>Lifecycle under the two-kind impact model (Docs/IMPACT_MODEL_REFACTOR.md §3.2):</para>
+    /// <para>Lifecycle under the two-kind impact model:</para>
     /// <code>
     /// Apply (durational):  shelve container
     ///                      → RegisterModifier per Continuous entry
@@ -32,23 +32,23 @@ namespace FarEmerald.PlayForge
         private bool needsCleaning;
 
         // What FinishedEffects holds, to look up without walking it. Marking a container finished, and the tick's and
-        // the requirement pass's skip of a finished one, each searched the list, so ending n effects cost n² (GAS-P5)
+        // the requirement pass's skip of a finished one, each searched the list, so ending n effects cost n²
         private readonly HashSet<AbstractEffectContainer> finishedSet = new();
 
-        // A cleaning pass's containers, which leave the shelf and the index together (GAS-P5)
+        // A cleaning pass's containers, which leave the shelf and the index together
         private readonly HashSet<AbstractEffectContainer> leaving = new();
         private readonly Predicate<AbstractEffectContainer> isLeaving;
 
         // The shelf's containers by asset tag, in shelf order, for re-application and removal to find their own. They
-        // walked the whole shelf, comparing every container's tag (GAS-P3)
+        // walked the whole shelf, comparing every container's tag
         private readonly Dictionary<Tag, List<AbstractEffectContainer>> byTag = new();
 
         // An application leaves the shelf's removal and ongoing requirements to be checked once, at the next tick. Each
         // application checked every container and rebuilt all tags, twice over for an instant effect, so it cost as
-        // much as the entity carried (GAS-P3)
+        // much as the entity carried
         private bool requirementsDirty;
 
-        // Effects part way through applying here, and those already reported for asking to apply again (GAS-28)
+        // Effects part way through applying here, and those already reported for asking to apply again
         private readonly HashSet<GameplayEffect> applying = new();
         private readonly HashSet<GameplayEffect> reportedCycles = new();
 
@@ -72,7 +72,7 @@ namespace FarEmerald.PlayForge
         {
             // Before the shelf ticks, so a container a requirement ends is skipped, as it was when applying checked. A
             // tag that came or went asks too, whatever granted it: a loose tag's, an ability's or an item's ended no
-            // effect until another effect came or went (GAS-56). With nothing on the shelf, there's nothing to ask
+            // effect until another effect came or went. With nothing on the shelf, there's nothing to ask
             var tags = Self.GetTagCache();
             bool tagsChanged = tags != null && tags.TagsChangedSinceChecked;
             if (tagsChanged && EffectShelf.Count == 0)
@@ -96,30 +96,30 @@ namespace FarEmerald.PlayForge
             if (spec is null) return false;
 
             // The dead take no one else's effects, as the dead in the games are untargetable; their own, as their death's
-            // respawn timer and their revive's, still land (FN-16, Decision 79)
+            // respawn timer and their revive's, still land
             if (Self.IsDead && !ReferenceEquals(spec.Origin?.GetSource(), Self)) return Refused(spec, EEffectRefusal.Dead);
 
-            // Under its own marker in the Profiler, a contained effect's within its container's (FEAT-18)
+            // Under its own marker in the Profiler, a contained effect's within its container's
             using var sample = ForgeProfiler.ApplyEffect.Auto();
 
-            // Each refusal is told, and why (LAB-12): its affiliation, then its requirements, as the check ran them together
+            // Each refusal is told, and why: its affiliation, then its requirements, as the check ran them together
             if (!ForgeHelper.ValidateAffiliationPolicy(spec, Self.GetAffiliation())) return Refused(spec, EEffectRefusal.Affiliation);
             if (!spec.Base.ValidateApplicationRequirements(spec)) return Refused(spec, EEffectRefusal.Requirements);
 
-            // An immunity on the target refuses an effect it names, and a miss on its chance to apply refuses it too (FEAT-8)
+            // An immunity on the target refuses an effect it names, and a miss on its chance to apply refuses it too
             if (IsImmuneTo(spec.Base)) return Refused(spec, EEffectRefusal.Immunity);
             if (!RollsToApply(spec)) return Refused(spec, EEffectRefusal.Chance);
 
             // A Block or Evade stage in its hits' pipelines, or one a modifier brings, rolls once as it lands; on a stop
-            // nothing of it lands, and each side hears it (TW-12)
+            // nothing of it lands, and each side hears it
             if (StoppedBy(spec) is { } stop)
             {
                 HearStopped(spec, stop);
                 return Refused(spec, EEffectRefusal.Stopped);
             }
 
-            // Its area, its Area component's: each the area takes near this one takes it too, and spreads it no further
-            // (TW-10, FN-14); in the project's resolve order, this one among them, where the area follows it (TW-31)
+            // Its area, its Area component's: each the area takes near this one takes it too, and spreads it no further;
+            // in the project's resolve order, this one among them, where the area follows it
             var area = spec.FromArea ? null : spec.Base.Area;
             bool spreads = area is { Reaches: true };
             if (spreads && area.UseResolveOrder && ForgeResolveOrder.Orders) return LandOverArea(spec, area);
@@ -129,7 +129,7 @@ namespace FarEmerald.PlayForge
             return true;
         }
 
-        // An effect this one didn't take, told with why (LAB-12)
+        // An effect this one didn't take, told with why
         private bool Refused(GameplayEffectSpec spec, EEffectRefusal refusal)
         {
             Self.GetCallbacks()?.EffectRefused(spec, refusal);
@@ -137,11 +137,11 @@ namespace FarEmerald.PlayForge
         }
 
         // Lands the effect on this one, once nothing refused it: numbered, applied, told and its contained effects applied.
-        // False where it asks for itself inside its own application (GAS-28)
+        // False where it asks for itself inside its own application
         private bool Land(GameplayEffectSpec spec)
         {
             // Asked for again before its own application is over, an effect contains itself, through its contained
-            // effects or what applying it sets off. It recursed until the stack overflowed, which nothing catches (GAS-28)
+            // effects or what applying it sets off. It recursed until the stack overflowed, which nothing catches
             if (!applying.Add(spec.Base))
             {
                 if (reportedCycles.Add(spec.Base))
@@ -153,7 +153,7 @@ namespace FarEmerald.PlayForge
                 return Refused(spec, EEffectRefusal.Cycle);
             }
 
-            // Numbered as it lands, by the entity it lands on (FEAT-13)
+            // Numbered as it lands, by the entity it lands on
             spec.ApplicationId = ++applications;
 
             try
@@ -173,12 +173,12 @@ namespace FarEmerald.PlayForge
 
                 requirementsDirty = true;
 
-                // A cleanse takes off the effects it names as it lands, before its own contained effects do (FEAT-8), and a
-                // purge those its strength reaches (FN-16)
+                // A cleanse takes off the effects it names as it lands, before its own contained effects do, and a
+                // purge those its strength reaches
                 RemoveEffectsNamedBy(spec);
                 if (spec.Base.Purges is { Purges: true } purge) ForgePurge.Purge(Self, purge, spec.Origin?.GetSource(), spec.Base);
 
-                // Recorded where the callback fires, for analysis workers. Nothing recorded it (GAS-28)
+                // Recorded where the callback fires, for analysis workers. Nothing recorded it
                 Self.GetFrameSummary()?.RecordEffectApplied(spec);
                 Self.GetCallbacks()?.EffectApplied(spec);
                 ForgeCounters.EffectsApplied.Value++;
@@ -195,7 +195,7 @@ namespace FarEmerald.PlayForge
         }
 
         // Lands an effect on each its area takes near the one it landed on, from the same origin, nearest first where it
-        // takes at most some (TW-10)
+        // takes at most some
         private void SpreadOverArea(GameplayEffectSpec spec, EffectArea area)
         {
             var taken = TakenBy(spec, area);
@@ -209,8 +209,8 @@ namespace FarEmerald.PlayForge
         }
 
         // Lands the effect on this one, its target, and on those its area takes, all in the project's resolve order, this
-        // one first among those placed alike (TW-31). The area takes whom it would, the nearest at most some, and one that
-        // refuses the effect gives its place to the next nearest, as it did (TW-10). Whether it landed on this one
+        // one first among those placed alike. The area takes whom it would, the nearest at most some, and one that
+        // refuses the effect gives its place to the next nearest, as it did. Whether it landed on this one
         private bool LandOverArea(GameplayEffectSpec spec, EffectArea area)
         {
             var taken = TakenBy(spec, area);
@@ -233,7 +233,7 @@ namespace FarEmerald.PlayForge
         }
 
         // Those its area takes near this one, the nearest first where it takes at most some: each it reaches but this one,
-        // the dead, and its caster unless it says, of the sides it takes (TW-10)
+        // the dead, and its caster unless it says, of the sides it takes
         private List<ITarget> TakenBy(GameplayEffectSpec spec, EffectArea area)
         {
             var taken = new List<ITarget>();
@@ -259,7 +259,7 @@ namespace FarEmerald.PlayForge
             return taken;
         }
 
-        // Lands the effect on another its area takes, made for it from the same origin, and spreading no further (TW-10)
+        // Lands the effect on another its area takes, made for it from the same origin, and spreading no further
         private static bool LandFromArea(GameplayEffectSpec spec, ITarget other)
         {
             var made = other.GenerateEffectSpec(spec.Origin, spec.Base);
@@ -269,12 +269,12 @@ namespace FarEmerald.PlayForge
             return other.ApplyGameplayEffect(made);
         }
 
-        // The number of the entity's last effect application (FEAT-13)
+        // The number of the entity's last effect application
         private int applications;
 
         // The first Block or Evade stage whose chance comes up, of its hits' pipelines, each pipeline once, then the stages
-        // its modifiers bring for an attribute it impacts; null where none does (TW-12). A stop that stops losses alone
-        // rolls only for an effect that lowers its attribute, so a heal lands past it unrolled (GAS-77)
+        // its modifiers bring for an attribute it impacts; null where none does. A stop that stops losses alone
+        // rolls only for an effect that lowers its attribute, so a heal lands past it unrolled
         private AbstractStopStage StoppedBy(GameplayEffectSpec spec)
         {
             var impact = spec.Base.ImpactSpecification;
@@ -307,7 +307,7 @@ namespace FarEmerald.PlayForge
         }
 
         // Whether a stop can stop the effect: any effect where it stops any impact; else one that lowers its attribute, or
-        // any attribute where it names none (GAS-77)
+        // any attribute where it names none
         private bool Reaches(AbstractStopStage stop, GameplayEffectSpec spec, IAttribute attribute) =>
             stop.Stops == EStopImpacts.AnyImpact || Lowers(spec, attribute);
 
@@ -390,24 +390,24 @@ namespace FarEmerald.PlayForge
 
         // Whether the effect lands by its chance to apply. A chance of 1 or more, every effect's unless it's set, lands
         // and draws nothing, and one of 0 or less never lands and draws nothing either, so an effect without a chance
-        // leaves the numbers others draw as they were. An effect always landed (FEAT-8)
+        // leaves the numbers others draw as they were. An effect always landed
         private static bool RollsToApply(GameplayEffectSpec spec)
         {
             var chance = spec.Base.ImpactSpecification?.ChanceToApply;
             if (chance == null && spec.Changes == null) return true;
             float odds = chance?.Evaluate(spec) ?? 1f;
-            // As its modifiers change it (TW-7)
+            // As its modifiers change it
             if (spec.Changes != null) odds = spec.Changes.Chance(odds);
-            // Pseudo-random and lucky as its roll says, its streak the caster's for this effect (TW-8)
+            // Pseudo-random and lucky as its roll says, its streak the caster's for this effect
             return ForgeChance.Roll(odds, NumberContext.Of(spec), spec.Base.ImpactSpecification?.ChanceRoll, spec.Base);
         }
 
         // The shelf's immunities, the containers whose effects block others, so an application checks them alone and costs
-        // the same however much the entity carries (GAS-P3)
+        // the same however much the entity carries
         private readonly List<AbstractEffectContainer> immunities = new();
 
         // Whether an effect on the shelf, while it holds, blocks the effect: an immunity. Nothing made an entity immune
-        // to a kind of effect but a requirement on each effect of the kind (FEAT-8)
+        // to a kind of effect but a requirement on each effect of the kind
         private bool IsImmuneTo(GameplayEffect effect)
         {
             if (immunities.Count == 0) return false;
@@ -420,7 +420,7 @@ namespace FarEmerald.PlayForge
         }
 
         // Takes off each other effect on the shelf that the landing effect names: a cleanse. Each leaves at the next tick,
-        // as a removed effect does. A cleanse took a removal requirement on each effect it meant to clear (FEAT-8)
+        // as a removed effect does. A cleanse took a removal requirement on each effect it meant to clear
         private void RemoveEffectsNamedBy(GameplayEffectSpec spec)
         {
             var named = spec.Base.Tags.RemovesEffectsTagged;
@@ -434,24 +434,24 @@ namespace FarEmerald.PlayForge
         }
 
         // An effect another lands, from its origin and with the magnitudes its caller set: a contained effect, or an
-        // overflow's (FEAT-2); on this one's target, or on its caster where it says (TW-14)
+        // overflow's; on this one's target, or on its caster where it says
         private bool ApplyMadeFrom(GameplayEffectSpec from, GameplayEffect effect, EEffectRecipient landsOn = EEffectRecipient.Target,
             EffectModifierRule addedBy = null)
         {
             var onto = Recipient(from, landsOn);
             if (onto == null) return false;
 
-            // The rules whose added effect the one it's made from is change it no more (TW-7)
+            // The rules whose added effect the one it's made from is change it no more
             var spec = EffectModifiers.Make(onto, from.GetOrigin(), effect, from, addedBy);
             spec?.TakeSetByCaller(from.SetByCallerMagnitudes);
             return ReferenceEquals(onto, Self) ? ApplyGameplayEffect(spec) : onto.ApplyGameplayEffect(spec);
         }
 
-        // Whom an effect another lands lands on: this one's target, or its caster where that's an entity (TW-14)
+        // Whom an effect another lands lands on: this one's target, or its caster where that's an entity
         private ITarget Recipient(GameplayEffectSpec from, EEffectRecipient landsOn) =>
             landsOn == EEffectRecipient.Caster ? from.GetOrigin()?.GetSource() as ITarget : Self as ITarget;
 
-        // Its own contained effects for a moment, each on whom it says (TW-14)
+        // Its own contained effects for a moment, each on whom it says
         private void ApplyContained(GameplayEffectSpec spec, EApplyTickRemove when)
         {
             var packets = spec.Base.ImpactSpecification?.Packets;
@@ -474,7 +474,7 @@ namespace FarEmerald.PlayForge
             // worker/tag utility.
             //
             // Every commit goes to the removal workers. They saw only the last, and an empty one, on no attribute,
-            // when nothing committed (GAS-28)
+            // when nothing committed
             List<ImpactData> impacts = null;
             foreach (var attribute in spec.GetImpactedAttributes(EImpactDelivery.OnApply))
             {
@@ -487,7 +487,7 @@ namespace FarEmerald.PlayForge
                 if (impact.Attribute is not null) (impacts ??= new List<ImpactData>(1)).Add(impact);
             }
 
-            // What its transfers move as it lands (TW-20)
+            // What its transfers move as it lands
             ForgeTransfers.Move(spec, Self, EImpactDelivery.OnApply);
 
             spec.RunWorkerRemoval(new EffectWorkerContext(Self, spec, Self.GetFrameSummary(), Self.GetActionQueue(), 1,
@@ -495,7 +495,7 @@ namespace FarEmerald.PlayForge
             tagCache.RemoveTags(spec.Base.Tags.GrantedTags);
             if (spec.Changes != null) tagCache.RemoveTags(spec.Changes.GrantedTags);
 
-            // An instant effect lands and is over, so its cue is a burst (FEAT-1)
+            // An instant effect lands and is over, so its cue is a burst
             Cue(spec, ECueMoment.Applied);
         }
 
@@ -504,7 +504,7 @@ namespace FarEmerald.PlayForge
             bool ongoing = ForgeHelper.ValidateEffectOngoingRequirements(spec);
             if (TryHandleExistingDurationalGameplayEffect(spec, ongoing))
             {
-                // Taken in by the effect on already, whose lasting cues go on (FEAT-1)
+                // Taken in by the effect on already, whose lasting cues go on
                 Cue(spec, ECueMoment.Applied);
                 return;
             }
@@ -520,14 +520,14 @@ namespace FarEmerald.PlayForge
 
             container.Spec.RunWorkerApplication(new EffectWorkerContext(Self, container.Spec, Self.GetFrameSummary(), Self.GetActionQueue()));
 
-            // Its burst, and its lasting cues begin (FEAT-1)
+            // Its burst, and its lasting cues begin
             Cue(container.Spec, ECueMoment.Applied);
             Cue(container.Spec, ECueMoment.Begin);
 
             if (!ongoing) return;
             // An OnApply entry is one commit, made as the effect lands. Tick On Application commits them with its tick, and
             // was the only durational path that did, so an impact authored to land as a ticking effect does was dropped,
-            // and only its ticks dealt (GAS-71)
+            // and only its ticks dealt
             if (spec.Base.DurationSpecification.TickOnApplication) ApplyTickOnApplication(container);
             else CommitOnApply(container.Spec);
         }
@@ -543,14 +543,14 @@ namespace FarEmerald.PlayForge
                     spec.GetImpactersFor(attribute, EImpactDelivery.OnApply));
             }
 
-            // And what its transfers move as it lands (TW-20)
+            // And what its transfers move as it lands
             ForgeTransfers.Move(spec, Self, EImpactDelivery.OnApply);
         }
 
         /// <summary>
         /// Puts a container on the shelf and in the index, and counts its tags now, as a rebuild would. Counted as it is
-        /// shelved, nothing counts them twice: any rebuild after this counts the shelf afresh (GAS-P3). A restore counts
-        /// them once, in its own compile as it ends (FEAT-9).
+        /// shelved, nothing counts them twice: any rebuild after this counts the shelf afresh. A restore counts
+        /// them once, in its own compile as it ends.
         /// </summary>
         private void Shelve(AbstractEffectContainer container, bool countTags = true)
         {
@@ -568,7 +568,7 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// Takes a cleaning pass's containers off the shelf and out of the index, in one walk of each. Taken off one at a
-        /// time, each a linear remove, ending n containers cost n² (GAS-P5).
+        /// time, each a linear remove, ending n containers cost n².
         /// </summary>
         private void Unshelve(AbstractEffectContainer[] finished)
         {
@@ -585,7 +585,7 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// Reads every effect on the shelf that <paramref name="origin"/> applied again, re-registering its modifiers, as
-        /// something a scaler on it reads has changed: an item's stack count (FEAT-14).
+        /// something a scaler on it reads has changed: an item's stack count.
         /// </summary>
         public void RefreshEffectsFrom(IEffectOrigin origin)
         {
@@ -599,7 +599,7 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// Reads every effect on the shelf whose origin's level is kept under <paramref name="levelKey"/> again, as that
         /// level has changed: an item's, an ability's or the entity's own. A lasting effect's magnitude was read as its
-        /// modifier registered, so an item that levelled up kept its first level's bonus (GAS-58).
+        /// modifier registered, so an item that levelled up kept its first level's bonus.
         /// </summary>
         public void RefreshEffectsLevelledBy(Tag levelKey)
         {
@@ -612,34 +612,34 @@ namespace FarEmerald.PlayForge
         }
 
         // The abilities each container lent its target, with the slot each took, to take back as it comes off. Only a
-        // container whose effect grants abilities is here (FEAT-8)
+        // container whose effect grants abilities is here
         private readonly Dictionary<AbstractEffectContainer, List<(Ability Ability, int Slot)>> lent = new();
 
         // The On Hits each container gave its target, to take back as it comes off. Kept apart, as a replacement by another
-        // effect under its tag gives the container the other's spec first, and a load clears the shelf quietly (TW-6)
+        // effect under its tag gives the container the other's spec first, and a load clears the shelf quietly
         private readonly Dictionary<AbstractEffectContainer, List<OnHitEntry>> onHitsLent = new();
 
-        // The modifiers each container gave its target, kept apart as its On Hits are (TW-7)
+        // The modifiers each container gave its target, kept apart as its On Hits are
         private readonly Dictionary<AbstractEffectContainer, List<EffectModifierEntry>> modifiersLent = new();
 
-        // The auras each container gave its target, kept apart as its modifiers are (TW-10)
+        // The auras each container gave its target, kept apart as its modifiers are
         private readonly Dictionary<AbstractEffectContainer, List<AuraEntry>> aurasLent = new();
 
-        // The containers whose side change their target is under, each held by its container (TW-18)
+        // The containers whose side change their target is under, each held by its container
         private readonly HashSet<AbstractEffectContainer> sidesLent = new();
 
         // The worker group each container gave its target, and how many of the containers lasting gave each, so two of an
-        // effect give it once and the last to go takes it back: a worker is one object, which its cache keeps once (TW-13)
+        // effect give it once and the last to go takes it back: a worker is one object, which its cache keeps once
         private readonly Dictionary<AbstractEffectContainer, StandardWorkerGroup> groupsLent = new();
         private readonly Dictionary<StandardWorkerGroup, int> groupCounts = new();
 
         // Gives the target each ability the container's effect grants, at the level of what applied it, and notes the slot
         // each took. One the target can't take, as one it knows already, isn't lent, so it isn't taken back either, as an
-        // item's isn't (GAS-48). An effect couldn't lend an ability (FEAT-8). A restore lends them quietly, and compiles the
-        // tags once as it ends (FEAT-9)
+        // item's isn't. An effect couldn't lend an ability. A restore lends them quietly, and compiles the
+        // tags once as it ends
         private void LendAbilities(AbstractEffectContainer container, bool quietly = false)
         {
-            // Its On Hits, while it lasts, as what it lends (TW-6)
+            // Its On Hits, while it lasts, as what it lends
             var onHit = container.Spec.Base.OnHit;
             if (onHit is { Count: > 0 })
             {
@@ -648,7 +648,7 @@ namespace FarEmerald.PlayForge
                 onHitsLent[container] = given;
             }
 
-            // Its modifiers, while it lasts (TW-7)
+            // Its modifiers, while it lasts
             var modifiers = container.Spec.Base.Modifiers;
             if (modifiers is { Count: > 0 })
             {
@@ -657,7 +657,7 @@ namespace FarEmerald.PlayForge
                 modifiersLent[container] = given;
             }
 
-            // Its worker group, while it lasts (TW-13)
+            // Its worker group, while it lasts
             var group = container.Spec.Base.WorkerGroup;
             if (group != null && HasWorkers(group))
             {
@@ -668,7 +668,7 @@ namespace FarEmerald.PlayForge
             }
 
             // Its side change, its Side Change component's, while it lasts: its caster's sides as they are as it lands, or
-            // those it names (TW-18, FN-26)
+            // those it names
             var change = container.Spec.Base.SideChange;
             if (change != null && Self.GetSides() is { } sides)
             {
@@ -680,7 +680,7 @@ namespace FarEmerald.PlayForge
                 sides.Add(container, given, priority, change.Interrupts);
             }
 
-            // Its auras, its Aura components', while it lasts (TW-10, FN-14)
+            // Its auras, its Aura components', while it lasts
             var auras = ForgeAuras.Of(container.Spec.Base.Components);
             if (auras is { Count: > 0 })
             {
@@ -707,7 +707,7 @@ namespace FarEmerald.PlayForge
             if (slots != null) lent[container] = slots;
         }
 
-        // One container's share of a worker group back: the last of them takes the group back (TW-13)
+        // One container's share of a worker group back: the last of them takes the group back
         private void TakeBackGroup(StandardWorkerGroup group)
         {
             if (!groupCounts.TryGetValue(group, out int giving)) return;
@@ -724,7 +724,7 @@ namespace FarEmerald.PlayForge
             group.AttributeWorkers is { Count: > 0 } || group.ImpactWorkers is { Count: > 0 } ||
             group.TagWorkers is { Count: > 0 } || group.AnalysisWorkers is { Count: > 0 };
 
-        // Takes back what the container lent, interrupting an ability that's running, as an item's is (FEAT-8)
+        // Takes back what the container lent, interrupting an ability that's running, as an item's is
         private void TakeBackAbilities(AbstractEffectContainer container)
         {
             if (onHitsLent.Count > 0 && onHitsLent.Remove(container, out var onHit)) OnHits.Remove(onHit, Self);
@@ -755,7 +755,7 @@ namespace FarEmerald.PlayForge
                     spec.GetImpactersFor(attribute, EImpactDelivery.Continuous));
             }
 
-            // Its lasting transfers, lent or read again with its entries; ReverseImpact gives them back (TW-20)
+            // Its lasting transfers, lent or read again with its entries; ReverseImpact gives them back
             ForgeTransfers.Lend(spec, Self);
         }
 
@@ -766,7 +766,7 @@ namespace FarEmerald.PlayForge
         {
             // An OnApply entry is one commit, made as the effect is applied. A durational effect whose only tick is
             // Tick On Application derives OnApply for Add and Flat Bonus, and only the Instant path committed it, so
-            // its change never landed (GAS-50)
+            // its change never landed
             CommitOnApply(container.Spec);
 
             // Evaluate the tick count ONCE (a scaler-driven count must not be re-rolled
@@ -795,7 +795,7 @@ namespace FarEmerald.PlayForge
                     spec.GetImpactersFor(attribute, EImpactDelivery.Periodic));
             }
 
-            // What its transfers move each tick (TW-20)
+            // What its transfers move each tick
             ForgeTransfers.Move(spec, Self, EImpactDelivery.Periodic);
 
             ApplyContained(spec, EApplyTickRemove.OnTick);
@@ -803,7 +803,7 @@ namespace FarEmerald.PlayForge
         }
 
         // The contained effects its modifiers add for a moment, each made with the rule that added it kept from changing
-        // it again; those as it ends come through its container's removal, as its own do (TW-7)
+        // it again; those as it ends come through its container's removal, as its own do
         private void ApplyAddedPackets(GameplayEffectSpec spec, EApplyTickRemove when)
         {
             if (spec.Changes == null || spec.Changes.Packets.Count == 0) return;
@@ -820,7 +820,7 @@ namespace FarEmerald.PlayForge
 
         private bool TryHandleExistingDurationalGameplayEffect(GameplayEffectSpec spec, bool ongoing)
         {
-            // A spent charge's cooldown runs alone, whatever its effect does when it's applied again (TW-17)
+            // A spent charge's cooldown runs alone, whatever its effect does when it's applied again
             if (spec.OwnContainer) return false;
             if (!byTag.TryGetValue(spec.Base.Tags.AssetTag, out var existing) || existing.Count == 0) return false;
 
@@ -851,7 +851,7 @@ namespace FarEmerald.PlayForge
                         RegisterContinuousEntries(spec);
 
                         // Another effect under the same tag grants its own tags, which only a rebuild counts, and lends
-                        // its own abilities in place of the old one's (FEAT-8)
+                        // its own abilities in place of the old one's
                         if (otherEffect)
                         {
                             Self.CompileGrantedTags();
@@ -893,7 +893,7 @@ namespace FarEmerald.PlayForge
             // containers. On the append path (flag == false) the caller proceeds with a
             // fresh application — running Refresh/Extend + ApplyTickOnApplication here as
             // well would double-tick the effect.
-            // An application that overflows with Deny Refresh leaves the effect's duration as it was (FEAT-8)
+            // An application that overflows with Deny Refresh leaves the effect's duration as it was
             if (flag && !(overflowBound != null && overflowBound.DenyRefreshOnOverflow))
             {
                 switch (spec.Base.DurationSpecification.ReApplicationInteraction)
@@ -915,7 +915,7 @@ namespace FarEmerald.PlayForge
                             int stacksBefore = StackCount(c);
                             c.Extend(spec.Base.DurationSpecification.GetTotalDuration(spec));
 
-                            // Independent durations extend by adding a stack, which refreshes as any other does (GAS-34)
+                            // Independent durations extend by adding a stack, which refreshes as any other does
                             if (StackCount(c) != stacksBefore) RegisterContinuousEntries(c.Spec);
                             if (c.Spec.Base.DurationSpecification.TickOnApplication) ApplyTickOnApplication(c);
                         }
@@ -925,7 +925,7 @@ namespace FarEmerald.PlayForge
                 }
 
                 // No tags to rebuild: the containers that absorbed it grant what they did. A rebuild here walked every
-                // source of every tag (GAS-P3)
+                // source of every tag
             }
 
             if (overflowing != null) Overflow(overflowing, overflowBound, spec);
@@ -935,7 +935,7 @@ namespace FarEmerald.PlayForge
 
         // A stack its bound held back at its max: the bound's overflow effects land from the application's origin, and
         // the effect's stacks come off, leaving at the next tick as a removed effect does, when the bound says so. A
-        // stack past the max did nothing, so a bleed couldn't hemorrhage at its fourth stack (FEAT-8, Decision 30)
+        // stack past the max did nothing, so a bleed couldn't hemorrhage at its fourth stack
         private void Overflow(AbstractStackingEffectContainer container, StackBoundsConfig bound, GameplayEffectSpec spec)
         {
             bool clear = bound.ClearStacksOnOverflow || (spec.Changes?.ClearStacksOnOverflow ?? false);
@@ -944,7 +944,7 @@ namespace FarEmerald.PlayForge
                 for (int i = 0; i < bound.OverflowEffects.Count; i++)
                     if (bound.OverflowEffects[i] != null) ApplyMadeFrom(spec, bound.OverflowEffects[i], bound.OverflowLandsOn);
 
-            // And those its modifiers add, each kept from the rule that added it (TW-7)
+            // And those its modifiers add, each kept from the rule that added it
             if (spec.Changes == null) return;
             foreach (var overflow in spec.Changes.Overflows)
                 if (overflow.Effect != null) ApplyMadeFrom(spec, overflow.Effect, overflow.LandsOn, overflow.AddedBy);
@@ -961,11 +961,11 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// Ends each effect on the shelf that one of <paramref name="tags"/> names, by its asset tag, a context tag or a tag it
-        /// grants, or one under them, as a cleanse ends them; how many it ended (TW-4).
+        /// grants, or one under them, as a cleanse ends them; how many it ended.
         /// </summary>
         /// <summary>
         /// Takes off each effect on the shelf that <paramref name="takes"/> says to, at the next tick, as a removed effect
-        /// goes, a purge's, and how many (FN-16).
+        /// goes, a purge's, and how many.
         /// </summary>
         public int Purge(Func<AbstractEffectContainer, bool> takes)
         {
@@ -1038,7 +1038,7 @@ namespace FarEmerald.PlayForge
             // the shelf must have its granted tags count toward everyone else's ongoing state.
             Self.CompileGrantedTags();
 
-            // The pass reads the tags as they are now (GAS-56)
+            // The pass reads the tags as they are now
             Self.GetTagCache()?.MarkTagsChecked();
 
             foreach (var container in EffectShelf)
@@ -1055,13 +1055,13 @@ namespace FarEmerald.PlayForge
                 }
             }
 
-            // Once: checking requirements changes no tag, and a second compile here rebuilt the same ones (GAS-P3)
+            // Once: checking requirements changes no tag, and a second compile here rebuilt the same ones
         }
 
         /// <summary>
         /// Checks each lasting effect's Ongoing and Removal conditions as the frame ends, as no tag needs to change for an
         /// attribute a condition reads to: one whose Removal phase is met comes off, and the rest go on or pause. Only the
-        /// tags' changes asked before (TW-19).
+        /// tags' changes asked before.
         /// </summary>
         internal void CheckConditions()
         {
@@ -1132,8 +1132,8 @@ namespace FarEmerald.PlayForge
                 {
                     // A stack ran out and others are left. A per-stack magnitude reads the count only when its
                     // attribute recomputes, so this refreshes as gaining a stack does. The old count held until
-                    // something else recomputed the attribute, and that change took the credit (GAS-34)
-                    // And a barrier that fades with its effect reads its share of the time left (TW-12)
+                    // something else recomputed the attribute, and that change took the credit
+                    // And a barrier that fades with its effect reads its share of the time left
                     if (StackCount(container) != stacksBefore || container.Spec.Fades) RegisterContinuousEntries(container.Spec);
                     continue;
                 }
@@ -1154,7 +1154,7 @@ namespace FarEmerald.PlayForge
             needsCleaning = false;
 
             // Off the shelf and out of the index FIRST, the whole pass together, so re-entrant
-            // HandleGameplayEffects passes and removals can't re-mark a container that is mid-removal (GAS-P5)
+            // HandleGameplayEffects passes and removals can't re-mark a container that is mid-removal
             Unshelve(finished);
 
             foreach (var container in finished)
@@ -1167,12 +1167,12 @@ namespace FarEmerald.PlayForge
                     Self.GetFrameSummary(), Self.GetActionQueue());
                 container.Spec.RunWorkerRemoval(effectContext);
 
-                // Recorded where the callback fires, as an application is (GAS-28)
+                // Recorded where the callback fires, as an application is
                 Self.GetFrameSummary()?.RecordEffectRemoved(container.Spec.Base);
                 Self.GetCallbacks()?.EffectRemoved(container.Spec.Base);
                 ForgeCounters.EffectsRemoved.Value++;
 
-                // Its burst, and its lasting cues end (FEAT-1)
+                // Its burst, and its lasting cues end
                 Cue(container.Spec, ECueMoment.Removed);
                 Cue(container.Spec, ECueMoment.End);
             }
@@ -1181,7 +1181,7 @@ namespace FarEmerald.PlayForge
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
-        // CUES (FEAT-1)
+        // CUES
         // ═══════════════════════════════════════════════════════════════════════════
 
         private enum ECueMoment { Applied, Ticked, Removed, Begin, End }
@@ -1216,13 +1216,13 @@ namespace FarEmerald.PlayForge
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
-        // RESTORE — a load's quiet paths (FEAT-9)
+        // RESTORE — a load's quiet paths
         // ═══════════════════════════════════════════════════════════════════════════
 
         /// <summary>
         /// Takes every effect off the shelf at once with nothing told and nothing run: no removal effects, workers or
         /// callbacks. Nor does it take back the abilities effects lent, which the ability system lets go of with the rest; the
-        /// On Hits they gave it does, which the ability system keeps (TW-6). A restore puts back what the save had.
+        /// On Hits they gave it does, which the ability system keeps. A restore puts back what the save had.
         /// </summary>
         internal void ClearForRestore()
         {
@@ -1232,10 +1232,10 @@ namespace FarEmerald.PlayForge
                 foreach (var attribute in container.Spec.GetImpactedAttributes(EImpactDelivery.Continuous))
                     AttributeSystem.UnregisterQuietly(attribute, container.Spec);
 
-                // What its lasting transfers hold, on this entity and the other side, which the load lends again (TW-20)
+                // What its lasting transfers hold, on this entity and the other side, which the load lends again
                 ForgeTransfers.GiveBack(container.Spec, quietly: true);
 
-                // Its lasting cues end, as its effect leaves; no burst plays (FEAT-1)
+                // Its lasting cues end, as its effect leaves; no burst plays
                 Cue(container.Spec, ECueMoment.End);
             }
 
@@ -1247,7 +1247,7 @@ namespace FarEmerald.PlayForge
             immunities.Clear();
             lent.Clear();
 
-            // The On Hits they gave are the ability system's, which keeps them through its own clear (TW-6)
+            // The On Hits they gave are the ability system's, which keeps them through its own clear
             foreach (var onHit in onHitsLent.Values) OnHits.Remove(onHit, Self);
             onHitsLent.Clear();
             foreach (var modifiers in modifiersLent.Values) EffectModifiers.Remove(modifiers, Self);
@@ -1264,7 +1264,7 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// Lends each effect's lasting transfers with nothing told, once a load has put the entity's commits back, as what
-        /// each takes reads them; a restore lends none. Whether any effect has them (TW-20).
+        /// each takes reads them; a restore lends none. Whether any effect has them.
         /// </summary>
         internal bool LendRestoredTransfers()
         {
@@ -1280,7 +1280,7 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// Each effect on the shelf hears the entity die, its components' Death, in the shelf's order, before the death
-        /// takes any off (FN-14). A component may land effects on others as it hears, never this one, which is dead.
+        /// takes any off. A component may land effects on others as it hears, never this one, which is dead.
         /// </summary>
         internal void HearDeath()
         {
@@ -1296,7 +1296,7 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// Gives back what every lasting transfer on the shelf holds, as the entity goes with its effects, which nothing else
-        /// ends: told on another entity, with nothing told on this one (TW-20).
+        /// ends: told on another entity, with nothing told on this one.
         /// </summary>
         internal void GiveBackTransfers()
         {
@@ -1324,7 +1324,7 @@ namespace FarEmerald.PlayForge
             foreach (var attribute in spec.GetImpactedAttributes(EImpactDelivery.Continuous))
                 AttributeSystem.RegisterQuietly(attribute, spec, spec.GetImpactersFor(attribute, EImpactDelivery.Continuous));
 
-            // Its lasting cues begin again, with no burst (FEAT-1)
+            // Its lasting cues begin again, with no burst
             Cue(spec, ECueMoment.Begin);
 
             requirementsDirty = true;
@@ -1335,7 +1335,7 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// Moves each of an effect's containers on this shelf onto another entity's, with its stacks and its time left,
-        /// as a possession hands a body's effects over (FEAT-23). A move is neither a removal nor an application: nothing
+        /// as a possession hands a body's effects over. A move is neither a removal nor an application: nothing
         /// of either runs, its workers, its commits or its contained effects, and neither is told. Its lasting modifiers
         /// leave this entity and hold on the other, its lasting cues end here and begin there, the abilities it lends go
         /// with it, and both entities' tags are compiled again. Each keeps what applied it. Taking an effect off and
@@ -1373,7 +1373,7 @@ namespace FarEmerald.PlayForge
                 TakeBackAbilities(container);
 
                 // Onto the other, as a restore puts one back, by what applied it, its lasting transfers taking from it
-                // now (TW-20)
+                // now
                 var spec = onto.GenerateEffectSpec(container.Spec.Origin, effect);
                 if (spec == null) continue;
                 spec.TakeSetByCaller(container.Spec.SetByCallerMagnitudes);
@@ -1390,7 +1390,7 @@ namespace FarEmerald.PlayForge
             return moved;
         }
 
-        /// <summary>Whether an effect on the shelf lent the ability in the slot, which comes back with the effect (FEAT-9).</summary>
+        /// <summary>Whether an effect on the shelf lent the ability in the slot, which comes back with the effect.</summary>
         internal bool Lends(int slot)
         {
             foreach (var slots in lent.Values)
@@ -1401,7 +1401,7 @@ namespace FarEmerald.PlayForge
             return false;
         }
 
-        /// <summary>Whether the container leaves the shelf at the next tick, as a save asks (FEAT-9).</summary>
+        /// <summary>Whether the container leaves the shelf at the next tick, as a save asks.</summary>
         internal bool IsLeaving(AbstractEffectContainer container) => finishedSet.Contains(container);
 
         // ═══════════════════════════════════════════════════════════════════════════
@@ -1422,7 +1422,7 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// How many containers of <paramref name="effect"/> that <paramref name="origin"/> applied are on the shelf and not
-        /// leaving it: an ability's charges count their cooldowns so (TW-17). Allocates nothing.
+        /// leaving it: an ability's charges count their cooldowns so. Allocates nothing.
         /// </summary>
         public int CountFrom(GameplayEffect effect, IEffectOrigin origin)
         {

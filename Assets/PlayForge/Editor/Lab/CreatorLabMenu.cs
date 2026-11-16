@@ -9,7 +9,7 @@ using UnityEngine;
 namespace FarEmerald.PlayForge.Lab.Editor
 {
     /// <summary>
-    /// Window → PlayForge → Creator Lab (LAB-1): the lab in a new scene, played. The scenes open first are saved if the
+    /// Window → PlayForge → Creator Lab: the lab in a new scene, played. The scenes open first are saved if the
     /// author wants. In the editor the lab lists every asset of the project, and opens one in The Forge.
     /// </summary>
     public static class CreatorLabMenu
@@ -46,7 +46,7 @@ namespace FarEmerald.PlayForge.Lab.Editor
     }
 
     /// <summary>
-    /// The library in the editor, by kind (LAB-5, LAB-18): the active Forge Project's assets, as The Forge's pickers offer
+    /// The library in the editor, by kind: the active Forge Project's assets, as The Forge's pickers offer
     /// them, or every asset of the project's own folders while it has no Forge Project; it switches the active project, as
     /// The Forge does, and follows as The Forge switches it. Given folders, it plays those folders' assets alone.
     /// </summary>

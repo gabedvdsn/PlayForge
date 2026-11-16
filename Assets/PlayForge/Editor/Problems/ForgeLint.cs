@@ -10,7 +10,7 @@ using Object = UnityEngine.Object;
 namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
-    /// What the project's assets give each other, which the content linter's checks read (TW-25, Decision 65): the impact
+    /// What the project's assets give each other, which the content linter's checks read: the impact
     /// types its effects and impact workers deal, the gameplay events its thresholds and stop stages send, and the effects
     /// its items apply. It's gathered from every PlayForge asset, and the shared Value Pipelines and Effect Modifiers, as a
     /// check first asks, and forgotten as the validator checks the project afresh, or as an asset changes what it gives,
@@ -19,10 +19,10 @@ namespace FarEmerald.PlayForge.Editor
     public static class ForgeLint
     {
         // The code's impact types and events, PlayForge's and the project's own, as the tag registry finds those the code
-        // exposes (TAG-5): an impact type every filter takes, as Always Allow, or one the core deals, as Returned; an event
+        // exposes: an impact type every filter takes, as Always Allow, or one the core deals, as Returned; an event
         // the core sends, as Kill
         private static HashSet<string> CoreImpactTypes => CodeTags(ForgeContext.ImpactType, tag => tag.Name);
-        // The code's events by their paths, as a trigger takes a tag under its own by its path (TAG-1, TAG-5)
+        // The code's events by their paths, as a trigger takes a tag under its own by its path
         private static HashSet<string> CoreEvents => CodeTags(ForgeContext.Event, tag => tag.Path);
 
         private static HashSet<string> CodeTags(string context, System.Func<Tag, string> read) =>
@@ -193,11 +193,11 @@ namespace FarEmerald.PlayForge.Editor
                 if (tag.IsValid) into.Add(tag.Name);
         }
 
-        /// <summary>A serialized tag's path, as its tag's <see cref="Tag.Path"/> (TAG-1).</summary>
+        /// <summary>A serialized tag's path, as its tag's <see cref="Tag.Path"/>.</summary>
         internal static string PathOf(SerializedProperty tag) => tag == null ? "" : Tag.PathOf(
             tag.FindPropertyRelative(nameof(Tag.Name))?.stringValue ?? "", tag.FindPropertyRelative(nameof(Tag.DisplayName))?.stringValue ?? "");
 
-        // Whether an event is the trigger's tag or one under it, by their paths, as a trigger takes it (TAG-1)
+        // Whether an event is the trigger's tag or one under it, by their paths, as a trigger takes it
         private static bool Under(string sent, string trigger) =>
             sent == trigger || sent.Length > trigger.Length && sent.StartsWith(trigger, StringComparison.Ordinal) && sent[trigger.Length] == '.';
 
@@ -234,7 +234,7 @@ namespace FarEmerald.PlayForge.Editor
     }
 
     /// <summary>
-    /// A number that counts its stacks twice (TW-25): a stacking effect's periodic impact, or transfer, ticks once for each
+    /// A number that counts its stacks twice: a stacking effect's periodic impact, or transfer, ticks once for each
     /// stack already, so one that reads its own stacks hits 9 times as hard with 3; and an effect that reads an item's
     /// stacks where no item applies it, which reads 1.
     /// </summary>
@@ -265,7 +265,7 @@ namespace FarEmerald.PlayForge.Editor
             const string ticks = "but ticks once for each stack already, so 3 stacks hit 9 times as hard as 1.";
             const string impactPath = nameof(GameplayEffect.ImpactSpecification);
 
-            // The first impact, as the effect derives its entry (ED-3)
+            // The first impact, as the effect derives its entry
             bool authored = impact.AttributeTarget != null ||
                             impact.MagnitudeOperation != null && (impact.MagnitudeOperation.Scaler != null || impact.MagnitudeOperation.Magnitude != 0f);
             if (authored && impact.ResolveDelivery(duration, out _) == EImpactDelivery.Periodic)
@@ -282,7 +282,7 @@ namespace FarEmerald.PlayForge.Editor
                     $"Additional impact {i + 1} on {entry.AttributeTarget.Name} reads its stacks, {ticks}", problems);
             }
 
-            // Its transfers, each a component, numbered among themselves (FN-14)
+            // Its transfers, each a component, numbered among themselves
             var components = effect.Components ?? new List<AbstractEffectComponent>();
             for (int i = 0, n = 0; i < components.Count; i++)
             {
@@ -318,7 +318,7 @@ namespace FarEmerald.PlayForge.Editor
     }
 
     /// <summary>
-    /// A filter's impact type that no effect in the project deals, so it never matches (TW-25): an On Hit's, a lifesteal's,
+    /// A filter's impact type that no effect in the project deals, so it never matches: an On Hit's, a lifesteal's,
     /// a trigger's that takes events, or a modifier's Change Impact's. Where the filter keeps a type that's dealt, its fix
     /// removes the one that isn't; one that has only types none deals would take every hit without them, so it's the
     /// author's to fix.
@@ -392,7 +392,7 @@ namespace FarEmerald.PlayForge.Editor
 
     /// <summary>
     /// A trigger on a gameplay event that the core doesn't send and no asset in the project does, as a threshold sends its
-    /// event (TW-25). Code may send it, so it's a note.
+    /// event. Code may send it, so it's a note.
     /// </summary>
     internal sealed class EventsNothingSendsRule : ForgeValidationRule
     {

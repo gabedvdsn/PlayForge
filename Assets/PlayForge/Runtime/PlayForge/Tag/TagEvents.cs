@@ -4,8 +4,7 @@ namespace FarEmerald.PlayForge
 {
     /// <summary>
     /// A tag's weight on an entity changing: the tag, and its weight before and after, 0 when it isn't held. An event
-    /// carries one as it happens; a compile, which rebuilds the tags from their sources, carries only what it changed
-    /// (FEAT-3).
+    /// carries one as it happens; a compile, which rebuilds the tags from their sources, carries only what it changed.
     /// </summary>
     public readonly struct TagChange
     {
@@ -29,7 +28,7 @@ namespace FarEmerald.PlayForge
         public override string ToString() => $"{Tag}: {Before} -> {After}";
     }
 
-    /// <summary>What a tag listener hears (FEAT-3).</summary>
+    /// <summary>What a tag listener hears.</summary>
     public enum ETagChangeKind
     {
         /// <summary>A tag coming or going: its weight leaving 0, or reaching it.</summary>
@@ -41,7 +40,7 @@ namespace FarEmerald.PlayForge
 
     /// <summary>
     /// A listener on one tag of an entity and the tags under it, as <see cref="TagCache.Listen"/> makes: it hears
-    /// <c>Status.Burning</c> when it listens to <c>Status</c>. Dispose stops it (FEAT-3).
+    /// <c>Status.Burning</c> when it listens to <c>Status</c>. Dispose stops it.
     /// </summary>
     public sealed class TagListener : IDisposable
     {

@@ -5,13 +5,13 @@ namespace FarEmerald.PlayForge
 {
     /// <summary>
     /// PlayForge's own tags, grouped by kind. Each is its text padded to 64 characters by a hash of it, a name every asset
-    /// that uses the tag stores, so a text changed is another tag; a test pins each one's name and kind (TAG-8). Each is
-    /// exposed to the editor's pickers for its kind (TAG-5).
+    /// that uses the tag stores, so a text changed is another tag; a test pins each one's name and kind. Each is
+    /// exposed to the editor's pickers for its kind.
     /// </summary>
     public static partial class Tags
     {
         // Each is made once, as the class first loads. Made on every read, each took two locks and two lookups of its
-        // 64-character name, and a recompute reads several (GAS-P4)
+        // 64-character name, and a recompute reads several
         
         // ═══════════════════════════════════════════════════════════════════════════
         // Special Tags
@@ -29,7 +29,7 @@ namespace FarEmerald.PlayForge
         [ForgeTagExposed(ForgeContext.ImpactType)] public static Tag ALWAYS_ALLOW { get; } = Tag.GenerateAsUnique("Always Allow");
         [ForgeTagExposed(ForgeContext.ImpactType)] public static Tag NEVER_ALLOW { get; } = Tag.GenerateAsUnique("Never Allow");
 
-        /// <summary>The type of damage a return sends back, so no return returns it again and no lifesteal heals from it (TW-15).</summary>
+        /// <summary>The type of damage a return sends back, so no return returns it again and no lifesteal heals from it.</summary>
         [ForgeTagExposed(ForgeContext.ImpactType)] public static Tag RETURNED { get; } = Tag.GenerateAsUnique("Returned");
 
         // ═══════════════════════════════════════════════════════════════════════════
@@ -56,7 +56,7 @@ namespace FarEmerald.PlayForge
         // ═══════════════════════════════════════════════════════════════════════════
         // Attribute Roles
         // ═══════════════════════════════════════════════════════════════════════════
-        // The roles PlayForge's features read, each filled by a project's attribute (TW-29)
+        // The roles PlayForge's features read, each filled by a project's attribute
 
         /// <summary>
         /// The attribute an entity dies of as it reaches 0, where no death watcher of its own watches; which On Hit counts,
@@ -73,7 +73,7 @@ namespace FarEmerald.PlayForge
         // ═══════════════════════════════════════════════════════════════════════════
         // Events
         // ═══════════════════════════════════════════════════════════════════════════
-        // The gameplay events the core sends, where an ability listens (TW-5)
+        // The gameplay events the core sends, where an ability listens
 
         /// <summary>To the dealer, as an impact it dealt lands on another entity.</summary>
         [ForgeTagExposed(ForgeContext.Event)] public static Tag IMPACT_DEALT { get; } = Tag.GenerateAsUnique("Impact Dealt");
@@ -90,16 +90,16 @@ namespace FarEmerald.PlayForge
         /// <summary>To a staying entity as it revives.</summary>
         [ForgeTagExposed(ForgeContext.Event)] public static Tag REVIVED { get; } = Tag.GenerateAsUnique("Revived");
 
-        /// <summary>To the one hit as it blocks an effect, its dealer as Source (TW-12).</summary>
+        /// <summary>To the one hit as it blocks an effect, its dealer as Source.</summary>
         [ForgeTagExposed(ForgeContext.Event)] public static Tag BLOCKED { get; } = Tag.GenerateAsUnique("Blocked");
 
-        /// <summary>To the one hit as it evades an effect, its dealer as Source (TW-12).</summary>
+        /// <summary>To the one hit as it evades an effect, its dealer as Source.</summary>
         [ForgeTagExposed(ForgeContext.Event)] public static Tag EVADED { get; } = Tag.GenerateAsUnique("Evaded");
 
-        /// <summary>To the dealer as the one it hit blocks its effect, that one as Subject (TW-12).</summary>
+        /// <summary>To the dealer as the one it hit blocks its effect, that one as Subject.</summary>
         [ForgeTagExposed(ForgeContext.Event)] public static Tag HIT_BLOCKED { get; } = Tag.GenerateAsUnique("Hit Blocked");
 
-        /// <summary>To the dealer as the one it hit evades its effect, that one as Subject (TW-12).</summary>
+        /// <summary>To the dealer as the one it hit evades its effect, that one as Subject.</summary>
         [ForgeTagExposed(ForgeContext.Event)] public static Tag HIT_EVADED { get; } = Tag.GenerateAsUnique("Hit Evaded");
 
         // ═══════════════════════════════════════════════════════════════════════════
@@ -118,10 +118,10 @@ namespace FarEmerald.PlayForge
         [ForgeTagExposed(ForgeContext.DataKey)] public static Tag TARGET_REAL { get; } = Tag.GenerateAsUnique("Target Real");
         [ForgeTagExposed(ForgeContext.DataKey)] public static Tag TARGET_POS { get; } = Tag.GenerateAsUnique("Target Position");
 
-        /// <summary>A core event's subject: the one hit, the one killed, or the entity itself (TW-5).</summary>
+        /// <summary>A core event's subject: the one hit, the one killed, or the entity itself.</summary>
         [ForgeTagExposed(ForgeContext.DataKey)] public static Tag EVENT_SUBJECT { get; } = Tag.GenerateAsUnique("Event Subject");
 
-        /// <summary>An impact event's impact, an <see cref="ImpactData"/> (TW-5).</summary>
+        /// <summary>An impact event's impact, an <see cref="ImpactData"/>.</summary>
         [ForgeTagExposed(ForgeContext.DataKey)] public static Tag EVENT_IMPACT { get; } = Tag.GenerateAsUnique("EventImpact");
 
         /// <summary>Used to communicate the act of targeting to the targeted entity</summary>
@@ -135,7 +135,7 @@ namespace FarEmerald.PlayForge
         [ForgeTagExposed(ForgeContext.DataKey)] public static Tag ATTRIBUTES { get; } = Tag.GenerateAsUnique("Attributes");
         [ForgeTagExposed(ForgeContext.DataKey)] public static Tag ATTRIBUTE_SETS { get; } = Tag.GenerateAsUnique("Attribute Sets");
 
-        /// <summary>The Forge Project a Bootstrapper plays, in the GameRoot's registration (EP-11).</summary>
+        /// <summary>The Forge Project a Bootstrapper plays, in the GameRoot's registration.</summary>
         [ForgeTagExposed(ForgeContext.DataKey)] public static Tag FORGE_PROJECT { get; } = Tag.GenerateAsUnique("Forge Project");
         [ForgeTagExposed(ForgeContext.DataKey)] public static Tag TAGS { get; } = Tag.GenerateAsUnique("Tags");
 
@@ -143,7 +143,7 @@ namespace FarEmerald.PlayForge
         // Data Keys for Coded Behaviours
         // ═══════════════════════════════════════════════════════════════════════════
         // Ready-made keys a project's coded behaviours carry their values under, in the data packets of the processes
-        // they run; PlayForge's own code reads none (TAG-8)
+        // they run; PlayForge's own code reads none
 
         [ForgeTagExposed(ForgeContext.DataKey)] public static Tag GAMEPLAY_ABILITY_SYSTEM { get; } = Tag.GenerateAsUnique("Gameplay Ability System");
         [ForgeTagExposed(ForgeContext.DataKey)] public static Tag INDEX { get; } = Tag.GenerateAsUnique("Index");
@@ -174,17 +174,17 @@ namespace FarEmerald.PlayForge
         // Set By Caller Keys
         // ═══════════════════════════════════════════════════════════════════════════
 
-        /// <summary>The role a projectile reads its speed by, among the attributes it carries or its origin's (FEAT-24)</summary>
+        /// <summary>The role a projectile reads its speed by, among the attributes it carries or its origin's</summary>
         [ForgeTagExposed(ForgeContext.SetByCallerKey)] public static Tag PROJECTILE_SPEED { get; } = Tag.GenerateAsUnique("Projectile Speed");
 
         // ═══════════════════════════════════════════════════════════════════════════
         // Process Statuses
         // ═══════════════════════════════════════════════════════════════════════════
 
-        /// <summary>A process's status as it failed as it began (TAG-5)</summary>
+        /// <summary>A process's status as it failed as it began</summary>
         [ForgeTagExposed] public static Tag FAILED_TO_INITIALIZE { get; } = Tag.GenerateAsUnique("Failed To Initialize");
 
-        /// <summary>A process's status as it failed while it ran (TAG-5)</summary>
+        /// <summary>A process's status as it failed while it ran</summary>
         [ForgeTagExposed] public static Tag FAILED_WHILE_ACTIVE { get; } = Tag.GenerateAsUnique("Failed While Active");
     }
 }

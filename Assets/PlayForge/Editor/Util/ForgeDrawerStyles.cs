@@ -415,7 +415,7 @@ namespace FarEmerald.PlayForge.Editor
             public bool StartExpanded = true;
             
             /// <summary>URL for the help button (if empty, no help button shown)</summary>
-            // The help button's topic in ForgeDocs, such as "abilities/leveling" (ED-16)
+            // The help button's topic in ForgeDocs, such as "abilities/leveling"
             public string HelpTopic;
             
             /// <summary>
@@ -466,7 +466,7 @@ namespace FarEmerald.PlayForge.Editor
 
             /// <summary>
             /// Import lists any PlayForge asset with the section's fields, of the same types at the same paths, as an item's
-            /// worker group is a source for an ability's. A worker group's own Import did this, and went with its box (ED-66).
+            /// worker group is a source for an ability's. A worker group's own Import did this, and went with its box.
             /// </summary>
             public bool ImportAcrossTypes;
             
@@ -517,9 +517,9 @@ namespace FarEmerald.PlayForge.Editor
         
         /// <summary>
         /// Creates a complete collapsible section with header and content, from the kit's ForgeSection, which takes its
-        /// look from PlayForge's style sheet (Decision 20). Supports import/clear functionality when SerializedObject and
+        /// look from PlayForge's style sheet. Supports import/clear functionality when SerializedObject and
         /// PropertyPaths are provided. Import, Clear and Help always show: they appeared only while the pointer was over
-        /// the header (Q18), and the section set its own dark colors and an accent divider (ED-20).
+        /// the header, and the section set its own dark colors and an accent divider.
         /// </summary>
         public static SectionResult CreateCollapsibleSection(SectionConfig config, Action<string, bool> onClick = null)
         {
@@ -545,7 +545,7 @@ namespace FarEmerald.PlayForge.Editor
 
             if (showImport)
             {
-                // The one Import window: choose a source, then the fields that differ (ED-32)
+                // The one Import window: choose a source, then the fields that differ
                 Action importAction = config.HasImportClearSupport
                     ? () => ForgeImportWindow.ShowFor(
                         config.SerializedObject,
@@ -561,7 +561,7 @@ namespace FarEmerald.PlayForge.Editor
 
             if (showClear)
             {
-                // Clear empties the section at once, with no question, and one Undo takes it back (Decision 28)
+                // Clear empties the section at once, with no question, and one Undo takes it back
                 Action clearAction = config.HasImportClearSupport
                     ? () => SectionClearUtility.Clear(
                         config.SerializedObject,
@@ -880,7 +880,7 @@ namespace FarEmerald.PlayForge.Editor
 
         /// <summary>
         /// A line where values would be, such as in a multiple selection, in secondary text from the style sheet. A
-        /// hint label set its own 10 px size and color in code (ED-37).
+        /// hint label set its own 10 px size and color in code.
         /// </summary>
         public static Label CreateNote(string text)
         {

@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge.Testing
 {
-    /// <summary>A clock whose frames each take a fixed step, as <see cref="ForgeTestWorld.Clock"/> sets one (TW-26).</summary>
+    /// <summary>A clock whose frames each take a fixed step, as <see cref="ForgeTestWorld.Clock"/> sets one.</summary>
     public sealed class SteppingClock : IForgeClock
     {
         public SteppingClock(float step) => Step = step;
@@ -20,7 +20,7 @@ namespace FarEmerald.PlayForge.Testing
 
     /// <summary>
     /// Rolls that come out as the test writes them, one after another and round again, and how many were drawn, as
-    /// <see cref="ForgeTestWorld.Rolls"/> sets them (TW-26). A chance below a roll misses, so 0 always lands and 0.99
+    /// <see cref="ForgeTestWorld.Rolls"/> sets them. A chance below a roll misses, so 0 always lands and 0.99
     /// almost never does.
     /// </summary>
     public sealed class ScriptedRandom : IForgeRandom

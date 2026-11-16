@@ -6,7 +6,7 @@ using Object = UnityEngine.Object;
 namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
-    /// Carries an asset's new tag to every asset that stored its old one (ED-84, the user's report of 2026-11-11). A tag is
+    /// Carries an asset's new tag to every asset that stored its old one. A tag is
     /// stored by its name, so whatever named an asset by its tag, as Asset Part's Tagged, a requirement's tag query,
     /// Removes or Blocks Effects Tagged, or a trigger, kept the old name when the Identity section's Update or the
     /// Problems window's fix changed the asset's tag, and found the asset no more: an attack that read Fury Swipes's stacks
@@ -60,8 +60,8 @@ namespace FarEmerald.PlayForge.Editor
         }
 
         /// <summary>
-        /// Why a tag can't be renamed to a path, or null where it can (FN-9): a path the registry can't take, one of
-        /// PlayForge's own tags' text (TAG-2), a path another tag has; or the tag, or one under it, is an asset's own tag,
+        /// Why a tag can't be renamed to a path, or null where it can: a path the registry can't take, one of
+        /// PlayForge's own tags' text, a path another tag has; or the tag, or one under it, is an asset's own tag,
         /// which follows its asset's name, or one of PlayForge's own, which code writes.
         /// </summary>
         public static string WhyNotRename(Tag tag, string path)
@@ -83,8 +83,8 @@ namespace FarEmerald.PlayForge.Editor
         }
 
         /// <summary>
-        /// Renames a tag, and the tags under it, to a new path, as one Undo step (FN-9): in every PlayForge asset that names
-        /// one, as an asset's new tag is carried (ED-84), and in the Tag Library entry that declares it. A unique tag stays
+        /// Renames a tag, and the tags under it, to a new path, as one Undo step: in every PlayForge asset that names
+        /// one, as an asset's new tag is carried, and in the Tag Library entry that declares it. A unique tag stays
         /// unique, its name the new path's; a plain tag stays plain. The tag it became, or the tag itself where it can't be
         /// renamed, as <see cref="WhyNotRename"/> says.
         /// </summary>

@@ -9,7 +9,7 @@ using UnityEngine.UIElements;
 namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
-    /// The PlayForge Processes module in Unity's Profiler (FEAT-18, Decision 32): ProcessControl's and TaskSequence's
+    /// The PlayForge Processes module in Unity's Profiler: ProcessControl's and TaskSequence's
     /// counters, charted, and in its details the selected frame's costliest processes, which PlayForge puts into the
     /// capture as the frame's metadata while the Profiler records.
     /// </summary>
@@ -38,7 +38,7 @@ namespace FarEmerald.PlayForge.Editor
     }
 
     /// <summary>
-    /// The PlayForge GAS module in Unity's Profiler (FEAT-18, Decision 32): the GAS's counters, charted: its entities by
+    /// The PlayForge GAS module in Unity's Profiler: the GAS's counters, charted: its entities by
     /// hub, its effects, impacts, activations and refusals, and its tag compiles and recomputes.
     /// </summary>
     [Serializable]

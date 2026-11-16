@@ -36,7 +36,7 @@ namespace FarEmerald.PlayForge.Testing
     }
 
     /// <summary>
-    /// Measures allocation with <see cref="ProfilerRecorder"/>, because the GC API returns 0 under Mono (TW-26).
+    /// Measures allocation with <see cref="ProfilerRecorder"/>, because the GC API returns 0 under Mono.
     /// Unity's "GC Allocated In Frame" counter reads live within a frame, so an operation is the counter's change
     /// across it. Dispose it as the test ends.
     ///

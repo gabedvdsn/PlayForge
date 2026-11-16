@@ -7,7 +7,7 @@ using UnityEngine;
 namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
-    /// A Value Pipeline tried in the editor (EP-23): a value put through its stages at each level of a range, against the
+    /// A Value Pipeline tried in the editor: a value put through its stages at each level of a range, against the
     /// stand-ins a Scaler asset's try reads against, a caster's and a target's attributes, typed or filled from an entity,
     /// and the values a caller sets. Each chance a stage rolls comes up where it can, or misses where it can, as
     /// <see cref="ChancesComeUp"/> says, so a read gives the same each time. A Block or Evade stage rolls first, as it does

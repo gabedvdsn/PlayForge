@@ -67,6 +67,6 @@ namespace FarEmerald.PlayForge.Samples.Demo
         }
     }
 
-    // The Demo's Area Effect, Apply To Caster, Dash, Blink and Consume Item are the framework's now (FN-24); its units
+    // The Demo's Area Effect, Apply To Caster, Dash, Blink and Consume Item are the framework's now; its units
     // follow their use of items through their item systems' Item Consumed (DemoUnit)
 }

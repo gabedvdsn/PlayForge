@@ -43,7 +43,7 @@ namespace FarEmerald.PlayForge
         /// </summary>
         bool ValidateApplication(ITarget target);
 
-        // IsSustainedModifier removed (impact-model overhaul). The old Mode A/B inference
+        // IsSustainedModifier removed. The old Mode A/B inference
         // from duration + tick flags is replaced by per-entry EImpactDelivery declarations:
         // Continuous entries are modifiers (transient, derived, auto-reversing);
         // OnApply/Periodic entries are commits (permanent). See AttributeImpactEntry.

@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
-    /// <summary>What a Tracked Impact number reads of what effects have dealt (FEAT-29).</summary>
+    /// <summary>What a Tracked Impact number reads of what effects have dealt.</summary>
     public enum ETrackedImpactPart
     {
         [Tooltip("The last impact dealt")]
@@ -16,7 +16,7 @@ namespace FarEmerald.PlayForge
         Count,
     }
 
-    /// <summary>Whose impacts a Tracked Impact number reads (FEAT-29).</summary>
+    /// <summary>Whose impacts a Tracked Impact number reads.</summary>
     public enum ETrackedImpactOf
     {
         [Tooltip("The effect whose number it is, as a periodic effect reading its own ticks")]
@@ -36,7 +36,7 @@ namespace FarEmerald.PlayForge
     }
 
     /// <summary>
-    /// What an effect has dealt (FEAT-29, NUM-10): its last impact, its total, or how many impacts, as each effect spec
+    /// What an effect has dealt: its last impact, its total, or how many impacts, as each effect spec
     /// tracks them once they land, after workers, so a blow reads as it landed, after the target's armor. Whose: this
     /// effect, the one whose number it is, as a burn that grows each tick by its own count; an effect on the caster or the
     /// target, by its asset, its containers summed, as a combustion consuming a burn's total; or every effect there tagged

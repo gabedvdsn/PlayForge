@@ -6,12 +6,12 @@ namespace FarEmerald.PlayForge
 {
     /// <summary>
     /// Names the assets a save refers to, attributes, effects, abilities and items, by IDs that last across sessions, as a
-    /// reference doesn't. A save names each by its ID here, and a load finds it by that (FEAT-9).
+    /// reference doesn't. A save names each by its ID here, and a load finds it by that.
     ///
     /// <para>In the editor, Add Every PlayForge Asset, in the catalog's menu, names each PlayForge asset in the project by
     /// its GUID, which lasts as the asset is renamed or moved. A game can add its own as it runs.</para>
-    /// <para>A <see cref="ForgeProject"/> is the catalog the Create menu makes, of the assets in its folder (FEAT-34), which
-    /// it keeps current as they're made, moved in and deleted (EP-15); a catalog made before goes on naming what it names.</para>
+    /// <para>A <see cref="ForgeProject"/> is the catalog the Create menu makes, of the assets in its folder, which
+    /// it keeps current as they're made, moved in and deleted; a catalog made before goes on naming what it names.</para>
     /// </summary>
     public class ForgeAssetCatalog : ScriptableObject, IAssetNames
     {
@@ -105,7 +105,7 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// Adds each PlayForge asset at a path <paramref name="within"/> takes, or each in the project for none, that the
-        /// catalog doesn't name yet, named by its GUID, and says how many it added. A project adds its own (FEAT-34).
+        /// catalog doesn't name yet, named by its GUID, and says how many it added. A project adds its own.
         /// </summary>
         protected int AddAssets(Func<string, bool> within)
         {
@@ -124,7 +124,7 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// Names a PlayForge asset by its GUID, a sub-asset by its file's GUID and its local file ID, as Add Every PlayForge
-        /// Asset names each (EP-15). False where it's in no asset file, or where its ID or the asset is named already: an ID
+        /// Asset names each. False where it's in no asset file, or where its ID or the asset is named already: an ID
         /// any entry holds is taken, though that entry's asset hasn't loaded yet, as on a fresh import.
         /// </summary>
         public bool AddByGuid(BaseForgeAsset asset)
@@ -138,7 +138,7 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// Lets go of each entry naming an asset in the file of <paramref name="fileGuid"/>, its main asset's and its
-        /// sub-assets', as the file is deleted, and says how many (EP-15).
+        /// sub-assets', as the file is deleted, and says how many.
         /// </summary>
         public int RemoveFile(string fileGuid)
         {

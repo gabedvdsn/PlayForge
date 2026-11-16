@@ -4,9 +4,9 @@ using UnityEngine;
 namespace FarEmerald.PlayForge
 {
     /// <summary>
-    /// One number where a condition holds, and another where it doesn't (FEAT-29): "−0.1 × Target's Health (base) if
+    /// One number where a condition holds, and another where it doesn't: "−0.1 × Target's Health (base) if
     /// Target's Health &lt; 0.3 × Target's Health (base), else 0". The condition is a class read against the number's
-    /// context, so a project adds its own (<see cref="GameplayCondition"/>, Decision 43), and each branch is a number of
+    /// context, so a project adds its own (<see cref="GameplayCondition"/>), and each branch is a number of
     /// any kind, read with the scaler as its owner. With no condition, it reads its False branch.
     /// </summary>
     [Serializable]
@@ -40,7 +40,7 @@ namespace FarEmerald.PlayForge
         public override string Describe() =>
             $"{NumberText.Of(TrueValue)} if {NumberText.Of(When)}, else {NumberText.Of(FalseValue)}";
 
-        // Its condition, and the branch it took (FEAT-32)
+        // Its condition, and the branch it took
         public override void Explain(in NumberContext context, NumberTrace trace)
         {
             bool holds = When != null && trace.Add(When, context, "When").Holds;

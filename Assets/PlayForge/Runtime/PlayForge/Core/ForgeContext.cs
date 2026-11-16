@@ -4,8 +4,8 @@ using System.Linq;
 namespace FarEmerald.PlayForge
 {
     /// <summary>
-    /// The contexts a tag is offered in: one per kind of tag, what a tag is rather than where it's used (TAG-6, Decision
-    /// 74). A tag field names the kinds it takes with [ForgeTagContext], and its picker offers the tags of those kinds: those
+    /// The contexts a tag is offered in: one per kind of tag, what a tag is rather than where it's used.
+    /// A tag field names the kinds it takes with [ForgeTagContext], and its picker offers the tags of those kinds: those
     /// assets use in such a field, those a Tag Library declares for them, and those code exposes with [ForgeTagExposed].
     ///
     /// Usage:
@@ -27,7 +27,7 @@ namespace FarEmerald.PlayForge
         /// <summary>An asset's context tags, which group it with others of its sort, as Spell or Fire</summary>
         public const string ContextTag = "Context Tag";
 
-        /// <summary>A Requirement Template's category (ED-79)</summary>
+        /// <summary>A Requirement Template's category</summary>
         public const string RequirementCategory = "Requirement Category";
 
         // ═══════════════════════════════════════════════════════════════════════════
@@ -56,7 +56,7 @@ namespace FarEmerald.PlayForge
         /// <summary>A gameplay event, as Impact Taken or Died, which triggers, thresholds and the combat log read</summary>
         public const string Event = "Event";
 
-        /// <summary>A part an attribute plays in a project, as Health (TW-29)</summary>
+        /// <summary>A part an attribute plays in a project, as Health</summary>
         public const string AttributeRole = "Attribute Role";
 
         /// <summary>A texture item's slot</summary>
@@ -87,7 +87,7 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// Tags written in code and exposed to the editor with [ForgeTagExposed] that name no context of their own, a
-        /// project's as PlayForge's (TAG-5)
+        /// project's as PlayForge's
         /// </summary>
         public const string Code = "Code";
 

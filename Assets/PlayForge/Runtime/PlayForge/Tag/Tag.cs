@@ -33,7 +33,7 @@ namespace FarEmerald.PlayForge
 
         // The ID the tag is compared and hashed by, and the name it was given for. Given as the tag is made or loaded,
         // and again if its name is changed in place; never serialized. A tag hashed and compared its name, a string,
-        // on every lookup, so a lookup cost as much as the name was long (GAS-P7, Decision 22)
+        // on every lookup, so a lookup cost as much as the name was long
         [NonSerialized] private int id;
         [NonSerialized] private string idName;
 
@@ -42,7 +42,7 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// The path its hierarchy goes by: a unique tag's display path, what the designer sees, as its name carries hash
         /// padding; any other tag's name. So a New-Tag "Status.Debuff.Burn" is under a New-Tag "Status.Debuff", and under a
-        /// plain "Status" (TAG-1, Decision 71). Equality still goes by the name.
+        /// plain "Status". Equality still goes by the name.
         /// </summary>
         public string Path => PathOf(Name, DisplayName);
 
@@ -116,12 +116,12 @@ namespace FarEmerald.PlayForge
             if (string.IsNullOrEmpty(childName))
                 return this;
             
-            // Under its path, so a unique tag's child goes under what it reads as, not its padding (TAG-1)
+            // Under its path, so a unique tag's child goes under what it reads as, not its padding
             var path = Path;
             string newName = string.IsNullOrEmpty(path) ? childName : $"{path}.{childName}";
 
             // The tag of that name. These helpers made deterministic tags, whose names are padded with a hash, so
-            // none of them was ever the tag of the name it stood for (GAS-17)
+            // none of them was ever the tag of the name it stood for
             return Generate(newName);
         }
 
@@ -249,14 +249,14 @@ namespace FarEmerald.PlayForge
         /// </summary>
         public bool IsChildOf(Tag parent)
         {
-            // By their paths, so a unique tag, whose name is padded, has children and parents (TAG-1)
+            // By their paths, so a unique tag, whose name is padded, has children and parents
             var path = Path;
             var parentPath = parent.Path;
             if (string.IsNullOrEmpty(parentPath) || string.IsNullOrEmpty(path))
                 return false;
 
             // Must be longer than parent and start with parent path followed by dot. Ordinal: paths are identifiers, and
-            // a culture-aware StartsWith was slower and could match by the current culture's rules (GAS-P4)
+            // a culture-aware StartsWith was slower and could match by the current culture's rules
             return path.Length > parentPath.Length
                    && path.StartsWith(parentPath, StringComparison.Ordinal)
                    && path[parentPath.Length] == '.';
@@ -271,7 +271,7 @@ namespace FarEmerald.PlayForge
         {
             if (!IsChildOf(parent)) return false;
 
-            // No more dots after the parent path, looked for in place: the rest was cut out as a new string (GAS-P4)
+            // No more dots after the parent path, looked for in place: the rest was cut out as a new string
             return Path.IndexOf('.', parent.Path.Length + 1) < 0;
         }
         
@@ -303,14 +303,14 @@ namespace FarEmerald.PlayForge
         /// </summary>
         public bool SharesAncestorWith(Tag other)
         {
-            // By their paths, as a unique tag's name is padded (TAG-1)
+            // By their paths, as a unique tag's name is padded
             var path = Path;
             var otherPath = other.Path;
             if (string.IsNullOrEmpty(path) || string.IsNullOrEmpty(otherPath))
                 return false;
 
             // The first segments compared in place. Each side's root was cut out as a new string and registered as a
-            // tag, for every tag a same-root query compared (GAS-P4)
+            // tag, for every tag a same-root query compared
             int length = RootLength(path);
             return length == RootLength(otherPath) && string.CompareOrdinal(path, 0, otherPath, 0, length) == 0;
         }
@@ -326,7 +326,7 @@ namespace FarEmerald.PlayForge
         // ═══════════════════════════════════════════════════════════════════════════
         
         // The name it reads by, which is its display name: its Name is what tells it apart, and a unique tag's is
-        // padded (ED-67)
+        // padded
         public string GetName() => ToString();
         public string GetDescription() => "";
         public Texture2D GetDefaultIcon() => null;
@@ -340,7 +340,7 @@ namespace FarEmerald.PlayForge
         public static bool operator !=(Tag a, Tag b) => !a.Equals(b);
         public static bool operator ==(Tag a, Tag b) => a.Equals(b);
 
-        // By ID, which stands for the name: two tags are equal exactly when their names are (GAS-P7)
+        // By ID, which stands for the name: two tags are equal exactly when their names are
         public bool Equals(Tag other) => Id == other.Id;
         public override bool Equals(object obj) => obj is Tag other && Equals(other);
         public override int GetHashCode() => Id;
@@ -379,13 +379,13 @@ namespace FarEmerald.PlayForge
         // ═══════════════════════════════════════════════════════════════════════════
         
         public static implicit operator string(Tag tag) => tag.Name;
-        // The tag of that name, not a deterministic one padded with a hash, which matched nothing written by name (GAS-17)
+        // The tag of that name, not a deterministic one padded with a hash, which matched nothing written by name
         public static implicit operator Tag(string name) => Generate(name);
     }
     
     /// <summary>
-    /// The IDs tags are compared and hashed by, one for each name, given at run time and never serialized (GAS-P7,
-    /// Decision 22). An ID is never taken back or given to another name: <see cref="TagRegistry.Reset"/> clears the
+    /// The IDs tags are compared and hashed by, one for each name, given at run time and never serialized.
+    /// An ID is never taken back or given to another name: <see cref="TagRegistry.Reset"/> clears the
     /// registry, not these. Safe across threads, as an asset can load off the main thread.
     /// </summary>
     internal static class TagIds

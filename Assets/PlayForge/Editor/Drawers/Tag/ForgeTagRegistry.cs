@@ -272,7 +272,7 @@ namespace FarEmerald.PlayForge.Editor
         
         // The asset types to scan, by name, so the lab's, in an assembly of its own, are among them: every type the validator
         // checks, the Forge Project's roles, resolve order and combat log, and the lab's rules. Five were read, so a tag
-        // used only in an item or a Requirement Template left every picker at the next rescan (TAG-7)
+        // used only in an item or a Requirement Template left every picker at the next rescan
         private static readonly string[] ScanTypeNames =
         {
             "Ability", "GameplayEffect", "Item", "EntityIdentity", "Attribute", "AttributeSet", "ScalerAsset", "RequirementTemplate",
@@ -328,8 +328,8 @@ namespace FarEmerald.PlayForge.Editor
             var result = new HashSet<Tag>();
 
             // Each context's own tags, by its exact key: a key that only held a context's name was taken too, "Impact
-            // Retention" by an Impact field (TAG-4). A tag used in a field of several contexts is used in each, so each one's
-            // fields offer it; no key joins several, which kept such a field's picks to its own set (EP-14)
+            // Retention" by an Impact field. A tag used in a field of several contexts is used in each, so each one's
+            // fields offer it; no key joins several, which kept such a field's picks to its own set
             foreach (var context in Each(contextStrings))
             {
                 if (!_contextToTags.TryGetValue(context.ContextKey, out var single)) continue;
@@ -442,7 +442,7 @@ namespace FarEmerald.PlayForge.Editor
             if (!IsValidTag(tag)) return;
             if (asset == null) return;
 
-            // Under each of its field's contexts, alone (EP-14)
+            // Under each of its field's contexts, alone
             RegisterTagInCacheForAsset(tag, new TagContext(contextStrings), asset, fieldPath);
         }
         
@@ -458,7 +458,7 @@ namespace FarEmerald.PlayForge.Editor
             if (!_tagCache.TryGetValue(tag, out var record))
                 return;
             
-            // From each of its field's contexts, as it was used in each (EP-14)
+            // From each of its field's contexts, as it was used in each
             foreach (var context in Each(contextStrings)) record.RemoveUsage(context, asset);
 
             // If tag has no more usages, remove it entirely (unless it's a system default)
@@ -647,7 +647,7 @@ namespace FarEmerald.PlayForge.Editor
             }
 
             // And the code tags the project exposes: each type of its code with a static Tag field or property marked
-            // [ForgeTagExposed] (TAG-5, Decision 73)
+            // [ForgeTagExposed]
             foreach (var sourceType in CodeTagTypes())
             {
                 if (ContextDefaultSourceTypes.Contains(sourceType) || _additionalContextDefaultSources.Contains(sourceType)) continue;
@@ -658,7 +658,7 @@ namespace FarEmerald.PlayForge.Editor
         }
 
         // The types of the project's code with a static Tag field or property it exposes: in the player assemblies that
-        // reference PlayForge, and PlayForge's own, tests left out. Found once a domain reload (TAG-5)
+        // reference PlayForge, and PlayForge's own, tests left out. Found once a domain reload
         private static List<Type> codeTagTypes;
         private static IEnumerable<Type> CodeTagTypes()
         {
@@ -682,7 +682,7 @@ namespace FarEmerald.PlayForge.Editor
         }
 
         // The contexts a code tag is offered in: those it's exposed for, or Code where it names none; none where it isn't
-        // exposed, which keeps it out of the pickers (TAG-5, Decision 73)
+        // exposed, which keeps it out of the pickers
         private static string[] CodeContextsOf(MemberInfo member)
         {
             var exposed = member.GetCustomAttribute<ForgeTagExposed>();
@@ -714,7 +714,7 @@ namespace FarEmerald.PlayForge.Editor
                     if (!IsTagSetForScanning(tag))
                         continue;
 
-                    // Register this tag for each context it's exposed for, or Code (TAG-5)
+                    // Register this tag for each context it's exposed for, or Code
                     RegisterSystemDefaultTag(tag, contexts, $"{type.Name}.{property.Name}");
                     count++;
                 }
@@ -757,7 +757,7 @@ namespace FarEmerald.PlayForge.Editor
         /// </summary>
         private static void RegisterSystemDefaultTag(Tag tag, string[] contexts, string sourcePath)
         {
-            // For each context alone: the set of them is no context of its own (EP-14). None, none at all, as before
+            // For each context alone: the set of them is no context of its own. None, none at all, as before
             if (contexts == null || contexts.Length == 0) return;
             RegisterTagInCacheAsSystemDefault(tag, new TagContext(contexts), sourcePath);
         }
@@ -782,17 +782,17 @@ namespace FarEmerald.PlayForge.Editor
                 {
                     if (entry == null || string.IsNullOrWhiteSpace(entry.Name)) continue;
 
-                    // A unique tag reads by its display name, as it does where it's used (ED-83)
+                    // A unique tag reads by its display name, as it does where it's used
                     var tag = string.IsNullOrWhiteSpace(entry.DisplayName)
                         ? Tag.Generate(entry.Name.Trim())
                         : Tag.Generate(entry.Name.Trim(), entry.DisplayName.Trim());
-                    // An old context reads as its new one, though the library isn't moved yet (TAG-6)
+                    // An old context reads as its new one, though the library isn't moved yet
                     string[] contexts = entry.Contexts is { Count: > 0 }
                         ? ForgeContext.Current(entry.Contexts)
                         : new[] { ForgeContext.Universal };
                     if (contexts.Length == 0) contexts = new[] { ForgeContext.Universal };
 
-                    // For each context alone: the set of them is no context of its own (EP-14)
+                    // For each context alone: the set of them is no context of its own
                     RegisterTagInCacheForAsset(tag, new TagContext(contexts), library, "Entries");
 
                     count++;
@@ -815,7 +815,7 @@ namespace FarEmerald.PlayForge.Editor
         /// <summary>
         /// Files a use of a tag under each of a context's strings, alone: a field of several contexts, a code tag declared
         /// for several and a Tag Library entry of several each use it in each. Their set was a context of its own, "A+B",
-        /// which The Forge showed beside the rest and only a field of that very set offered (EP-14).
+        /// which The Forge showed beside the rest and only a field of that very set offered.
         /// </summary>
         private static void FileUse(Tag tag, TagContext context, ScriptableObject asset, string fieldPath, bool systemDefault)
         {
@@ -838,7 +838,7 @@ namespace FarEmerald.PlayForge.Editor
             }
         }
 
-        /// <summary>A field's contexts, each alone, or the one for none (EP-14).</summary>
+        /// <summary>A field's contexts, each alone, or the one for none.</summary>
         private static IEnumerable<TagContext> Each(string[] contextStrings)
         {
             var strings = (contextStrings ?? Array.Empty<string>()).Where(each => !string.IsNullOrWhiteSpace(each)).Distinct().ToArray();
@@ -940,7 +940,6 @@ namespace FarEmerald.PlayForge.Editor
                 }
                 // A field that holds its object by reference, under an interface or a base not marked serializable, which say
                 // nothing of what it holds: the object's own fields, as an ability's activation rules' and its targeting's
-                // (TAG-7)
                 else if (field.GetCustomAttribute<SerializeReference>() != null && !ShouldRecurse(fieldType))
                 {
                     var value = field.GetValue(obj);
@@ -992,7 +991,7 @@ namespace FarEmerald.PlayForge.Editor
         
         // A field's contexts, as its [ForgeTagContext] names them; none where it names none, as its pick is filed. The scan
         // guessed some from the field's name and its asset's type, so a tag was filed one way as it was picked and another
-        // after, under contexts no field names (TAG-6)
+        // after, under contexts no field names
         private static TagContext GetContextFromField(FieldInfo field, Type rootType)
         {
             var contextAttr = field.GetCustomAttribute<ForgeTagContext>();
@@ -1001,7 +1000,7 @@ namespace FarEmerald.PlayForge.Editor
         
         private static void RegisterTagInCache(Tag tag, TagContext context, ScriptableObject asset, string fieldPath)
         {
-            // Under each of its field's contexts, alone (EP-14)
+            // Under each of its field's contexts, alone
             FileUse(tag, context, asset, fieldPath, systemDefault: false);
 
             // Rebuild the runtime TagRegistry from serialized asset data so that

@@ -45,7 +45,7 @@ namespace FarEmerald.PlayForge
 
                 // A stage that asks for a tag is a branch, taken while its condition holds and skipped otherwise, with
                 // its own settings, a critical flag among them. The compiler emitted none, so there was no on-hit or
-                // on-miss stage (TS-7)
+                // on-miss stage
                 var condition = abilityStage.Condition;
                 if (condition != null && condition.IsSet)
                 {
@@ -211,7 +211,7 @@ namespace FarEmerald.PlayForge
         /// - Stage ended fires when it terminates
         /// - Usage effects apply at whichever of the two the stage asks for
         /// These are stage hooks rather than a task, because a task counts toward the stage's policy: a task
-        /// that finished at once ended every Any stage as it began (TS-B).
+        /// that finished at once ended every Any stage as it began.
         /// </summary>
         private static void WireStageCallbacks(
             StageBuilder stage,
@@ -222,7 +222,6 @@ namespace FarEmerald.PlayForge
             bool applyAtStart = abilityStage.ApplyUsageAtStageStart;
 
             // The stage's milestone on the packet's path, formatted once as it compiles: it was formatted on every run
-            // (TS-5)
             string pathPart = $"Stage[{stageIndex},{abilityStage.Tasks?.Count ?? 0}tasks]";
 
             stage.OnInit(data =>

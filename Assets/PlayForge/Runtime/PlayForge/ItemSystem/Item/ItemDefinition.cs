@@ -22,19 +22,19 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// How many of the item one slot holds. A give fills the item's stack first; 1 or less, and each is a slot of its
-        /// own. Nothing read it, and the stack count was never set (FEAT-14, GAS-51).
+        /// own. Nothing read it, and the stack count was never set.
         /// </summary>
         [Tooltip("How many of the item one slot holds, read at the item's level. 1 or less, and each is a slot of its own")]
         [NumberMin(0f)] public ScalableInt MaxStackSize = 0;
 
-        /// <summary>How many of the item one slot holds, read in a context: its Max Stack Size, or 1 (FEAT-14, FN-19).</summary>
+        /// <summary>How many of the item one slot holds, read in a context: its Max Stack Size, or 1.</summary>
         public int StackSizeAt(in NumberContext context)
         {
             int size = MaxStackSize?.Evaluate(context) ?? 0;
             return size > 1 ? size : 1;
         }
 
-        /// <summary>How many of the item a slot of it holds, at the slot's level (FN-19).</summary>
+        /// <summary>How many of the item a slot of it holds, at the slot's level.</summary>
         public int StackSizeOf(ItemSpec spec) => StackSizeAt(NumberContext.Of(spec));
     }
 }

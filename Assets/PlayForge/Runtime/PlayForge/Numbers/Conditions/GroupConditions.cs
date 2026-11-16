@@ -6,7 +6,7 @@ using UnityEngine;
 namespace FarEmerald.PlayForge
 {
     /// <summary>
-    /// Whether every one of its conditions holds (FEAT-29); with none, it holds. A member that can't be worked out where
+    /// Whether every one of its conditions holds; with none, it holds. A member that can't be worked out where
     /// it's read doesn't hold, so neither does this.
     /// </summary>
     [Serializable]
@@ -34,12 +34,12 @@ namespace FarEmerald.PlayForge
 
         public override string Describe() => GroupCondition.Describe(Conditions, " and ", "always");
 
-        // Each condition it joins (FEAT-32)
+        // Each condition it joins
         public override void Explain(in NumberContext context, NumberTrace trace) => GroupCondition.Explain(Conditions, context, trace);
     }
 
     /// <summary>
-    /// Whether any one of its conditions holds (FEAT-29); with none, it doesn't. A member that can't be worked out where
+    /// Whether any one of its conditions holds; with none, it doesn't. A member that can't be worked out where
     /// it's read doesn't hold, and the others still can.
     /// </summary>
     [Serializable]
@@ -66,12 +66,12 @@ namespace FarEmerald.PlayForge
 
         public override string Describe() => GroupCondition.Describe(Conditions, " or ", "never");
 
-        // Each condition it joins (FEAT-32)
+        // Each condition it joins
         public override void Explain(in NumberContext context, NumberTrace trace) => GroupCondition.Explain(Conditions, context, trace);
     }
 
     /// <summary>
-    /// Whether its condition doesn't hold (FEAT-29). Where that condition can't be worked out, neither can this, so it
+    /// Whether its condition doesn't hold. Where that condition can't be worked out, neither can this, so it
     /// doesn't hold either: not having a target's tag doesn't hold where there's no target.
     /// </summary>
     [Serializable]
@@ -96,7 +96,7 @@ namespace FarEmerald.PlayForge
 
         public override string Describe() => $"not ({NumberText.Of(Condition)})";
 
-        // The condition it turns (FEAT-32)
+        // The condition it turns
         public override void Explain(in NumberContext context, NumberTrace trace)
         {
             if (Condition != null) trace.Add(Condition, context, "Not");

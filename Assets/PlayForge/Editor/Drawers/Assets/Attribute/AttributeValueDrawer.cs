@@ -5,7 +5,7 @@ using UnityEngine.UIElements;
 namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
-    /// An attribute value: its label in the label column, then its Current and Base side by side (ED-49). It drew "Cur" and
+    /// An attribute value: its label in the label column, then its Current and Base side by side. It drew "Cur" and
     /// "Base" in 9 px text with a slash between them, from styles set in C#.
     /// </summary>
     [CustomPropertyDrawer(typeof(AttributeValue))]

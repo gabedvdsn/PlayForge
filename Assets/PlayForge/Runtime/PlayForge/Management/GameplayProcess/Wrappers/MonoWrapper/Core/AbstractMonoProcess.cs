@@ -119,7 +119,7 @@ namespace FarEmerald.PlayForge
             processActive = false;
 
             // What this process handles ends with it, each where it's held. Through the scene's ProcessControl by its
-            // cache index, one in a world of its own ran on, and the scene's process under that index ended (FEAT-10)
+            // cache index, one in a world of its own ran on, and the scene's process under that index ended
             foreach (var _relay in HandlerRelays.Values.ToArray())
             {
                 _relay.TerminateImmediate();
@@ -159,7 +159,7 @@ namespace FarEmerald.PlayForge
             WhenDestroy();
         }
 
-        // A later SetParent files the process again under its new ancestors, as a cascade follows them (PC-28)
+        // A later SetParent files the process again under its new ancestors, as a cascade follows them
         private void OnTransformParentChanged()
         {
             if (Relay != null && ProcessControl.Instance) ProcessControl.Instance.ProcessReparented(Relay);

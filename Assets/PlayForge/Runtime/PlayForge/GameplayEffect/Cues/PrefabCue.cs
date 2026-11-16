@@ -7,7 +7,7 @@ namespace FarEmerald.PlayForge
 {
     /// <summary>
     /// Places a prefab at the effect's target: a burst as the effect lands, gone after its Lifetime, or, While Active, for
-    /// as long as the effect lasts, following a target that has a place (FEAT-1).
+    /// as long as the effect lasts, following a target that has a place.
     /// </summary>
     [Serializable]
     [ForgeMenu(Description = "Places a prefab at the target, for a moment or for as long as the effect lasts.")]

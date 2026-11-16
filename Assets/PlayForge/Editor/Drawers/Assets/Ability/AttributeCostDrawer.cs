@@ -5,7 +5,7 @@ using UnityEngine.UIElements;
 namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
-    /// An ability's attribute cost (TW-29): the attribute it spends, or, where it names none, the role whose attribute it
+    /// An ability's attribute cost: the attribute it spends, or, where it names none, the role whose attribute it
     /// spends, and how much.
     /// </summary>
     [CustomPropertyDrawer(typeof(AttributeCost))]

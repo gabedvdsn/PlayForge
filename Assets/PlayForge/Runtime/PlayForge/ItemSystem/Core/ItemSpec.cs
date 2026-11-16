@@ -14,14 +14,14 @@ namespace FarEmerald.PlayForge
         /// <summary>True while the item is equipped, which is when what it grants is on the entity.</summary>
         public bool IsEquipped { get; internal set; }
 
-        /// <summary>How many of the item its slot holds, which an <see cref="ItemStacksScaler"/> reads (FEAT-14).</summary>
+        /// <summary>How many of the item its slot holds, which an <see cref="ItemStacksScaler"/> reads.</summary>
         public int Stacks { get; internal set; } = 1;
 
         // ═══════════════════════════════════════════════════════════════════════════
         // Constructor
         // ═══════════════════════════════════════════════════════════════════════════
 
-        // Its max level as its item gives it, a linked item its provider's; it took the item's own (GAS-82)
+        // Its max level as its item gives it, a linked item its provider's; it took the item's own
         public ItemSpec(ISource owner, Item item, int level) : base(owner, new IntValuePairClamped(level, item.GetMaxLevel()), item.Tags.AssetTag)
         {
             Base = item;

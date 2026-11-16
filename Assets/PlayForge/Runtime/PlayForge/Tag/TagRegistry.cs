@@ -21,7 +21,7 @@ namespace FarEmerald.PlayForge
         // ═══════════════════════════════════════════════════════════════════════════
         
         // Not cleared when play mode starts, even with domain reload off: static tag fields register as their types
-        // initialise, once per domain, and wouldn't register again (SP-22)
+        // initialise, once per domain, and wouldn't register again
 
         // All registered tags by their full path
         private static readonly Dictionary<string, Tag> _tagsByPath = new();
@@ -565,7 +565,7 @@ namespace FarEmerald.PlayForge
             {
                 N = System.Math.Clamp(N, 32, 64);
                 // Remembered by its prefix, its text and its length, each apart: run together, a text and a prefix were
-                // another split of the same letters, and a tag asked for at one length came back at another's (TAG-8)
+                // another split of the same letters, and a tag asked for at one length came back at another's
                 var key = $"{prefix}\u001f{input}\u001f{N}";
                 lock (_lock)
                 {

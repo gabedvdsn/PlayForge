@@ -10,7 +10,7 @@ namespace FarEmerald.PlayForge
         
         /// <summary>
         /// The owner disjoints: every homing shot aimed at it that's marked disjointable loses it, as
-        /// <see cref="DisjointProxyTaskBehaviour"/> describes. Skill shots aren't affected (GAS-36).
+        /// <see cref="DisjointProxyTaskBehaviour"/> describes. Skill shots aren't affected.
         /// </summary>
         /// <param name="data"></param>
         /// <param name="token"></param>

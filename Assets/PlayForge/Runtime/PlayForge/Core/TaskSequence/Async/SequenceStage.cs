@@ -170,7 +170,7 @@ namespace FarEmerald.PlayForge
         /// </summary>
         public bool ShouldRepeat => Repeat || Policy is RepeatUntilSkippedPolicy;
 
-        // The stage's part of a packet's path, made again only when its name changes. It was formatted on every run (TS-5)
+        // The stage's part of a packet's path, made again only when its name changes. It was formatted on every run
         private string _pathPart, _pathPartName;
 
         internal string PathPart
@@ -214,7 +214,7 @@ namespace FarEmerald.PlayForge
                 units.Add(ExecuteTaskUnit(task, data, stageToken));
             }
             
-            // Add sub-stage executions. Each runs as a stage, with its own settings (TS-N)
+            // Add sub-stage executions. Each runs as a stage, with its own settings
             foreach (var subStage in stage.SubStages)
             {
                 units.Add(runtime.ExecuteSubStage(subStage, stageToken));
@@ -376,7 +376,7 @@ namespace FarEmerald.PlayForge
             get
             {
                 // A loop, not Any(method group): this is read for every sequence run, and the delegate
-                // and enumerator allocated each time (PF-007)
+                // and enumerator allocated each time
                 if (Stages == null) return false;
                 for (int i = 0; i < Stages.Count; i++)
                 {
@@ -392,7 +392,6 @@ namespace FarEmerald.PlayForge
         public bool HasAnyConditions => HasConditions || HasAnyStageConditions;
 
         // The sequence's part of a packet's path, made again only when its name changes. It was formatted on every run
-        // (TS-5)
         private string _pathPart, _pathPartName;
 
         internal string PathPart
@@ -475,7 +474,7 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// Builds a SyncedTaskSequence from this definition for per-frame stepping. A runner steps tasks and has no
         /// runtime to inject into, so what needs one can't come across. Each such thing is named in a warning as the
-        /// runner is built, where it used to be left out without a word (TS-Q).
+        /// runner is built, where it used to be left out without a word.
         /// </summary>
         public SyncedTaskSequence BuildSyncRunner()
         {

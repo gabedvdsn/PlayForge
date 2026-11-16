@@ -22,7 +22,7 @@ namespace FarEmerald.PlayForge
         
         /// <summary>
         /// A number of the task, read for its activation as it runs: at its ability's level, against its caster, its target
-        /// and its data (FN-20). None reads 0.
+        /// and its data. None reads 0.
         /// </summary>
         protected static float Read(ScalableFloat number, AbilityDataPacket data) =>
             number == null ? 0f : number.Evaluate(NumberContext.Of(data));
@@ -33,7 +33,7 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// The entity a task acts on for its activation: its caster, or the activation's first target, where it's an entity;
-        /// null where there's none (FN-24).
+        /// null where there's none.
         /// </summary>
         protected static IGameplayAbilitySystem EntityOf(AbilityDataPacket data, NumberSide on)
         {
@@ -44,7 +44,7 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// Applies an effect from the activation's origin to a target, with the activation's caller's magnitudes, as an Apply
-        /// Effects task's effects land; whether it landed (FN-24).
+        /// Effects task's effects land; whether it landed.
         /// </summary>
         protected static bool ApplyTo(AbilityDataPacket data, ITarget target, GameplayEffect effect)
         {

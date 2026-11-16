@@ -7,7 +7,7 @@ using UnityEngine.UIElements;
 namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
-    /// An ability's stage, in Docs/EDITOR_STYLE.md's terms (ED-64): a foldout row named by its place, as "Stage 1", with
+    /// An ability's stage: a foldout row named by its place, as "Stage 1", with
     /// Critical on its right while a task commits the ability to it; folded, one line of what it holds, as "2 tasks · All ·
     /// Applies usage effects"; open, its completion policy, its usage effects, its condition, what cancels it and what it
     /// blocks, then its tasks in Unity's reorderable list, where a new task starts empty. The stages' own list removes a
@@ -27,11 +27,11 @@ namespace FarEmerald.PlayForge.Editor
         public override VisualElement CreatePropertyGUI(SerializedProperty property)
         {
             var root = new VisualElement { name = "StageRoot" };
-            // The style sheet lays out the stage, wherever it's drawn (ED-20)
+            // The style sheet lays out the stage, wherever it's drawn
             ForgeTheme.Apply(root);
             root.AddToClassList("pf-element");
 
-            // The stage, found again by its path, as the stages' list moves and an Undo puts objects back (ED-49)
+            // The stage, found again by its path, as the stages' list moves and an Undo puts objects back
             var serialized = property.serializedObject;
             var path = property.propertyPath;
             SerializedProperty Fresh()

@@ -5,7 +5,7 @@ using UnityEngine;
 namespace FarEmerald.PlayForge
 {
     /// <summary>
-    /// A value through ordered stages as it lands (TW-2, Decision 46). An effect names one as its impact's calculation,
+    /// A value through ordered stages as it lands. An effect names one as its impact's calculation,
     /// as an Unreal effect names its execution calculation, so each hit goes through the stages a project writes once: the
     /// caster's bonuses, those that read the target, a critical roll, the target's reductions, a barrier; and what comes
     /// out lands. A new item that changes every hit is a stage, not an edit to each attack. Generic: the value is any
@@ -65,7 +65,7 @@ namespace FarEmerald.PlayForge
         }
 
         /// <summary>
-        /// Stages a value goes through after its pipeline, as modifiers add them (TW-7): kept in the breakdown after the
+        /// Stages a value goes through after its pipeline, as modifiers add them: kept in the breakdown after the
         /// pipeline's own steps where one ran, as a breakdown of their own where none did.
         /// </summary>
         public static float RunAfter(IReadOnlyList<AbstractValueStage> stages, float value, IAttributeImpactCarrier carrier,
@@ -141,7 +141,7 @@ namespace FarEmerald.PlayForge
 
     /// <summary>
     /// A run's stages, each with the value it took and gave and a note: what a combat log, a debugger and a test read of a
-    /// hit (TW-2). One is kept for each effect spec and filled again by each run.
+    /// hit. One is kept for each effect spec and filled again by each run.
     /// </summary>
     public sealed class ValueBreakdown
     {

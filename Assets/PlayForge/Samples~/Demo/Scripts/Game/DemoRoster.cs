@@ -57,7 +57,7 @@ namespace FarEmerald.PlayForge.Samples.Demo
         public Tag Difficulty;
 
         // ═══════════════════════════════════════════════════════════════════════════
-        // The Creator Lab's rules (LAB-7): the units, which are the lab's, read the roster as a project's rules
+        // The Creator Lab's rules: the units, which are the lab's, read the roster as a project's rules
         // ═══════════════════════════════════════════════════════════════════════════
 
         [NonSerialized] private List<Tag> stops, hides, shields;

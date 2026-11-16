@@ -5,7 +5,7 @@ namespace FarEmerald.PlayForge
 {
     /// <summary>
     /// Files a kind in the pickers that offer it, an ability task's, a worker's, a component's, a cue's, a number's and the
-    /// rest (EP-2): under the submenus its path names, a slash between each, as "Effects" or "Effects/Damage"; with a name
+    /// rest: under the submenus its path names, a slash between each, as "Effects" or "Effects/Damage"; with a name
     /// to show in place of its class's; and with a description the picker's Context says while it's highlighted.
     /// <para>
     /// A path holds for the classes made from the one that names it, unless one names its own, "" for the picker's top; a

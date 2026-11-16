@@ -5,9 +5,9 @@ using UnityEngine.UIElements;
 namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
-    /// New Project, from The Forge's project menu (FEAT-34): a name, then Create, which makes a Forge Project in a folder of
+    /// New Project, from The Forge's project menu: a name, then Create, which makes a Forge Project in a folder of
     /// its own under the PlayForge Folder, with its Game Root, and makes it the active one, so The Forge shows its assets,
-    /// none yet (EP-10). A name it can't take, it says why.
+    /// none yet. A name it can't take, it says why.
     /// </summary>
     internal sealed class ForgeNewProjectWindow : EditorWindow
     {

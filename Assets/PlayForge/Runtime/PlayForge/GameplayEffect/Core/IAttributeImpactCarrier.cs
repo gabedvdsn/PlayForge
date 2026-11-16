@@ -28,8 +28,7 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// The magnitude-evaluation pipeline this carrier contributes to the cached
-        /// attribute aggregator. Default empty so existing implementations remain valid
-        /// during the additive phase of the Origin/Carrier/Impacter refactor; concrete
+        /// attribute aggregator. Default empty, so an implementation without impacters stays valid; concrete
         /// carriers override to expose their <see cref="ScalerImpacter"/>s,
         /// <see cref="ConstantImpacter"/>s, etc.
         /// </summary>
@@ -41,7 +40,7 @@ namespace FarEmerald.PlayForge
             return new LevelerImpactDerivation(source, level, attribute);
         }
 
-        // A raw delta's carrier, with no impact type, as GenerateSimple's is (GAS-25)
+        // A raw delta's carrier, with no impact type, as GenerateSimple's is
         public static SourceAttributeImpact GenerateSourceDerivation(ISource source, IAttribute attribute)
         {
             return new SourceAttributeImpact(source, attribute,
@@ -79,7 +78,7 @@ namespace FarEmerald.PlayForge
         private TrackedImpact TrackedImpact;
 
         // The origin a carrier with no root carrier gives, made the first time it's asked for. It was made each time it
-        // was asked for, which a raw delta's commit did three times (GAS-P8). It only passes the source's own answers on
+        // was asked for, which a raw delta's commit did three times. It only passes the source's own answers on
         private SourceEffectOrigin sourceOrigin;
 
         // Optional impacter list — populated when this carrier represents a synthetic
@@ -140,7 +139,7 @@ namespace FarEmerald.PlayForge
 
             // A commit clamps after every step, and Current is bounded by Base. So a growing Base
             // goes first (else the Current gain is clamped against the old Base and lost), and a
-            // shrinking one goes last (it then pulls Current down to the new bound). PF-005.
+            // shrinking one goes last (it then pulls Current down to the new bound).
             if (baseDelta > 0f && baseStep != null) built.Add(baseStep);
             if (currentStep != null) built.Add(currentStep);
             if (baseDelta < 0f && baseStep != null) built.Add(baseStep);
@@ -186,10 +185,8 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// Returns the impacter list this carrier was constructed with, or an empty list
-        /// for identity-only carriers. Identity-only carriers route through the legacy
-        /// delta-and-forget path during the additive phase of the refactor — once the
-        /// recompute aggregator is the only modify path (refactor step 5), every
-        /// caller will be expected to supply impacters.
+        /// for identity-only carriers. Identity-only carriers route through the
+        /// delta-and-forget path.
         /// </summary>
         public IReadOnlyList<IAttributeImpacter> GetImpacters()
             => Impacters ?? Array.Empty<IAttributeImpacter>();
@@ -197,7 +194,7 @@ namespace FarEmerald.PlayForge
 
     /// <summary>
     /// Carriers kept for the changes the system makes on someone's behalf, such as a rescale or a lifesteal's heal, one
-    /// for each source and attribute. Each change made a new one (GAS-P9). They're kept in a table keyed weakly by
+    /// for each source and attribute. Each change made a new one. They're kept in a table keyed weakly by
     /// source, so a source that's gone isn't held. A kept carrier is what a new one would be in all but identity.
     /// </summary>
     internal sealed class SourceCarriers

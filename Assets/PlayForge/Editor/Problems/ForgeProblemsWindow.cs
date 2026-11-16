@@ -10,17 +10,17 @@ using Object = UnityEngine.Object;
 namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
-    /// The Problems view (Q8, ED-15): every problem the validator finds in the project's PlayForge assets, each with its
-    /// severity and its asset, and a click selects the asset. It follows the validator, so it has no Refresh (Q30). It
+    /// The Problems view: every problem the validator finds in the project's PlayForge assets, each with its
+    /// severity and its asset, and a click selects the asset. It follows the validator, so it has no Refresh. It
     /// replaces Validate All, which showed 15 problems in a dialog nothing in could be selected, and the Audit, which
     /// wrote to the Console.
     /// <para>
     /// By Rule, its other view, groups the problems under the rule each breaks, and where a simple step fixes a problem,
-    /// gives it a Quick Fix, and its rule a Fix All, each one Undo step (FEAT-25, the user's request).
+    /// gives it a Quick Fix, and its rule a Fix All, each one Undo step.
     /// </para>
     /// <para>
     /// It lists the linter's notes too, which may be meant, as a trigger on an event that code sends, under their own
-    /// filter, and its counts leave them out (TW-25).
+    /// filter, and its counts leave them out.
     /// </para>
     /// </summary>
     public sealed class ForgeProblemsWindow : EditorWindow
@@ -46,7 +46,7 @@ namespace FarEmerald.PlayForge.Editor
         private Label status;
         private List<ForgeProblem> shown = new();
 
-        // The menu's name is the window's title (ED-19)
+        // The menu's name is the window's title
         [MenuItem("Window/PlayForge/" + Title, false, 10)]
         public static ForgeProblemsWindow ShowWindow()
         {
@@ -76,7 +76,7 @@ namespace FarEmerald.PlayForge.Editor
             root.AddToClassList("pf-problems");
 
             var toolbar = new Toolbar { name = "ProblemsToolbar" };
-            // The list, or By Rule (FEAT-25)
+            // The list, or By Rule
             listToggle = Filter(toolbar, "List", !byRule, "Each problem, the errors first, by asset", on => ShowView(!on));
             listToggle.text = "List";
             ruleToggle = Filter(toolbar, "ByRule", byRule, "The problems grouped under the rule each breaks, with their quick fixes", on => ShowView(on));
@@ -235,7 +235,7 @@ namespace FarEmerald.PlayForge.Editor
             notesToggle.text = CountOf(notes.Count, "Note", "Notes");
             int assets = problems.Select(problem => problem.Asset).Distinct().Count();
             int fixable = shown.Count(problem => problem.Fix != null);
-            // The problems, and the notes beside them, which they don't count (TW-25)
+            // The problems, and the notes beside them, which they don't count
             status.text = (problems.Count == 0 ? "No problems" : $"{CountOf(problems.Count, "problem", "problems")} in {CountOf(assets, "asset", "assets")}") +
                           (notes.Count > 0 ? $" · {CountOf(notes.Count, "note", "notes")}" : "") +
                           (shown.Count < all.Count ? $" · {shown.Count} shown" : "") +
@@ -251,7 +251,7 @@ namespace FarEmerald.PlayForge.Editor
         };
 
         // A problem's severity as its glyph: a warning's triangle, an error's in the destructive color, and a note's info
-        // mark in the neutral one (TW-25)
+        // mark in the neutral one
         private static void ShowSeverity(ForgeGlyph glyph, ForgeProblem problem)
         {
             glyph.Shape = problem.Severity == ForgeProblemSeverity.Note ? ForgeGlyphShape.Info : ForgeGlyphShape.Warning;
@@ -261,7 +261,7 @@ namespace FarEmerald.PlayForge.Editor
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
-        // By Rule (FEAT-25)
+        // By Rule
         // ═══════════════════════════════════════════════════════════════════════════
 
         // The shown problems under their rules: a rule with errors first, then by name; each rule's problems as the list

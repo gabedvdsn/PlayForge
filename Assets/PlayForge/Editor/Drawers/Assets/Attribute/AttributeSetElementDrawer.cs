@@ -9,17 +9,16 @@ using UnityEngine.UIElements;
 namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
-    /// An attribute set element, in Docs/EDITOR_STYLE.md's terms: a foldout row with the attribute, and while it's folded
+    /// An attribute set element: a foldout row with the attribute, and while it's folded
     /// one line of what it starts at; open, what it starts at at each level, then Base and Current, each a magnitude field
-    /// as an effect's are, then its bounds, its constraints, its retention group and its collision (ED-49).
+    /// as an effect's are, then its bounds, its constraints, its retention group and its collision.
     /// <para>
     /// What it starts at is worked out by the runtime (<see cref="AttributeStartValues"/>): a stand-in entity at each level
     /// of the set it's previewed in, with the set's sub-sets. A note says when another element's value is the one used, and
     /// a message when a scaler reads an attribute the set doesn't give. The element showed its magnitudes as a formula, as
     /// "10 + Level", and Current and Base one at a time on a switch.
     /// </para>
-    /// It writes nothing while it draws, and only a typed magnitude is kept within the bounds, as part of the same edit
-    /// (ED-39).
+    /// It writes nothing while it draws, and only a typed magnitude is kept within the bounds, as part of the same edit.
     /// </summary>
     [CustomPropertyDrawer(typeof(AttributeSetElement))]
     public class AttributeSetElementDrawer : PropertyDrawer
@@ -27,7 +26,7 @@ namespace FarEmerald.PlayForge.Editor
         public const string CollapsedClass = "pf-element--collapsed";
         private const string Hidden = "pf-hidden";
 
-        // Kept per asset for the editor session (ED-18)
+        // Kept per asset for the editor session
         private static bool IsCollapsed(SerializedProperty property) =>
             DrawerCollapseState.IsCollapsed(property, collapsedByDefault: false);
         private static void SetCollapsed(SerializedProperty property, bool collapsed) =>
@@ -36,7 +35,7 @@ namespace FarEmerald.PlayForge.Editor
         public override VisualElement CreatePropertyGUI(SerializedProperty property)
         {
             var root = new VisualElement { name = "AttributeSetElementRoot" };
-            // The style sheet lays out the element, wherever the drawer is drawn: in Unity's own inspector too (ED-20)
+            // The style sheet lays out the element, wherever the drawer is drawn: in Unity's own inspector too
             ForgeTheme.Apply(root);
             root.AddToClassList("pf-element");
 
@@ -125,7 +124,7 @@ namespace FarEmerald.PlayForge.Editor
             }
 
             // A typed magnitude stays within the bounds, as part of the same edit; a change to Base keeps Current within
-            // the bounds Base sets. Nothing else writes: it clamped on every change to the set, and as it drew (ED-39)
+            // the bounds Base sets. Nothing else writes: it clamped on every change to the set, and as it drew
             void KeepTypedInBounds(bool current, float typed, FloatField field)
             {
                 // Only a value typed into the field: binding the field sends it change events of its own as it draws
@@ -358,7 +357,7 @@ namespace FarEmerald.PlayForge.Editor
 
         /// <summary>
         /// What the help box says of an element whose magnitudes are outside its bounds: that the runtime clamps them. The
-        /// validator says the same, so the Problems view and the element agree (ED-15).
+        /// validator says the same, so the Problems view and the element agree.
         /// </summary>
         internal static List<string> BoundsMessages(AttributeOverflowData overflow, bool clamped, float storedBase, bool linked, float storedCurrent)
         {

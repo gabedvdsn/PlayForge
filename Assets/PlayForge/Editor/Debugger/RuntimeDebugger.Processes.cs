@@ -8,8 +8,8 @@ using UnityEngine.UIElements;
 
 namespace FarEmerald.PlayForge.Editor
 {
-    // The Processes view, as the design canvas's Processes board draws it: every process ProcessControl holds, with what
-    // it's doing and how long its steps take, beside the one selected, which can be paused, resumed and terminated (ED-5)
+    // The Processes view: every process ProcessControl holds, with what
+    // it's doing and how long its steps take, beside the one selected, which can be paused, resumed and terminated
     public sealed partial class RuntimeDebugger
     {
         private readonly List<ProcessControlBlock> processes = new();
@@ -23,7 +23,7 @@ namespace FarEmerald.PlayForge.Editor
 
         // Each process's steps and their time at each sample of the last second, which its step time averages. Process
         // Control's usage was the wall-clock time between a process's steps, much the same for every process whatever its
-        // work cost (ED-5)
+        // work cost
         private readonly struct StepSample
         {
             public readonly double At;
@@ -216,7 +216,7 @@ namespace FarEmerald.PlayForge.Editor
         // The process the detail shows: its header, Pause, Resume and Terminate, then what it is, its state and its time.
         // Pause and Resume take the processes it handles with it alike; Process Control's Pause did and its Resume didn't,
         // and it greyed out Pause for a running process that waits or needs control, as it read the state the process
-        // would take next (ED-5)
+        // would take next
         private void ShowProcess(ProcessControlBlock pcb)
         {
             if (processDetail == null) return;
@@ -316,7 +316,7 @@ namespace FarEmerald.PlayForge.Editor
         }
 
         // Whether a process's run is going or held by a pause, which a resume picks up, or was cancelled, so a resume
-        // starts a new one (Decision 5)
+        // starts a new one
         private static string RunOf(ProcessControlBlock pcb)
         {
             if (pcb.Wrapper.Lifecycle == EProcessLifecycle.Synchronous) return "None";

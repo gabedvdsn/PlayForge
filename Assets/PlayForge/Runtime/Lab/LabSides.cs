@@ -4,7 +4,7 @@ using UnityEngine;
 namespace FarEmerald.PlayForge.Lab
 {
     /// <summary>
-    /// A side a unit stands on in the lab (LAB-2, LAB-4): an affiliation tag, as its registration's data gives it, a name
+    /// A side a unit stands on in the lab: an affiliation tag, as its registration's data gives it, a name
     /// and the color of its ring.
     /// </summary>
     public readonly struct LabSide

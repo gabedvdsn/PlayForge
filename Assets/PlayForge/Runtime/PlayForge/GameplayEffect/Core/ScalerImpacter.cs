@@ -8,8 +8,7 @@ namespace FarEmerald.PlayForge
     /// on <see cref="GameplayEffectImpact"/>) and exposes it through the impacter contract.
     ///
     /// One <see cref="ScalerImpacter"/> per <see cref="GameplayEffectImpact"/> is the
-    /// current shape — multi-impacter authoring per asset is intentionally deferred until
-    /// the runtime split has shipped (see refactor plan §5A).
+    /// current shape.
     /// </summary>
     public class ScalerImpacter : IAttributeImpacter
     {
@@ -23,13 +22,13 @@ namespace FarEmerald.PlayForge
         public ValuePipeline         Pipeline { get; }
         public Tag                   Group { get; }
 
-        /// <summary>The modifiers' stages for it (TW-7): on its magnitude where it lasts, after its pipeline as it commits.</summary>
+        /// <summary>The modifiers' stages for it: on its magnitude where it lasts, after its pipeline as it commits.</summary>
         public IReadOnlyList<AbstractValueStage> Stages { get; }
 
         // A lasting impact's stages run on its magnitude, as no pipeline runs on it
         private readonly bool stagesOnMagnitude;
 
-        // A lasting effect's barrier that fades with it, to 0 by its end (TW-12)
+        // A lasting effect's barrier that fades with it, to 0 by its end
         private readonly bool fades;
 
         public ScalerImpacter(
@@ -62,7 +61,7 @@ namespace FarEmerald.PlayForge
         {
             float value = EvaluateOwn(carrier);
 
-            // As much as its effect has left of its duration (TW-12)
+            // As much as its effect has left of its duration
             if (fades && carrier is GameplayEffectSpec faded && faded.RuntimeContainer is { TotalDuration: > 0f } container)
                 value *= UnityEngine.Mathf.Clamp01(container.DurationRemaining / container.TotalDuration);
             return stagesOnMagnitude ? ValuePipeline.RunAfter(Stages, value, carrier, null, false) : value;

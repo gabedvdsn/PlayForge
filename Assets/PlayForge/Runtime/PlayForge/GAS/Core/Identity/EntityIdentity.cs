@@ -19,13 +19,13 @@ namespace FarEmerald.PlayForge
         [ForgeTagContext(ForgeContext.Granted)] public List<Tag> GrantedTags;
         [ForgeTagContext(ForgeContext.ContextTag)] public List<Tag> ContextTags;
 
-        // The level always stays between these two; Cap At Max, which nothing read, is gone (GAS-45)
+        // The level always stays between these two; Cap At Max, which nothing read, is gone
         public int StartingLevel = 1;
         public int MaxLevel = 99;
         
         public EAbilityActivationPolicy ActivationPolicy = EAbilityActivationPolicy.QueueActivationIfBusy;
         
-        // These had no default, so an identity that didn't set them could hold nothing: a new asset's were 0 (GAS-23)
+        // These had no default, so an identity that didn't set them could hold nothing: a new asset's were 0
         [ScalerOperationKeyword("Max Abilities")]
         public ScalableInt MaxAbilitiesOperation = new() { Magnitude = 99 };
         public List<Ability> StartingAbilities = new();
@@ -43,7 +43,7 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// The attribute its time runs at, 1 as the game's: an effect that lowers it slows the entity, its effects,
-        /// cooldowns, sequences and waits with it, and one that raises it hastes it (FEAT-22). None, its time scale is
+        /// cooldowns, sequences and waits with it, and one that raises it hastes it. None, its time scale is
         /// its game's code's to set, through its clock.
         /// </summary>
         [Tooltip("The attribute its time runs at, 1 as the game's: an effect that lowers it slows the entity, and one that raises it hastes it. None, the game's code sets its time scale")]
@@ -218,7 +218,7 @@ namespace FarEmerald.PlayForge
         /// </summary>
         public void UnlinkAllChildren()
         {
-            // Unlinked. This linked them again (GAS-30)
+            // Unlinked. This linked them again
             if (StartingItems is not null)
             {
                 foreach (var item in StartingItems)

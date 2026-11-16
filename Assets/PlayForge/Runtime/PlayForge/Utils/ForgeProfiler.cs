@@ -8,7 +8,7 @@ namespace FarEmerald.PlayForge
     /// PlayForge's markers in Unity's Profiler, so what it runs shows there by its own name: the step loop at each timing,
     /// a process's step, under one of its type's too, a GAS's step and its end of frame, an effect's application, an
     /// ability's activation, a tag compile, an attribute's recompute and a stage's start. Runtime had none, so PlayForge's
-    /// cost showed only as its callers' (FEAT-18, Decision 32). Each is a sample in the Scripts category, which a
+    /// cost showed only as its callers'. Each is a sample in the Scripts category, which a
     /// ProfilerRecorder can read by its name, as "PlayForge.ApplyEffect".
     /// </summary>
     public static class ForgeProfiler

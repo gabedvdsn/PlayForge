@@ -4,7 +4,7 @@ using UnityEngine;
 namespace FarEmerald.PlayForge.Samples.Demo
 {
     /// <summary>
-    /// A hero or the dummy in the arena: the Creator Lab's unit (LAB-7), which walks where it's sent, attacks what it's set
+    /// A hero or the dummy in the arena: the Creator Lab's unit, which walks where it's sent, attacks what it's set
     /// on, casts its abilities and its items', and holds its items, with the Demo's seat and game besides. Its body, its
     /// movement and its casting are the lab's, so the two can't drift; the Demo's roster gives it its rules.
     /// </summary>
@@ -43,7 +43,7 @@ namespace FarEmerald.PlayForge.Samples.Demo
                 if (ability) unit.ApplyLevel(ability, seat.LevelOf(ability));
             foreach (var held in seat.Items)
                 unit.Give(held.Item, held.Level, held.Count);
-            // Its seat holds one less of each item it uses up, as a Consume Item task's, the Healing Salve's (FN-24)
+            // Its seat holds one less of each item it uses up, as a Consume Item task's, the Healing Salve's
             if (unit.Gas != null && unit.Gas.GetItemSystem() is { } items)
                 items.Callbacks.OnItemConsumed += (item, count) =>
                 {

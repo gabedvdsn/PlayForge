@@ -6,7 +6,7 @@ namespace FarEmerald.PlayForge
 {
     /// <summary>
     /// Names the entities a save refers to besides the one it's of: the source of an effect another entity applied. A game
-    /// keeps IDs that last across sessions, as a reference doesn't (FEAT-9).
+    /// keeps IDs that last across sessions, as a reference doesn't.
     /// </summary>
     public interface IForgeEntityIds
     {
@@ -19,7 +19,7 @@ namespace FarEmerald.PlayForge
 
     /// <summary>
     /// Names a save's assets and finds them again: an asset catalog, or, for a copy within one session, the assets
-    /// themselves (FEAT-20).
+    /// themselves.
     /// </summary>
     internal interface IAssetNames
     {
@@ -35,7 +35,7 @@ namespace FarEmerald.PlayForge
     }
 
     /// <summary>
-    /// Saves an entity at rest and loads it back (FEAT-9, Decision 30). Nothing captured an entity's state, so a game
+    /// Saves an entity at rest and loads it back. Nothing captured an entity's state, so a game
     /// couldn't keep a battle between sessions.
     ///
     /// <para><see cref="Capture"/> takes what lasts on an entity into a <see cref="ForgeSnapshot"/>: its attributes'
@@ -81,7 +81,7 @@ namespace FarEmerald.PlayForge
             return Take(core, catalog, ids);
         }
 
-        // What Capture and Copy take: the entity at rest, its assets named by a catalog or by the session (FEAT-20)
+        // What Capture and Copy take: the entity at rest, its assets named by a catalog or by the session
         private static ForgeSnapshot Take(GASCore core, IAssetNames assets, IForgeEntityIds ids)
         {
             var gas = core.Owner;
@@ -94,7 +94,7 @@ namespace FarEmerald.PlayForge
                 if (!pair.Key.IsValid) continue;
 
                 // The entity's own under no key, so a save of one kind loads onto another as its own. Under its kind's
-                // tag, it stayed behind on a clone of another kind (FEAT-20)
+                // tag, it stayed behind on a clone of another kind
                 snapshot.Levels.Add(new LevelSave
                 {
                     Key = pair.Key == core.Identity.AssetTag ? "" : pair.Key.Name,
@@ -293,14 +293,14 @@ namespace FarEmerald.PlayForge
             return true;
         }
 
-        // What Restore and Copy put back (FEAT-20)
+        // What Restore and Copy put back
         private static bool Put(GASCore core, ForgeSnapshot snapshot, IAssetNames assets, IForgeEntityIds ids)
         {
             var gas = core.Owner;
             var finds = new Finds(assets);
 
             // An ability the entity holds in the slot its save gives it stays as it is, so another entity's effect that
-            // it applied still finds it there (GAS-60)
+            // it applied still finds it there
             var keep = new Dictionary<int, Ability>();
             foreach (var save in Each(snapshot.Abilities))
                 if (save.Slot >= 0 && finds.TryFind(save.Ability, out Ability held)) keep[save.Slot] = held;
@@ -340,13 +340,13 @@ namespace FarEmerald.PlayForge
                     var origin = OriginOf(gas, save.Origin, finds, ids, items);
                     var spec = effect.Generate(origin, gas);
 
-                    // With the magnitudes its caller set, before its modifiers read them (FEAT-2)
+                    // With the magnitudes its caller set, before its modifiers read them
                     foreach (var magnitude in Each(save.SetByCaller))
                         if (!string.IsNullOrEmpty(magnitude.Key)) spec.SetByCaller(Tag.Generate(magnitude.Key), magnitude.Magnitude);
                     core.EffectSystem.Restore(spec, save);
                 }
 
-                // The entity's own, under no key, onto this entity's own (FEAT-20)
+                // The entity's own, under no key, onto this entity's own
                 foreach (var save in Each(snapshot.Levels))
                 {
                     var key = string.IsNullOrEmpty(save.Key) ? core.Identity.AssetTag : Tag.Generate(save.Key);
@@ -364,10 +364,10 @@ namespace FarEmerald.PlayForge
             // the level it reads
             core.AttributeSystem.RecomputeAll();
 
-            // The effects' lasting transfers take from what the load put back, and the attributes read them (TW-20)
+            // The effects' lasting transfers take from what the load put back, and the attributes read them
             if (core.EffectSystem.LendRestoredTransfers()) core.AttributeSystem.RecomputeAll();
 
-            // Each set's bonuses as the equipped pieces now call for, those the load put back kept (FN-14)
+            // Each set's bonuses as the equipped pieces now call for, those the load put back kept
             ForgeSets.RefreshAll(core.ItemSystem);
 
             var loose = new List<Tag>();
@@ -470,7 +470,7 @@ namespace FarEmerald.PlayForge
         /// <see cref="Capture"/> takes, put back as <see cref="Restore"/> puts it, with no catalog and no IDs, as both
         /// entities are in this session. An effect another entity applied stays that entity's, and the entity's own level
         /// goes onto the other's own. A copy took a catalog naming every asset, which an asset made as the game runs
-        /// never has (FEAT-20).
+        /// never has.
         /// </summary>
         public static bool Copy(IGameplayAbilitySystem from, IGameplayAbilitySystem onto)
         {

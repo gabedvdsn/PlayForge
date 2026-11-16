@@ -6,14 +6,14 @@ namespace FarEmerald.PlayForge
 {
     /// <summary>
     /// Uses: how many times an item's ability can be used, each use one that paid what it costs, as a potion's sips or a
-    /// wand's charges (FN-14, Decision 77). With none left, one of the item goes: a stack of it, its uses whole again for
+    /// wand's charges. With none left, one of the item goes: a stack of it, its uses whole again for
     /// the next, or the item with its last. A load gives its uses whole. An item holds one at most.
     /// </summary>
     [Serializable]
     [ForgeMenu(Description = "How many times the item's ability can be used before one of the item goes.")]
     public sealed class UsesItemComponent : AbstractItemComponent
     {
-        /// <summary>What it does, in one line (EP-5).</summary>
+        /// <summary>What it does, in one line.</summary>
         public override string Describe() => $"{NumberText.Of(Uses)} uses";
 
         [Tooltip("How many times its ability can be used before one of it goes, read at the item's level")]
@@ -64,7 +64,7 @@ namespace FarEmerald.PlayForge
 
     /// <summary>
     /// Set Bonus: an effect its holder has while it has enough of a set's pieces equipped, as two pieces of a set giving
-    /// fire resistance and four a flame aura (FN-14, Decision 77). Each piece names its set by a tag and carries the set's
+    /// fire resistance and four a flame aura. Each piece names its set by a tag and carries the set's
     /// bonuses; the holder's equipped pieces count each item once, and a bonus holds while they're as many as it needs,
     /// once for the holder however many pieces carry it. An item holds one for each of its set's bonuses.
     /// </summary>
@@ -72,7 +72,7 @@ namespace FarEmerald.PlayForge
     [ForgeMenu(Description = "An effect its holder has while enough of a set's pieces are equipped.")]
     public sealed class SetBonusItemComponent : AbstractItemComponent
     {
-        /// <summary>What it does, in one line (EP-5).</summary>
+        /// <summary>What it does, in one line.</summary>
         public override string Describe() => $"{NameOf(Bonus)} with {NumberText.Of(Pieces)} pieces of {Set}";
 
         [Tooltip("The set the item is a piece of, by its tag")]
@@ -96,7 +96,7 @@ namespace FarEmerald.PlayForge
         }
     }
 
-    /// <summary>What weighs a holder's set bonuses against the set's pieces it has equipped (FN-14).</summary>
+    /// <summary>What weighs a holder's set bonuses against the set's pieces it has equipped.</summary>
     internal static class ForgeSets
     {
         /// <summary>
@@ -142,7 +142,7 @@ namespace FarEmerald.PlayForge
             }
         }
 
-        /// <summary>Each set the holder's items are pieces of, weighed once, as after a load (FN-14).</summary>
+        /// <summary>Each set the holder's items are pieces of, weighed once, as after a load.</summary>
         internal static void RefreshAll(ItemSystemComponent items)
         {
             if (items == null) return;
@@ -158,7 +158,7 @@ namespace FarEmerald.PlayForge
         }
 
         // How many pieces a tier needs, read for its holder: a tier is its pieces and its bonus, its number read and not the
-        // number itself, which a Scalable one would compare as one object with another (FN-19)
+        // number itself, which a Scalable one would compare as one object with another
         private static int PiecesOf(SetBonusItemComponent tier, NumberContext context) => tier.Pieces?.Evaluate(context) ?? 0;
 
         // A tier's bonus on its holder, from one of the set's pieces, or null

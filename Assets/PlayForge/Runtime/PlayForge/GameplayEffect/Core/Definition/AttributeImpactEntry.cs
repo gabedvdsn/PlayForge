@@ -6,7 +6,7 @@ namespace FarEmerald.PlayForge
 {
     /// <summary>
     /// How an impact entry rides its carrier's lifecycle. Delivery IMPLIES the
-    /// contribution kind (see Docs/IMPACT_MODEL_REFACTOR.md §1) — there is deliberately no
+    /// contribution kind — there is deliberately no
     /// independent "retained?" switch to get wrong:
     ///
     /// <list type="bullet">
@@ -49,10 +49,10 @@ namespace FarEmerald.PlayForge
         /// <summary>Only meaningful for Multiply — see <see cref="EMultiplyBehaviour"/>.</summary>
         public EMultiplyBehaviour MultiplyBehaviour = EMultiplyBehaviour.Multiplicative;
 
-        /// <summary>Only meaningful for Add — see <see cref="EAddBehaviour"/> (TW-1).</summary>
+        /// <summary>Only meaningful for Add — see <see cref="EAddBehaviour"/>.</summary>
         public EAddBehaviour AddBehaviour = EAddBehaviour.AttributeRole;
 
-        /// <summary>The calculation each hit of it goes through as it lands, if any (TW-2).</summary>
+        /// <summary>The calculation each hit of it goes through as it lands, if any.</summary>
         [Tooltip("The calculation each hit goes through as it lands: an instant impact's, each tick of a periodic one's")]
         public ValuePipeline Pipeline;
 

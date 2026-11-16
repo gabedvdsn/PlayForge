@@ -4,7 +4,7 @@ using UnityEngine;
 namespace FarEmerald.PlayForge.Lab
 {
     /// <summary>
-    /// The lab's camera (LAB-3): it looks down at an angle at a point on the ground, from the distance and tilt it's set
+    /// The lab's camera: it looks down at an angle at a point on the ground, from the distance and tilt it's set
     /// to. Scroll pulls it back, a middle drag pans it, and <see cref="ResetView"/> puts it back as it started. It follows
     /// a unit when given one, as the Demo's follows its hero, and shakes as a cue asks, as the game's camera shaker
     /// PlayForge's cues reach through ForgeCues.

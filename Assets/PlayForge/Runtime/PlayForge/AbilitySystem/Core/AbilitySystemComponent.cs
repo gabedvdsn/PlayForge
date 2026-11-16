@@ -13,7 +13,7 @@ namespace FarEmerald.PlayForge
     /// </summary>
     public class AbilitySystemComponent : DeferredContextSystem
     {
-        // The number of this system's next activation: activations are numbered per entity (FEAT-13)
+        // The number of this system's next activation: activations are numbered per entity
         private int nextHandleId;
 
         internal int NextHandleId() => nextHandleId++;
@@ -71,7 +71,7 @@ namespace FarEmerald.PlayForge
         public int AbilityCount => AbilityCache.Count;
         
         // The input buffer: one slot per ability, each its latest press and how long it may wait yet. The Queue policy was
-        // a plain queue: a request carried no time, a press again queued again, and they fired in the order pressed (FEAT-6)
+        // a plain queue: a request carried no time, a press again queued again, and they fired in the order pressed
         private readonly List<BufferedRequest> buffer = new();
         private int presses;
         private bool firingBuffer;
@@ -93,10 +93,10 @@ namespace FarEmerald.PlayForge
                 a.Priority != b.Priority ? b.Priority.CompareTo(a.Priority) : b.Order.CompareTo(a.Order);
         }
 
-        /// <summary>How many requests wait in the input buffer (FEAT-6).</summary>
+        /// <summary>How many requests wait in the input buffer.</summary>
         public int BufferedCount => buffer.Count;
 
-        /// <summary>Whether a request for the ability in this slot waits in the input buffer (FEAT-6).</summary>
+        /// <summary>Whether a request for the ability in this slot waits in the input buffer.</summary>
         public bool IsBuffered(int index)
         {
             for (int i = 0; i < buffer.Count; i++)
@@ -105,7 +105,7 @@ namespace FarEmerald.PlayForge
         }
 
         /// <param name="bufferWindow">How long the request may wait in the input buffer, in seconds of the caster's time,
-        /// or below 0 for its ability's Buffer Window (FEAT-6).</param>
+        /// or below 0 for its ability's Buffer Window.</param>
         public AbilityActivationRequest CreateActivationRequest(int index, ProcessDataPacket _data = null, EAbilityActivationPolicyExtended? policy = null,
             float bufferWindow = -1f)
         {
@@ -124,7 +124,7 @@ namespace FarEmerald.PlayForge
             public ProcessDataPacket Data;
             public AbilitySystemComponent System;
 
-            /// <summary>How long the request may wait in the input buffer, or below 0 for its ability's window (FEAT-6).</summary>
+            /// <summary>How long the request may wait in the input buffer, or below 0 for its ability's window.</summary>
             public float BufferWindow;
             
             public AbilityActivationRequest(int index, AbilitySystemComponent asc, EAbilityActivationPolicy policy, ProcessDataPacket data)
@@ -156,7 +156,7 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// The entity is ending: no activation from now on, nothing left queued, and the abilities still running end
-        /// with the entity's process (GAS-52). Unlike turning <see cref="Enabled"/> off, it sends them no interrupt.
+        /// with the entity's process. Unlike turning <see cref="Enabled"/> off, it sends them no interrupt.
         /// </summary>
         internal void ShutDown()
         {
@@ -220,7 +220,7 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// Tries each Starting Ability set to Activate Immediately. The hub calls this once its attributes, items and
         /// tags are in place. Tried as the abilities were given, before any attribute existed, the Cost rule refused
-        /// every one with a cost (GAS-49).
+        /// every one with a cost.
         /// </summary>
         public void ActivateImmediateAbilities()
         {
@@ -272,7 +272,7 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// Gives an ability without compiling the tags: into <paramref name="slot"/> where that's free, as a restore puts one
-        /// back where it was, or else the first free slot. The restore compiles once as it ends (FEAT-9).
+        /// back where it was, or else the first free slot. The restore compiles once as it ends.
         /// </summary>
         internal bool GiveQuietly(Ability ability, int level, out int abilityIndex, int slot = -1)
         {
@@ -299,8 +299,8 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// Ends what's running and lets go of every ability, lent ones too, with nothing left buffered and no tag compile,
         /// but each that <paramref name="keep"/> names in the slot it holds, which stays as it is. A restore gives back
-        /// the rest of what the save had, and compiles once as it ends (FEAT-9). It let go of every one and gave each back
-        /// as a new one, so another entity's effect that one of them applied kept the old, which no slot held (GAS-60).
+        /// the rest of what the save had, and compiles once as it ends. It let go of every one and gave each back
+        /// as a new one, so another entity's effect that one of them applied kept the old, which no slot held.
         /// </summary>
         internal void ClearForRestore(IReadOnlyDictionary<int, Ability> keep = null)
         {
@@ -330,7 +330,7 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// Removes the ability in one slot, if the slot holds <paramref name="expected"/> when one is given. Where an
         /// entity holds the same ability more than once, this takes the copy meant, as an item taking back its grant
-        /// does (GAS-48).
+        /// does.
         /// </summary>
         public bool RemoveAbilityAt(int index, Ability expected = null)
         {
@@ -345,7 +345,7 @@ namespace FarEmerald.PlayForge
             container.Spec.HearRemoved();
 
             // Off the active list too, where the next claim check looked its slot up and threw, and gone before
-            // the tags are compiled, which counted it still granted (GAS-20)
+            // the tags are compiled, which counted it still granted
             foreach (var active in ActiveCache.Values) active.Remove(index);
             AbilityCache.Remove(index);
 
@@ -410,31 +410,31 @@ namespace FarEmerald.PlayForge
         private bool CanActivateAbility(AbilitySpecContainer container, AbilityDataPacket data) =>
             CanActivateUnblocked(container, data) && !IsBlocked(container.Spec.Base);
 
-        // Everything but a running stage's block, which a Queue request waits out in the buffer (FEAT-6)
+        // Everything but a running stage's block, which a Queue request waits out in the buffer
         private bool CanActivateUnblocked(AbilitySpecContainer container, AbilityDataPacket data) =>
             UnblockedRefusal(container, data, out _) == EActivationRefusal.None;
 
-        // What refuses it, but a running stage's block, as a refusal says it (FEAT-17)
+        // What refuses it, but a running stage's block, as a refusal says it
         private EActivationRefusal UnblockedRefusal(AbilitySpecContainer container, AbilityDataPacket data, out string rule)
         {
             rule = null;
             if (!Enabled) return EActivationRefusal.Disabled;
             if (Locked) return EActivationRefusal.Locked;
 
-            // An ability runs as a process, so it can't start while its caster's world refuses new ones (TS-AC). It asked
-            // the scene's, wherever the caster was (FEAT-10)
+            // An ability runs as a process, so it can't start while its caster's world refuses new ones. It asked
+            // the scene's, wherever the caster was
             if (ProcessWorld.Of(data?.EffectOrigin?.GetSource()) is { AcceptsNewProcesses: false }) return EActivationRefusal.NoNewProcesses;
 
             var source = container.Spec.SourceRefusal(data, out rule);
             if (source != EActivationRefusal.None) return source;
             if (container.Spec.Base.IgnoreWhenLevelZero && container.Spec.GetLevel().CurrentValue <= 0) return EActivationRefusal.LevelZero;
 
-            // Its caster must pass its While active group, as it will for as long as it runs (FEAT-5)
+            // Its caster must pass its While active group, as it will for as long as it runs
             return PassesWhileActive(container, Self.GetTagCache()) ? EActivationRefusal.None : EActivationRefusal.Requirements;
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
-        // Cancel and block by tag, and While active (FEAT-5)
+        // Cancel and block by tag, and While active
         // ═══════════════════════════════════════════════════════════════════════════
 
         // How many abilities run, over every policy, for a copy of their slots
@@ -494,14 +494,14 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// Hears each change to the caster's tags, which a running ability's While active group may fail on, and checks
         /// at once, as tag events are heard. Checked at the next step, a stun let a channel's tick that came due first
-        /// land (FEAT-5).
+        /// land.
         /// </summary>
         internal void HearTagChange(TagChange change)
         {
             tagsChangedWhileActive = true;
             if (!checkingWhileActive) CheckWhileActive();
 
-            // A tag gained sets off the abilities it triggers (FEAT-4)
+            // A tag gained sets off the abilities it triggers
             if (change.Added && AbilityCache is { Count: > 0 })
             {
                 gainedTags.Add(change.Tag);
@@ -510,19 +510,19 @@ namespace FarEmerald.PlayForge
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
-        // Triggers (FEAT-4)
+        // Triggers
         // ═══════════════════════════════════════════════════════════════════════════
 
         /// <summary>
         /// Sends a gameplay event to the entity: each ability it knows whose trigger is a gameplay event under the event's
         /// tag, or a tag above it, activates, in slot order, with the event's data, its target among it. The callbacks
-        /// hear the event. How many activated. An ability activated only when code asked for it (FEAT-4).
+        /// hear the event. How many activated. An ability activated only when code asked for it.
         /// </summary>
         public int SendGameplayEvent(Tag eventTag, ProcessDataPacket data = null)
         {
             if (!eventTag.IsValid) return 0;
 
-            // In its combat log, where the project writes the event (TW-22)
+            // In its combat log, where the project writes the event
             if (ForgeCombatLog.Writes(eventTag)) Self.GetCombatLog()?.WriteEvent(eventTag, data, Self);
             Callbacks.GameplayEventReceived(eventTag, data);
             return FireTriggers(EAbilityTriggerSource.GameplayEvent, eventTag, data);
@@ -555,7 +555,7 @@ namespace FarEmerald.PlayForge
             foreach (int slot in AbilityCache.Keys.OrderBy(index => index).ToList())
             {
                 if (!AbilityCache.TryGetValue(slot, out var container) || !IsTriggeredBy(container.Spec.Base, source, tag)) continue;
-                // The trigger's impact filters and its chance, rolled once for the event (TW-5)
+                // The trigger's impact filters and its chance, rolled once for the event
                 var trigger = AcceptingTrigger(container.Spec.Base, source, tag, data);
                 if (trigger == null) continue;
                 var request = data;
@@ -592,17 +592,17 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// Whether an ability it knows is set off by a gameplay event under <paramref name="eventTag"/>: the core sends its
-        /// own events only where one is, so an entity that listens for none pays nothing (TW-5).
+        /// own events only where one is, so an entity that listens for none pays nothing.
         /// </summary>
         public bool ListensFor(Tag eventTag)
         {
             if (!eventTag.IsValid) return false;
 
-            // A task waiting for it, as a Wait For Event, hears it (FN-24)
+            // A task waiting for it, as a Wait For Event, hears it
             foreach (var awaited in awaitedEvents.Keys)
                 if (eventTag.MatchesOrIsChildOf(awaited)) return true;
 
-            // Its combat log hears the events the project writes, though no ability listens (TW-22)
+            // Its combat log hears the events the project writes, though no ability listens
             if (ForgeCombatLog.Writes(eventTag)) return true;
             if (AbilityCache == null || AbilityCache.Count == 0) return false;
             foreach (var container in AbilityCache.Values)
@@ -610,7 +610,7 @@ namespace FarEmerald.PlayForge
             return false;
         }
 
-        // The events tasks wait for, each by how many wait, which the core sends while one does (FN-24)
+        // The events tasks wait for, each by how many wait, which the core sends while one does
         private readonly Dictionary<Tag, int> awaitedEvents = new();
 
         /// <summary>
@@ -624,7 +624,7 @@ namespace FarEmerald.PlayForge
             awaitedEvents[eventTag] = waiting + 1;
         }
 
-        /// <summary>A task stops waiting for events under <paramref name="eventTag"/> (FN-24).</summary>
+        /// <summary>A task stops waiting for events under <paramref name="eventTag"/>.</summary>
         internal void StopAwaiting(Tag eventTag)
         {
             if (!awaitedEvents.TryGetValue(eventTag, out int waiting)) return;
@@ -644,7 +644,7 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// Interrupts each running ability whose While active group its caster no longer passes, once the tags have
         /// changed: a stun ends a channel. Called as the tags change, and each step as well, after the effects tick.
-        /// Requirements weren't checked once an ability ran (FEAT-5).
+        /// Requirements weren't checked once an ability ran.
         /// </summary>
         internal void CheckWhileActive()
         {
@@ -671,7 +671,7 @@ namespace FarEmerald.PlayForge
             if (count == 0) return;
             var tags = Self.GetTagCache();
 
-            // The crowd control its caster is under breaks what it stops, as a stun breaks a channel (TW-16)
+            // The crowd control its caster is under breaks what it stops, as a stun breaks a channel
             var crowdControl = Self.GetCrowdControl();
             var slots = ArrayPool<int>.Shared.Rent(count);
             try
@@ -693,9 +693,9 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// Activates the ability the request names, if it may run. The ability runs inside this call until one of its
         /// tasks waits: its claim, its targeting and its first stage. So an instant ability has ended, and its callbacks
-        /// have fired, by the time this returns (Decision 25). An ability asked for again while its own activation call
+        /// have fired, by the time this returns. An ability asked for again while its own activation call
         /// still runs, from its own callbacks or from another ability's that it started, starts next frame instead, so
-        /// a loop of instant activations goes round once a frame (TS-8).
+        /// a loop of instant activations goes round once a frame.
         /// </summary>
         /// <returns>True if the ability activated, waits in the input buffer, or was put off to the next frame.</returns>
         public bool TryActivateAbility(AbilityActivationRequest req) => TryActivateAbility(req, out _);
@@ -703,7 +703,7 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// Activates the ability the request names, as <see cref="TryActivateAbility(AbilityActivationRequest)"/> does, and
         /// says why where it's refused, as the callbacks' <see cref="AbilitySystemCallbacks.OnAbilityRefused"/> tells it. A
-        /// refused activation said only false (FEAT-17).
+        /// refused activation said only false.
         /// </summary>
         public bool TryActivateAbility(AbilityActivationRequest req, out ActivationRefusal refusal)
         {
@@ -714,7 +714,7 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// Activates the ability by its asset, in the first slot that holds it, and says why where it's refused. An
-        /// ability activated only by its slot (FEAT-17).
+        /// ability activated only by its slot.
         /// </summary>
         public bool TryActivateAbility(Ability ability, out ActivationRefusal refusal, ProcessDataPacket data = null,
             EAbilityActivationPolicyExtended? policy = null)
@@ -734,7 +734,7 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// Activates the first ability, by slot, whose asset tag or a context tag is <paramref name="tag"/> or under it, and
         /// says why where none activates: the first one's refusal, or not known where none carries the tag. One call
-        /// activates one ability (FEAT-17).
+        /// activates one ability.
         /// </summary>
         public bool TryActivateAbility(Tag tag, out ActivationRefusal refusal, ProcessDataPacket data = null,
             EAbilityActivationPolicyExtended? policy = null)
@@ -779,12 +779,12 @@ namespace FarEmerald.PlayForge
 
         private bool TryActivate(AbilityActivationRequest req, bool fromBuffer, out ActivationRefusal refusal)
         {
-            // Under its own marker in the Profiler (FEAT-18)
+            // Under its own marker in the Profiler
             using var sample = ForgeProfiler.ActivateAbility.Auto();
 
             // Before the packet, which reads the entity: an ended entity's system is off, and a Mono entity may be
-            // destroyed by then (GAS-52)
-            // Named for the ability its slot holds, where it holds one, so a stop or a track on the ability hears it (GAS-87)
+            // destroyed by then
+            // Named for the ability its slot holds, where it holds one, so a stop or a track on the ability hears it
             if (!Enabled)
                 return Refuse(out refusal, AbilityCache.TryGetValue(req.Index, out var held) ? held.Spec?.Base : null, req.Index,
                     EActivationRefusal.Disabled);
@@ -798,7 +798,7 @@ namespace FarEmerald.PlayForge
             // Not refused, the request activated, waits in the buffer, or starts next frame
             refusal = new ActivationRefusal(ability, req.Index, EActivationRefusal.None);
 
-            // A running stage's block refuses it, unless, under the Queue policy, it may wait for the block to lift (FEAT-6)
+            // A running stage's block refuses it, unless, under the Queue policy, it may wait for the block to lift
             if (IsBlocked(ability))
             {
                 if (!fromBuffer && req.Policy == EAbilityActivationPolicy.QueueActivationIfBusy && BufferActivation(req)) return true;
@@ -806,7 +806,7 @@ namespace FarEmerald.PlayForge
             }
 
             // Run at once, it nested inside its own activation, and a loop of instant activations nested until the
-            // stack overflowed (TS-8)
+            // stack overflowed
             if (container.IsActivating)
             {
                 ActivateNextFrame(container, req).Forget();
@@ -816,10 +816,10 @@ namespace FarEmerald.PlayForge
             // Busy, a request from the buffer waits on in its slot
             if (fromBuffer && IsClaimingPolicy(req.Policy)) return Refuse(out refusal, ability, req.Index, EActivationRefusal.Busy);
 
-            // Its chance to activate, rolled once for the activation, as it would start (TW-8)
+            // Its chance to activate, rolled once for the activation, as it would start
             if (!RollsToActivate(ability, data)) return Refuse(out refusal, ability, req.Index, EActivationRefusal.Chance);
 
-            // Each running ability in a stage this one cancels ends first, so this one starts clear of it (FEAT-5)
+            // Each running ability in a stage this one cancels ends first, so this one starts clear of it
             CancelAbilitiesCancelledBy(ability);
 
             why = ProcessActivationRequest(data);
@@ -827,7 +827,7 @@ namespace FarEmerald.PlayForge
             return true;
         }
 
-        // Whether an ability's chance to activate comes up; one that can't miss draws nothing (TW-8)
+        // Whether an ability's chance to activate comes up; one that can't miss draws nothing
         private static bool RollsToActivate(Ability ability, AbilityDataPacket data)
         {
             var chance = ability.Definition?.ChanceToActivate;
@@ -850,7 +850,7 @@ namespace FarEmerald.PlayForge
             if (AbilityCache.TryGetValue(req.Index, out var cached) && cached == container) TryActivateAbility(req);
         }
         
-        // What the policy refuses, or None where the ability activated or waits in the buffer (FEAT-17)
+        // What the policy refuses, or None where the ability activated or waits in the buffer
         private EActivationRefusal ProcessActivationRequest(AbilityDataPacket data)
         {
             var container = AbilityCache[data.Request.Index];
@@ -886,7 +886,7 @@ namespace FarEmerald.PlayForge
         }
 
         // Puts a request in its ability's slot in the buffer, which a new press refreshes, with its window. A window of 0
-        // doesn't wait, so the request is refused (FEAT-6)
+        // doesn't wait, so the request is refused
         private bool BufferActivation(AbilityActivationRequest req)
         {
             if (!AbilityCache.TryGetValue(req.Index, out var container)) return false;
@@ -907,7 +907,7 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// Fires the buffered request that should go first and can start now: the highest priority, then the newest.
-        /// One that can't yet, as while a claim or a block holds, waits on in its slot. One fires each time (FEAT-6).
+        /// One that can't yet, as while a claim or a block holds, waits on in its slot. One fires each time.
         /// </summary>
         private void FireBuffered()
         {
@@ -934,7 +934,7 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// Tries the buffer, then counts its requests' windows down by the caster's time and lets go of those that ran out.
         /// Each step, after the effects tick, so a press waits out a block's end or a cooldown's in time; paused, the
-        /// entity doesn't step, and the windows wait too (FEAT-6).
+        /// entity doesn't step, and the windows wait too.
         /// </summary>
         internal void StepBuffer(float deltaTime)
         {
@@ -955,7 +955,7 @@ namespace FarEmerald.PlayForge
 
             foreach (var policy in ActiveCache.Keys)
             {
-                // Through Inject, which walks a copy of the set its interrupt empties (GAS-53)
+                // Through Inject, which walks a copy of the set its interrupt empties
                 Inject(policy, InterruptSequenceInjection.Instance);
                 ActiveCache[policy].Clear();
             }
@@ -982,7 +982,7 @@ namespace FarEmerald.PlayForge
             if (count == 0) return;
 
             // From a copy: an interrupted ability ends inside the interrupt and takes itself off this set, so walking the
-            // set threw once the first had ended, and the rest ran on (GAS-53). Rented, as a stun may interrupt often
+            // set threw once the first had ended, and the rest ran on. Rented, as a stun may interrupt often
             var indices = ArrayPool<int>.Shared.Rent(count);
             try
             {
@@ -1009,8 +1009,8 @@ namespace FarEmerald.PlayForge
         public bool ClaimActive(AbilitySpecContainer container, AbilityDataPacket data)
         {
             // The container's own slot, under the policy the activation asked for. The claim went to the first slot
-            // holding the same ability (GAS-21), and under the definition's policy, where EndActivation never
-            // looked (TS-T)
+            // holding the same ability, and under the definition's policy, where EndActivation never
+            // looked
             if (!AbilityCache.TryGetValue(container.Index, out var cached) || cached != container) return false;
 
             Callbacks.AbilityClaimed(AbilityCallbackStatus.GenerateForAbilityEvent(data));
@@ -1018,7 +1018,7 @@ namespace FarEmerald.PlayForge
 
             ActiveCache[data.Request.Policy].Add(container.Index);
 
-            // Its components hear it start (FN-14)
+            // Its components hear it start
             container.Spec.HearStart(data);
 
             return true;
@@ -1030,13 +1030,13 @@ namespace FarEmerald.PlayForge
         /// </summary>
         public void ReleaseClaim(AbilitySpecContainer container, AbilityDataPacket data)
         {
-            // A removed ability lets go too, or what's queued behind it waits on someone else (GAS-20)
+            // A removed ability lets go too, or what's queued behind it waits on someone else
             if (data != null)
             {
                 Callbacks.AbilityClaimReleased(AbilityCallbackStatus.GenerateForAbilityEvent(data));
             }
 
-            // The buffer's best request fires now that the claim is released (FEAT-6)
+            // The buffer's best request fires now that the claim is released
             FireBuffered();
         }
 
@@ -1046,23 +1046,23 @@ namespace FarEmerald.PlayForge
         /// </summary>
         public void EndActivation(AbilitySpecContainer container, AbilityDataPacket data, EAbilityEnd how = EAbilityEnd.Done)
         {
-            // A removed ability's slot left the active list with it, and may hold another ability by now (GAS-20)
+            // A removed ability's slot left the active list with it, and may hold another ability by now
             if (AbilityCache.TryGetValue(container.Index, out var cached) && cached == container)
             {
                 var policy = data?.Request.Policy
                              ?? container.Spec.Base.Definition.ActivationPolicy.Translate(this);
 
-                // Overlapping activations share the slot, which stays while one under this policy still runs (TS-T)
+                // Overlapping activations share the slot, which stays while one under this policy still runs
                 if (!container.IsActiveUnder(policy)) ActiveCache[policy].Remove(container.Index);
             }
 
-            // After the active list is told, so that a listener finds the ability over (TS-9)
+            // After the active list is told, so that a listener finds the ability over
             if (data != null)
             {
                 Callbacks.AbilityEnded(AbilityCallbackStatus.GenerateForAbilityEvent(data));
             }
 
-            // Its components hear it end, by how it did (FN-14)
+            // Its components hear it end, by how it did
             container.Spec.HearEnd(data, how);
         }
 
@@ -1082,7 +1082,7 @@ namespace FarEmerald.PlayForge
 
             // Run effect-specific workers — only ICarrierApplication carriers have a
             // worker lifecycle. Synthetic delta carriers (SourceAttributeImpact, etc.)
-            // skip this entirely. A modifier coming off is no impact to them, nor a hit to the impact workers (GAS-85)
+            // skip this entirely. A modifier coming off is no impact to them, nor a hit to the impact workers
             if (!impactData.Ends && impactData.SourcedModifier.Carrier is ICarrierApplication appCarrier)
             {
                 var effectContext = new EffectWorkerContext(
@@ -1122,7 +1122,7 @@ namespace FarEmerald.PlayForge
     }
 
     // What an activation does when another holds its claim, which the inspectors show as When Busy. The names the
-    // inspectors show say the choice, as the Ability mockup does: Queue, not Queue Activation If Busy (ED-37)
+    // inspectors show say the choice: Queue, not Queue Activation If Busy
     public enum EAbilityActivationPolicy
     {
         /// <summary>

@@ -8,8 +8,8 @@ namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
     /// Where each help (?) button leads: a page in the package's Documentation folder, and the section on it. This one
-    /// table replaces 49 links to a hosted site on a domain PlayForge doesn't own, some of which named the wrong page
-    /// (ED-16). A hosted site would change only <see cref="Open"/>.
+    /// table replaces 49 links to a hosted site on a domain PlayForge doesn't own, some of which named the wrong page.
+    /// A hosted site would change only <see cref="Open"/>.
     /// </summary>
     internal static class ForgeDocs
     {

@@ -4,7 +4,7 @@ using UnityEngine;
 namespace FarEmerald.PlayForge
 {
     /// <summary>
-    /// What an ability spends of an attribute as it's used (TW-29): the attribute it names, or the one playing the role it
+    /// What an ability spends of an attribute as it's used: the attribute it names, or the one playing the role it
     /// names in the project, and how much, a number that can scale by level. It's paid beside the ability's Cost effect.
     /// </summary>
     [Serializable]

@@ -20,7 +20,7 @@ namespace FarEmerald.PlayForge
         public TaskSequenceDefinition Definition { get; }
         
         // Every run in progress, newest last. Each has a runtime of its own, because one slot left all but the
-        // newest run out of reach when a sequence ran more than once (TS-I)
+        // newest run out of reach when a sequence ran more than once
         private readonly List<TaskSequenceRuntime> _runs = new();
 
         /// <summary>The newest run's runtime (null when not running).</summary>
@@ -48,8 +48,8 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// Registers the sequence with ProcessControl and runs it, under the packet's source when the packet is an
-        /// ability's. The packet's static type picked the handler, so an ability's packet put its sequence under GameRoot
-        /// (FEAT-15, GAS-52). Null when ProcessControl refuses it.
+        /// ability's. The packet's static type picked the handler, so an ability's packet put its sequence under GameRoot.
+        /// Null when ProcessControl refuses it.
         /// </summary>
         public ProcessRelay RegisterAndRun(SequenceDataPacket data) => ProcessControl.Register(this).With(data).Run().Relay;
         
@@ -246,7 +246,7 @@ namespace FarEmerald.PlayForge
             {
                 if (_conditions.Count > 0) return true;
 
-                // By index: Any through LINQ allocated its enumerator each time the chain was read (TS-5)
+                // By index: Any through LINQ allocated its enumerator each time the chain was read
                 for (int i = 0; i < _sequences.Count; i++)
                 {
                     if (_sequences[i].HasConditions) return true;
@@ -371,7 +371,7 @@ namespace FarEmerald.PlayForge
 
             Data = seqData;
 
-            // Given back at the end, as a sequence gives back the packet's runtime (TS-F)
+            // Given back at the end, as a sequence gives back the packet's runtime
             var outerChain = seqData.Chain;
             seqData.Chain = this;
 
@@ -386,7 +386,7 @@ namespace FarEmerald.PlayForge
             try
             {
                 // A loop: a repeat used to call Run again from inside the last one, a level deeper each time
-                // round (TS-O)
+                // round
                 while (true)
                 {
                     int startFrame = ForgeTime.FrameCount;
@@ -512,7 +512,7 @@ namespace FarEmerald.PlayForge
             return !_interrupted && _currentIndex >= _sequences.Count - 1;
         }
 
-        // Between two sequences there's no runtime to ask, and asking threw (TS-O)
+        // Between two sequences there's no runtime to ask, and asking threw
         public bool IsCriticalSection => _currentSequence?.Runtime?.IsCriticalSection ?? false;
 
         // ═══════════════════════════════════════════════════════════════════════════

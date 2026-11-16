@@ -4,8 +4,8 @@ using System.Collections.Generic;
 namespace FarEmerald.PlayForge
 {
     /// <summary>
-    /// The carrier a number's scaler evaluates against where its context has none, as a task's or a process's number
-    /// (FEAT-29). Scalers read an impact carrier, and most sites have none: a context fills one of these, which answers as
+    /// The carrier a number's scaler evaluates against where its context has none, as a task's or a process's number.
+    /// Scalers read an impact carrier, and most sites have none: a context fills one of these, which answers as
     /// a carrier would from what the context holds. They're kept and reused, one for each depth a read nests to, so a read
     /// allocates nothing. The leveler derivation process attributes used allocated on every read.
     /// </summary>

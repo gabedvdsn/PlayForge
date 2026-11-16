@@ -549,7 +549,7 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// Builds a SyncedTaskSequence for per-frame stepping, as <see cref="TaskSequenceDefinition.BuildSyncRunner"/>
-        /// does. This was a second copy of it, which fell behind (TS-Q).
+        /// does. This was a second copy of it, which fell behind.
         /// </summary>
         public SyncedTaskSequence BuildSyncRunner() => Build().BuildSyncRunner();
     }

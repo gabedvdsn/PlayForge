@@ -1,7 +1,7 @@
 namespace FarEmerald.PlayForge
 {
     /// <summary>
-    /// The part of an attribute's value a number reads (TW-9): its current, its base, what's missing of it (base − current),
+    /// The part of an attribute's value a number reads: its current, its base, what's missing of it (base − current),
     /// or its share (current ÷ base). × Attribute, the cached attribute scaler and the Attribute condition read through it.
     /// </summary>
     public static class AttributeParts

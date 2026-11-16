@@ -102,7 +102,7 @@ namespace FarEmerald.PlayForge.Editor
             if (template == null) return modified;
 
             // The family from one search of the project: each child's own children were searched for over the project
-            // again (ED-44)
+            // again
             Cascade(template, ChildrenByTemplate(template.GetType()), modified, new HashSet<BaseForgeAsset>());
             return modified;
         }
@@ -211,7 +211,7 @@ namespace FarEmerald.PlayForge.Editor
         /// <summary>
         /// Every asset of a type in the project, by the template it names, from one search. A family's members, looked for
         /// one at a time, searched the project and loaded each of its assets of the type once for every member, so a push
-        /// to 2,000 children loaded 2,000 assets 2,000 times (ED-44).
+        /// to 2,000 children loaded 2,000 assets 2,000 times.
         /// </summary>
         public static Dictionary<BaseForgeAsset, List<BaseForgeAsset>> ChildrenByTemplate(Type type)
         {
@@ -818,7 +818,7 @@ namespace FarEmerald.PlayForge.Editor
         private static void CopyManagedReference(SerializedProperty source, SerializedProperty dest)
         {
             // One equal already, in its kind and its fields, is left as it is: a copy gave it a new reference id, a change
-            // to the child's file the push didn't make, as each push did to an ability's Recharge (TW-17)
+            // to the child's file the push didn't make, as each push did to an ability's Recharge
             if (AreManagedReferencesEqual(source, dest)) return;
 
             var srcObj = source.managedReferenceValue;

@@ -5,7 +5,7 @@ using UnityEngine.UIElements;
 namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
-    /// An effect's transfer (TW-20): when it moves, who gives and of what, who gets and in what, which of the values, and how
+    /// An effect's transfer: when it moves, who gives and of what, who gets and in what, which of the values, and how
     /// much, each a field of its own as an attribute cost's are.
     /// </summary>
     [CustomPropertyDrawer(typeof(AttributeTransfer))]

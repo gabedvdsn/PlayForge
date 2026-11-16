@@ -5,7 +5,7 @@ using UnityEngine;
 namespace FarEmerald.PlayForge
 {
     /// <summary>
-    /// An attribute's part in a project (TW-29): a role, by its tag, and the attribute that plays it. PlayForge's features
+    /// An attribute's part in a project: a role, by its tag, and the attribute that plays it. PlayForge's features
     /// read the roles it ships, as death at 0 reads <see cref="Tags.ROLE_HEALTH"/>; a game's code reads its own.
     /// </summary>
     [Serializable]
@@ -20,7 +20,7 @@ namespace FarEmerald.PlayForge
     }
 
     /// <summary>
-    /// A Forge Project's settings (TW-29, Decision 57): what its game reads as it runs, its attributes' roles and the crowd
+    /// A Forge Project's settings: what its game reads as it runs, its attributes' roles and the crowd
     /// control rules an entity follows where it names none of its own. A running game finds them through its GameRoot.
     /// </summary>
     [Serializable]
@@ -81,7 +81,7 @@ namespace FarEmerald.PlayForge
     }
 
     /// <summary>
-    /// The attributes playing roles in the current project (TW-29): PlayForge's features read the roles it ships, as
+    /// The attributes playing roles in the current project: PlayForge's features read the roles it ships, as
     /// <see cref="Tags.ROLE_HEALTH"/>, and a game's code reads its own by their tags.
     /// </summary>
     public static class ForgeRoles

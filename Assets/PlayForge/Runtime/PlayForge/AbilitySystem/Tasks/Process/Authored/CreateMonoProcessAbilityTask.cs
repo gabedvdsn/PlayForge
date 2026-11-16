@@ -9,7 +9,7 @@ namespace FarEmerald.PlayForge
 {
     /// <summary>
     /// Spawns mono processes, as a projectile, as the ability runs. What it spawns takes the ability as its origin, so the
-    /// effects it applies are the caster's at the ability's level, and its attributes can start as the caster's (GAS-65).
+    /// effects it applies are the caster's at the ability's level, and its attributes can start as the caster's.
     /// It spawns the processes the activation's data holds under <see cref="DataTag"/>, or, where the data holds none or
     /// <see cref="InternalIsOverride"/> is on, its own.
     /// </summary>
@@ -27,7 +27,7 @@ namespace FarEmerald.PlayForge
         [Tooltip("Where a spawned process appears: where the data's Position says, or else where its prefab stands; at the caster, as a projectile does; or at the ability's target, as a fire on the ground does")]
         public ESpawnPoint SpawnAt = ESpawnPoint.Data;
 
-        /// <summary>Where a spawned process appears (GAS-67).</summary>
+        /// <summary>Where a spawned process appears.</summary>
         public enum ESpawnPoint
         {
             [InspectorName("As Its Data Says")] Data,
@@ -49,14 +49,14 @@ namespace FarEmerald.PlayForge
         public override UniTask Activate(AbilityDataPacket data, CancellationToken token)
         {
             // What it spawns takes the ability as its origin. Nothing set it, so a process fell back to GameRoot, and a
-            // projectile took GameRoot's speed and applied GameRoot's effects (GAS-65)
+            // projectile took GameRoot's speed and applied GameRoot's effects
             if (!data.Contains(Tags.DERIVATION)) data.SetPrimary(Tags.DERIVATION, data.EffectOrigin);
 
             var source = data.EffectOrigin.GetSource();
 
             // Placed where Spawn At says for its registration alone, as a process places itself at its data's Position as it
             // starts, and the data put back after, since the ability's other tasks read it too. A process appeared where
-            // its prefab stood unless the data held a Position, so a projectile left the world's origin (GAS-67)
+            // its prefab stood unless the data held a Position, so a projectile left the world's origin
             bool placed = TrySpawnPoint(data, source, out var point);
             object before = null;
             bool held = placed && data.TryGet(Tags.POSITION, EDataTarget.Primary, out before);
@@ -101,7 +101,7 @@ namespace FarEmerald.PlayForge
         }
 
         // The data's processes, or, where it holds none or the task's own override it, the task's own. The task's own
-        // were spawned only with InternalIsOverride on, so a task given processes and nothing else spawned none (GAS-65)
+        // were spawned only with InternalIsOverride on, so a task given processes and nothing else spawned none
         private IEnumerable<AbstractMonoProcess> ProcessesFor(AbilityDataPacket data)
         {
             if (!InternalIsOverride)

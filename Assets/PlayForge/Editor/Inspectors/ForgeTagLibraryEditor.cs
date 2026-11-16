@@ -6,7 +6,7 @@ using UnityEngine.UIElements;
 
 namespace FarEmerald.PlayForge.Editor
 {
-    /// <summary>A Tag Library's inspector: the shared header, then its entries and its contexts (FN-12).</summary>
+    /// <summary>A Tag Library's inspector: the shared header, then its entries and its contexts.</summary>
     [CustomEditor(typeof(ForgeTagLibrary))]
     public class ForgeTagLibraryEditor : UnityEditor.Editor
     {

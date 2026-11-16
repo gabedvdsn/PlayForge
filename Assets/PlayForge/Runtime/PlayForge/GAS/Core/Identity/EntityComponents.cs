@@ -6,14 +6,14 @@ namespace FarEmerald.PlayForge
 {
     /// <summary>
     /// Bounty: an effect an entity's killer takes as it dies, from it, so the effect reads its level, as gold or experience;
-    /// and the killer's allies near it too, where it shares, as an assist (FN-14, Decision 77). A death no one dealt gives
+    /// and the killer's allies near it too, where it shares, as an assist. A death no one dealt gives
     /// none. An entity holds as many as it gives, each its own.
     /// </summary>
     [Serializable]
     [ForgeMenu(Description = "An effect the entity's killer takes as it dies, as gold or experience.")]
     public sealed class BountyEntityComponent : AbstractEntityComponent
     {
-        /// <summary>What it does, in one line (EP-5).</summary>
+        /// <summary>What it does, in one line.</summary>
         public override string Describe() => $"{NameOf(Effect)} to its killer";
 
         [Tooltip("The effect its killer takes as it dies, from it, so the effect reads its level: gold or experience")]
@@ -46,7 +46,7 @@ namespace FarEmerald.PlayForge
         }
     }
 
-    /// <summary>Where a Respawn brings its entity back (FN-14).</summary>
+    /// <summary>Where a Respawn brings its entity back.</summary>
     public enum ERespawnPlace
     {
         /// <summary>Where it stood as it registered: its spawn.</summary>
@@ -61,7 +61,7 @@ namespace FarEmerald.PlayForge
 
     /// <summary>
     /// Respawn: revives an entity that stays as it dies a while after, in its own time, at its home, where it died, or a
-    /// point, as a hero comes back at its fountain (FN-14, Decision 77). Its Death's On Revive effects land as it does, as
+    /// point, as a hero comes back at its fountain. Its Death's On Revive effects land as it does, as
     /// any revive's do; a revive before its time, as a buyback, ends the wait. An entity that ends as it dies has nothing to
     /// revive, which the Problems view says. An entity holds one at most.
     /// </summary>
@@ -69,7 +69,7 @@ namespace FarEmerald.PlayForge
     [ForgeMenu(Description = "Brings the entity back a while after it dies.")]
     public sealed class RespawnEntityComponent : AbstractEntityComponent
     {
-        /// <summary>What it does, in one line (EP-5).</summary>
+        /// <summary>What it does, in one line.</summary>
         public override string Describe() => $"Respawns after {NumberText.Of(Delay)} s, {System.Text.RegularExpressions.Regex.Replace(At.ToString(), "(?<=[a-z])(?=[A-Z])", " ").ToLowerInvariant()}";
 
         [Tooltip("How long after it dies it revives, in seconds of its own time, read at its level")]

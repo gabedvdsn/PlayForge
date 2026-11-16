@@ -21,7 +21,7 @@ namespace FarEmerald.PlayForge.Lab
     }
 
     /// <summary>
-    /// A test dummy (LAB-4), and the Demo's training dummy: a unit that stands and counts what it takes. It shows its
+    /// A test dummy, and the Demo's training dummy: a unit that stands and counts what it takes. It shows its
     /// damage a second over a window, the last blow with its types, and a short history of blows. It doesn't die unless
     /// asked: falling, it's revived where it stands at once. Left alone a few seconds, it mends to full, by the mend effect
     /// given, or else one of the lab's own.

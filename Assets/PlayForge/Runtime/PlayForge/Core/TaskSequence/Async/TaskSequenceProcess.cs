@@ -134,7 +134,7 @@ namespace FarEmerald.PlayForge
             base.WhenInitialize();
 
             // Made once, here. A sync sequence made a new one for every step, and a plain packet was swapped for an
-            // empty one, so what it carried never reached the tasks (TS-P)
+            // empty one, so what it carried never reached the tasks
             SeqData = regData as SequenceDataPacket ?? new SequenceDataPacket(regData);
         }
 
@@ -146,7 +146,7 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// For async: checks conditions. For sync: drives the sync runner. Every timing the process steps at comes
-        /// here: only Update used to, so a sequence set to step at any other never ran (TS-H).
+        /// here: only Update used to, so a sequence set to step at any other never ran.
         /// </summary>
         private void StepAt(EProcessStepTiming timing)
         {
@@ -190,7 +190,7 @@ namespace FarEmerald.PlayForge
                 // Synchronous processes don't use RunProcess — they step in WhenUpdate.
                 // Keep processActive true so the process stays alive.
                 processActive = true;
-                // Kept alive tick by tick: in a world of its own, its steps; elsewhere, Unity's frames, as the wait was (FEAT-10)
+                // Kept alive tick by tick: in a world of its own, its steps; elsewhere, Unity's frames, as the wait was
                 while (processActive) await ForgeTick.Next(token);
                 return;
             }
@@ -222,7 +222,7 @@ namespace FarEmerald.PlayForge
         /// </summary>
         public override void WhenTerminate()
         {
-            // Ended part way through, a sync sequence cleans the stage it's in, as an async one does (TS-P)
+            // Ended part way through, a sync sequence cleans the stage it's in, as an async one does
             if (IsSynchronous) _syncRunner?.Interrupt(SeqData);
 
             if (IsSynchronous && _sequence?.Definition?.Metadata?.OnTerminate != null)
@@ -321,7 +321,7 @@ namespace FarEmerald.PlayForge
         /// </summary>
         public bool Interrupt()
         {
-            // A sync sequence has no run to inject into: its runner stops, and its next step ends the process (TS-P)
+            // A sync sequence has no run to inject into: its runner stops, and its next step ends the process
             if (IsSynchronous) return _syncRunner.Interrupt(SeqData);
 
             return IsChain ? _chain.Interrupt() : Inject(InterruptSequenceInjection.Instance);

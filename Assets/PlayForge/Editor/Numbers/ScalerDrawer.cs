@@ -9,14 +9,13 @@ using UnityEngine.UIElements;
 namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
-    /// A scaler field drawn on its own, such as an effect's Delta Time Scaler or an attribute set element's Scaling, in
-    /// the canvas scaler board's terms (ED-33): its name and kind, the range it gives, then its content: its values per
+    /// A scaler field drawn on its own, such as an effect's Delta Time Scaler or an attribute set element's Scaling:
+    /// its name and kind, the range it gives, then its content: its values per
     /// level with their curve, Stretch Over Levels, the kind's own fields and its behaviours, or a Shared scaler's
     /// asset. It drew a tinted box with a colored border, a collapse arrow, Quick Fill tabs and an import button, and
-    /// rebuilt itself on a copy of the first selected asset, so an edit after a rebuild reached that asset alone (ED-12).
-    /// It writes nothing while it draws (ED-34). Its kinds file by category, as a number field's do (ED-81), and its field
-    /// menu is a number field's: Save as Scaler Asset, the Scaler assets, Import Values, Quick Fill and Make Constant
-    /// (ED-77).
+    /// rebuilt itself on a copy of the first selected asset, so an edit after a rebuild reached that asset alone.
+    /// It writes nothing while it draws. Its kinds file by category, as a number field's do, and its field
+    /// menu is a number field's: Save as Scaler Asset, the Scaler assets, Import Values, Quick Fill and Make Constant.
     /// </summary>
     [CustomPropertyDrawer(typeof(AbstractScaler), true)]
     public class ScalerDrawer : PropertyDrawer
@@ -26,11 +25,11 @@ namespace FarEmerald.PlayForge.Editor
         public override VisualElement CreatePropertyGUI(SerializedProperty property)
         {
             var root = new VisualElement { name = "ScalerRoot" };
-            // The style sheet lays out the scaler, wherever it's drawn (ED-20)
+            // The style sheet lays out the scaler, wherever it's drawn
             ForgeTheme.Apply(root);
             root.AddToClassList("pf-scaler-field");
             var label = preferredLabel ?? property.displayName;
-            // In the number field's menu's order, filed by category (ED-81)
+            // In the number field's menu's order, filed by category
             var kinds = NumberFields.InMenuOrder(ScalerFields.KindsFor(property));
 
             Type shownType = null;
@@ -43,8 +42,8 @@ namespace FarEmerald.PlayForge.Editor
             {
                 if (!ScalerFields.Alive(property)) return;
                 root.Clear();
-                // Selected scalers whose kinds differ show a mixed kind, and neither scaler's content as both's (ED-12); a
-                // Table and a By Level differ as kinds do (TW-27)
+                // Selected scalers whose kinds differ show a mixed kind, and neither scaler's content as both's; a
+                // Table and a By Level differ as kinds do
                 mixedKinds = EachAsset.Differ(property, ScalerFields.ChoiceOf);
                 shownType = ScalerFields.KindOf(property);
                 built = true;
@@ -62,13 +61,13 @@ namespace FarEmerald.PlayForge.Editor
                 kind.AddToClassList("pf-magnitude__kind-labelled");
                 kind.showMixedValue = mixedKinds;
                 NumberFields.FileByCategory(kind, kinds, shownType);
-                // PlayForge's dropdown, its kinds under their categories (EP-1)
+                // PlayForge's dropdown, its kinds under their categories
                 ForgePopupDropdown.Use(kind, "Kind", NumberFields.ContextOf(kinds));
                 row.Add(kind);
                 range = new Label { name = "Range" };
                 range.AddToClassList("pf-magnitude__range");
                 row.Add(range);
-                // The number field's menu, wherever a scaler is chosen (ED-77)
+                // The number field's menu, wherever a scaler is chosen
                 var menu = new ForgeIconButton(ForgeGlyphShape.Menu, $"{label} field menu", null) { name = "FieldMenu" };
                 menu.AddToClassList("pf-magnitude__menu");
                 menu.clicked += () => MagnitudeField.ShowMenu(property, menu, label, null);
@@ -76,7 +75,7 @@ namespace FarEmerald.PlayForge.Editor
                 root.Add(row);
 
                 // A scaler another list element shares, after Unity's array "+" copied its reference id, says so, with a
-                // button that gives this element its own copy. Building the drawer cloned it, so drawing changed it (ED-34)
+                // button that gives this element its own copy. Building the drawer cloned it, so drawing changed it
                 // In a multiple selection, the first selected asset whose element shares one
                 sharedWith = SharedWith(property);
                 if (sharedWith >= 0)
@@ -95,7 +94,7 @@ namespace FarEmerald.PlayForge.Editor
                 }
                 else if (shownType != null)
                 {
-                    // The scaler's fields sit on one block under its kind (ED-51, Decision 36)
+                    // The scaler's fields sit on one block under its kind
                     var content = ScalerFields.Content(property);
                     content.AddToClassList("pf-scaler-field__content");
                     content.AddToClassList(ScalerFields.BlockClass);
@@ -107,7 +106,7 @@ namespace FarEmerald.PlayForge.Editor
                     // A mixed kind takes the one chosen, even the first scaler's
                     if (!mixedKinds && change.newValue == change.previousValue) return;
                     var (type, spread) = change.newValue == NoKind ? ((Type)null, (bool?)null) : ScalerFields.Chosen(change.newValue, kinds);
-                    // Each selected asset's scaler starts from its own first value (ED-12)
+                    // Each selected asset's scaler starts from its own first value
                     ScalerFields.SetKind(property, type, own =>
                     {
                         var values = ScalerFields.ValuesOf(own);
@@ -118,7 +117,7 @@ namespace FarEmerald.PlayForge.Editor
                 Show();
             }
 
-            // The range of the values per level it reads; none for a kind that reads none, as a Group (ED-80)
+            // The range of the values per level it reads; none for a kind that reads none, as a Group
             string RangeOf(SerializedProperty each) =>
                 ScalerFields.ReadsValues(each) ? ScalerFields.RangeText(ScalerFields.ValuesOf(each), null) : "";
 
@@ -134,7 +133,7 @@ namespace FarEmerald.PlayForge.Editor
                 if (!ScalerFields.Alive(property)) return;
                 bool mixed = EachAsset.Differ(property, ScalerFields.KindOf);
                 // A copy of its own, given to this element or to the one it shared with, draws it again, so neither warns
-                // on of a scaler they no longer share (FN-2)
+                // on of a scaler they no longer share
                 if (!built || mixed != mixedKinds || ScalerFields.KindOf(property) != shownType || SharedWith(property) != sharedWith) Draw();
                 else Show();
             });
@@ -149,7 +148,7 @@ namespace FarEmerald.PlayForge.Editor
         /// <summary>
         /// Finds another element of the same list whose scaler has this property's managed-reference id. Unity's array
         /// "+" copies the previous element's id, so two elements can hold one scaler, and an edit to one changes both.
-        /// Returns that element's index, or -1. It only reads (ED-34).
+        /// Returns that element's index, or -1. It only reads.
         /// </summary>
         internal static int FindSharedSibling(SerializedProperty property)
         {
@@ -186,7 +185,7 @@ namespace FarEmerald.PlayForge.Editor
         }
 
         // Gives this element a scaler of its own, a copy of the one it shares, as one undoable step: in each selected asset
-        // whose element shares one (ED-12). A condition in a list takes it too (FEAT-29)
+        // whose element shares one. A condition in a list takes it too
         internal static void GiveOwnCopy(SerializedProperty property) =>
             EachAsset.Write(property, own =>
             {

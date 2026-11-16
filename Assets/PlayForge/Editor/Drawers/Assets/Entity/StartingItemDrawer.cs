@@ -5,8 +5,8 @@ using UnityEngine.UIElements;
 namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
-    /// A starting item on one row, as the Entity mockup draws it: the item, then an Equip checkbox, which equips it as
-    /// it's given. It drew as a foldout holding Item and Equip On Init (ED-37).
+    /// A starting item on one row: the item, then an Equip checkbox, which equips it as
+    /// it's given. It drew as a foldout holding Item and Equip On Init.
     /// </summary>
     [CustomPropertyDrawer(typeof(StartingItemContainer))]
     public class StartingItemDrawer : PropertyDrawer
@@ -14,7 +14,7 @@ namespace FarEmerald.PlayForge.Editor
         public override VisualElement CreatePropertyGUI(SerializedProperty property)
         {
             var row = new VisualElement();
-            // The style sheet lays out the row, wherever the drawer is drawn: in Unity's own inspector too (ED-20)
+            // The style sheet lays out the row, wherever the drawer is drawn: in Unity's own inspector too
             ForgeTheme.Apply(row);
             row.AddToClassList("pf-starting-item");
 

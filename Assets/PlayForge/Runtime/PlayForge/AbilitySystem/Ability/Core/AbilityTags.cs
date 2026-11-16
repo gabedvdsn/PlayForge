@@ -37,7 +37,7 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// Whether an ability is tagged with one of the tags, or a child of one, by its asset tag or a context tag, as
-        /// a stage's Cancelled By and Blocks name abilities (FEAT-5).
+        /// a stage's Cancelled By and Blocks name abilities.
         /// </summary>
         public static bool Names(List<Tag> tags, Ability ability)
         {

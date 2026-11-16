@@ -12,7 +12,7 @@ namespace FarEmerald.PlayForge
 
     /// <summary>
     /// What holds textures under tags, as an asset's Textures: an ability, an item, an effect, an entity or a running one.
-    /// An effect that inherits its texture takes its origin's under a tag (FN-25).
+    /// An effect that inherits its texture takes its origin's under a tag.
     /// </summary>
     public interface IHasTextures
     {

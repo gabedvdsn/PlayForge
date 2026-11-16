@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
-    /// <summary>How a stacking curve turns a count into its number (TW-9), with its a.</summary>
+    /// <summary>How a stacking curve turns a count into its number, with its a.</summary>
     public enum EStackingCurve
     {
         /// <summary>a × n: Soldier's Syringe's 15% a stack.</summary>
@@ -23,7 +23,7 @@ namespace FarEmerald.PlayForge
     }
 
     /// <summary>
-    /// A count through a stacking curve, then a number added (TW-9): an item's stacks, an effect's stacks or an attribute,
+    /// A count through a stacking curve, then a number added: an item's stacks, an effect's stacks or an attribute,
     /// read as its curve says. Risk of Rain's items stack this way, and Dota's armor, so a number that reads stacks or armor
     /// needs no worker of its own. Plus 1 makes a share a multiplier.
     /// </summary>

@@ -7,7 +7,7 @@ using Object = UnityEngine.Object;
 namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
-    /// A new asset's name and folder, then Create, as The Forge's Create menu asks (Q20). It makes the asset through the one
+    /// A new asset's name and folder, then Create, as The Forge's Create menu asks. It makes the asset through the one
     /// factory a field's New uses too, <see cref="ForgeAssetCreation.CreateNew"/>: a copy of the type's New Asset default,
     /// named, with the tag its name gives, in the folder Project Settings names. The Create tab's dialog set type
     /// settings that did nothing, and logged each asset it made.
@@ -22,8 +22,8 @@ namespace FarEmerald.PlayForge.Editor
         private Label fileLabel;
 
         /// <summary>
-        /// Asks for a new asset's name and folder, then makes it, from a preset where one's given (TW-24); the name starts as
-        /// the one given, as a field's New gives one for the asset that holds it (EP-8), or else "New" and the type's.
+        /// Asks for a new asset's name and folder, then makes it, from a preset where one's given; the name starts as
+        /// the one given, as a field's New gives one for the asset that holds it, or else "New" and the type's.
         /// </summary>
         public static ForgeNewAssetWindow Show(Type type, Action<Object> onCreated, ForgePreset preset = null, string name = null)
         {
@@ -33,7 +33,7 @@ namespace FarEmerald.PlayForge.Editor
             window.created = onCreated;
             string noun = preset?.AssetName ?? ForgeAssetTypes.NameOf(type);
             window.assetName = string.IsNullOrWhiteSpace(name) ? $"New {noun}" : name.Trim();
-            // In the active Forge Project (FEAT-34)
+            // In the active Forge Project
             window.folder = ForgeAssetCreation.FolderFor(type);
             window.titleContent = new GUIContent($"New {noun}");
             window.minSize = new Vector2(380, 128);
@@ -120,7 +120,7 @@ namespace FarEmerald.PlayForge.Editor
             });
         }
 
-        // The file the asset will be, its name alone (EP-13)
+        // The file the asset will be, its name alone
         private void ShowFile()
         {
             if (fileLabel == null || type == null) return;

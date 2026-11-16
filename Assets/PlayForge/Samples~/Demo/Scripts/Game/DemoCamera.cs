@@ -4,7 +4,7 @@ using UnityEngine;
 namespace FarEmerald.PlayForge.Samples.Demo
 {
     /// <summary>
-    /// The arena's camera: the Creator Lab's (LAB-7), following the player's hero from above and behind, at the offset its
+    /// The arena's camera: the Creator Lab's, following the player's hero from above and behind, at the offset its
     /// scene gives, and shaking as a camera shake cue asks, as Thunderclap's does.
     /// </summary>
     public class DemoCamera : LabCamera

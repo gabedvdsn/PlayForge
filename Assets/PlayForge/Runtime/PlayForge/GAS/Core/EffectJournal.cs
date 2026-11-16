@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace FarEmerald.PlayForge
 {
-    /// <summary>What an effect journal's entry tells (LAB-12).</summary>
+    /// <summary>What an effect journal's entry tells.</summary>
     public enum EEffectJournalKind
     {
         /// <summary>The effect landed on the entity.</summary>
@@ -25,7 +25,7 @@ namespace FarEmerald.PlayForge
         Worker,
     }
 
-    /// <summary>Where an action a worker queued stands (LAB-12).</summary>
+    /// <summary>Where an action a worker queued stands.</summary>
     public enum EJournalActionState
     {
         /// <summary>Queued, and not run yet.</summary>
@@ -38,7 +38,7 @@ namespace FarEmerald.PlayForge
         Dropped,
     }
 
-    /// <summary>An action a worker queued, as a journal keeps it: what it said it was, and whether it ran (LAB-12).</summary>
+    /// <summary>An action a worker queued, as a journal keeps it: what it said it was, and whether it ran.</summary>
     public sealed class EffectJournalAction
     {
         internal EffectJournalAction(IRootAction action)
@@ -58,7 +58,7 @@ namespace FarEmerald.PlayForge
     }
 
     /// <summary>
-    /// One entry of an effect journal (LAB-12): when, of what kind, on whom, the effect and who applied it, and what the kind
+    /// One entry of an effect journal: when, of what kind, on whom, the effect and who applied it, and what the kind
     /// says: why it was refused, how many ticks, the change it made, or which worker ran, at which of its effect's moments,
     /// on whose side, with the actions it queued.
     /// </summary>
@@ -98,7 +98,7 @@ namespace FarEmerald.PlayForge
         /// <summary>For an impact, what it changed the attribute by.</summary>
         public AttributeValue Change { get; internal set; }
 
-        /// <summary>For an impact, its run through its pipeline (TW-2), in a line; empty where none ran.</summary>
+        /// <summary>For an impact, its run through its pipeline, in a line; empty where none ran.</summary>
         public string Breakdown { get; internal set; } = "";
 
         /// <summary>For an application, its first impact's number read as it landed, part by part.</summary>
@@ -168,7 +168,7 @@ namespace FarEmerald.PlayForge
     }
 
     /// <summary>
-    /// An effect journal (LAB-12): each application, refusal (by requirement, immunity or chance), tick, impact and removal
+    /// An effect journal: each application, refusal (by requirement, immunity or chance), tick, impact and removal
     /// of an effect on the entities it listens to, with its number's trace as it lands, and each worker that ran for it, by
     /// its hook and its side, with the actions it queued and whether they ran. It keeps its last <see cref="Keep"/>
     /// entries, oldest first. It records only while it listens, and an entity no journal listens to pays nothing: the
@@ -207,7 +207,7 @@ namespace FarEmerald.PlayForge
         /// <summary>What it has heard, so a view knows when to read it again: an entry written, or an action run or dropped.</summary>
         public int Version { get; private set; }
 
-        /// <summary>Raised as it writes each entry, for a stop to watch for (LAB-14).</summary>
+        /// <summary>Raised as it writes each entry, for a stop to watch for.</summary>
         public event Action<EffectJournalEntry> Wrote;
 
         /// <summary>The entities it listens to.</summary>

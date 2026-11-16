@@ -5,7 +5,7 @@ namespace FarEmerald.PlayForge
 {
     /// <summary>
     /// A GAS on a GameObject. What makes it a GAS lives in <see cref="GASCore"/>, which it builds as it initializes and
-    /// forwards to. What stays here is the asset it is made from, its place in the scene, and how it goes away (GAS-S1).
+    /// forwards to. What stays here is the asset it is made from, its place in the scene, and how it goes away.
     /// </summary>
     public partial class GameplayAbilitySystem : LazyMonoProcess, IGameplayAbilitySystem, IHasTextures
     {
@@ -14,7 +14,7 @@ namespace FarEmerald.PlayForge
         // Built as this initializes, so null before then
         private GASCore core;
 
-        // What a save reads and writes past the hub's public face (FEAT-9)
+        // What a save reads and writes past the hub's public face
         internal GASCore Core => core;
 
         // Subsystems
@@ -31,7 +31,7 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// Callbacks for GAS-level events (frame completion, action queue, effects, etc.). Created with the
         /// component, so a caller can subscribe (to <c>OnSystemInitialized</c> above all) before the GAS is
-        /// registered and initialized; initialization keeps this instance (PF-013).
+        /// registered and initialized; initialization keeps this instance.
         /// </summary>
         public GameplayAbilitySystemCallbacks Callbacks { get; private set; } = new();
 
@@ -40,13 +40,13 @@ namespace FarEmerald.PlayForge
         {
             base.WhenInitialize();
 
-            // The registration data's sides, on this entity alone (GAS-47)
+            // The registration data's sides, on this entity alone
             var registered = regData.TryGet(Tags.AFFILIATION, EDataTarget.Primary, out List<Tag> sides) ? sides : null;
 
             core = new GASCore(this, Callbacks);
             core.Initialize(EntityData ? new RuntimeEntityIdentity(EntityData) : null, registered);
 
-            // An entity for the Mono Entities counter as it runs, GameRoot aside (FEAT-18)
+            // An entity for the Mono Entities counter as it runs, GameRoot aside
             if (this is not IManagerial && !counted)
             {
                 ForgeCounters.MonoEntities.Value++;
@@ -61,7 +61,7 @@ namespace FarEmerald.PlayForge
 
         public override void WhenLateUpdate() => EndOfFrame();
 
-        // Nothing starts on it from now on, and the base ends what it handles, its abilities among them (GAS-52)
+        // Nothing starts on it from now on, and the base ends what it handles, its abilities among them
         public override void WhenTerminate()
         {
             if (counted)
@@ -136,20 +136,20 @@ namespace FarEmerald.PlayForge
         public GameplayAbilitySystemCallbacks GetCallbacks() => Callbacks;
         public EffectModifierSet GetEffectModifiers() => core.EffectModifiers;
 
-        /// <summary>The auras it runs (TW-10).</summary>
+        /// <summary>The auras it runs.</summary>
         public AuraSet GetAuras() => core.Auras;
 
-        /// <summary>The crowd control rules its abilities follow (TW-16).</summary>
+        /// <summary>The crowd control rules its abilities follow.</summary>
         public CrowdControlRules GetCrowdControl() => core.CrowdControl;
 
-        /// <summary>The side changes it's under (TW-18).</summary>
+        /// <summary>The side changes it's under.</summary>
         public SideSet GetSides() => core?.Sides;
 
-        /// <summary>Its combat log (TW-22).</summary>
+        /// <summary>Its combat log.</summary>
         public CombatLog GetCombatLog() => core?.CombatLog;
 
         /// <summary>
-        /// Sets its own sides, as the game runs, which its tags follow (TW-18); before it initializes, its registration's,
+        /// Sets its own sides, as the game runs, which its tags follow; before it initializes, its registration's,
         /// which it takes as it does.
         /// </summary>
         public void SetAffiliation(List<Tag> sides)
@@ -170,7 +170,7 @@ namespace FarEmerald.PlayForge
         public ISource GetSource() => this;
         public IHasReadableDefinition GetReadableDefinition() => this;
 
-        // Its identity's textures, as an effect it applies may take one of them (FN-25)
+        // Its identity's textures, as an effect it applies may take one of them
         public IReadOnlyList<TextureItem> GetTextureItems() => EntityData != null ? EntityData.Textures : null;
         public List<Tag> GetContextTags() => EntityData.ContextTags;
         public TagCache GetTagCache() => TagCache;
@@ -187,7 +187,7 @@ namespace FarEmerald.PlayForge
 
         public void CommunicateTargetedIntent(AbstractGameplayMonoProcess entity)
         {
-            // Once: a process that runs again after a pause says it again (GAS-26)
+            // Once: a process that runs again after a pause says it again
             if (!regData.Contains(entity, Tags.TARGETED_INTENT)) regData.AddPayload(Tags.TARGETED_INTENT, entity);
         }
 

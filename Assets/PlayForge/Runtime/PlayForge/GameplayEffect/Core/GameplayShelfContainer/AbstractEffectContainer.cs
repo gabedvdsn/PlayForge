@@ -71,7 +71,7 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// Whether a tick falls due this frame. A duration's last tick falls due as the duration ends, and the
         /// two count down apart, so rounding could end the duration a hair before the tick, which then never
-        /// landed (GAS-33). A tick that near due on the duration's last frame is that tick.
+        /// landed. A tick that near due on the duration's last frame is that tick.
         /// </summary>
         /// <param name="timeUntilTick">Time to the tick, this frame included</param>
         /// <param name="period">Time between ticks</param>
@@ -86,7 +86,7 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// The time each stack has left and to its next tick, as a save keeps them: one of each, for a clock that counts one
-        /// stack at a time. A container whose clock is more than that overrides this and <see cref="RestoreClock"/> (FEAT-9).
+        /// stack at a time. A container whose clock is more than that overrides this and <see cref="RestoreClock"/>.
         /// </summary>
         protected internal virtual void CaptureClock(List<double> remaining, List<double> untilTick)
         {
@@ -95,7 +95,7 @@ namespace FarEmerald.PlayForge
         }
 
         // The clock as it is, which a container that keeps doubles gives in full, so a save keeps it to the last digit.
-        // A save took the floats the clock shows, so a restored effect ran on from a time a hair off (GAS-61)
+        // A save took the floats the clock shows, so a restored effect ran on from a time a hair off
         protected internal virtual double ExactDurationRemaining => NextDurationRemaining;
         protected internal virtual double ExactTimeUntilPeriodTick => TimeUntilPeriodTick;
         protected internal virtual void SetExactDurationRemaining(double duration) => SetDurationRemaining((float)duration);
@@ -104,7 +104,7 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// Sets the clock as a save left it: the duration and the time left, then the period and the time to the next tick.
         /// An infinite effect's duration, and the period of one that doesn't tick, stay the float.MaxValue its spec gave
-        /// it as it was made (FEAT-9).
+        /// it as it was made.
         /// </summary>
         protected internal virtual void RestoreClock(float total, float period, int stacks, IReadOnlyList<double> remaining, IReadOnlyList<double> untilTick)
         {
@@ -127,8 +127,8 @@ namespace FarEmerald.PlayForge
 
             ReverseImpact();
 
-            // Onto the target, where the OnApply and OnTick ones land. These went to the source (GAS-8). One made for the
-            // caster, where it says, onto the caster (TW-14)
+            // Onto the target, where the OnApply and OnTick ones land. These went to the source. One made for the
+            // caster, where it says, onto the caster
             foreach (var carrier in Spec.GetContainedCarriers(EApplyTickRemove.OnRemove))
             {
                 var onto = (carrier as IAttributeImpactCarrier)?.GetTarget() ?? Spec.Target;
@@ -147,7 +147,7 @@ namespace FarEmerald.PlayForge
         /// </summary>
         public void ReverseImpact()
         {
-            // What its lasting transfers hold, on both sides, wherever the target is (TW-20)
+            // What its lasting transfers hold, on both sides, wherever the target is
             ForgeTransfers.GiveBack(Spec);
 
             AttributeSystemComponent attrSystem = null;
@@ -165,10 +165,10 @@ namespace FarEmerald.PlayForge
         public IEnumerable<Tag> GetGrantedTags()
         {
             // Its own asset tag, as an ability or an item grants. This gave its source's, so a target carried the tag
-            // of whoever had affected it (GAS-14)
+            // of whoever had affected it
             yield return Spec.Base.GetAssetTag();
             foreach (var t in Spec.Base.GetGrantedTags()) yield return t;
-            // And those its modifiers add (TW-7)
+            // And those its modifiers add
             if (Spec.Changes != null)
                 foreach (var t in Spec.Changes.GrantedTags) yield return t;
         }

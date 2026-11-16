@@ -26,7 +26,7 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// Set once the targeting task gets to its end. Targeting cut short, by a throw or by anything ending its
-        /// sequence, has no target to give, and the ability goes no further (TS-V).
+        /// sequence, has no target to give, and the ability goes no further.
         /// </summary>
         public bool TargetingFinished { get; internal set; }
 
@@ -44,7 +44,7 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// The state a task keeps for this activation, made the first time it's asked for. A task is one object
-        /// shared by every activation of its ability, so whatever it keeps for an activation belongs here (TS-U).
+        /// shared by every activation of its ability, so whatever it keeps for an activation belongs here.
         /// </summary>
         public T GetTaskState<T>(AbstractAbilityTask task) where T : class, new()
         {
@@ -69,13 +69,13 @@ namespace FarEmerald.PlayForge
 
             if (request.Data is not null)
             {
-                // Lists of its own: these were the request's, so writing to one packet wrote to both (TS-X)
+                // Lists of its own: these were the request's, so writing to one packet wrote to both
                 foreach (var d in request.Data.Payload)
                 {
                     _payload[d.Key] = new List<object>(d.Value);
                 }
 
-                // And the magnitudes the caller set, for the effects the ability applies (FEAT-2)
+                // And the magnitudes the caller set, for the effects the ability applies
                 TakeSetByCaller(request.Data.SetByCallerMagnitudes);
             }
             
@@ -131,8 +131,8 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// Files the entity each targeting packet points at under Target Real, in the packets' order, where tasks, rules
         /// and spawned processes look for it, unless a target is there already. Targeting leaves only the packets, under
-        /// Target or the implicit tag, and nothing filed the entity, so Apply Effects never found its target (GAS-46).
-        /// Then only the first was filed, so an ability that targeted several reached one of them (GAS-62).
+        /// Target or the implicit tag, and nothing filed the entity, so Apply Effects never found its target.
+        /// Then only the first was filed, so an ability that targeted several reached one of them.
         /// </summary>
         public void ResolveTarget(Tag implicitTag)
         {

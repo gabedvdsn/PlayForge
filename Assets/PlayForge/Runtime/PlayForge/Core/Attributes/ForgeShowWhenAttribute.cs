@@ -4,9 +4,9 @@ namespace FarEmerald.PlayForge
 {
     /// <summary>
     /// Shows a field in its inspector only while another field of the same object holds one of the values given, as a
-    /// randomized scaler's multipliers show only for its Multiplier mode (ED-51). The inspector reads it; nothing at
+    /// randomized scaler's multipliers show only for its Multiplier mode. The inspector reads it; nothing at
     /// runtime does. The other field is an enum or a bool. A field can carry several, and shows while every one holds, as
-    /// an Asset Part number's worker key shows only for an effect's Worker Value (FEAT-29).
+    /// an Asset Part number's worker key shows only for an effect's Worker Value.
     /// </summary>
     [AttributeUsage(AttributeTargets.Field, AllowMultiple = true)]
     public sealed class ForgeShowWhenAttribute : System.Attribute

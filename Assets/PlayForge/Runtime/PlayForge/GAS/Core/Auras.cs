@@ -5,7 +5,7 @@ using UnityEngine;
 namespace FarEmerald.PlayForge
 {
     /// <summary>
-    /// An aura (TW-10, Decision 50): an effect that holds on each it takes near its holder, and comes off as they leave, as
+    /// An aura: an effect that holds on each it takes near its holder, and comes off as they leave, as
     /// Mekansm's or a captain's command aura does. An item's holds while it's equipped, an ability's while it's known, an
     /// effect's while it lasts on the one it's on, an entity's as it lives. It checks who's near every so often.
     /// </summary>
@@ -32,7 +32,7 @@ namespace FarEmerald.PlayForge
         [NumberMin(0f)] public ScalableFloat Interval = 0.25f;
     }
 
-    /// <summary>Gives a holder the auras it has, and takes them back (TW-10).</summary>
+    /// <summary>Gives a holder the auras it has, and takes them back.</summary>
     public static class ForgeAuras
     {
         /// <summary>Gives <paramref name="holder"/> each aura, which holds its effect on those near it from its next step.</summary>
@@ -51,7 +51,7 @@ namespace FarEmerald.PlayForge
                 if (entry != null) auras.Remove(entry);
         }
 
-        /// <summary>The auras a list of components holds, each an Aura component's; null where it holds none (FN-14).</summary>
+        /// <summary>The auras a list of components holds, each an Aura component's; null where it holds none.</summary>
         public static List<AuraEntry> Of<T>(List<T> components) where T : AbstractForgeComponent
         {
             if (components == null) return null;
@@ -62,55 +62,55 @@ namespace FarEmerald.PlayForge
         }
     }
 
-    /// <summary>A component that holds an aura: its holder's effect on those near it (TW-10, FN-14).</summary>
+    /// <summary>A component that holds an aura: its holder's effect on those near it.</summary>
     public interface IAuraComponent
     {
         /// <summary>The aura it holds.</summary>
         AuraEntry Aura { get; }
     }
 
-    /// <summary>An aura an effect holds while it lasts, on those near the one it's on (TW-10, FN-14).</summary>
+    /// <summary>An aura an effect holds while it lasts, on those near the one it's on.</summary>
     [Serializable]
     [ForgeMenu(Description = "Gives those near the target an aura's effects while the effect lasts.")]
     public sealed class AuraEffectComponent : AbstractEffectComponent, IAuraComponent
     {
-        /// <summary>What it does, in one line (EP-5).</summary>
+        /// <summary>What it does, in one line.</summary>
         public override string Describe() => $"{NameOf(Aura?.Effect)} on {Whom(Aura?.Takes ?? EAffinityFilter.Allies)} within {NumberText.Of(Aura?.Radius)}";
 
         public AuraEntry Aura = new();
         AuraEntry IAuraComponent.Aura => Aura;
     }
 
-    /// <summary>An aura an ability holds while its holder knows it, on those near its holder (TW-10, FN-14).</summary>
+    /// <summary>An aura an ability holds while its holder knows it, on those near its holder.</summary>
     [Serializable]
     [ForgeMenu(Description = "Gives those near the holder an aura's effects while it knows the ability.")]
     public sealed class AuraAbilityComponent : AbstractAbilityComponent, IAuraComponent
     {
-        /// <summary>What it does, in one line (EP-5).</summary>
+        /// <summary>What it does, in one line.</summary>
         public override string Describe() => $"{NameOf(Aura?.Effect)} on {Whom(Aura?.Takes ?? EAffinityFilter.Allies)} within {NumberText.Of(Aura?.Radius)}";
 
         public AuraEntry Aura = new();
         AuraEntry IAuraComponent.Aura => Aura;
     }
 
-    /// <summary>An aura an item holds while it's equipped, on those near its holder (TW-10, FN-14).</summary>
+    /// <summary>An aura an item holds while it's equipped, on those near its holder.</summary>
     [Serializable]
     [ForgeMenu(Description = "Gives those near the holder an aura's effects while the item is equipped.")]
     public sealed class AuraItemComponent : AbstractItemComponent, IAuraComponent
     {
-        /// <summary>What it does, in one line (EP-5).</summary>
+        /// <summary>What it does, in one line.</summary>
         public override string Describe() => $"{NameOf(Aura?.Effect)} on {Whom(Aura?.Takes ?? EAffinityFilter.Allies)} within {NumberText.Of(Aura?.Radius)}";
 
         public AuraEntry Aura = new();
         AuraEntry IAuraComponent.Aura => Aura;
     }
 
-    /// <summary>An aura an entity holds while it lives, on those near it (TW-10, FN-14).</summary>
+    /// <summary>An aura an entity holds while it lives, on those near it.</summary>
     [Serializable]
     [ForgeMenu(Description = "Gives those near the entity an aura's effects while it lives.")]
     public sealed class AuraEntityComponent : AbstractEntityComponent, IAuraComponent
     {
-        /// <summary>What it does, in one line (EP-5).</summary>
+        /// <summary>What it does, in one line.</summary>
         public override string Describe() => $"{NameOf(Aura?.Effect)} on {Whom(Aura?.Takes ?? EAffinityFilter.Allies)} within {NumberText.Of(Aura?.Radius)}";
 
         public AuraEntry Aura = new();
@@ -118,7 +118,7 @@ namespace FarEmerald.PlayForge
     }
 
     /// <summary>
-    /// An entity's running auras (TW-10): each checks who's near at its interval, by its holder's time, holds its effect on
+    /// An entity's running auras: each checks who's near at its interval, by its holder's time, holds its effect on
     /// each it takes, from an origin of its own, and takes it off as they leave, die or end, as its holder dies, or as the
     /// aura goes. Two of one aura, as two of an item, are two runs, each holding its own.
     /// </summary>
@@ -209,7 +209,7 @@ namespace FarEmerald.PlayForge
             }
 
             // On each near that hasn't it, or whose has ended on its own, as a durational effect does, in the project's
-            // resolve order (TW-31)
+            // resolve order
             ForgeResolveOrder.Sort(near);
             foreach (var target in near)
             {

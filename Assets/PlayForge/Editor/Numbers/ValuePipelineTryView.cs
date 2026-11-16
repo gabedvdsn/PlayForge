@@ -7,7 +7,7 @@ using UnityEngine.UIElements;
 namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
-    /// A Value Pipeline's Try section (EP-23), as a Scaler asset's is drawn: the value going in, whether chances come up,
+    /// A Value Pipeline's Try section, as a Scaler asset's is drawn: the value going in, whether chances come up,
     /// and its range of levels; a block for the caster and one for the target, each an Entity field that fills it and a
     /// row for each attribute the stages read there; a row for each key a caller sets; then a row of what comes out at each
     /// level, with the steps behind the selected level under it, each stage's value in and out and its note. What's typed

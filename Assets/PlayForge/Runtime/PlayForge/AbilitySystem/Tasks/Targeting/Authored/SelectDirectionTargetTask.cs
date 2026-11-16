@@ -44,7 +44,7 @@ namespace FarEmerald.PlayForge
 
         public override string Description => "Click to select a direction from caster";
 
-        // Where the data aims it: its point, or else its target's place (GAS-66)
+        // Where the data aims it: its point, or else its target's place
         private static bool TryGetDataAim(AbilityDataPacket data, out Vector3 point)
         {
             if (TryGetDataPoint(data, out point)) return true;
@@ -64,7 +64,7 @@ namespace FarEmerald.PlayForge
             float least = Read(MinDistance, data);
             var owner = data.EffectOrigin.GetSource();
             // From the caster's targeting packet, which every caster has. Through its transform, a runtime caster, which
-            // has none, always failed (GAS-38)
+            // has none, always failed
             var ownerPacket = owner?.GetTargetingPacket();
 
             if (ownerPacket == null)
@@ -75,7 +75,7 @@ namespace FarEmerald.PlayForge
 
             var origin = ownerPacket.position;
 
-            // Handed a point or a target, as an AI's activation hands it, it aims at it with no click (GAS-66)
+            // Handed a point or a target, as an AI's activation hands it, it aims at it with no click
             if (TakeTargetFromData && TryGetDataAim(data, out var aimAt))
             {
                 var toward = aimAt - origin;

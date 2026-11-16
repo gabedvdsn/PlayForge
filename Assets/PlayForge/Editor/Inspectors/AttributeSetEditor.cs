@@ -9,7 +9,7 @@ using static FarEmerald.PlayForge.Editor.ForgeDrawerStyles;
 namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
-    /// The Attribute Set inspector, in Docs/EDITOR_STYLE.md's terms (ED-37): Identity, Leveling, the set's Attributes,
+    /// The Attribute Set inspector: Identity, Leveling, the set's Attributes,
     /// Sub-Sets and Collision Settings, then All Attributes, the table of what the set gives an entity, then Workers,
     /// Local Data and Used By. A collapsed section shows one line, and the inspector takes its look from the style sheet.
     /// </summary>
@@ -22,7 +22,6 @@ namespace FarEmerald.PlayForge.Editor
 
         // Its fields write through the SerializedObject, so it edits a multiple selection; what acts on one set steps
         // aside: the name, the asset tag, linking, the attributes each set keeps of its own, All Attributes, and Used By
-        // (ED-12)
         protected override bool SupportsMultipleObjects => true;
 
         private IEnumerable<AttributeSet> Sets => targets.Cast<AttributeSet>();
@@ -100,10 +99,9 @@ namespace FarEmerald.PlayForge.Editor
 
         protected override void BuildInspectorContent(VisualElement parent)
         {
-            // The style doc's order: Identity, Leveling, the set's own sections, Workers and Local Data, then what uses
+            // The inspectors' order: Identity, Leveling, the set's own sections, Workers and Local Data, then what uses
             // the set. All Attributes, the table of what the set gives an entity, follows the sections that decide it.
             // Level Source sat apart from Leveling, and a Summary section opened a dialog that listed the attributes
-            // (ED-37)
             BuildIdentitySection(parent);
             BuildLevelingSection(parent);
             BuildAttributesSection(parent);
@@ -138,7 +136,7 @@ namespace FarEmerald.PlayForge.Editor
                 Title = "Identity",
                 HelpTopic = "attributesets/definition",
 
-                // Import and Clear leave the name, which identifies the set and gives its tag (ED-35)
+                // Import and Clear leave the name, which identifies the set and gives its tag
                 SerializedObject = serializedObject,
                 PropertyPaths = new[] { nameof(AttributeSet.Description), nameof(AttributeSet.Textures) },
                 OnImportComplete = OnSectionReplaced,
@@ -151,7 +149,7 @@ namespace FarEmerald.PlayForge.Editor
             nameField = CreateTextField("Name", "Name");
             nameField.AddToClassList(BaseField<string>.alignedFieldUssClassName);
             nameField.value = attributeSet.Name;
-            // Typing previews the tag; leaving the field stores the name and the tag in one undoable step (ED-12)
+            // Typing previews the tag; leaving the field stores the name and the tag in one undoable step
             nameField.RegisterValueChangedCallback(evt => UpdateAssetTagDisplay(evt.newValue));
             nameField.RegisterCallback<FocusOutEvent>(_ =>
             {
@@ -161,11 +159,11 @@ namespace FarEmerald.PlayForge.Editor
                 MarkDirty(attributeSet);
                 SyncAssetTag();
                 UpdateHeader();
-                // Its file follows its name (ED-70)
+                // Its file follows its name
                 RenameFile(attributeSet, nameField.value);
                 Repaint();
             });
-            // Each set's tag comes from its own name, so a multiple selection shows the names and can't rename (ED-12)
+            // Each set's tag comes from its own name, so a multiple selection shows the names and can't rename
             if (IsMultiple)
             {
                 nameField.SetEnabled(false);
@@ -175,11 +173,11 @@ namespace FarEmerald.PlayForge.Editor
             content.Add(nameField);
 
             // Description binds to its property, so an edit undoes. It wrote straight into the asset when it lost focus,
-            // with no Undo (ED-12).
+            // with no Undo.
             content.Add(CreateBoundTextField(nameof(AttributeSet.Description), "Description", multiline: true, minHeight: 18));
 
-            // The tag the name gives, under the name. It sat in a tinted, bordered box (ED-37). Each set has its own, so a
-            // multiple selection doesn't show one (ED-12)
+            // The tag the name gives, under the name. It sat in a tinted, bordered box. Each set has its own, so a
+            // multiple selection doesn't show one
             if (!IsMultiple)
             {
                 assetTagField = new ForgeAssetTagField();
@@ -226,11 +224,11 @@ namespace FarEmerald.PlayForge.Editor
             RebuildLevelingContent();
         }
 
-        // Leveling holds what Level Source did (ED-37), so the base editor's two rebuilds are one here
+        // Leveling holds what Level Source did, so the base editor's two rebuilds are one here
         protected override void RebuildLevelSourceContent() => RebuildLevelingContent();
 
         // Link Mode, then the set's own range, or its provider and the range the provider gives. Level Source drew the
-        // link state in tinted boxes with colored borders, under sentences about linking (ED-37)
+        // link state in tinted boxes with colored borders, under sentences about linking
         protected override void RebuildLevelingContent()
         {
             if (levelingContent == null) return;
@@ -238,13 +236,13 @@ namespace FarEmerald.PlayForge.Editor
             shownLeveling = LevelingState();
 
             // Link Mode binds to its property, so a change undoes, and OnAssetChanged redraws from it. It wrote the mode
-            // straight into the asset, with no Undo, and redrew only then (ED-12).
+            // straight into the asset, with no Undo, and redrew only then.
             var linkModeField = new EnumField("Link Mode", attributeSet.LinkMode) { name = "LinkMode", bindingPath = nameof(AttributeSet.LinkMode) };
             linkModeField.AddToClassList(BaseField<System.Enum>.alignedFieldUssClassName);
             levelingContent.Add(linkModeField);
 
             // The range in use while linked: the provider's, or the set's own while it has none. A provider belongs to one
-            // set, so a multiple selection edits the range when every set keeps its own (ED-12)
+            // set, so a multiple selection edits the range when every set keeps its own
             if (IsMultiple && !Sets.All(each => each.LinkMode != EAttributeSetLinkMode.LinkedToProvider))
                 levelingContent.Add(CreateNote("Each linked set takes its levels from its own provider."));
             else if (!IsMultiple && IsLinkMode) AddLinkedLevels(levelingContent, attributeSet, "set", attributeSet.GetStartingLevel(), attributeSet.GetMaxLevel());
@@ -284,13 +282,13 @@ namespace FarEmerald.PlayForge.Editor
             parent.Add(attributesSection.Section);
 
             // Each set keeps its own attributes, a list a multiple selection can't edit safely: its elements at one index
-            // are different attributes, and a list of another length would be cut (ED-12)
+            // are different attributes, and a list of another length would be cut
             if (IsMultiple)
             {
                 attributesSection.Content.Add(CreateNote("Select one set to edit its attributes."));
                 return;
             }
-            // The set its elements and All Attributes work their values out in, while another set holds it (ED-49)
+            // The set its elements and All Attributes work their values out in, while another set holds it
             previewIn = new VisualElement { name = "PreviewInRow" };
             attributesSection.Content.Add(previewIn);
             previewIn.RegisterCallback<AttachToPanelEvent>(_ =>
@@ -307,12 +305,12 @@ namespace FarEmerald.PlayForge.Editor
                 AttributeStartValues.PreviewChanged -= PreviewChanged;
             });
             ShowPreviewIn();
-            // The list's header counts its elements; the section's header showed a count of its own as well (ED-37)
+            // The list's header counts its elements; the section's header showed a count of its own as well
             attributesSection.Content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(AttributeSet.Attributes)), "Attributes", ""));
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
-        // Preview In: the set an entity is built from, for what the set's attributes start at (ED-49)
+        // Preview In: the set an entity is built from, for what the set's attributes start at
         // ═══════════════════════════════════════════════════════════════════════════
 
         private VisualElement previewIn;
@@ -422,7 +420,7 @@ namespace FarEmerald.PlayForge.Editor
         }
 
         // The attributes the set gives an entity, its sub-sets' with them, settled as the runtime settles them. A Summary
-        // section counted them and opened a dialog that listed their names (ED-37)
+        // section counted them and opened a dialog that listed their names
         private void BuildAllAttributesSection(VisualElement parent)
         {
             allAttributesSection = CreateSection(new SectionConfig
@@ -433,7 +431,7 @@ namespace FarEmerald.PlayForge.Editor
             });
             parent.Add(allAttributesSection.Section);
 
-            // The table shows one set's attributes (ED-12)
+            // The table shows one set's attributes
             if (IsMultiple)
             {
                 allAttributesSection.Content.Add(CreateNote("Select one set to see all its attributes."));
@@ -491,7 +489,6 @@ namespace FarEmerald.PlayForge.Editor
         // ═══════════════════════════════════════════════════════════════════════════
 
         // The assets that use the set, such as an entity built from it or a set that holds it, each a row that selects it
-        // (ED-37)
         private void BuildUsedBySection(VisualElement parent)
         {
             usedBySection = CreateSection(new SectionConfig
@@ -519,7 +516,7 @@ namespace FarEmerald.PlayForge.Editor
         protected override void OnAssetChanged()
         {
             // Leveling is drawn from the link mode and the provider, so it redraws when either changes, an Undo among
-            // them (ED-12)
+            // them
             if (levelingContent != null && LevelingState() != shownLeveling) RebuildLevelingContent();
             // The name field isn't bound, so it follows an Undo here, unless it's being typed in
             if (!IsMultiple && nameField != null && !IsFocused(nameField) && nameField.value != (attributeSet.Name ?? ""))
@@ -551,7 +548,7 @@ namespace FarEmerald.PlayForge.Editor
                 settingsSection.Summary.text = ObjectNames.NicifyVariableName(attributeSet.CollisionResolutionPolicy.ToString());
             if (allAttributesSection != null && attributeTable != null)
             {
-                // And the set it's previewed in, whose values it shows (ED-49)
+                // And the set it's previewed in, whose values it shows
                 var preview = AttributeStartValues.PreviewOf(attributeSet);
                 var count = CountOf(attributeTable.Count, "attribute", "attributes");
                 allAttributesSection.Summary.text = preview != attributeSet ? $"{count}, in {AttributeStartValues.NameOf(preview)}" : count;
@@ -565,11 +562,11 @@ namespace FarEmerald.PlayForge.Editor
         // Helper Methods
         // ═══════════════════════════════════════════════════════════════════════════
 
-        // Shows the tag a name gives: the stored name's, or the one being typed (ED-12)
+        // Shows the tag a name gives: the stored name's, or the one being typed
         private void UpdateAssetTagDisplay(string name = null) =>
             ShowAssetTag(assetTagField, name ?? attributeSet.Name, "AttributeSet", attributeSet.AssetTag, SyncAssetTag);
 
-        // Stores the tag the name gives, then shows it (ED-12)
+        // Stores the tag the name gives, then shows it
         private void SyncAssetTag()
         {
             StoreAssetTag(attributeSet, attributeSet.Name, "AttributeSet", attributeSet.AssetTag,

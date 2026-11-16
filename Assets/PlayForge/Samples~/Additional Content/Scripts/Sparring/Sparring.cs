@@ -5,7 +5,7 @@ using UnityEngine;
 namespace FarEmerald.PlayForge.AdditionalContent
 {
     /// <summary>
-    /// A dummy that spars, as the Sparring scene's two do (AC-2): it uses its abilities at its partner as each is ready,
+    /// A dummy that spars, as the Sparring scene's two do: it uses its abilities at its partner as each is ready,
     /// lands its statuses in turn, each on its partner or itself, and mends to full as its attribute falls low, so the
     /// bout goes on. It's given each of its abilities it hasn't. Its entity is the hub on the same object.
     /// </summary>

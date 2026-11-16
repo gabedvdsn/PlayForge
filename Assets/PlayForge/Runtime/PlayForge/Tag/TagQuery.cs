@@ -84,7 +84,7 @@ namespace FarEmerald.PlayForge
             if (appliedTags == null || appliedTags.Count == 0) return 0;
 
             // A plain loop: this runs on every requirement check, and LINQ here allocated a closure and an
-            // enumerator each time (PF-007)
+            // enumerator each time
             int count = 0;
             for (int i = 0; i < appliedTags.Count; i++) if (Matches(appliedTags[i])) count++;
             return count;
@@ -106,7 +106,7 @@ namespace FarEmerald.PlayForge
             }
             
             // A hierarchical match counts each matching tag by its weight, as an exact match does. Counting the tags
-            // made a magnitude mean grants in one mode and different tags in the others (GAS-16)
+            // made a magnitude mean grants in one mode and different tags in the others
             var applied = tags.GetAppliedTags();
             int count = 0;
             for (int i = 0; i < applied.Count; i++)
@@ -124,7 +124,7 @@ namespace FarEmerald.PlayForge
             if (appliedTags == null) return 0;
             if (appliedTags is List<Tag> list) return CountMatches(list);
             
-            // Through the match the other overloads use. SameRoot was written two ways (GAS-16)
+            // Through the match the other overloads use. SameRoot was written two ways
             int count = 0;
             foreach (var applied in appliedTags) if (Matches(applied)) count++;
             return count;

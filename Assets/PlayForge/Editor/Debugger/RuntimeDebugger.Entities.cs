@@ -8,9 +8,9 @@ using UnityEngine.UIElements;
 
 namespace FarEmerald.PlayForge.Editor
 {
-    // The Entities view, as the design canvas's Entities board draws it (version 22): the hubs ProcessControl holds,
+    // The Entities view: the hubs ProcessControl holds,
     // beside the one selected, with its attributes, effects, abilities and tags in a grid of four sections, each of
-    // whose foot rows changes it (Q27, ED-40)
+    // whose foot rows changes it
     public sealed partial class RuntimeDebugger
     {
         private readonly List<IGameplayAbilitySystem> hubs = new();
@@ -23,7 +23,7 @@ namespace FarEmerald.PlayForge.Editor
         private readonly List<Action> entityUpdates = new();
 
         // The shown entity's callbacks, which the window listens to while it shows the entity: an entity with a listener
-        // fills a frame summary every frame. The GAS Debugger listened to every entity and never stopped (ED-26)
+        // fills a frame summary every frame. The GAS Debugger listened to every entity and never stopped
         private GameplayAbilitySystemCallbacks shownCallbacks;
 
         // What changed the shown entity's attributes in the last second: each impact it took, by what made it
@@ -149,7 +149,7 @@ namespace FarEmerald.PlayForge.Editor
 
         // The entity the detail shows: its header, then its attributes, effects, abilities and tags. They're built once,
         // and a sample changes their values in place; the GAS Debugger cleared and rebuilt them every 0.25 s, replacing a
-        // field while it was typed in (ED-4)
+        // field while it was typed in
         private void ShowEntity(IGameplayAbilitySystem gas)
         {
             if (entityDetail == null) return;
@@ -184,7 +184,7 @@ namespace FarEmerald.PlayForge.Editor
         }
 
         // The entity's combat log, newest first, as its project writes it; a click on an entry shows its hit's run through
-        // its pipeline (TW-22), and its steps (LAB-17)
+        // its pipeline, and its steps
         private VisualElement CombatLogSection(IGameplayAbilitySystem gas)
         {
             var section = Section("CombatLog", "Combat Log");
@@ -222,7 +222,7 @@ namespace FarEmerald.PlayForge.Editor
                     Selectable(row, () =>
                     {
                         ShowSelected(rows, row);
-                        // Its run through its pipeline, then its steps, as made and as it landed (LAB-13, LAB-17)
+                        // Its run through its pipeline, then its steps, as made and as it landed
                         var breakdown = entry.BreakdownText;
                         var steps = entry.Kind == ECombatLogKind.Event ? "" : entry.StepsText;
                         run.text = string.IsNullOrEmpty(breakdown)
@@ -303,7 +303,7 @@ namespace FarEmerald.PlayForge.Editor
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
-        // The sections' foot rows, as the board draws them (canvas version 22)
+        // The sections' foot rows
         // ═══════════════════════════════════════════════════════════════════════════
 
         // A section's foot row, under a thin rule: the actions on the row its table selects, then what adds to it. An
@@ -346,8 +346,8 @@ namespace FarEmerald.PlayForge.Editor
 
         // Each attribute, by its base and current values and what changed it: the impacts it took in the last second, by
         // what made them, and the effects that hold a modifier on it. The current value's tooltip breaks it down by
-        // retention group, from GetBreakdown; the GAS Debugger read RetainedGroups, which made a dictionary on each read
-        // (ED-4). The foot row sets the selected attribute's values (Q27); a double-click on a value goes to its field
+        // retention group, from GetBreakdown; the GAS Debugger read RetainedGroups, which made a dictionary on each read.
+        // The foot row sets the selected attribute's values; a double-click on a value goes to its field
         private VisualElement AttributesSection(IGameplayAbilitySystem gas)
         {
             var section = Section("Attributes", "Attributes");
@@ -499,7 +499,7 @@ namespace FarEmerald.PlayForge.Editor
         }
 
         // The entity takes a value set in the foot row as it is: the change goes in directly, as a delta no worker sees,
-        // and the next sample shows what the entity holds (Q27)
+        // and the next sample shows what the entity holds
         private void SetAttribute(IGameplayAbilitySystem gas, IAttribute attribute, Func<IReadOnlyDictionary<IAttribute, CachedAttributeValue>> cacheOf,
             float? current, float? @base)
         {
@@ -523,8 +523,8 @@ namespace FarEmerald.PlayForge.Editor
         // ═══════════════════════════════════════════════════════════════════════════
 
         // The effects on the entity: each one's time left, its stacks and where it came from, as "Player · Fireball". The
-        // foot row's Remove takes the selected one off, and an effect picked there lands from the entity itself (Q27).
-        // The GAS Debugger printed an impact's values as "current/base", with no label (ED-4)
+        // foot row's Remove takes the selected one off, and an effect picked there lands from the entity itself.
+        // The GAS Debugger printed an impact's values as "current/base", with no label
         private VisualElement EffectsSection(IGameplayAbilitySystem gas)
         {
             var section = Section("Effects", "Effects");
@@ -615,7 +615,7 @@ namespace FarEmerald.PlayForge.Editor
             return row;
         }
 
-        // A name cell with its type's icon, as the boards draw an effect's or an ability's
+        // A name cell with its type's icon, for an effect or an ability
         private static VisualElement NameCell(Type type, string name)
         {
             var cell = new VisualElement { name = "NameCell" };
@@ -668,8 +668,8 @@ namespace FarEmerald.PlayForge.Editor
         // ═══════════════════════════════════════════════════════════════════════════
 
         // The entity's abilities: each one's level, its state, as "Stage 2/3", and the time its cooldown has left. The
-        // foot row activates or interrupts the selected one, and grants one picked there at the level given (Q27). The
-        // GAS Debugger showed the cooldown effect's raw magnitude, before its scaler (ED-4)
+        // foot row activates or interrupts the selected one, and grants one picked there at the level given. The
+        // GAS Debugger showed the cooldown effect's raw magnitude, before its scaler
         private VisualElement AbilitiesSection(IGameplayAbilitySystem gas)
         {
             var section = Section("Abilities", "Abilities");
@@ -820,8 +820,8 @@ namespace FarEmerald.PlayForge.Editor
         // ═══════════════════════════════════════════════════════════════════════════
 
         // The tags the entity has, each with its count, its weight, and what grants it. The foot row's Remove takes back
-        // the selected tag where it's loose, and a tag typed or picked from the project's there is granted as a loose tag
-        // (FEAT-16, Q27). A tag added straight to the entity's cache went at its next compile. The Tag Debugger listed
+        // the selected tag where it's loose, and a tag typed or picked from the project's there is granted as a loose tag.
+        // A tag added straight to the entity's cache went at its next compile. The Tag Debugger listed
         // tags in a window of its own
         private VisualElement TagsSection(IGameplayAbilitySystem gas)
         {
@@ -918,7 +918,7 @@ namespace FarEmerald.PlayForge.Editor
         }
 
         // A tag's path, from its display name: its parents in secondary text and its leaf in strong text. A unique tag's name
-        // is padded with a generated suffix (ED-60)
+        // is padded with a generated suffix
         private static VisualElement TagNameCell(Tag tag)
         {
             var cell = new VisualElement { name = "NameCell" };
@@ -948,7 +948,7 @@ namespace FarEmerald.PlayForge.Editor
         }
 
         // The project's tag a path names, by its display name or its name, or else a new tag of that name: a unique tag's
-        // name is padded, so the path the field shows isn't its name (ED-60)
+        // name is padded, so the path the field shows isn't its name
         private static Tag TagNamed(string path)
         {
             foreach (var record in ForgeTagRegistry.GetAllTagRecords())

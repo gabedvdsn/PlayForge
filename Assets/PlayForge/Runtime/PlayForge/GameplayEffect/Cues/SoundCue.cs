@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
-    /// <summary>Plays a sound at the effect's target as the effect lands, and on each tick where set (FEAT-1).</summary>
+    /// <summary>Plays a sound at the effect's target as the effect lands, and on each tick where set.</summary>
     [Serializable]
     [ForgeMenu(Description = "Plays a sound at the target as the effect lands, and on each tick where set.")]
     public class SoundCue : AbstractCueHandler

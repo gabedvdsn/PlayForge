@@ -16,7 +16,7 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// Invoked at the end of each frame after all deferred actions are processed.
         /// Provides a complete summary of all modifications that occurred. The summary is the entity's own and is
-        /// refilled each frame, so read it during the call, or copy what you need (GAS-P10).
+        /// refilled each frame, so read it during the call, or copy what you need.
         /// </summary>
         public delegate void FrameCompleteDelegate(FrameSummarySnapshot summary);
         
@@ -38,7 +38,7 @@ namespace FarEmerald.PlayForge
         
         /// <summary>
         /// Invoked when an action is queued for deferred execution. An action the system makes for itself, such as a
-        /// rescale or a lifesteal's heal, is used again once the queue has run it, so read it during the call (GAS-P9).
+        /// rescale or a lifesteal's heal, is used again once the queue has run it, so read it during the call.
         /// </summary>
         public delegate void ActionQueuedDelegate(IRootAction action);
         
@@ -53,7 +53,7 @@ namespace FarEmerald.PlayForge
         
         /// <summary>
         /// Invoked when an action is executed from the queue. One the system makes for itself is used again once this
-        /// returns, so read it during the call (GAS-P9).
+        /// returns, so read it during the call.
         /// </summary>
         private ActionQueuedDelegate _onActionExecuted;
         public event ActionQueuedDelegate OnActionExecuted
@@ -123,7 +123,7 @@ namespace FarEmerald.PlayForge
         
         public void EffectTick(GameplayEffectSpec spec, int tickCount) => _onEffectTick?.Invoke(spec, tickCount);
 
-        /// <summary>An effect that didn't land on this entity, and why (LAB-12).</summary>
+        /// <summary>An effect that didn't land on this entity, and why.</summary>
         public delegate void EffectRefusedDelegate(GameplayEffectSpec spec, EEffectRefusal refusal);
 
         private EffectRefusedDelegate _onEffectRefused;
@@ -136,7 +136,7 @@ namespace FarEmerald.PlayForge
         public void EffectRefused(GameplayEffectSpec spec, EEffectRefusal refusal) => _onEffectRefused?.Invoke(spec, refusal);
 
         // ═══════════════════════════════════════════════════════════════════════════
-        // WORKERS RUN (LAB-12, LAB-13): told only where something listens, so a worker no one hears costs nothing more
+        // WORKERS RUN: told only where something listens, so a worker no one hears costs nothing more
         // ═══════════════════════════════════════════════════════════════════════════
 
         /// <summary>An effect's worker heard one of its effect's moments on this entity: its own, or a hit it dealt.</summary>
@@ -171,7 +171,7 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// A step a change to one of this entity's attributes took, as it was taken: an attribute worker's, a barrier's
-        /// soak or a gain's scaling (LAB-13).
+        /// soak or a gain's scaling.
         /// </summary>
         public delegate void ChangeStepDelegate(in ChangeStep step);
 
@@ -249,7 +249,7 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// Invoked once a save has loaded onto the system, as <see cref="ForgeSave.Restore"/> ends. A restore tells nothing
-        /// as it goes, effect by effect, so a listener reads the entity afresh here (FEAT-9).
+        /// as it goes, effect by effect, so a listener reads the entity afresh here.
         /// </summary>
         private SystemDelegate _onRestored;
         public event SystemDelegate OnRestored
@@ -410,7 +410,7 @@ namespace FarEmerald.PlayForge
 
         private event DeathDelegate _onEntityRevived;
 
-        /// <summary>A staying entity revived (TW-4).</summary>
+        /// <summary>A staying entity revived.</summary>
         public event DeathDelegate OnEntityRevived { add => _onEntityRevived += value; remove => _onEntityRevived -= value; }
 
         public void EntityRevived(IGameplayAbilitySystem system) => _onEntityRevived?.Invoke(system);

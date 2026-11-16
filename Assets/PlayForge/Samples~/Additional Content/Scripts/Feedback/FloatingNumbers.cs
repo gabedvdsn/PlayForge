@@ -6,7 +6,7 @@ using UnityEngine;
 namespace FarEmerald.PlayForge.AdditionalContent
 {
     /// <summary>
-    /// Floats a number over an entity for each change to its attribute (AC-2): a loss in one color, a gain in another,
+    /// Floats a number over an entity for each change to its attribute: a loss in one color, a gain in another,
     /// and a critical hit larger and in a color of its own, marked. A hit is critical where its breakdown carries one of
     /// its critical notes, as a Value Pipeline's Chance stage leaves its Note when it comes up. A Floating Word cue floats
     /// its word where the entity's numbers float.

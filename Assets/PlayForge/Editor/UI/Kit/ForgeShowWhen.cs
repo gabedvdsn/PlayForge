@@ -7,7 +7,7 @@ namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
     /// A field shown only where it applies, by what another field says, as Buffer Window under a Queue policy or Proc
-    /// Coefficient under Own Proc Coefficient (FN-23): hidden where it doesn't, not disabled, and shown again as its object
+    /// Coefficient under Own Proc Coefficient: hidden where it doesn't, not disabled, and shown again as its object
     /// changes, an Undo among its changes. A selection whose values differ shows it, as does a condition it can't read.
     /// </summary>
     internal static class ForgeShowWhen

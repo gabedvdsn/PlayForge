@@ -7,7 +7,7 @@ using UnityEngine.UIElements;
 namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
-    /// A sheet's changes before they're made (TW-27, Decision 67): each number it changes, its asset, what it reads now and
+    /// A sheet's changes before they're made: each number it changes, its asset, what it reads now and
     /// what it will, each chosen until it's unticked; what of the sheet can't be read; and Import, which makes the chosen
     /// changes as one Undo step.
     /// </summary>
@@ -122,7 +122,7 @@ namespace FarEmerald.PlayForge.Editor
             AllowImport();
         }
 
-        // A column of text, which clips its own (Decision 20)
+        // A column of text, which clips its own
         private static void AddText(MultiColumnListView list, string name, string title, float width,
             System.Func<SpreadsheetChange, string> textOf, List<SpreadsheetChange> changes, bool stretch = false)
         {

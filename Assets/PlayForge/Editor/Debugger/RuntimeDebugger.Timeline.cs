@@ -11,7 +11,7 @@ namespace FarEmerald.PlayForge.Editor
     public sealed partial class RuntimeDebugger
     {
         // ═══════════════════════════════════════════════════════════════════════════
-        // The Timeline view: what the entities did over time (FEAT-12, Decision 30)
+        // The Timeline view: what the entities did over time
         // ═══════════════════════════════════════════════════════════════════════════
 
         private static readonly float[] TimelineSpans = { 5f, 10f, 30f, 60f };
@@ -175,7 +175,7 @@ namespace FarEmerald.PlayForge.Editor
         private static int CountOf(TimelineTrack track) => track.Spans.Count(span => !span.Refused);
 
         // The tracks the search lets through, the newest first, keeping the selection. Listed in the order their first span
-        // came, a long list hid the newest under the oldest (ED-46)
+        // came, a long list hid the newest under the oldest
         private void RefillTracks()
         {
             if (trackList == null || recorder == null) return;
@@ -226,7 +226,7 @@ namespace FarEmerald.PlayForge.Editor
         {
             if (track.Kind == TimelineKind.Effect)
             {
-                // A refusal is no application (LAB-17)
+                // A refusal is no application
                 int landed = CountOf(track);
                 return $"Effect · {track.EntityName} · {CountOf(landed, "application", "applications")}";
             }
@@ -259,7 +259,7 @@ namespace FarEmerald.PlayForge.Editor
             if (stages.Count == 0) graph.Add(Note("None"));
             timelineDetail.Add(graphSection);
 
-            // Its runs, the latest first (ED-46)
+            // Its runs, the latest first
             var runsSection = Section("Runs", "Runs");
             runsSection.Content.Add(TableHead(("Run", "pf-debugger__col-40"), ("Start", "pf-debugger__col-60"), ("Length", "pf-debugger__col-60"),
                 ("Stages", "pf-debugger__col-48"), ("Outcome", "pf-debugger__col-grow")));
@@ -380,9 +380,9 @@ namespace FarEmerald.PlayForge.Editor
                 ("Length", "pf-debugger__col-60")));
             var rows = new VisualElement { name = "ApplicationRows" };
             section.Content.Add(rows);
-            // Applications and refusals each numbered by themselves (LAB-17)
+            // Applications and refusals each numbered by themselves
             int applications = CountOf(track), refusals = track.Spans.Count - applications;
-            // The latest first (ED-46)
+            // The latest first
             for (int i = track.Spans.Count - 1; i >= 0; i--)
             {
                 var span = track.Spans[i];
@@ -421,7 +421,7 @@ namespace FarEmerald.PlayForge.Editor
             timelineDetail.Add(JournalSection(track));
         }
 
-        // An effect's journal on the track's entity, newest first: a click on an entry shows its parts (LAB-17)
+        // An effect's journal on the track's entity, newest first: a click on an entry shows its parts
         private VisualElement JournalSection(TimelineTrack track)
         {
             var section = Section("EffectJournal", "Journal");
@@ -481,8 +481,7 @@ namespace FarEmerald.PlayForge.Editor
 
     /// <summary>
     /// A track's spans over the last seconds, drawn in its row: a run, or an effect's time on the shelf, as a bar, the one
-    /// the detail shows taller than the rest, and an instant, an instant effect or a refused activation, as a tick
-    /// (FEAT-12, ED-47).
+    /// the detail shows taller than the rest, and an instant, an instant effect or a refused activation, as a tick.
     /// </summary>
     internal sealed class TimelineStrip : VisualElement
     {

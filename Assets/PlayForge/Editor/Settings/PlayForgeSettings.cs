@@ -7,17 +7,17 @@ using UnityEngine;
 namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
-    /// PlayForge's authoring settings, a Forge Project's, so they travel with the project under version control (TW-30):
+    /// PlayForge's authoring settings, a Forge Project's, so they travel with the project under version control:
     /// where each type's new assets go, the defaults a new asset copies and Import lists first, and the effects a new Cost
-    /// or Cooldown copies. A new asset's file is its name alone (EP-13). The Project Settings page edits them; the view toggles stay in
+    /// or Cooldown copies. A new asset's file is its name alone. The Project Settings page edits them; the view toggles stay in
     /// Preferences (<see cref="PlayForgePreferences"/>). The file and the EditorPrefs a project took them from once are
-    /// gone with that taking (FN-21).
+    /// gone with that taking.
     /// </summary>
     public static class PlayForgeSettings
     {
         /// <summary>
         /// The asset types with settings, in The Forge's order, with the folder each one's new assets go in, within the
-        /// project's folder: Assets/PlayForge/Arena/Abilities for a project at Assets/PlayForge/Arena (EP-10, Decision 89).
+        /// project's folder: Assets/PlayForge/Arena/Abilities for a project at Assets/PlayForge/Arena.
         /// </summary>
         internal static readonly (Type type, string folder)[] Kinds =
         {
@@ -29,7 +29,7 @@ namespace FarEmerald.PlayForge.Editor
             (typeof(EntityIdentity), "Entities"),
             (typeof(ScalerAsset), "Scalers"),
             (typeof(RequirementTemplate), "Requirements"),
-            // The rules assets, which The Forge lists too (FN-12, Decision 72)
+            // The rules assets, which The Forge lists too
             (typeof(ValuePipeline), "Pipelines"),
             (typeof(EffectModifier), "Modifiers"),
             (typeof(CrowdControlRules), "Rules"),
@@ -40,7 +40,7 @@ namespace FarEmerald.PlayForge.Editor
 
         /// <summary>
         /// Uses <paramref name="project"/>'s authoring settings in place of the active project's, as a test does, or the
-        /// active project's again for null. Gives back the one used before, to put back (TW-30).
+        /// active project's again for null. Gives back the one used before, to put back.
         /// </summary>
         public static ForgeProject UseProject(ForgeProject project)
         {
@@ -52,11 +52,11 @@ namespace FarEmerald.PlayForge.Editor
         // What the settings say
         // ═══════════════════════════════════════════════════════════════════════════
 
-        // ─── The project whose settings these are (TW-30) ───
+        // ─── The project whose settings these are ───────────
 
         /// <summary>
         /// The project whose authoring settings The Forge reads and writes: the one a test uses, or else the active Forge
-        /// Project; or null, where there's none (TW-30). They were the whole Unity project's, in this file.
+        /// Project; or null, where there's none. They were the whole Unity project's, in this file.
         /// </summary>
         internal static ForgeProject Project => usedProject != null ? usedProject : ForgeProjects.Active;
 
@@ -89,7 +89,7 @@ namespace FarEmerald.PlayForge.Editor
         /// <summary>The folder a new asset of the type goes in, within the project in use's folder, as "Abilities".</summary>
         public static string FolderFor(Type type) => FolderFor(type, Project);
 
-        /// <summary>The folder a new asset of the type goes in, by a project's settings, within its folder, as "Abilities" (TW-30).</summary>
+        /// <summary>The folder a new asset of the type goes in, by a project's settings, within its folder, as "Abilities".</summary>
         public static string FolderFor(Type type, ForgeProject project)
         {
             var folder = NewAssetsFor(AuthoringOf(project)?.NewAssets, type)?.Folder;
@@ -181,7 +181,7 @@ namespace FarEmerald.PlayForge.Editor
 
         /// <summary>
         /// The folder a type's new assets go in until a setting says otherwise, within the project's folder; "" for the
-        /// project's folder itself, a type The Forge doesn't list, as a Tag Library (EP-10).
+        /// project's folder itself, a type The Forge doesn't list, as a Tag Library.
         /// </summary>
         public static string DefaultFolder(Type type)
         {
@@ -241,7 +241,7 @@ namespace FarEmerald.PlayForge.Editor
 
         /// <summary>
         /// A SerializedObject over a project, for the Project Settings page, with an entry for every type in its authoring
-        /// settings, saved where the entries are new (TW-30).
+        /// settings, saved where the entries are new.
         /// </summary>
         internal static SerializedObject Serialized(ForgeProject project)
         {

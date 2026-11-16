@@ -14,14 +14,15 @@ and a Log of each batch's test results.
   entry also names the class and method to search for. `git show e91fe34:<path>` shows a file as it was then.
 - In Rider, Go to File accepts `path:line`. In Visual Studio, open the file, then Go To Line (Ctrl+G).
   A bare `:123` after a path means another line in the same file.
-- `git grep "<ID>"` finds the comment at each fix, and `git log --grep "<ID>"` finds its commit. Three exceptions:
+- `git grep "<ID>" ad8f7d0` finds the comment at each fix as it stood before EP-26 took the tracker IDs out of the
+  package's comments, and `git log --grep "<ID>"` finds its commit. Three exceptions:
   - Phase 0's ports cite Arcade Fighter's log ID (`PF-005` to `PF-013`) in their comments, not the tracker ID. The
     plan's Phase 0 checklist maps one to the other.
   - These fixes have no ID comment at the fix: PC-6, PC-10, PC-11, PC-14, PC-16, PC-18, PC-19, PC-21, TS-1, TS-D,
     TS-AB, GAS-2, GAS-4, GAS-5, GAS-6, GAS-9, GAS-10, GAS-11, ED-17, ED-28, and most SP rows. `git log --grep` still
     finds their commits.
   - Seven commit subjects pad the number (`PC-09`, `GAS-04` to `GAS-09`), and a bare `GAS-4` also matches GAS-40 and
-    up. To match one ID exactly: `git grep -E "GAS-4([^0-9]|$)"` and `git log -E --grep "GAS-0?4([^0-9]|$)"`.
+    up. To match one ID exactly: `git grep -E "GAS-4([^0-9]|$)" ad8f7d0` and `git log -E --grep "GAS-0?4([^0-9]|$)"`.
 - "Decision n" is a numbered Decision in the plan. "New" means added since `01258b8`.
 - "Still open" names a later tracker row on the same code, and "Fixed in Phase 3" points to
   [Phase 3](#phase-3). The plan's tracker has each row's current status.
@@ -2182,7 +2183,7 @@ the process moves on as if the call had returned. A throwing step no longer stop
 throwing run still ends and applies its queued state, so nothing waiting on it hangs. A throwing `WhenTerminate` still
 unregisters, and a throwing `WhenInitialize` refuses the process, so `Register` returns false.
 
-- **IDs:** PC-1 (its comment says PF-011), PC-2, PC-8, PC-15.
+- **IDs:** PC-1 (its comment said PF-011), PC-2, PC-8, PC-15.
 - **Read:**
   - `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessControlBlock.cs:419`
     `ProcessControlBlock.Step`. A state queued during the step still applies after a throw.

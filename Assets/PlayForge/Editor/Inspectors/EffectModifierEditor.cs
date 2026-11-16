@@ -6,8 +6,8 @@ using UnityEngine.UIElements;
 namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
-    /// An Effect Modifier's inspector (TW-7): what it's for, its rule, the effects it picks and its changes, each of a
-    /// kind with its fields, and a line that says them. Unity's own fields, as <c>Docs/EDITOR_STYLE.md</c> has it.
+    /// An Effect Modifier's inspector: what it's for, its rule, the effects it picks and its changes, each of a
+    /// kind with its fields, and a line that says them. Unity's own fields.
     /// </summary>
     [CustomEditor(typeof(EffectModifier))]
     public class EffectModifierEditor : UnityEditor.Editor
@@ -17,7 +17,7 @@ namespace FarEmerald.PlayForge.Editor
             var modifier = (EffectModifier)target;
             var root = new VisualElement { name = "EffectModifierRoot" };
             ForgeTheme.Apply(root);
-            // The shared header, as every PlayForge asset's inspector opens with (FN-12)
+            // The shared header, as every PlayForge asset's inspector opens with
             root.Add(ForgeAssetHeaders.For(this));
 
             var description = new TextField("Description")
@@ -55,7 +55,7 @@ namespace FarEmerald.PlayForge.Editor
         }
     }
 
-    /// <summary>A modifier's change: its kind, always of some kind, then its fields, as a worker is drawn (TW-7).</summary>
+    /// <summary>A modifier's change: its kind, always of some kind, then its fields, as a worker is drawn.</summary>
     [CustomPropertyDrawer(typeof(AbstractEffectChange), true)]
     public class EffectChangeDrawer : AbstractGenericDrawer<AbstractEffectChange>
     {

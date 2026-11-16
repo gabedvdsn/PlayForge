@@ -5,7 +5,7 @@ using UnityEngine.UIElements;
 namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
-    /// A tag query, in Unity's aligned fields (ED-66): its tag, which tags match it, then how many it counts, as its
+    /// A tag query, in Unity's aligned fields: its tag, which tags match it, then how many it counts, as its
     /// comparison and its number on one row, "Count  Greater Than  0" for has the tag. It drew a tinted box with labels
     /// of its own size and color.
     /// </summary>
@@ -15,7 +15,7 @@ namespace FarEmerald.PlayForge.Editor
         public override VisualElement CreatePropertyGUI(SerializedProperty property)
         {
             var root = new VisualElement { name = "TagQuery" };
-            // The style sheet lays out the count's row, wherever the query is drawn (ED-20)
+            // The style sheet lays out the count's row, wherever the query is drawn
             ForgeTheme.Apply(root);
 
             root.Add(new PropertyField(property.FindPropertyRelative(nameof(TagQuery.Tag)), "Tag") { name = "Tag" });

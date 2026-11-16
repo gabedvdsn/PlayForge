@@ -4,7 +4,7 @@ using UnityEngine;
 namespace FarEmerald.PlayForge.AdditionalContent
 {
     /// <summary>
-    /// Flashes an entity's renderers as it takes a hit (AC-2): each loss to its attribute tints them the flash's color,
+    /// Flashes an entity's renderers as it takes a hit: each loss to its attribute tints them the flash's color,
     /// fading back over its duration, through a property block, so its materials stay shared. A Flash cue flashes it in
     /// the cue's own color.
     /// </summary>

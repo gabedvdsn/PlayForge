@@ -47,7 +47,7 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// Whether each block counts its steps and times them, as the Debugger asks while it reads the game. Off,
         /// as it is by default, a step costs one check of it. Process Control showed the time between a process's steps as
-        /// its cost, much the same for every process whatever its work (ED-5).
+        /// its cost, much the same for every process whatever its work.
         /// </summary>
         public static bool MeasureSteps { get; set; }
 
@@ -64,14 +64,14 @@ namespace FarEmerald.PlayForge
         private long _stepTicks;
         private long _peakStepTicks;
 
-        // The step marker of the process's type, which its first step finds (FEAT-18)
+        // The step marker of the process's type, which its first step finds
         private ProfilerMarker<int> _stepMarker;
         private bool _stepMarked;
 
         /// <summary>The type of the process the block holds, which its first step finds.</summary>
         internal Type ProcessType { get; private set; }
 
-        // The time its steps took in the frame the Profiler records, and which frame that is (FEAT-18)
+        // The time its steps took in the frame the Profiler records, and which frame that is
         internal long FrameTicks;
         internal int CostFrame = -1;
 
@@ -115,14 +115,14 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// Whether the process's run is going, or held by a pause: a paused process that holds its run picks it up on
-        /// resume, and one that doesn't had it cancelled, so a resume starts a new one (Decision 5). The Debugger shows
-        /// which (ED-5).
+        /// resume, and one that doesn't had it cancelled, so a resume starts a new one. The Debugger shows
+        /// which.
         /// </summary>
         public bool RunIsHeld => _cts != null && !_cts.IsCancellationRequested;
 
         // Done once the process has terminated and is unregistered, for whatever waits on it: made when something does.
         // Waiting meant polling the state once a frame, which found the end a frame later, and each relay waited on
-        // added a frame (TS-Z)
+        // added a frame
         private UniTaskCompletionSource _terminated;
         private bool _terminationDone;
 
@@ -137,7 +137,7 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// The world that holds the process. Its state changes, its relay and its unregistering go there; they went to
-        /// ProcessControl.Instance, whichever control held the process (FEAT-10).
+        /// ProcessControl.Instance, whichever control held the process.
         /// </summary>
         public ProcessWorld World { get; }
 
@@ -216,7 +216,7 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// Queues Terminated at someone's request. A running process only moves on when its run ends, and a run
-        /// may be waiting for exactly this, so the process is told (PC-5). A default transition queues the same
+        /// may be waiting for exactly this, so the process is told. A default transition queues the same
         /// state without asking anything to stop, so it doesn't come through here.
         /// </summary>
         public void QueueTerminate()
@@ -225,7 +225,7 @@ namespace FarEmerald.PlayForge
             QueueNextState(EProcessState.Terminated);
             if (State != EProcessState.Running) return;
 
-            // With no run to end and no step to apply it on, nothing else ever would (PC-17)
+            // With no run to end and no step to apply it on, nothing else ever would
             if (Wrapper.Lifecycle == EProcessLifecycle.Synchronous && Wrapper.StepTiming == EProcessStepTiming.None)
             {
                 SetQueuedState();
@@ -384,7 +384,7 @@ namespace FarEmerald.PlayForge
             _cts?.Cancel();
 
             // The process's own code, and the unregister has to happen whatever it does. A throw that skipped
-            // it left a block that was Terminated, still stepped, and that nothing could end (PC-8)
+            // it left a block that was Terminated, still stepped, and that nothing could end
             try
             {
                 Wrapper.WhenTerminate(Wrapper.Relay);
@@ -400,7 +400,7 @@ namespace FarEmerald.PlayForge
             }
             finally
             {
-                // Whatever waits on the process goes on now, in the frame it ended (TS-Z)
+                // Whatever waits on the process goes on now, in the frame it ended
                 _terminationDone = true;
                 _terminated?.TrySetResult();
             }
@@ -426,9 +426,9 @@ namespace FarEmerald.PlayForge
             // A step that throws is reported and goes no further, as a MonoBehaviour's Update would: the
             // rest of the frame's processes still step, and a state queued for this one still applies
             // below. Escaping, it ended the whole frame's stepping and skipped the flush, so a process
-            // terminated while its step kept throwing never left Running (PF-011).
+            // terminated while its step kept throwing never left Running.
             //
-            // Under its own marker in the Profiler, and its type's, with its ID (FEAT-18)
+            // Under its own marker in the Profiler, and its type's, with its ID
             if (!_stepMarked)
             {
                 ProcessType = Wrapper.TryGetProcess<object>(out var process) && process != null
@@ -479,7 +479,7 @@ namespace FarEmerald.PlayForge
                     _steps++;
                 }
 
-                // For the frame's costliest processes in the Profiler's capture (FEAT-18)
+                // For the frame's costliest processes in the Profiler's capture
                 if (recording) ForgeFrameCosts.Stepped(this, took);
             }
 
@@ -530,7 +530,7 @@ namespace FarEmerald.PlayForge
         private async UniTask RunProcessAsync()
         {
             // A token source per run: a pause and resume in one frame starts a new run while the old one is
-            // still unwinding, and sharing one let the old run cancel the new one and end the process (PC-12)
+            // still unwinding, and sharing one let the old run cancel the new one and end the process
             var cts = new CancellationTokenSource();
             _cts = cts;
             _hasRun = true;
@@ -552,7 +552,7 @@ namespace FarEmerald.PlayForge
             catch (Exception ex)
             {
                 // A run that throws is over like any other, so the state queued for its end still applies.
-                // Skipping it left the process Running for good, with anything waiting on it hanging (PC-2)
+                // Skipping it left the process Running for good, with anything waiting on it hanging
                 Debug.LogException(ex);
             }
 
@@ -572,7 +572,7 @@ namespace FarEmerald.PlayForge
             _midRun = cancelled;
 
             // A forced state change didn't wait for this run, so there is nothing left to apply. Applying it
-            // again ran WhenTerminate or WhenWait a second time (PC-4)
+            // again ran WhenTerminate or WhenWait a second time
             if (State == EProcessState.Running) SetQueuedState();
 
             // Left going by a pause, it finished anyway, and is what a resume moves on from

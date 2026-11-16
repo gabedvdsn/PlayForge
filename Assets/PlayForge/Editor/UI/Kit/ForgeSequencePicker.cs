@@ -7,7 +7,7 @@ using UnityEngine;
 namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
-    /// The picker a sequence reference opens (FN-24, EP-1): PlayForge's dropdown of the project's sequences by their names,
+    /// The picker a sequence reference opens: PlayForge's dropdown of the project's sequences by their names,
     /// None first and the one referenced checked. Where more than one class holds sequences, each class's are a submenu
     /// under its name; its search finds any sequence whatever its class, and its Context says the method a sequence is. It
     /// was Unity's searchable dropdown, and before that Unity's popup, one long list.

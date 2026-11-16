@@ -2,7 +2,7 @@ namespace FarEmerald.PlayForge
 {
     /// <summary>
     /// Why an activation was refused, or None where it wasn't: it activated, waits in the input buffer, or starts next
-    /// frame. A refused activation said only false (FEAT-17).
+    /// frame. A refused activation said only false.
     /// </summary>
     public enum EActivationRefusal
     {
@@ -39,7 +39,7 @@ namespace FarEmerald.PlayForge
         /// <summary>Another of the ability's caster checks refused it, which <see cref="ActivationRefusal.Rule"/> names.</summary>
         Rule,
 
-        /// <summary>A running ability's stage blocks it (FEAT-5), and the request doesn't wait.</summary>
+        /// <summary>A running ability's stage blocks it, and the request doesn't wait.</summary>
         Blocked,
 
         /// <summary>
@@ -51,19 +51,19 @@ namespace FarEmerald.PlayForge
         /// <summary>An Activate Anyway ability's critical section keeps another out.</summary>
         Critical,
 
-        /// <summary>Its chance to activate didn't come up (TW-8).</summary>
+        /// <summary>Its chance to activate didn't come up.</summary>
         Chance,
 
-        /// <summary>A crowd control rule its caster is under stops it, as a stun stops every ability (TW-16).</summary>
+        /// <summary>A crowd control rule its caster is under stops it, as a stun stops every ability.</summary>
         CrowdControl,
 
         /// <summary>
-        /// The target or the point it was handed lies beyond its Cast Range (FN-14), so an AI can walk closer and ask again.
+        /// The target or the point it was handed lies beyond its Cast Range, so an AI can walk closer and ask again.
         /// </summary>
         Range,
     }
 
-    /// <summary>A refused activation: the ability, its slot, why, and for a caster check, which (FEAT-17).</summary>
+    /// <summary>A refused activation: the ability, its slot, why, and for a caster check, which.</summary>
     public readonly struct ActivationRefusal
     {
         /// <summary>The ability, or null where the entity knows none it was asked for.</summary>
@@ -76,7 +76,7 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// The name of the caster check that refused it, for <see cref="EActivationRefusal.Rule"/>; or the tag of the
-        /// crowd control rule, as Stunned, for <see cref="EActivationRefusal.CrowdControl"/> (TW-16).
+        /// crowd control rule, as Stunned, for <see cref="EActivationRefusal.CrowdControl"/>.
         /// </summary>
         public readonly string Rule;
 

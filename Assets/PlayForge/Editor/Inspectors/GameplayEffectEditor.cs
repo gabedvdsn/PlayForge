@@ -9,7 +9,7 @@ using static FarEmerald.PlayForge.Editor.ForgeDrawerStyles;
 namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
-    /// The Effect inspector, in Docs/EDITOR_STYLE.md's terms and the Effect mockup's (ED-37): Identity, Leveling, Tags,
+    /// The Effect inspector: Identity, Leveling, Tags,
     /// Duration, Impact, Requirements, Workers and Local Data, then Used By. A collapsed section shows one line, and the
     /// inspector takes its look from the style sheet. Requirements shows the target's table, then the source's, on a
     /// two-button switch.
@@ -23,7 +23,7 @@ namespace FarEmerald.PlayForge.Editor
 
         // Its fields write through the SerializedObject, and its scalers through each asset's own, so it edits a multiple
         // selection; what acts on one effect steps aside: the name, the asset tag, linking, the lists each effect keeps
-        // of its own, and Used By (ED-12)
+        // of its own, and Used By
         protected override bool SupportsMultipleObjects => true;
 
         private IEnumerable<GameplayEffect> Effects => targets.Cast<GameplayEffect>();
@@ -96,9 +96,9 @@ namespace FarEmerald.PlayForge.Editor
 
         protected override void BuildInspectorContent(VisualElement parent)
         {
-            // The style doc's order, as the Effect mockup has it: Identity, Leveling, Tags, the effect's own Duration and
+            // The inspectors' order: Identity, Leveling, Tags, the effect's own Duration and
             // Impact, then Requirements, Workers and Local Data, then what uses the effect. Level Source sat apart from
-            // Leveling, Impact came before Duration and Workers before Requirements, and the asset tag sat in Tags (ED-37)
+            // Leveling, Impact came before Duration and Workers before Requirements, and the asset tag sat in Tags
             BuildIdentitySection(parent);
             BuildLevelingSection(parent);
             BuildTagsSection(parent);
@@ -139,7 +139,7 @@ namespace FarEmerald.PlayForge.Editor
                 Title = "Identity",
                 HelpTopic = "effects/definition",
 
-                // Import and Clear leave the name, which identifies the effect and gives its tag (ED-35)
+                // Import and Clear leave the name, which identifies the effect and gives its tag
                 SerializedObject = serializedObject,
                 PropertyPaths = new[]
                 {
@@ -156,7 +156,7 @@ namespace FarEmerald.PlayForge.Editor
             nameField = CreateTextField("Name", "Name");
             nameField.AddToClassList(BaseField<string>.alignedFieldUssClassName);
             nameField.value = effect.Definition.Name;
-            // Typing previews the tag; leaving the field stores the name and the tag in one undoable step (ED-12)
+            // Typing previews the tag; leaving the field stores the name and the tag in one undoable step
             nameField.RegisterValueChangedCallback(evt => UpdateAssetTagDisplay(evt.newValue));
             nameField.RegisterCallback<FocusOutEvent>(_ =>
             {
@@ -166,11 +166,11 @@ namespace FarEmerald.PlayForge.Editor
                 SyncAssetTag();
                 UpdateHeader();
                 MarkDirty(effect);
-                // Its file follows its name (ED-70)
+                // Its file follows its name
                 RenameFile(effect, nameField.value);
                 Repaint();
             });
-            // Each effect's tag comes from its own name, so a multiple selection shows the names and can't rename (ED-12)
+            // Each effect's tag comes from its own name, so a multiple selection shows the names and can't rename
             if (IsMultiple)
             {
                 nameField.SetEnabled(false);
@@ -179,12 +179,12 @@ namespace FarEmerald.PlayForge.Editor
             }
             content.Add(nameField);
 
-            // Description binds to its property, so an edit undoes. It wrote straight into the asset, with no Undo (ED-12)
+            // Description binds to its property, so an edit undoes. It wrote straight into the asset, with no Undo
             content.Add(CreateBoundTextField(DefinitionPath(nameof(GameplayEffectDefinition.Description)),
                 "Description", multiline: true, minHeight: 18, name: "Description"));
 
-            // The tag the name gives, under the name, as the mockup places it. It sat at the top of Tags (ED-37). Each effect
-            // has its own, so a multiple selection doesn't show one (ED-12)
+            // The tag the name gives, under the name. It sat at the top of Tags. Each effect
+            // has its own, so a multiple selection doesn't show one
             if (!IsMultiple)
             {
                 assetTagField = new ForgeAssetTagField();
@@ -202,7 +202,7 @@ namespace FarEmerald.PlayForge.Editor
             content.Add(texturesField);
 
             // Its icon from its origin, the ability, item or entity that applied it, by a tag, its own where the origin has
-            // none; the tag under Inherit From Origin alone (FN-25)
+            // none; the tag under Inherit From Origin alone
             var inherit = CreatePropertyField(serializedObject.FindProperty(DefinitionPath(nameof(GameplayEffectDefinition.InheritFromOrigin))), "InheritFromOrigin", "Inherit From Origin");
             content.Add(inherit);
             var originTexture = CreatePropertyField(serializedObject.FindProperty(DefinitionPath(nameof(GameplayEffectDefinition.OriginTexture))), "OriginTexture", "Origin Texture");
@@ -235,24 +235,24 @@ namespace FarEmerald.PlayForge.Editor
             RebuildLevelingContent();
         }
 
-        // Leveling holds what Level Source did (ED-37), so the base editor's two rebuilds are one here
+        // Leveling holds what Level Source did, so the base editor's two rebuilds are one here
         protected override void RebuildLevelSourceContent() => RebuildLevelingContent();
 
         // Link Mode, then the provider and the range it gives while linked, or what an effect's level is, then Link and
         // Unlink Contained Effects. Level Source drew the link state in tinted boxes with colored borders, under sentences
-        // about linking, with a red-tinted Unlink (ED-37)
+        // about linking, with a red-tinted Unlink
         protected override void RebuildLevelingContent()
         {
             if (levelingContent == null) return;
             levelingContent.Clear();
             shownLeveling = LevelingState();
 
-            // Link Mode binds to its property, so a change undoes, and OnAssetChanged redraws from it (ED-12)
+            // Link Mode binds to its property, so a change undoes, and OnAssetChanged redraws from it
             var linkModeField = new EnumField("Link Mode", effect.LinkMode) { name = "LinkMode", bindingPath = nameof(GameplayEffect.LinkMode) };
             linkModeField.AddToClassList(BaseField<System.Enum>.alignedFieldUssClassName);
             levelingContent.Add(linkModeField);
 
-            // A provider and a child's link belong to one effect, so a multiple selection sets the mode alone (ED-12)
+            // A provider and a child's link belong to one effect, so a multiple selection sets the mode alone
             if (IsMultiple)
             {
                 levelingContent.Add(CreateNote(Effects.All(each => each.LinkMode != EEffectLinkMode.LinkedToProvider)
@@ -313,20 +313,20 @@ namespace FarEmerald.PlayForge.Editor
             });
             parent.Add(tagsSection.Section);
 
-            // Granted Tags first, as the mockup has them, then the abilities it lends while it's on. Then the effects this
-            // one takes off as it lands, a cleanse, and those it refuses while it's on, an immunity (FEAT-8)
+            // Granted Tags first, then the abilities it lends while it's on. Then the effects this
+            // one takes off as it lands, a cleanse, and those it refuses while it's on, an immunity
             var content = tagsSection.Content;
             content.Add(CreatePropertyField(serializedObject.FindProperty(TagsPath(nameof(GameplayEffectTags.GrantedTags))), "GrantedTags", "Granted Tags"));
             var lends = CreatePropertyField(serializedObject.FindProperty(nameof(GameplayEffect.GrantedAbilities)), "GrantedAbilities", "Granted Abilities");
             lends.tooltip = "Abilities the target has while this is on, at the level of what applied it";
             content.Add(lends);
-            // A side change is a component, Side Change, in the Components section (FN-26)
+            // A side change is a component, Side Change, in the Components section
             content.Add(CreatePropertyField(serializedObject.FindProperty(TagsPath(nameof(GameplayEffectTags.ContextTags))), "ContextTags", "Context Tags"));
             var removes = CreatePropertyField(serializedObject.FindProperty(TagsPath(nameof(GameplayEffectTags.RemovesEffectsTagged))),
                 "RemovesEffectsTagged", "Removes Effects Tagged");
             removes.tooltip = "Effects on the target tagged with one of these, or a child of one, come off as this lands";
             content.Add(removes);
-            // A purge, by the project's Purge Levels: the effects its strength reaches come off as this lands (FN-16)
+            // A purge, by the project's Purge Levels: the effects its strength reaches come off as this lands
             content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(GameplayEffect.Purges)), "Purges", "Purges"));
             var blocks = CreatePropertyField(serializedObject.FindProperty(TagsPath(nameof(GameplayEffectTags.BlocksEffectsTagged))),
                 "BlocksEffectsTagged", "Blocks Effects Tagged");
@@ -346,7 +346,7 @@ namespace FarEmerald.PlayForge.Editor
                 Title = "Duration",
                 HelpTopic = "effects/duration",
 
-                // Duration's Import only logged a warning (ED-32)
+                // Duration's Import only logged a warning
                 SerializedObject = serializedObject,
                 PropertyPaths = new[] { nameof(GameplayEffect.DurationSpecification) },
                 OnImportComplete = OnSectionReplaced,
@@ -365,8 +365,8 @@ namespace FarEmerald.PlayForge.Editor
                 Title = "Impact",
                 HelpTopic = "effects/impact",
 
-                // Impact's Import only logged a warning (ED-32). Its own fields, but the chance to apply, which
-                // Requirements shows and imports and clears (FEAT-8)
+                // Impact's Import only logged a warning. Its own fields, but the chance to apply, which
+                // Requirements shows and imports and clears
                 SerializedObject = serializedObject,
                 PropertyPaths = ImpactPaths(),
                 OnImportComplete = OnSectionReplaced,
@@ -382,17 +382,17 @@ namespace FarEmerald.PlayForge.Editor
             retention.tooltip = "The group the effect's changes count toward, such as bonus health";
             content.Add(retention);
 
-            // What its hits carry for on-hit effects, its own or else its ability's (TW-8)
+            // What its hits carry for on-hit effects, its own or else its ability's
             content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(GameplayEffect.OwnProcCoefficient)), "OwnProcCoefficient", "Own Proc Coefficient"));
             var proc = CreatePropertyField(serializedObject.FindProperty(nameof(GameplayEffect.ProcCoefficient)), "ProcCoefficient", "Proc Coefficient");
             content.Add(proc);
-            // Its own, under Own Proc Coefficient alone: without it, its ability's is read (FN-23)
+            // Its own, under Own Proc Coefficient alone: without it, its ability's is read
             ForgeShowWhen.Track(proc, serializedObject, serialized => ForgeShowWhen.IsOn(serialized.FindProperty(nameof(GameplayEffect.OwnProcCoefficient))));
-            // No lifesteal of its own: its caster's Lifesteal heals by its hits (FN-22)
+            // No lifesteal of its own: its caster's Lifesteal heals by its hits
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
-        // Levels Section: what the effect does, level by level (FEAT-32)
+        // Levels Section: what the effect does, level by level
         // ═══════════════════════════════════════════════════════════════════════════
 
         // Its duration, ticks, chance and each impact at each level, and the parts behind a cell. Read alone, it changes
@@ -426,7 +426,7 @@ namespace FarEmerald.PlayForge.Editor
         }
 
         // The first impact at each level, as "-10/-20/-30 Health"
-        // Its one line, as its header and The Forge's list read it (TW-21)
+        // Its one line, as its header and The Forge's list read it
         private string LevelsSummary()
         {
             string line = ForgeAssetLines.Of(effect);
@@ -437,12 +437,12 @@ namespace FarEmerald.PlayForge.Editor
         // Requirements Section: the target's and the source's tags
         // ═══════════════════════════════════════════════════════════════════════════
 
-        // The target's table, then the source's, on a two-button switch, as the mockup's On the Target and On the Source.
-        // Both sides sat one after the other, each in a tinted box (ED-37)
-        // The impact's chance to apply, which the Requirements section shows (FEAT-8)
+        // The target's table, then the source's, on a two-button switch: On the Target and On the Source.
+        // Both sides sat one after the other, each in a tinted box
+        // The impact's chance to apply, which the Requirements section shows
         private static readonly string ChancePath = $"{nameof(GameplayEffect.ImpactSpecification)}.{nameof(GameplayEffectImpact.ChanceToApply)}";
 
-        // And how it rolls, pseudo-random and its luck, which the Requirements section shows with it (TW-8)
+        // And how it rolls, pseudo-random and its luck, which the Requirements section shows with it
         private static readonly string ChanceRollPath = $"{nameof(GameplayEffect.ImpactSpecification)}.{nameof(GameplayEffectImpact.ChanceRoll)}";
 
         // The impact's own fields, as the section's Import and Clear take them, and its retention group
@@ -486,14 +486,14 @@ namespace FarEmerald.PlayForge.Editor
             var content = requirementsSection.Content;
 
             // The chance it lands, above the requirements, since it gates the whole application as they do: its
-            // duration, tags and every impact. Under Impact it read as one impact's chance (FEAT-8)
+            // duration, tags and every impact. Under Impact it read as one impact's chance
             var chance = CreatePropertyField(serializedObject.FindProperty(ChancePath), "ChanceToApply", "Chance to Apply");
             chance.tooltip = "How likely the effect is to land, from 0 to 1, drawn each time it's applied. 1 always lands";
             content.Add(chance);
-            // How it rolls: pseudo-random, and its luck (TW-8)
+            // How it rolls: pseudo-random, and its luck
             var roll = CreatePropertyField(serializedObject.FindProperty(ChanceRollPath), "ChanceRoll", "Chance Roll");
             content.Add(roll);
-            // A chance that can't miss has nothing to roll (FN-23)
+            // A chance that can't miss has nothing to roll
             ForgeShowWhen.Track(roll, serializedObject, serialized => ForgeShowWhen.Rolls(serialized.FindProperty(ChancePath)));
 
             var sides = new VisualElement { name = "Sides" };
@@ -509,7 +509,7 @@ namespace FarEmerald.PlayForge.Editor
             content.Add(target);
             content.Add(source);
 
-            // Its conditions beside the tags of each phase, either side's numbers in reach of each (TW-19)
+            // Its conditions beside the tags of each phase, either side's numbers in reach of each
             string conditions = nameof(GameplayEffect.Conditions);
             content.Add(CreatePropertyField(serializedObject.FindProperty($"{conditions}.{nameof(EffectConditions.Application)}"), "ApplyConditions", "Apply Conditions"));
             content.Add(CreatePropertyField(serializedObject.FindProperty($"{conditions}.{nameof(EffectConditions.Ongoing)}"), "OngoingConditions", "Ongoing Conditions"));
@@ -531,7 +531,7 @@ namespace FarEmerald.PlayForge.Editor
         // Workers, Local Data and Used By Sections
         // ═══════════════════════════════════════════════════════════════════════════
 
-        // What the effect shows and sounds, an effect's own section after Impact (FEAT-1)
+        // What the effect shows and sounds, an effect's own section after Impact
         private void BuildCuesSection(VisualElement parent)
         {
             cuesSection = CreateSection(new SectionConfig
@@ -547,7 +547,7 @@ namespace FarEmerald.PlayForge.Editor
             });
             parent.Add(cuesSection.Section);
 
-            // Each effect keeps its own cue handlers, objects a multiple selection can't edit safely, as its workers (ED-12)
+            // Each effect keeps its own cue handlers, objects a multiple selection can't edit safely, as its workers
             if (IsMultiple)
             {
                 cuesSection.Content.Add(CreateNote("Select one effect to edit its cues."));
@@ -556,7 +556,7 @@ namespace FarEmerald.PlayForge.Editor
             cuesSection.Content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(GameplayEffect.Cues)), "Cues", ""));
         }
 
-        // Its components: features it carries, each a class with hooks into its life, added from the list's + (FN-14)
+        // Its components: features it carries, each a class with hooks into its life, added from the list's +
         private void BuildComponentsSection(VisualElement parent)
         {
             componentsSection = CreateSection(new SectionConfig
@@ -572,7 +572,7 @@ namespace FarEmerald.PlayForge.Editor
             });
             parent.Add(componentsSection.Section);
 
-            // Each effect keeps its own components, objects a multiple selection can't edit safely (ED-12)
+            // Each effect keeps its own components, objects a multiple selection can't edit safely
             if (IsMultiple)
             {
                 componentsSection.Content.Add(CreateNote("Select one effect to edit its components."));
@@ -600,18 +600,18 @@ namespace FarEmerald.PlayForge.Editor
             });
             parent.Add(workersSection.Section);
 
-            // Each effect keeps its own workers, objects a multiple selection can't edit safely (ED-12)
+            // Each effect keeps its own workers, objects a multiple selection can't edit safely
             if (IsMultiple)
             {
                 workersSection.Content.Add(CreateNote("Select one effect to edit its workers."));
                 return;
             }
-            // The effects the hits of the one it's on apply, while it lasts (TW-6)
+            // The effects the hits of the one it's on apply, while it lasts
             workersSection.Content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(GameplayEffect.OnHit)), "OnHit", "On Hit"));
-            // How it changes other effects, of the one it's on or landing on it, while it lasts (TW-7)
+            // How it changes other effects, of the one it's on or landing on it, while it lasts
             workersSection.Content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(GameplayEffect.Modifiers)), "Modifiers", "Modifiers"));
             workersSection.Content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(GameplayEffect.Workers)), "Workers", ""));
-            // The workers it gives the one it's on while it lasts (TW-13)
+            // The workers it gives the one it's on while it lasts
             workersSection.Content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(GameplayEffect.WorkerGroup)), "WorkerGroup", "Worker Group"));
         }
 
@@ -633,7 +633,7 @@ namespace FarEmerald.PlayForge.Editor
             localDataSection.Content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(GameplayEffect.LocalData)), "LocalData", ""));
         }
 
-        // The assets that use the effect, such as an ability whose cost it is or an item that grants it (ED-37)
+        // The assets that use the effect, such as an ability whose cost it is or an item that grants it
         private void BuildUsedBySection(VisualElement parent)
         {
             usedBySection = CreateSection(new SectionConfig
@@ -661,7 +661,7 @@ namespace FarEmerald.PlayForge.Editor
         protected override void OnAssetChanged()
         {
             // Leveling is drawn from the link mode and the provider, so it redraws when either changes, an Undo among
-            // them (ED-12)
+            // them
             if (levelingContent != null && LevelingState() != shownLeveling) RebuildLevelingContent();
             // The name field isn't bound, so it follows an Undo here, unless it's being typed in
             if (!IsMultiple && nameField != null && !IsFocused(nameField) && nameField.value != (effect.Definition.Name ?? ""))
@@ -674,7 +674,7 @@ namespace FarEmerald.PlayForge.Editor
             field.panel?.focusController?.focusedElement is VisualElement focused && (focused == field || field.Contains(focused));
 
         // The context tags, then what the effect grants while it's on, its tags by name and its abilities counted, as
-        // "Grants Status.Burning, 1 ability", then what it removes and blocks, as "Removes Status.Debuff" (FEAT-8)
+        // "Grants Status.Burning, 1 ability", then what it removes and blocks, as "Removes Status.Debuff"
         private string TagsSectionSummary()
         {
             var parts = new List<string>();
@@ -758,7 +758,7 @@ namespace FarEmerald.PlayForge.Editor
         }
 
         // How many tags the two sides require or forbid, then a chance to apply short of 1, as in "2 requirements ·
-        // 30% chance" (FEAT-8)
+        // 30% chance"
         private string RequirementsSummary()
         {
             var count = CountOf(RequirementCount(effect.TargetRequirements) + RequirementCount(effect.SourceRequirements),
@@ -781,7 +781,7 @@ namespace FarEmerald.PlayForge.Editor
         }
 
         // A chance to apply as the summary says it, or null when the effect always lands. One a scaler gives says so, as
-        // it changes by level (FEAT-8)
+        // it changes by level
         private static string ChanceSummary(ScalableFloat chance)
         {
             if (chance == null) return null;
@@ -800,11 +800,11 @@ namespace FarEmerald.PlayForge.Editor
         // Helper Methods
         // ═══════════════════════════════════════════════════════════════════════════
 
-        // Shows the tag a name gives: the stored name's, or the one being typed (ED-12)
+        // Shows the tag a name gives: the stored name's, or the one being typed
         private void UpdateAssetTagDisplay(string name = null) =>
             ShowAssetTag(assetTagField, name ?? effect.Definition?.Name, "Effect", effect.Tags.AssetTag, SyncAssetTag);
 
-        // Stores the tag the name gives, then shows it (ED-12)
+        // Stores the tag the name gives, then shows it
         private void SyncAssetTag()
         {
             StoreAssetTag(effect, effect.Definition?.Name, "Effect", effect.Tags.AssetTag, tag =>

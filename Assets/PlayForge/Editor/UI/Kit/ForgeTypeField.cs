@@ -4,7 +4,7 @@ using UnityEngine.UIElements;
 namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
-    /// The kind a [SerializeReference] field holds, as a field shows it (ED-56, Docs/EDITOR_STYLE.md): Unity's field, its
+    /// The kind a [SerializeReference] field holds, as a field shows it: Unity's field, its
     /// label in the label column, and the kind's name in a field's box, in strong text, or None in secondary text, then a
     /// popup's arrow. It takes the tag field's box, so the two read alike. Pressing the box, or Enter on the field, opens
     /// its picker. Its value is the kind's name, which a multiple selection whose kinds differ shows as mixed.

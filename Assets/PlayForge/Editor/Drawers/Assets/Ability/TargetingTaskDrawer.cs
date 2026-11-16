@@ -3,7 +3,7 @@ using UnityEditor;
 
 namespace FarEmerald.PlayForge.Editor
 {
-    /// <summary>An ability's targeting task: its kind, named without "TargetTask" or "Task", then its fields (ED-56).</summary>
+    /// <summary>An ability's targeting task: its kind, named without "TargetTask" or "Task", then its fields.</summary>
     [CustomPropertyDrawer(typeof(AbstractTargetingAbilityTask))]
     public class TargetingTaskDrawer : AbstractGenericDrawer<AbstractTargetingAbilityTask>
     {

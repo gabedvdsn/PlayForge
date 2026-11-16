@@ -8,10 +8,10 @@ using UnityEngine.UIElements;
 namespace FarEmerald.PlayForge.Lab
 {
     /// <summary>
-    /// The lab's panels (LAB-5), UI Toolkit over the space: the library on the left, the selected in the middle, hidden
+    /// The lab's panels, UI Toolkit over the space: the library on the left, the selected in the middle, hidden
     /// until something is, the mode on the right, and the log at the bottom; each collapses to a tab at its edge. Over the
     /// space, each unit's bar. An asset dragged from the library and dropped on the space is the lab's to apply, cast or
-    /// give (LAB-6). Neutral panels, Unity's own controls, and a type's color in its icon alone (`Docs/EDITOR_STYLE.md`).
+    /// give. Neutral panels, Unity's own controls, and a type's color in its icon alone.
     /// </summary>
     public class LabPanels : MonoBehaviour
     {
@@ -120,7 +120,7 @@ namespace FarEmerald.PlayForge.Lab
             BuildMode();
             selectedBody = new ScrollView { name = "SelectedBody" };
             Content(selected).Add(selectedBody);
-            // How it shows its working: the journal, the combat log, the stops, the watches and the log (LAB-12 to LAB-16)
+            // How it shows its working: the journal, the combat log, the stops, the watches and the log
             if (lab != null) bottom = new LabBottomPanel(lab, Content(log));
 
             ghost = new Label { name = "Ghost", pickingMode = PickingMode.Ignore };
@@ -202,7 +202,7 @@ namespace FarEmerald.PlayForge.Lab
             libraryName = new Label { name = "LibraryName" };
             libraryName.AddToClassList("lab-muted");
             content.Add(libraryName);
-            // The Forge Project it plays, where its library offers several (LAB-18)
+            // The Forge Project it plays, where its library offers several
             libraryProject = new DropdownField("Project", new List<string>(), 0)
             {
                 name = "LibraryProject",
@@ -259,7 +259,7 @@ namespace FarEmerald.PlayForge.Lab
             dummies.Add(new Button(() => lab?.ResetDummies()) { name = "ResetDummies", text = "Reset", tooltip = "Each dummy back where it was put, at full" });
             dummies.Add(new Button(() => lab?.Clear()) { name = "ClearUnits", text = "Clear", tooltip = "Take every unit out" });
 
-            // The author's own unit, in either mode (LAB-11)
+            // The author's own unit, in either mode
             unitSection = new VisualElement { name = "UnitSection" };
             content.Add(unitSection);
             Heading(unitSection, "Your unit");

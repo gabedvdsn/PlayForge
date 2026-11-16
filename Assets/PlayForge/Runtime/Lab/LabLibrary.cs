@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge.Lab
 {
-    /// <summary>The kinds of asset the lab's library lists, in its order (LAB-5).</summary>
+    /// <summary>The kinds of asset the lab's library lists, in its order.</summary>
     public enum LabAssetKind
     {
         Abilities,
@@ -17,7 +17,7 @@ namespace FarEmerald.PlayForge.Lab
     }
 
     /// <summary>
-    /// The assets the lab plays (LAB-5, LAB-18): in the editor every PlayForge asset of the project or of its active Forge
+    /// The assets the lab plays: in the editor every PlayForge asset of the project or of its active Forge
     /// Project, in a build those a project names. The library panel lists them by kind.
     /// </summary>
     public interface ILabLibrary
@@ -31,7 +31,7 @@ namespace FarEmerald.PlayForge.Lab
         /// <summary>Lists the assets again, as after one is made or deleted.</summary>
         void Refresh();
 
-        /// <summary>The Forge Projects it can play, by name, which the library's header switches between: none where it plays one set of assets (LAB-18).</summary>
+        /// <summary>The Forge Projects it can play, by name, which the library's header switches between: none where it plays one set of assets.</summary>
         IReadOnlyList<string> Projects => Array.Empty<string>();
 
         /// <summary>Which of <see cref="Projects"/> it plays now, or -1.</summary>
@@ -45,8 +45,8 @@ namespace FarEmerald.PlayForge.Lab
     public sealed class ListLibrary : ILabLibrary
     {
         /// <summary>
-        /// The library of what a Forge Project names, the assets in its catalog, under its name, as a build has them
-        /// (LAB-18); null for none.
+        /// The library of what a Forge Project names, the assets in its catalog, under its name, as a build has them;
+        /// null for none.
         /// </summary>
         public static ListLibrary Of(ForgeProject project)
         {
@@ -156,7 +156,7 @@ namespace FarEmerald.PlayForge.Lab
         }
 
         /// <summary>
-        /// A kind's color, which shows in its icon alone (`Docs/EDITOR_STYLE.md`): the hues The Forge gives each type.
+        /// A kind's color, which shows in its icon alone: the hues The Forge gives each type.
         /// </summary>
         public static Color ColorOf(LabAssetKind kind) => kind switch
         {

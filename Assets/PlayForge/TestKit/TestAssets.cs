@@ -34,7 +34,7 @@ namespace FarEmerald.PlayForge.Testing
     }
 
     /// <summary>
-    /// Builds PlayForge's assets in code, for one test world (TW-26): attributes, sets, identities, effects, items and
+    /// Builds PlayForge's assets in code, for one test world: attributes, sets, identities, effects, items and
     /// abilities, each ready to use. Everything it makes is destroyed with the world, and the tag names it gives are
     /// unique within it. A game's own assets, loaded from the project, are the test's to load.
     /// </summary>

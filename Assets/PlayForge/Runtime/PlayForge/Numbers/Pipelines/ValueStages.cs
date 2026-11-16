@@ -5,7 +5,7 @@ namespace FarEmerald.PlayForge
 {
     /// <summary>
     /// One stage of a <see cref="ValuePipeline"/>: it takes the value and gives what goes on. A project writes its own by
-    /// deriving from it; each built-in one reads its numbers in the hit's context, as any number field is read (TW-2).
+    /// deriving from it; each built-in one reads its numbers in the hit's context, as any number field is read.
     /// </summary>
     [Serializable]
     public abstract class AbstractValueStage
@@ -64,7 +64,7 @@ namespace FarEmerald.PlayForge
 
     /// <summary>
     /// On a chance, the value times a number: a critical hit. It rolls once for the hit, as it lands, and its step in the
-    /// breakdown says so (TW-8).
+    /// breakdown says so.
     /// </summary>
     [Serializable]
     [ForgeMenu(Description = "On a chance, multiplies the value, as a critical hit.")]
@@ -117,8 +117,8 @@ namespace FarEmerald.PlayForge
 
     /// <summary>
     /// A loss taken first from another attribute of the one hit, as a barrier or a shield takes a blow before health: what
-    /// it soaks comes off that attribute, unworkable so no worker reads it again, at the frame's end, and the rest goes on
-    /// (TW-12). A gain passes it by.
+    /// it soaks comes off that attribute, unworkable so no worker reads it again, at the frame's end, and the rest goes on.
+    /// A gain passes it by.
     /// </summary>
     [Serializable]
     [ForgeMenu(Description = "Takes a loss from another attribute first, as a shield takes a blow before health.")]
@@ -136,7 +136,7 @@ namespace FarEmerald.PlayForge
             float soaked = Mathf.Min(pool.CurrentValue, -value);
             if (soaked <= 0f) return value;
             // It comes off the side's entity at the frame's end; a stand-in, as a Value Pipeline's try reads in the editor, has
-            // no entity to take it from, and the stage still says what it soaks (EP-23)
+            // no entity to take it from, and the stage still says what it soaks
             var system = run.Context.SystemOf(On);
             system?.GetActionQueue()?.Enqueue(new ModifyAttributeAction(system, Into,
                 SourcedModifiedAttributeValue.GenerateUnworkable(system, Into, -soaked, 0f)));
@@ -148,7 +148,7 @@ namespace FarEmerald.PlayForge
     }
 
     /// <summary>
-    /// A stage that can stop a hit (TW-12, Decision 52): it rolls its chance once as the effect lands, before anything of it
+    /// A stage that can stop a hit: it rolls its chance once as the effect lands, before anything of it
     /// does, and on a roll that comes up nothing of the effect lands, its damage, tags, contained effects and on-hits, and
     /// each side hears it. A lasting effect's ticks aren't rolled again. As the hit commits it passes the value on.
     /// </summary>
@@ -181,7 +181,7 @@ namespace FarEmerald.PlayForge
             $"{Verb} on a {NumberText.Of(Chance)} chance{(Stops == EStopImpacts.AnyImpact ? ", any impact" : "")}";
     }
 
-    /// <summary>What a Block or Evade stage can stop (GAS-77).</summary>
+    /// <summary>What a Block or Evade stage can stop.</summary>
     public enum EStopImpacts
     {
         /// <summary>An effect that lowers its attribute, as a hit: a heal or a buff lands past it.</summary>
@@ -191,7 +191,7 @@ namespace FarEmerald.PlayForge
         AnyImpact,
     }
 
-    /// <summary>A block: on its chance, nothing of the effect lands, as Tougher Times blocks a hit outright (TW-12).</summary>
+    /// <summary>A block: on its chance, nothing of the effect lands, as Tougher Times blocks a hit outright.</summary>
     [Serializable]
     [ForgeMenu(Description = "On a chance, nothing of the effect lands, as a block.")]
     public class BlockStage : AbstractStopStage
@@ -201,7 +201,7 @@ namespace FarEmerald.PlayForge
         protected override string Verb => "blocked";
     }
 
-    /// <summary>An evade: on its chance, nothing of the effect lands, as a dodge (TW-12).</summary>
+    /// <summary>An evade: on its chance, nothing of the effect lands, as a dodge.</summary>
     [Serializable]
     [ForgeMenu(Description = "On a chance, nothing of the effect lands, as a dodge.")]
     public class EvadeStage : AbstractStopStage
@@ -212,7 +212,7 @@ namespace FarEmerald.PlayForge
     }
 
     /// <summary>
-    /// An execute (TW-15, Decision 53): a hit that would leave the one hit with less than a share of its attribute's base
+    /// An execute: a hit that would leave the one hit with less than a share of its attribute's base
     /// takes the rest, as Culling Blade does below its threshold.
     /// </summary>
     [Serializable]

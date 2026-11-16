@@ -7,7 +7,7 @@ using UnityEngine.UIElements;
 namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
-    /// A [LinkedSource] field, the asset whose levels this one takes (ED-66): Unity's object field of level providers,
+    /// A [LinkedSource] field, the asset whose levels this one takes: Unity's object field of level providers,
     /// whose picker lists them, and under it a line of the levels it gives. It was any asset's field that warned at a
     /// wrong pick, with a tinted box, a colored type badge, a × and a "..." that opened a browser window of its own,
     /// which Unity's picker does.
@@ -18,7 +18,7 @@ namespace FarEmerald.PlayForge.Editor
         public override VisualElement CreatePropertyGUI(SerializedProperty property)
         {
             var root = new VisualElement { name = "LevelSourceRoot" };
-            // The style sheet lays out the line, wherever the field is drawn (ED-20)
+            // The style sheet lays out the line, wherever the field is drawn
             ForgeTheme.Apply(root);
 
             var type = fieldInfo?.FieldType;

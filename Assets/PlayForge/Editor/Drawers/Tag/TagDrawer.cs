@@ -9,7 +9,7 @@ using UnityEngine.UIElements;
 namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
-    /// A tag field in Docs/EDITOR_STYLE.md's terms (ED-55): Unity's field, its label in the label column, the tag's parents in
+    /// A tag field: Unity's field, its label in the label column, the tag's parents in
     /// secondary text and its leaf in strong text, by its display name (<see cref="ForgeTagField"/>). Pressing it opens the
     /// tag picker, Unity's searchable dropdown of the tags its context offers (<see cref="ForgeTagContext"/>), with None and,
     /// where the field may make one, New Tag… (<see cref="ForgeTagPicker"/>). Its right-click menu clears it, makes a new
@@ -33,14 +33,14 @@ namespace FarEmerald.PlayForge.Editor
         public override VisualElement CreatePropertyGUI(SerializedProperty property)
         {
             var root = new VisualElement { name = "TagDrawerRoot" };
-            // The style sheet lays out the field, wherever it's drawn (ED-20)
+            // The style sheet lays out the field, wherever it's drawn
             ForgeTheme.Apply(root);
             var settings = SettingsOf(property);
             var field = new ForgeTagField(LabelOf(property)) { name = "TagField", tooltip = settings.Tooltip ?? "" };
             field.AddToClassList(BaseField<string>.alignedFieldUssClassName);
             root.Add(field);
 
-            // The tag each selected asset holds, mixed where they differ (ED-12)
+            // The tag each selected asset holds, mixed where they differ
             void Show()
             {
                 if (!ScalerFields.Alive(property)) return;
@@ -87,11 +87,11 @@ namespace FarEmerald.PlayForge.Editor
         // Opens the picker under the field's box, over the tags the field's context offers
         private void OpenPicker(SerializedProperty property, Settings settings, VisualElement under, string title, Action<Tag> picked, bool checkHeld = true)
         {
-            // The tags the active Forge Project uses alone, where another project uses them alone (FEAT-34)
+            // The tags the active Forge Project uses alone, where another project uses them alone
             var offers = ForgeProjects.OffersTag();
             var tags = ForgeTagRegistry.GetTagsForContext(settings.Contexts, settings.IncludeUniversal).Where(offers).ToList();
             var start = StartOf(TagOf(property));
-            // The field's tag checked, where the picker picks the field's own (EP-1)
+            // The field's tag checked, where the picker picks the field's own
             var held = checkHeld && !property.hasMultipleDifferentValues ? TagOf(property) : default;
             new ForgeTagPicker(tags, settings.AllowCreate, GroupByRoot(), title, picked,
                 () => ForgeNewTagWindow.ShowFor(start, settings.Contexts, made => Pick(property, made, settings.Contexts)), held).Show(under.worldBound);
@@ -121,7 +121,7 @@ namespace FarEmerald.PlayForge.Editor
                     if (!parent.IsValid) return;
                     var leaf = TagDisplaySettings.PathOf(tag);
                     leaf = leaf.Substring(leaf.LastIndexOf('.') + 1);
-                    // Under the parent's path, which is an asset tag's whole name where its display is its leaf (TAG-1)
+                    // Under the parent's path, which is an asset tag's whole name where its display is its leaf
                     Pick(property, Tag.GenerateAsUnique($"{parent.Path}.{leaf}"), settings.Contexts);
                 }), held ? DropdownMenuAction.Status.Normal : DropdownMenuAction.Status.Disabled);
             }

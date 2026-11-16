@@ -6,7 +6,7 @@ using UnityEngine.UIElements;
 namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
-    /// A Scaler asset's Try section (LVL-5, Decision 82): its range of levels; a block for the caster and one for the
+    /// A Scaler asset's Try section: its range of levels; a block for the caster and one for the
     /// target, each an Entity field that fills it and a row for each attribute the scaler reads there, whether the side has
     /// it, its current value and its base; a row for each key a caller sets, whether it's set and its value; then a row of
     /// the scaler's value at each level, as an effect's Levels shows, with the parts behind the selected level under it.

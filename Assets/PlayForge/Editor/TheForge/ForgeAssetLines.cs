@@ -7,7 +7,7 @@ using Object = UnityEngine.Object;
 namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
-    /// One line for each asset (TW-21, Decision 61), which its inspector's header and The Forge's list show: an ability's
+    /// One line for each asset, which its inspector's header and The Forge's list show: an ability's
     /// numbers by level, then its costs and cooldown, as "-450/-600/-750 Health; 280/420/680 Mana; 70/60/50 s"; an item's
     /// what it changes while equipped and the ability it grants, as "+20 Armor; Blink"; an entity's first attributes as it
     /// starts and its abilities, as "Health 500, Mana 300, Armor 5; Fireball, Blink"; an effect's first impact by level, as
@@ -43,7 +43,7 @@ namespace FarEmerald.PlayForge.Editor
                 if (impact != null) parts.Add(ImpactText(impact));
             }
 
-            // What its Cost effect spends, as amounts, then each of its attribute costs (TW-29)
+            // What its Cost effect spends, as amounts, then each of its attribute costs
             if (breakdown.Cost?.Series is { } cost)
             {
                 foreach (var impact in cost.Impacts)

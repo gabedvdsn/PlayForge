@@ -7,11 +7,11 @@ using UnityEngine;
 namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
-    /// The tag picker a tag field opens (ED-55, EP-1): PlayForge's dropdown of the tags the field's context offers, by their
+    /// The tag picker a tag field opens: PlayForge's dropdown of the tags the field's context offers, by their
     /// display names, each under its root while Group Tags by Root is on and its root has more than one; None first, then
     /// New Tag… where the field may make one, and the field's tag checked. Its search finds a tag by any part of its path,
-    /// and its Context says the contexts a tag is for: those it's used in, declared for, or exposed for in code (the user's
-    /// note, EP-1). It was Unity's searchable dropdown, and before that a list drawn under the field in tinted boxes in
+    /// and its Context says the contexts a tag is for: those it's used in, declared for, or exposed for in code.
+    /// It was Unity's searchable dropdown, and before that a list drawn under the field in tinted boxes in
     /// code, with a button that showed only on hover.
     /// </summary>
     internal sealed class ForgeTagPicker
@@ -53,7 +53,7 @@ namespace FarEmerald.PlayForge.Editor
         /// <summary>Shows it under a rect of the field's panel.</summary>
         public void Show(Rect worldBound) => Dropdown.Show(worldBound);
 
-        /// <summary>What the picker says of a tag: the contexts it's for, used, declared or exposed in code (EP-1).</summary>
+        /// <summary>What the picker says of a tag: the contexts it's for, used, declared or exposed in code.</summary>
         internal static string ContextOf(Tag tag, IReadOnlyList<string> order = null)
         {
             var contexts = ForgeTagContexts.ContextsOf(tag, order);

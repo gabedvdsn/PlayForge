@@ -8,7 +8,7 @@ namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
     /// Remembers the widths a table's columns are dragged to, and the columns its header's menu hides, so they outlive the
-    /// window's closing and a domain reload, as entering Play mode is (ED-48, FN-7). Unity keeps a table's columns only for
+    /// window's closing and a domain reload, as entering Play mode is. Unity keeps a table's columns only for
     /// a table with a view data key, which brings back its selection and scroll too, behind the window's back. This keeps
     /// the widths and the hidden columns alone, a preference each a table, and Use Defaults forgets them.
     /// </summary>
@@ -23,7 +23,7 @@ namespace FarEmerald.PlayForge.Editor
         /// <summary>The preference a table's widths are kept under.</summary>
         internal static string KeyOf(string table) => PlayForgePreferences.Prefix + "Columns_" + table;
 
-        /// <summary>The preference a table's hidden columns are kept under (FN-7).</summary>
+        /// <summary>The preference a table's hidden columns are kept under.</summary>
         internal static string HiddenKeyOf(string table) => PlayForgePreferences.Prefix + "HiddenColumns_" + table;
 
         /// <summary>
@@ -59,7 +59,7 @@ namespace FarEmerald.PlayForge.Editor
             }
 
             // The columns the header's menu hides, hidden again as the table is built; they came back as the window was
-            // closed and opened again (FN-7)
+            // closed and opened again
             var hiddenKey = HiddenKeyOf(table);
             var hidden = new SortedSet<string>(EditorPrefs.GetString(hiddenKey, "").Split(';').Where(name => name.Length > 0));
             foreach (var column in columns)

@@ -7,10 +7,10 @@ using UnityEngine.UIElements;
 namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
-    /// The header an asset inspector opens with: the 32 px type icon, or the asset's own texture where it has one (ED-69),
+    /// The header an asset inspector opens with: the 32 px type icon, or the asset's own texture where it has one,
     /// the asset's name, and its type and asset tag, then its actions, in one row on the right, with any line about the
-    /// asset, as its file name in The Forge, in a row of its own under them (ED-65). It takes its look from the style sheet
-    /// alone (Decision 20). It took the type's color as a thick border and badge, and set its own dark colors (ED-20).
+    /// asset, as its file name in The Forge, in a row of its own under them. It takes its look from the style sheet
+    /// alone. It took the type's color as a thick border and badge, and set its own dark colors.
     /// </summary>
     internal class ForgeAssetHeader : VisualElement
     {
@@ -24,7 +24,7 @@ namespace FarEmerald.PlayForge.Editor
             Icon = new ForgeTypeIcon(assetType) { name = "HeaderIcon" };
             Icon.AddToClassList("pf-asset-header__icon");
             Add(Icon);
-            // The asset's own texture, in the icon's place, where it has one (ED-69)
+            // The asset's own texture, in the icon's place, where it has one
             Picture = new Image { name = "HeaderPicture", scaleMode = ScaleMode.ScaleToFit };
             Picture.AddToClassList("pf-asset-header__icon");
             Picture.AddToClassList(HiddenClass);
@@ -40,7 +40,7 @@ namespace FarEmerald.PlayForge.Editor
             text.Add(Subtitle);
             Add(text);
 
-            // The actions, one row on the right, and under it the lines about the asset, on the right too (ED-65)
+            // The actions, one row on the right, and under it the lines about the asset, on the right too
             var actions = new VisualElement { name = "HeaderActions" };
             actions.AddToClassList("pf-asset-header__actions");
             ActionRow = new VisualElement { name = "HeaderActionRow" };
@@ -59,12 +59,12 @@ namespace FarEmerald.PlayForge.Editor
 
         public ForgeTypeIcon Icon { get; }
 
-        /// <summary>The asset's own texture, which takes the type icon's place where it has one (ED-69).</summary>
+        /// <summary>The asset's own texture, which takes the type icon's place where it has one.</summary>
         public Image Picture { get; }
 
         private const string HiddenClass = "pf-hidden";
 
-        /// <summary>Shows a texture in the type icon's place, or the type icon for none (ED-69).</summary>
+        /// <summary>Shows a texture in the type icon's place, or the type icon for none.</summary>
         public void ShowPicture(Texture texture)
         {
             Picture.image = texture;
@@ -77,7 +77,7 @@ namespace FarEmerald.PlayForge.Editor
         /// <summary>The line under the name: the asset's type and asset tag, as in "Gameplay Effect · Effect.Burning".</summary>
         public Label Subtitle { get; }
 
-        /// <summary>The asset's problem count, which shows while the validator finds any (Q8, ED-15).</summary>
+        /// <summary>The asset's problem count, which shows while the validator finds any.</summary>
         public Button ProblemCount { get; private set; }
 
         /// <summary>Adds the problem count, which opens the Problems view on the asset, hidden until it has problems.</summary>
@@ -85,7 +85,7 @@ namespace FarEmerald.PlayForge.Editor
         {
             ProblemCount = new Button(onClick) { name = "ProblemCount" };
             ProblemCount.AddToClassList("pf-asset-header__problems");
-            // Hidden by its class, as the header takes its whole look from the style sheet (ED-20)
+            // Hidden by its class, as the header takes its whole look from the style sheet
             ProblemCount.AddToClassList("pf-asset-header__problems--none");
             ActionRow.Add(ProblemCount);
             return ProblemCount;
@@ -114,8 +114,8 @@ namespace FarEmerald.PlayForge.Editor
 
         /// <summary>
         /// Adds a line of secondary text in a row of its own under the actions, on the right, as the asset's file name in
-        /// The Forge, whose list shows the asset's name alone (ED-58). It sat under Show in Project, which then stood two
-        /// lines tall in the row, so the other actions sat level with its middle (ED-65). The line hides while it has no
+        /// The Forge, whose list shows the asset's name alone. It sat under Show in Project, which then stood two
+        /// lines tall in the row, so the other actions sat level with its middle. The line hides while it has no
         /// text.
         /// </summary>
         public Label AddLine(string lineName)
@@ -156,9 +156,9 @@ namespace FarEmerald.PlayForge.Editor
 
         /// <summary>
         /// Keeps the header at the top of the scroll view it's in while the content scrolls under it, as far down as its
-        /// own inspector reaches (Decision 29). The header comes after the content, so it draws over it, and
+        /// own inspector reaches. The header comes after the content, so it draws over it, and
         /// <paramref name="space"/> holds its place at the top. It follows the scroll view's events and its own layout,
-        /// so nothing polls (ED-11). It scrolled away with the content (ED-36).
+        /// so nothing polls. It scrolled away with the content.
         /// </summary>
         public void StickTo(VisualElement space)
         {

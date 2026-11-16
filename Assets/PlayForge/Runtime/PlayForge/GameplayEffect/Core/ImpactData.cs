@@ -22,12 +22,12 @@
 
         /// <summary>
         /// A lasting modifier coming off: a change, told as every change is, but no hit. Its effect's workers hear no
-        /// impact, its dealer's impact workers don't run, and no Impact Taken or Dealt is sent (GAS-85, Decision 84).
+        /// impact, its dealer's impact workers don't run, and no Impact Taken or Dealt is sent.
         /// </summary>
         public bool Ends;
 
         // Its commit's steps, while the commit is in progress, where they're recorded: the combat log copies them as it
-        // writes (LAB-13). Null otherwise
+        // writes. Null otherwise
         internal ChangeStepRecorder Steps;
 
         public static ImpactData Generate(ITarget target, IAttribute attribute, SourcedModifiedAttributeValue sourcedModifier, AttributeValue realImpact, AttributeValue oldValue)

@@ -7,7 +7,7 @@ using UnityEngine.UIElements;
 namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
-    /// An effect level by level, as The Forge shows it (FEAT-32): a row for its duration, its ticks and its chance where it
+    /// An effect level by level, as The Forge shows it: a row for its duration, its ticks and its chance where it
     /// has them, then one for each impact, its own and its contained effects', with the value at each level. A cell
     /// selected shows the parts behind it, what each read and what it gave. It reads with no caster and no target, so a
     /// part that reads one gives what it falls back to, and its row says what it needs.

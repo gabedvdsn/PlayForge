@@ -10,11 +10,11 @@ namespace FarEmerald.PlayForge
     /// A disjoint, as in Dota: the shots already aimed at an entity lose it, fly on to where it stood, and land on
     /// nothing. A shot is found through the intent it registers with its target, which only a homing shot does
     /// (<see cref="AbstractTargetedMonoProcess"/>), and only one whose data marks it <see cref="IS_DISJOINTABLE"/>
-    /// is disjointed. A skill shot, one that hits whatever it crosses, registers no intent, and lands as usual (GAS-36).
+    /// is disjointed. A skill shot, one that hits whatever it crosses, registers no intent, and lands as usual.
     /// </summary>
     public class DisjointProxyTaskBehaviour : AbstractProxyTaskBehaviour
     {
-        // A packet key an ability's data sets, exposed where Data keys are picked (TAG-5)
+        // A packet key an ability's data sets, exposed where Data keys are picked
         [ForgeTagExposed(ForgeContext.DataKey)]
         public static Tag IS_DISJOINTABLE => Tag.GenerateAsUnique("CB_IS_DISJOINTABLE");
         public static Tag COMMAND => Tag.GenerateAsUnique("CB_DISJOINT");
@@ -61,7 +61,7 @@ namespace FarEmerald.PlayForge
             }
 
             // At a placeholder where the target stood, which takes nothing. This aimed the shot back at the target it
-            // had already, so it went on and hit (GAS-26)
+            // had already, so it went on and hit
             var disjoint = DisjointTarget.Generate(_target);
             userWithIntent.SetTarget(disjoint, disjoint.GetTargetingPacket());
             SetStatus(user, EActionStatus.Success);

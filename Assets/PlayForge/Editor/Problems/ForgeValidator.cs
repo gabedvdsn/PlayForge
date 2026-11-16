@@ -8,9 +8,9 @@ using Object = UnityEngine.Object;
 namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
-    /// PlayForge's one validator (Q8, ED-15). It runs every <see cref="ForgeValidationRule"/> on each PlayForge asset in
+    /// PlayForge's one validator. It runs every <see cref="ForgeValidationRule"/> on each PlayForge asset in
     /// the project and keeps what they find, which the Problems view lists and an inspector's header counts. It follows
-    /// the project, so nothing polls (Q30): an edit checks its asset again, an import checks what it brought, and a deleted
+    /// the project, so nothing polls: an edit checks its asset again, an import checks what it brought, and a deleted
     /// asset has every asset checked again, since another may have read it. In batch mode, <see cref="LogAll"/> writes
     /// each problem to the Console. Validate All checked four things, flagged every effect with no workers, and showed 15
     /// problems in a dialog.
@@ -54,7 +54,7 @@ namespace FarEmerald.PlayForge.Editor
                     // One rule that throws doesn't keep the others from checking
                     Debug.LogException(exception);
                 }
-                // Each problem knows the rule that found it, which the By Rule view groups it under (FEAT-25)
+                // Each problem knows the rule that found it, which the By Rule view groups it under
                 for (int i = before; i < problems.Count; i++) problems[i].Rule ??= rule;
             }
             return problems;
@@ -62,7 +62,7 @@ namespace FarEmerald.PlayForge.Editor
 
         /// <summary>
         /// The problems an asset has, its warnings and errors: a saved one's as the validator last found them, another's as
-        /// it is now. Its notes are <see cref="NotesOf"/> (TW-25).
+        /// it is now. Its notes are <see cref="NotesOf"/>.
         /// </summary>
         public static IReadOnlyList<ForgeProblem> ProblemsOf(Object asset)
         {
@@ -70,7 +70,7 @@ namespace FarEmerald.PlayForge.Editor
             return found.Any(IsNote) ? found.Where(problem => !IsNote(problem)).ToList() : found;
         }
 
-        /// <summary>The notes an asset has, which may be meant, as a trigger on an event that code sends (TW-25).</summary>
+        /// <summary>The notes an asset has, which may be meant, as a trigger on an event that code sends.</summary>
         public static IReadOnlyList<ForgeProblem> NotesOf(Object asset) => FoundIn(asset).Where(IsNote).ToList();
 
         /// <summary>Every problem the project's PlayForge assets have, their warnings and errors.</summary>
@@ -83,7 +83,7 @@ namespace FarEmerald.PlayForge.Editor
             }
         }
 
-        /// <summary>Every note the project's PlayForge assets have (TW-25).</summary>
+        /// <summary>Every note the project's PlayForge assets have.</summary>
         public static IReadOnlyList<ForgeProblem> Notes
         {
             get
@@ -119,7 +119,7 @@ namespace FarEmerald.PlayForge.Editor
                 if (problem.Severity == ForgeProblemSeverity.Error) Debug.LogError(line, problem.Asset);
                 else Debug.LogWarning(line, problem.Asset);
             }
-            // A note as a plain line, so a build that fails on warnings passes it (TW-25)
+            // A note as a plain line, so a build that fails on warnings passes it
             var notes = Notes;
             foreach (var note in notes)
                 Debug.Log($"[PlayForge problems] {AssetDatabase.GetAssetPath(note.Asset)}: Note: {note.Message}", note.Asset);
@@ -150,7 +150,7 @@ namespace FarEmerald.PlayForge.Editor
         private static void Scan()
         {
             Known.Clear();
-            // The linter's facts of the project are gathered again as a check first asks (TW-25)
+            // The linter's facts of the project are gathered again as a check first asks
             ForgeLint.Forget();
             foreach (var asset in ProjectAssets()) Remember(asset);
             scanned = true;
@@ -222,7 +222,7 @@ namespace FarEmerald.PlayForge.Editor
             if (asset == null || !EditorUtility.IsPersistent(asset)) return false;
             // An asset that now gives the linter other facts, as an effect that deals another impact type or a pipeline
             // whose stage sends another event, has every asset checked again, the next time someone asks, as another's
-            // check reads them (TW-25)
+            // check reads them
             if (ForgeLint.Moved(asset))
             {
                 scanned = false;

@@ -4,7 +4,7 @@ using UnityEngine;
 namespace FarEmerald.PlayForge
 {
     /// <summary>
-    /// Whether an attribute of the caster or the target compares with a number (FEAT-29): "Target's Health &lt; 0.3 ×
+    /// Whether an attribute of the caster or the target compares with a number: "Target's Health &lt; 0.3 ×
     /// Target's Health (base)". The number is any kind, read with the condition as its owner. An entity without the
     /// attribute doesn't hold.
     /// </summary>
@@ -43,7 +43,7 @@ namespace FarEmerald.PlayForge
 
         public override void Initialize(IAttributeImpactCarrier carrier) => Value?.Initialize(carrier);
 
-        // The attribute's value, and the number it was compared with (FEAT-32)
+        // The attribute's value, and the number it was compared with
         public override void Explain(in NumberContext context, NumberTrace trace)
         {
             string name = Attribute != null ? Attribute.GetName() : "attribute";

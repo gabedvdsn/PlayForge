@@ -5,9 +5,9 @@ using UnityEngine.UIElements;
 namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
-    /// A worker group, in Docs/EDITOR_STYLE.md's terms (ED-57): its four lists of workers, each Unity's reorderable list,
+    /// A worker group: its four lists of workers, each Unity's reorderable list,
     /// where a new worker starts empty for its kind to be picked. The Workers section it's drawn in folds, counts and
-    /// imports it. Its name, which nothing reads, it doesn't draw (FN-4).
+    /// imports it. Its name, which nothing reads, it doesn't draw.
     /// <para>
     /// It was a box of its own, with a colored border, colored count badges, a type tag and an Import of its own, from 90
     /// styles set in C#, inside a section whose header already counted and imported it.
@@ -32,7 +32,7 @@ namespace FarEmerald.PlayForge.Editor
         public override VisualElement CreatePropertyGUI(SerializedProperty property)
         {
             var root = new VisualElement { name = "WorkerGroup" };
-            // The style sheet lays out the group, wherever it's drawn (ED-20)
+            // The style sheet lays out the group, wherever it's drawn
             ForgeTheme.Apply(root);
 
             var serialized = property.serializedObject;

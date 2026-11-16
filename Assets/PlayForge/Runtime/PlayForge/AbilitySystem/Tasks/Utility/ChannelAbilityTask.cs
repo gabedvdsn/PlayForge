@@ -6,7 +6,7 @@ namespace FarEmerald.PlayForge
 {
     /// <summary>
     /// Channels: holds its stage for its duration, in its caster's time, read as it starts at its ability's level, a
-    /// critical section, as a cast bar fills (FN-24). It kept a cast bar's calls commented out, which nothing drew.
+    /// critical section, as a cast bar fills. It kept a cast bar's calls commented out, which nothing drew.
     /// </summary>
     [ForgeMenu("Waits", Description = "Holds its stage for a duration nothing interrupts, as a cast bar fills.")]
     public class ChannelAbilityTask : AbstractAbilityTask

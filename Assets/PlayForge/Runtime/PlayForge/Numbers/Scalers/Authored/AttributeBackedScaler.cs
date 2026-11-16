@@ -100,7 +100,7 @@ namespace FarEmerald.PlayForge
                 ? deriv.GetOrigin()?.GetSource() 
                 : deriv.GetTarget();
             
-            // A context with no one on that side, as a number read where there's no target, reads 0 (FEAT-29)
+            // A context with no one on that side, as a number read where there's no target, reads 0
             if (entity == null || CaptureAttribute is null || !RetentionGroups.TryRead(Groups, entity, CaptureAttribute, out var attrValue))
             {
                 return 0f;
@@ -114,11 +114,11 @@ namespace FarEmerald.PlayForge
             return false;
         }
 
-        // It reads the attribute, through its behaviours (ED-51)
+        // It reads the attribute, through its behaviours
         public override EScalerParts Parts => EScalerParts.Behaviours;
     }
     
-    /// <summary>How × Attribute reads its attribute (TW-1).</summary>
+    /// <summary>How × Attribute reads its attribute.</summary>
     public enum EAttributeRead
     {
         /// <summary>As the attribute's role says: a Bonus Share as a multiplier, a Resistance as what's left, else as it is.</summary>

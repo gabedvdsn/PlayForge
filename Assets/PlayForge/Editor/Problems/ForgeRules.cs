@@ -6,14 +6,14 @@ using Object = UnityEngine.Object;
 
 namespace FarEmerald.PlayForge.Editor
 {
-    // The validator's own rules (ED-15). Each finds what an inspector warns about in place, in the inspector's words where
+    // The validator's own rules. Each finds what an inspector warns about in place, in the inspector's words where
     // it has some, so the Problems view, the header's count and the inspector agree. Validate All's four checks are gone:
     // an effect with no workers, or an ability with no cost or cooldown, is fine. Each names what it finds, which the
-    // Problems view's By Rule view groups by, and a problem a simple step fixes carries the step (FEAT-25).
+    // Problems view's By Rule view groups by, and a problem a simple step fixes carries the step.
 
     /// <summary>
     /// A quick fix's step: a write through a SerializedObject of the asset's own, which records Undo, so the step the
-    /// Problems view opens takes it back, and the validator, which follows each edit, checks the asset again (FEAT-25).
+    /// Problems view opens takes it back, and the validator, which follows each edit, checks the asset again.
     /// </summary>
     internal static class QuickFixes
     {
@@ -75,7 +75,7 @@ namespace FarEmerald.PlayForge.Editor
             if (isUnknown || (stored.Name == result && stored.DisplayName == display)) return;
             var was = string.IsNullOrEmpty(stored.Name) ? "not set" : stored.Name;
             // A tag whose path is right reads by its display name, which its name gives too: the message named the same
-            // path twice (FEAT-25)
+            // path twice
             var message = stored.Name != result
                 ? $"Its asset tag is {was}, but its name gives {result}. Identity's Update stores it."
                 : string.IsNullOrEmpty(stored.DisplayName)
@@ -91,7 +91,7 @@ namespace FarEmerald.PlayForge.Editor
                     var from = tag.FindPropertyRelative(nameof(Tag.Name)).stringValue;
                     tag.FindPropertyRelative(nameof(Tag.Name)).stringValue = result;
                     tag.FindPropertyRelative(nameof(Tag.DisplayName)).stringValue = display;
-                    // What stored its old tag stores the new one, or it finds the asset no more (ED-84)
+                    // What stored its old tag stores the new one, or it finds the asset no more
                     ForgeTagRenames.Rename(from, result, display, asset);
                 })),
             });
@@ -173,7 +173,7 @@ namespace FarEmerald.PlayForge.Editor
 
     /// <summary>
     /// A magnitude field that reads a scaler it hasn't got, as the field warns, a Shared scaler with no Scaler asset, and a
-    /// Group whose members multiply with none that adds, which multiply 0 (ED-80).
+    /// Group whose members multiply with none that adds, which multiply 0.
     /// </summary>
     internal sealed class MagnitudeRule : ForgeValidationRule
     {
@@ -222,12 +222,12 @@ namespace FarEmerald.PlayForge.Editor
     }
 
     /// <summary>
-    /// A number whose kind its field's context can't resolve (FEAT-29), as a kind that reads the target in a field that
+    /// A number whose kind its field's context can't resolve, as a kind that reads the target in a field that
     /// declares none, often one copied from another field. At runtime it reads its number, as the field warns. Its fix
     /// is a choice of kind, so it has no Quick Fix.
     /// <para>
     /// A relative number is flagged where its field's code gives it no owner, as any kind its field can't resolve, and
-    /// where the object that holds it has no field of the name it reads, as after a rename (NUM-9).
+    /// where the object that holds it has no field of the name it reads, as after a rename.
     /// </para>
     /// </summary>
     internal sealed class NumberContextRule : ForgeValidationRule
@@ -254,7 +254,7 @@ namespace FarEmerald.PlayForge.Editor
                         $"{ScalerFields.FieldLabel(path)} reads {missing}, which its field doesn't have, so it reads its number.", path));
 
                 // With an owner to read, a relative number still needs the field it names: each number's own, inside a
-                // scaler's or a condition's too, read on the object its owner is (FEAT-29)
+                // scaler's or a condition's too, read on the object its owner is
                 if ((provides & NumberReads.Owner) == 0) continue;
                 Type owner = null;
                 foreach (var relative in NumberFields.ScalersIn(kind, NumberFields.Walk.SameNumber).OfType<RelativeToFieldKind>())
@@ -319,7 +319,7 @@ namespace FarEmerald.PlayForge.Editor
     }
 
     /// <summary>
-    /// An attribute set that gives nothing, an element with no attribute, which gives nothing (GAS-54), and a magnitude
+    /// An attribute set that gives nothing, an element with no attribute, which gives nothing, and a magnitude
     /// outside its bounds, which the runtime clamps, as the element warns.
     /// </summary>
     internal sealed class AttributeSetRule : ForgeValidationRule
@@ -376,9 +376,9 @@ namespace FarEmerald.PlayForge.Editor
     }
 
     /// <summary>
-    /// Charges that a built-in recharge brings back with no Cooldown to bring them (TW-17): they never run out, so they
-    /// limit nothing. A recharge of one's own decides for itself. It took the place of ED-41's rule, of a cost or a
-    /// cooldown no stage applied, as TW-17 applies them as the ability starts.
+    /// Charges that a built-in recharge brings back with no Cooldown to bring them: they never run out, so they
+    /// limit nothing. A recharge of one's own decides for itself. It took the place of a rule of a cost or a
+    /// cooldown no stage applied, as an ability applies them as it starts.
     /// </summary>
     internal sealed class ChargesRule : ForgeValidationRule
     {
@@ -412,7 +412,7 @@ namespace FarEmerald.PlayForge.Editor
         }
     }
 
-    /// <summary>An item whose Uses never counts, as it lends no ability to use (FN-14).</summary>
+    /// <summary>An item whose Uses never counts, as it lends no ability to use.</summary>
     internal sealed class UsesRule : ForgeValidationRule
     {
         public override string Name => "Uses that never count";
@@ -431,7 +431,7 @@ namespace FarEmerald.PlayForge.Editor
         }
     }
 
-    /// <summary>An entity whose Respawn never revives it, as it ends as it dies (FN-14).</summary>
+    /// <summary>An entity whose Respawn never revives it, as it ends as it dies.</summary>
     internal sealed class RespawnRule : ForgeValidationRule
     {
         public override string Name => "Respawns that never revive";
@@ -451,7 +451,7 @@ namespace FarEmerald.PlayForge.Editor
     }
 
     /// <summary>
-    /// A transfer that never moves as it's set (TW-20): one whose delivery its effect's duration can't make, as an additional
+    /// A transfer that never moves as it's set: one whose delivery its effect's duration can't make, as an additional
     /// impact's, or one that names no attribute to give or to get; and an ability that toggles an Instant effect, which is
     /// never on to turn off.
     /// </summary>
@@ -466,7 +466,7 @@ namespace FarEmerald.PlayForge.Editor
                 problems.Add(new ForgeProblem(asset, ForgeProblemSeverity.Warning,
                     "It toggles an Instant effect, which is never on to turn off. Toggle a lasting one.", nameof(Ability.Components)));
 
-            // Its transfers, each a component, numbered among themselves (FN-14)
+            // Its transfers, each a component, numbered among themselves
             if (asset is not GameplayEffect effect || effect.Components == null) return;
             for (int i = 0, n = 0; i < effect.Components.Count; i++)
             {
@@ -483,7 +483,7 @@ namespace FarEmerald.PlayForge.Editor
     }
 
     /// <summary>
-    /// An asset that leans on its project's roles where they can't serve it (TW-29; TW-28's fixed attributes before it): an
+    /// An asset that leans on its project's roles where they can't serve it: an
     /// ability's attribute cost that names nothing to spend, or a role no attribute plays in its project; an entity whose
     /// starting abilities spend attributes its set doesn't give; and an entity that stays when it dies, whom the Health
     /// role's attribute can't kill, as its set lacks it, with no death watcher of its own. Each asset is read against its

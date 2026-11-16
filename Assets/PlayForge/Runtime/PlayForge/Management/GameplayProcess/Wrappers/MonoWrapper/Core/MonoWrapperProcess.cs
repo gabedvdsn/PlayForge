@@ -18,7 +18,7 @@ namespace FarEmerald.PlayForge
         private AbstractMonoProcess activeMono;
 
         // The instantiator that made the object, which takes it back as the process ends. The object's own was asked,
-        // which a clone never has, as it isn't serialized, so a pool's object was destroyed instead (PC-33)
+        // which a clone never has, as it isn't serialized, so a pool's object was destroyed instead
         private AbstractMonoProcessInstantiator madeBy;
         
         public MonoWrapperProcess(AbstractMonoProcess storedMono, ProcessDataPacket data, IGameplayProcessHandler handler) : base(data, handler)
@@ -53,7 +53,7 @@ namespace FarEmerald.PlayForge
         }
 
         // Being outside a scene isn't enough: a live HideAndDontSave object is too, and cloning one left the
-        // object that was registered uninitialized, with whatever was set on it (PC-9). A prefab is never active
+        // object that was registered uninitialized, with whatever was set on it. A prefab is never active
         private static bool IsPrefab(AbstractMonoProcess process)
         {
             return !process.gameObject.scene.IsValid() && !process.gameObject.activeInHierarchy;
@@ -110,7 +110,7 @@ namespace FarEmerald.PlayForge
                 else
                 {
                     // Destroy is refused outside play mode, where editor tools and edit-mode tests terminate processes;
-                    // there only DestroyImmediate works (PC-32)
+                    // there only DestroyImmediate works
                     try
                     {
                         if (UnityEngine.Application.isPlaying) Object.Destroy(activeMono.gameObject);

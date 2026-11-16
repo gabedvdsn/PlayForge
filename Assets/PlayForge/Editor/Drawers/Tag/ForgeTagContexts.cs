@@ -8,16 +8,16 @@ using UnityEngine;
 namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
-    /// The contexts a tag is declared for, which the project's Tag Library keeps (ED-83). A tag field's picker offers the
+    /// The contexts a tag is declared for, which the project's Tag Library keeps. A tag field's picker offers the
     /// tags used in its context and the tags declared for it, so declaring a context puts a tag in that context's pickers,
     /// whatever uses it. A tag's contexts came only from the fields that used it, so they couldn't be changed, in The Forge
-    /// or as a tag was made (the user's report).
+    /// or as a tag was made.
     /// </summary>
     internal static class ForgeTagContexts
     {
         /// <summary>
         /// The contexts there are: PlayForge's, any a field of the project names, and the project's own, which its Tag
-        /// Libraries keep (FN-9); Universal first.
+        /// Libraries keep; Universal first.
         /// </summary>
         public static List<string> All()
         {
@@ -36,7 +36,7 @@ namespace FarEmerald.PlayForge.Editor
 
         /// <summary>
         /// Makes a context of the project's own, in its first Tag Library, made where Project Settings puts new assets while
-        /// there's none, as one Undo step (FN-9, Decision 70). A context there already changes nothing.
+        /// there's none, as one Undo step. A context there already changes nothing.
         /// </summary>
         public static void MakeContext(string name)
         {
@@ -52,7 +52,7 @@ namespace FarEmerald.PlayForge.Editor
         }
 
         /// <summary>
-        /// Why a name makes no new context, or null where it makes one (FN-9).
+        /// Why a name makes no new context, or null where it makes one.
         /// </summary>
         public static string WhyNotContext(string name)
         {
@@ -64,7 +64,7 @@ namespace FarEmerald.PlayForge.Editor
         /// <summary>
         /// The contexts a tag is for, each alone, in the order of <paramref name="order"/>, <see cref="All"/>'s by default:
         /// those its uses are in, its Tag Library's declaration and its code's exposure among them, which the registry reads
-        /// as uses (EP-1, EP-14). A tag picker's Context says them.
+        /// as uses. A tag picker's Context says them.
         /// </summary>
         public static List<string> ContextsOf(Tag tag, IReadOnlyList<string> order = null)
         {
@@ -88,7 +88,7 @@ namespace FarEmerald.PlayForge.Editor
 
         /// <summary>
         /// The contexts a tag's code declares it for, by <c>[ForgeTagExposed(...)]</c> where it's written, in the menu's
-        /// order; none for a tag no code exposes (EP-7). They're written in code, so no menu takes them away.
+        /// order; none for a tag no code exposes. They're written in code, so no menu takes them away.
         /// </summary>
         public static List<string> CodeContextsOf(Tag tag)
         {
@@ -113,7 +113,7 @@ namespace FarEmerald.PlayForge.Editor
         public static List<string> DeclaredOf(Tag tag)
         {
             var entry = EntryOf(tag, out _);
-            // An old context reads as its new one (TAG-6)
+            // An old context reads as its new one
             return entry?.Contexts != null ? ForgeContext.Current(entry.Contexts).ToList() : new List<string>();
         }
 

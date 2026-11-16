@@ -12,7 +12,7 @@ namespace FarEmerald.PlayForge
     public class ActionQueue
     {
         // Priority buckets, highest first, walked by index. In a SortedDictionary, taking each action off walked it, and
-        // its enumerator allocated every time, so every deferred action allocated as it ran (GAS-P9)
+        // its enumerator allocated every time, so every deferred action allocated as it ran
         private readonly List<Bucket> _buckets = new();
 
         private sealed class Bucket
@@ -23,7 +23,7 @@ namespace FarEmerald.PlayForge
             public Bucket(int priority) => Priority = priority;
         }
 
-        // Actions across every bucket. Kept so the per-frame "anything to do?" check never walks the buckets (PF-006)
+        // Actions across every bucket. Kept so the per-frame "anything to do?" check never walks the buckets
         private int _count;
 
         // Callbacks for pipeline transparency
@@ -31,13 +31,13 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// Invoked when an action is queued. An action the system makes for itself, such as a rescale, is used again
-        /// once the queue has run it, so read it during the call (GAS-P9).
+        /// once the queue has run it, so read it during the call.
         /// </summary>
         public event ActionCallback OnActionQueued;
 
         /// <summary>
         /// Invoked when an action is successfully executed. An action the system makes for itself is used again once
-        /// this returns, so read it during the call (GAS-P9).
+        /// this returns, so read it during the call.
         /// </summary>
         public event ActionCallback OnActionExecuted;
 
@@ -101,7 +101,7 @@ namespace FarEmerald.PlayForge
         {
             if (actions == null) return;
 
-            // A list or an array by index: a foreach through the interface allocated an enumerator for each (GAS-P9)
+            // A list or an array by index: a foreach through the interface allocated an enumerator for each
             if (actions is IReadOnlyList<IRootAction> list)
             {
                 for (int i = 0; i < list.Count; i++) Enqueue(list[i]);
@@ -153,7 +153,7 @@ namespace FarEmerald.PlayForge
                         Debug.LogError($"[ActionQueue] Action execution threw: {action.Description}\n{e}");
                     }
 
-                    // Run, so one the system uses again goes back to it (GAS-P9)
+                    // Run, so one the system uses again goes back to it
                     if (action is IReusableAction reusable) reusable.Release();
                 }
                 else

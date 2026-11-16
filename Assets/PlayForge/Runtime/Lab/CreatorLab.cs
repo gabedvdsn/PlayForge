@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge.Lab
 {
-    /// <summary>What the lab's space holds (LAB-1, LAB-9).</summary>
+    /// <summary>What the lab's space holds.</summary>
     public enum LabMode
     {
         /// <summary>Test dummies the author puts down.</summary>
@@ -19,7 +19,7 @@ namespace FarEmerald.PlayForge.Lab
     }
 
     /// <summary>
-    /// A bot's place in a battle (LAB-9): what it's made of, its side, its level and where it starts, and what the author
+    /// A bot's place in a battle: what it's made of, its side, its level and where it starts, and what the author
     /// gave it since, which a reset gives again as it makes the bot anew.
     /// </summary>
     public sealed class LabSeat
@@ -37,12 +37,12 @@ namespace FarEmerald.PlayForge.Lab
     }
 
     /// <summary>
-    /// The Creator Lab (FEAT-35): a space where an author puts units down, gives them their project's abilities, effects
-    /// and items, casts, and watches the numbers move (`Docs/CREATOR_LAB_DESIGN.md`). It builds what it needs as it wakes:
+    /// The Creator Lab: a space where an author puts units down, gives them their project's abilities, effects
+    /// and items, casts, and watches the numbers move. It builds what it needs as it wakes:
     /// PlayForge, where the scene has none; the ground, a light and its camera; a world of its own, which it steps by its
-    /// own time (LAB-8); its own caster, a neutral source for what the author drops; and its panels (LAB-5).
+    /// own time; its own caster, a neutral source for what the author drops; and its panels.
     /// <para>
-    /// Window → PlayForge → Creator Lab opens it in a new scene (LAB-1). A test makes one with <see cref="Create"/> and
+    /// Window → PlayForge → Creator Lab opens it in a new scene. A test makes one with <see cref="Create"/> and
     /// drives it through the same calls the panels make.
     /// </para>
     /// </summary>
@@ -94,17 +94,17 @@ namespace FarEmerald.PlayForge.Lab
         public LabUnit SelectedUnit { get; private set; }
         public ScriptableObject SelectedAsset { get; private set; }
 
-        /// <summary>The unit the author controls, if any: moved and made to cast by the lab's controls (LAB-11).</summary>
+        /// <summary>The unit the author controls, if any: moved and made to cast by the lab's controls.</summary>
         public LabUnit ControlledUnit { get; private set; }
 
-        /// <summary>The lab's controls, which give the author's unit its orders through its driver (LAB-11).</summary>
+        /// <summary>The lab's controls, which give the author's unit its orders through its driver.</summary>
         public LabControls Controls { get; private set; }
 
         /// <summary>Whether its time stands still.</summary>
         public bool Paused { get; set; }
 
         /// <summary>
-        /// What it shows of its working (LAB-12 to LAB-16): its effect journal over every unit, its stops and its watches,
+        /// What it shows of its working: its effect journal over every unit, its stops and its watches,
         /// and ForgeLog's messages, which its bottom panel shows.
         /// </summary>
         public LabShowing Showing { get; private set; }
@@ -115,7 +115,7 @@ namespace FarEmerald.PlayForge.Lab
         /// <summary>Raised as what it holds or what's selected changes, for the panels to redraw.</summary>
         public event Action Changed;
 
-        /// <summary>The battle's seats, a bot standing for each (LAB-9).</summary>
+        /// <summary>The battle's seats, a bot standing for each.</summary>
         public IReadOnlyList<LabSeat> Seats => seats;
 
         /// <summary>Whether the battle's bots fight.</summary>
@@ -156,7 +156,7 @@ namespace FarEmerald.PlayForge.Lab
         {
             Current = this;
             BringUpPlayForge();
-            // Given; or the editor's, its active Forge Project's; or, as in a build, what the game's project names (LAB-18)
+            // Given; or the editor's, its active Forge Project's; or, as in a build, what the game's project names
             Library = givenLibrary ?? DefaultLibrary?.Invoke() ?? ListLibrary.Of(ForgeProject.Current) ?? new ListLibrary("Nothing", null);
             ActiveRules = Rules ? Rules : Own(LabRules.MakeDefault(Library));
             if (Rules) Rules.FindIn(Library);
@@ -307,7 +307,7 @@ namespace FarEmerald.PlayForge.Lab
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
-        // Time (LAB-8)
+        // Time
         // ═══════════════════════════════════════════════════════════════════════════
 
         /// <summary>Goes one step of <see cref="StepSeconds"/> while paused.</summary>
@@ -337,7 +337,7 @@ namespace FarEmerald.PlayForge.Lab
             }
             if (Caster) Caster.Step(deltaTime);
             if (Fighting) Judge();
-            // Its stops' crossings and tags, and its watches' values, as they are after the step (LAB-14, LAB-15)
+            // Its stops' crossings and tags, and its watches' values, as they are after the step
             Showing?.Stepped(deltaTime);
         }
 
@@ -366,7 +366,7 @@ namespace FarEmerald.PlayForge.Lab
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
-        // Units (LAB-2, LAB-4)
+        // Units
         // ═══════════════════════════════════════════════════════════════════════════
 
         /// <summary>A unit of an entity or an attribute set, on a side, at a point, in the lab's world.</summary>
@@ -387,7 +387,7 @@ namespace FarEmerald.PlayForge.Lab
             return unit;
         }
 
-        /// <summary>A test dummy (LAB-4): a unit that stands, counts what it takes, mends, and is revived where it falls.</summary>
+        /// <summary>A test dummy: a unit that stands, counts what it takes, mends, and is revived where it falls.</summary>
         public LabDummy AddDummy(ScriptableObject entityOrSet, LabSide side, Vector3 at, int level = 0)
         {
             var unit = AddUnit(entityOrSet, side, at, level, stays: true);
@@ -419,7 +419,7 @@ namespace FarEmerald.PlayForge.Lab
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
-        // Battle (LAB-9)
+        // Battle
         // ═══════════════════════════════════════════════════════════════════════════
 
         /// <summary>
@@ -539,7 +539,7 @@ namespace FarEmerald.PlayForge.Lab
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
-        // The author's unit (LAB-11)
+        // The author's unit
         // ═══════════════════════════════════════════════════════════════════════════
 
         /// <summary>Puts down a unit of an entity or a set, on a side, at a point, and takes control of it.</summary>
@@ -659,7 +659,7 @@ namespace FarEmerald.PlayForge.Lab
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
-        // What's dropped (LAB-6)
+        // What's dropped
         // ═══════════════════════════════════════════════════════════════════════════
 
         /// <summary>

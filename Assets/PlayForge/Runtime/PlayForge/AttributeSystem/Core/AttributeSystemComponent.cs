@@ -7,7 +7,7 @@ namespace FarEmerald.PlayForge
 {
     /// <summary>
     /// Component for managing attributes and their modifications.
-    /// Refactored to support WorkerContext and deferred execution.
+    /// It supports WorkerContext and deferred execution.
     /// </summary>
     public class AttributeSystemComponent : DeferredContextSystem
     {
@@ -139,7 +139,7 @@ namespace FarEmerald.PlayForge
             // linked-to-Base (otherwise we'd register the same scaler instance twice for the
             // same owning attribute).
             //
-            // Every combined part's too, so one scaled from another attribute refreshes with it (GAS-27)
+            // Every combined part's too, so one scaled from another attribute refreshes with it
             foreach (var part in blueprint.Parts)
             {
                 part.SetElement.Base?.Scaling?.RegulateContactWith(attribute, RegulationCache);
@@ -191,7 +191,7 @@ namespace FarEmerald.PlayForge
             return false;
         }
 
-        // ─── Per-group attribution surface (Docs/IMPACT_MODEL_REFACTOR.md §2.3) ─────────
+        // ─── Per-group attribution surface ──────────────────────────────────────────────
         // Groups partition an attribute's pool for UX/consumer queries (base vs bonus
         // health, base vs bonus damage). Slices always sum exactly to ActiveValue.
 
@@ -220,7 +220,7 @@ namespace FarEmerald.PlayForge
         }
         
         // ═══════════════════════════════════════════════════════════════════════════
-        // ATTRIBUTE MODIFICATION — the four-verb surface (Docs/IMPACT_MODEL_REFACTOR.md §2.4)
+        // ATTRIBUTE MODIFICATION — the four-verb surface
         //
         //   RegisterModifier   — Continuous entries; transient, derived, auto-reversing.
         //   UnregisterModifier — the ONLY reversal mechanism. Runs through the same
@@ -282,7 +282,7 @@ namespace FarEmerald.PlayForge
             var change = scratch.Change;
             var ctx = new WorkerContext(Self, AttributeCache, change, _frameSummary, _actionQueue);
 
-            // Each step the change takes, recorded where the combat log keeps entries or anything hears its steps (LAB-13)
+            // Each step the change takes, recorded where the combat log keeps entries or anything hears its steps
             var told = Self.GetCallbacks();
             var steps = scratch.Steps;
             steps.Begin(runEvents && (ForgeCombatLog.Keeps || told is { HasChangeStepListeners: true }), told);
@@ -295,7 +295,7 @@ namespace FarEmerald.PlayForge
             // commit their precomputed (CurrentValue, BaseValue) delta as constant Adds,
             // so every path flows through the same impacter machinery (bounds + rounding
             // + attribution). The Adds are frozen in the commit's own impacters; they came
-            // in a SourceAttributeImpact made to wrap them, on every raw delta (GAS-P8).
+            // in a SourceAttributeImpact made to wrap them, on every raw delta.
             //
             // The impacters are evaluated ONCE, frozen as constants, and previewed: the
             // pre-change phase sees the delta they propose (effect specs arrive as (0,0)
@@ -348,7 +348,7 @@ namespace FarEmerald.PlayForge
             // ═══════════════════════════════════════════════════════════════════════
             if (runEvents) PreChangeHandler.RunWorkers(ctx, steps);
 
-            // A barrier takes a workable loss first, as much as it holds (TW-12)
+            // A barrier takes a workable loss first, as much as it holds
             if (mode == ECommitMode.CommitImpact && sourcedModifiedValue.ImpactIsWorkable && change.Value.CurrentValue < 0f)
             {
                 var unsoaked = change.Value.ToAttributeValue();
@@ -360,7 +360,7 @@ namespace FarEmerald.PlayForge
             }
 
             // A workable gain to its current, multiplied by the attribute it names, as Healing Received scales a heal and 0
-            // blocks it (TW-15)
+            // blocks it
             if (mode == ECommitMode.CommitImpact && sourcedModifiedValue.ImpactIsWorkable && change.Value.CurrentValue > 0f
                 && attribute is Attribute { GainsScaledBy: { } scaledBy } && AttributeCache.TryGetValue(scaledBy, out var scale))
             {
@@ -393,7 +393,7 @@ namespace FarEmerald.PlayForge
                     // records the post-constraint delta and recomputes.
                     //
                     // The Adds are frozen in the commit's own impacters. They came in a carrier made to wrap them, which
-                    // only the commit read, on every commit a worker adjusted (GAS-P6)
+                    // only the commit read, on every commit a worker adjusted
                     var adjusted = change.Value.ToAttributeValue();
                     if (adjusted != incoming)
                     {
@@ -426,9 +426,9 @@ namespace FarEmerald.PlayForge
                 attribute,
                 sourcedModifiedValue,
                 change.Value.ToAttributeValue(), holdValue);
-            // A modifier coming off is a change, and no hit (GAS-85)
+            // A modifier coming off is a change, and no hit
             impactData.Ends = mode == ECommitMode.UnregisterModifier;
-            // Its steps, for the combat log to copy as it writes, during the commit (LAB-13)
+            // Its steps, for the combat log to copy as it writes, during the commit
             if (steps.Recording) impactData.Steps = steps;
 
             // Record RECEIVED impact on this (target) GAS — fires target-side callbacks
@@ -460,14 +460,14 @@ namespace FarEmerald.PlayForge
                 sourcedModifiedValue.Carrier?.RetainImpact() ?? false);
         }
 
-        // ─── A commit's scratch (GAS-P6) ──────────────────────────────────────────
+        // ─── A commit's scratch ───────────────────────────────────────────────────
         // A commit made a new change, a new list, and a constant impacter for each of its impacters, so every tick that
         // committed allocated. A commit now rents what it works with and gives it back, one set for each commit in
         // progress, since a worker or a listener can commit inside another
 
         private readonly Stack<CommitScratch> spareScratch = new();
 
-        // A commit's scratch, its change to the attribute given (GAS-78)
+        // A commit's scratch, its change to the attribute given
         private CommitScratch RentScratch(IAttribute attribute, SourcedModifiedAttributeValue value)
         {
             var scratch = spareScratch.Count > 0 ? spareScratch.Pop() : new CommitScratch();
@@ -490,7 +490,7 @@ namespace FarEmerald.PlayForge
             /// <summary>The commit's impacters, each frozen at the magnitude it has now.</summary>
             public readonly List<IAttributeImpacter> Frozen = new();
 
-            /// <summary>The steps its change takes, where they're recorded (LAB-13).</summary>
+            /// <summary>The steps its change takes, where they're recorded.</summary>
             public readonly ChangeStepRecorder Steps = new();
 
             // Frozen's impacters, kept by place: the n-th one frozen is always the n-th made
@@ -511,9 +511,9 @@ namespace FarEmerald.PlayForge
                     if (imp == null) continue;
 
                     float magnitude = imp.Evaluate(carrier);
-                    // Through its calculation, once for the hit, so a roll in it is drawn once (TW-2)
+                    // Through its calculation, once for the hit, so a roll in it is drawn once
                     if (imp.Pipeline != null) magnitude = imp.Pipeline.Run(magnitude, carrier, (carrier as GameplayEffectSpec)?.TakeBreakdown());
-                    // Then its holders' modifiers' stages, in the same breakdown (TW-7)
+                    // Then its holders' modifiers' stages, in the same breakdown
                     if (imp.Stages != null && imp.Operation != ECalculationOperation.Override)
                         magnitude = ValuePipeline.RunAfter(imp.Stages, magnitude, carrier, (carrier as GameplayEffectSpec)?.TakeBreakdown(), imp.Pipeline != null);
                     Next().Set(magnitude, imp.Operation, imp.TargetSlot, imp.SortOrder, imp.MultiplyBehaviour, imp.Group);
@@ -523,7 +523,7 @@ namespace FarEmerald.PlayForge
             /// <summary>
             /// Freezes <paramref name="delta"/> as constant Adds in <paramref name="group"/>, in the order
             /// <see cref="SourceAttributeImpact.FromAdditiveDelta"/> gives them. A commit clamps after every step, and
-            /// Current is bounded by Base, so a growing Base goes first and a shrinking one last (PF-005).
+            /// Current is bounded by Base, so a growing Base goes first and a shrinking one last.
             /// </summary>
             public void FreezeDelta(AttributeValue delta, Tag group)
             {
@@ -597,7 +597,7 @@ namespace FarEmerald.PlayForge
             var fallback = carrier?.GetRetentionGroup() ?? Tags.IgnoreRetention;
             Tag shared = default;
 
-            // By index: a foreach through the interface boxed the list's enumerator (GAS-P6)
+            // By index: a foreach through the interface boxed the list's enumerator
             for (int i = 0; i < impacters.Count; i++)
             {
                 var imp = impacters[i];
@@ -639,7 +639,7 @@ namespace FarEmerald.PlayForge
                     {
                         // The system's own change, carried by the attribute's root, which is typed DisallowImpact, so a
                         // worker that checks types passes it by. It takes the post-change half of the pipeline and
-                        // reaches the frame summary; it fired OnAttributeChanged alone (GAS-27, Decision 14)
+                        // reaches the frame summary; it fired OnAttributeChanged alone
                         var sourcedModifier = new SourcedModifiedAttributeValue(cached.Root, realImpact.CurrentValue, realImpact.BaseValue);
                         var scratch = RentScratch(relative, sourcedModifier);
                         var ctx = new WorkerContext(Self, AttributeCache, scratch.Change, _frameSummary, _actionQueue);
@@ -687,7 +687,7 @@ namespace FarEmerald.PlayForge
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
-        // RESTORE — a load's quiet paths (FEAT-9)
+        // RESTORE — a load's quiet paths
         // ═══════════════════════════════════════════════════════════════════════════
 
         /// <summary>
@@ -729,7 +729,7 @@ namespace FarEmerald.PlayForge
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
-        // BARRIERS (TW-12)
+        // BARRIERS
         // ═══════════════════════════════════════════════════════════════════════════
 
         // The entity's barriers, kept as its attributes were when last counted
@@ -797,7 +797,7 @@ namespace FarEmerald.PlayForge
             for (int i = 0; i < all.Count; i++)
             {
                 var barrier = all[i];
-                // Its decay, read at its holder's level (FN-19)
+                // Its decay, read at its holder's level
                 float decay = barrier.DecayPerSecond?.Evaluate(NumberContext.Of(Self)) ?? 0f;
                 if (decay <= 0f || !AttributeCache.TryGetValue(barrier, out var cached)) continue;
                 var value = cached.ActiveValue;

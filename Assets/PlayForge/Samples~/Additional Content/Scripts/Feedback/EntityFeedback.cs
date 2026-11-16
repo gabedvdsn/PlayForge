@@ -3,7 +3,7 @@ using UnityEngine;
 namespace FarEmerald.PlayForge.AdditionalContent
 {
     /// <summary>
-    /// What the feedback components on an entity share (AC-2): the entity each shows, which is the hub on the same
+    /// What the feedback components on an entity share: the entity each shows, which is the hub on the same
     /// object or above it unless one is set, or given in code; and that entity's changes to one attribute, the project's
     /// Health role's where none is set. Each hooks to the entity's callbacks once it has them, so it can sit on an entity
     /// registered before it or after.

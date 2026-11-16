@@ -5,7 +5,7 @@ using UnityEngine;
 namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
-    /// The files a project brings PlayForge up with, made by code (EP-11, Decision 89): the Bootstrapper, GameRoot and
+    /// The files a project brings PlayForge up with, made by code: the Bootstrapper, GameRoot and
     /// ProcessControl prefabs, in the PlayForge Folder's Bootstrap folder, as the first Forge Project is made and again where
     /// one's gone; and each Forge Project's own Game Root entity, in its GameRoot folder. PlayForge ships none of them, so
     /// a deleted prefab comes back, and every project's Game Root is its own.
@@ -56,7 +56,7 @@ namespace FarEmerald.PlayForge.Editor
             if (missing.Contains(GameRootName))
                 Save(GameRootName, made =>
                 {
-                    // Stepping in Update and LateUpdate, as a GAS must for its end of frame (GAS-1)
+                    // Stepping in Update and LateUpdate, as a GAS must for its end of frame
                     var root = made.AddComponent<GameRoot>();
                     root.ProcessLifecycle = EProcessLifecycle.Synchronous;
                     root.ProcessTiming = EProcessStepTiming.UpdateAndLate;
@@ -102,7 +102,7 @@ namespace FarEmerald.PlayForge.Editor
 
         /// <summary>
         /// Makes a Forge Project's Game Root entity in its GameRoot folder, as "Assets/PlayForge/Arena/GameRoot/GameRoot.asset",
-        /// the game's own entity, on the System side, and gives it the project (EP-11).
+        /// the game's own entity, on the System side, and gives it the project.
         /// </summary>
         public static EntityIdentity MakeGameRootEntity(ForgeProject project)
         {

@@ -232,7 +232,7 @@ namespace FarEmerald.PlayForge
     }
     
     // [Serializable] on each, as their base is generic: without it Unity dropped a [SerializeReference] list of them
-    // whole, so an effect's Stack Behaviours never saved (GAS-70)
+    // whole, so an effect's Stack Behaviours never saved
     [Serializable]
     public abstract class AbstractStackingConfig : AbstractEffectConfig<AbstractStackingEffectContainer>
     {
@@ -273,7 +273,7 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// The effects that land, from the application's origin, as a stack would take the effect past <see cref="Max"/>,
-        /// as a bleed's fourth stack hemorrhages. A stack past the max did nothing (FEAT-8, Decision 30).
+        /// as a bleed's fourth stack hemorrhages. A stack past the max did nothing.
         /// </summary>
         [Tooltip("Effects that land, from the application's origin, as an application would take the effect past its most")]
         public List<GameplayEffect> OverflowEffects = new();
@@ -292,7 +292,7 @@ namespace FarEmerald.PlayForge
         /// <summary>Whether an amount reaching the bound would take the container past its max.</summary>
         public bool Overflows(AbstractStackingEffectContainer container, int amount) => amount > 0 && container.Stacks + amount > MaxFor(container.Spec);
 
-        /// <summary>The most stacks an application's effect holds: the bound's, and more where its modifiers say (TW-7).</summary>
+        /// <summary>The most stacks an application's effect holds: the bound's, and more where its modifiers say.</summary>
         public int MaxFor(GameplayEffectSpec spec) => (Max?.Evaluate(spec) ?? 0) + (spec?.Changes?.MostStacks ?? 0);
 
         public override int ConfigPriority => 999;
@@ -353,8 +353,8 @@ namespace FarEmerald.PlayForge
         } 
     }
 
-    // A part of a stack made whole, as a behaviour's rounding says. Round, a half away from zero, came with number fields
-    // (NUM-1), and threw where the behaviours made their stacks whole (ED-75)
+    // A part of a stack made whole, as a behaviour's rounding says. Round, a half away from zero, came with number fields,
+    // and threw where the behaviours made their stacks whole
     internal static class StackRounding
     {
         public static int Whole(float stacks, ERoundingOperation rounding) => rounding switch
@@ -372,7 +372,7 @@ namespace FarEmerald.PlayForge
     {
         /// <summary>
         /// The stacks a new effect starts with: a number of any kind, read at the effect's level, as its other numbers are.
-        /// Its own number, scaler, combine and rounding were a Scalable whole number written out (FN-19).
+        /// Its own number, scaler, combine and rounding were a Scalable whole number written out.
         /// </summary>
         [Tooltip("The stacks a new effect starts with, read at the effect's level")]
         [NumberMin(0f)] public ScalableInt InitializationStacks = 0;

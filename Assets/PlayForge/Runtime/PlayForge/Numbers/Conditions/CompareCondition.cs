@@ -4,7 +4,7 @@ using UnityEngine;
 namespace FarEmerald.PlayForge
 {
     /// <summary>
-    /// Whether one number compares with another (FEAT-29): "Caster's Health &gt; 2 × Target's Health". Each is any kind,
+    /// Whether one number compares with another: "Caster's Health &gt; 2 × Target's Health". Each is any kind,
     /// read with the condition as its owner.
     /// </summary>
     [Serializable]
@@ -30,7 +30,7 @@ namespace FarEmerald.PlayForge
             Right?.Initialize(carrier);
         }
 
-        // The two numbers it compared (FEAT-32)
+        // The two numbers it compared
         public override void Explain(in NumberContext context, NumberTrace trace)
         {
             trace.Add(Left, context, this, "Left");

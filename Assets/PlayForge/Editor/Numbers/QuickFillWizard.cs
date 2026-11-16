@@ -10,9 +10,9 @@ using Object = UnityEngine.Object;
 namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
-    /// Quick Fill, from a scaler field's menu (ED-63, Docs/EDITOR_STYLE.md): what it fills, the scaler's levels or its
+    /// Quick Fill, from a scaler field's menu: what it fills, the scaler's levels or its
     /// points; a pattern and its values; rounding; and a preview of the values as the scaler's table shows them, with their
-    /// curve, and, for a scaler spread over levels, what each level reads between its points (ED-82). Apply writes them,
+    /// curve, and, for a scaler spread over levels, what each level reads between its points. Apply writes them,
     /// and the curve a spread scaler reads, as one Undo step. It drew a look of its own, a purple
     /// bold title, a green Apply, 10 px hints and tinted boxes, from styles set in C#, with its fields outside the label
     /// column, and wrote through a property it kept from when it opened.
@@ -66,7 +66,7 @@ namespace FarEmerald.PlayForge.Editor
         private string fills = "";
         private EScalerInterpolation between = EScalerInterpolation.Linear;
 
-        // A spread scaler's levels, which its points spread over and the preview reads between them (ED-82)
+        // A spread scaler's levels, which its points spread over and the preview reads between them
         private ScalerFields.LevelRange levels;
         private ELevelConfig levelConfig = ELevelConfig.LockToLevelProvider;
         private int ownMax;
@@ -102,7 +102,7 @@ namespace FarEmerald.PlayForge.Editor
             var config = scaler.FindPropertyRelative(nameof(AbstractScaler.Configuration));
             var range = ScalerFields.LevelsOf(scaler.serializedObject);
             // The levels a spread scaler's points spread over, as its table reads them: a kind that takes no range of its
-            // own spreads over its provider's (ED-82)
+            // own spreads over its provider's
             levels = range;
             bool readsRange = scaler.managedReferenceValue is AbstractScaler kind && (kind.Parts & EScalerParts.LevelRange) != 0;
             levelConfig = readsRange && config != null ? (ELevelConfig)config.intValue : ELevelConfig.LockToLevelProvider;
@@ -110,7 +110,7 @@ namespace FarEmerald.PlayForge.Editor
             bool follows = !spread && range.Known && config != null && (ELevelConfig)config.intValue == ELevelConfig.LockToLevelProvider;
 
             // It fills the levels the scaler's table shows: its level provider's, while it follows one, rather than the
-            // values it has (ED-53); a spread scaler's points; or its own levels
+            // values it has; a spread scaler's points; or its own levels
             int shown = ScalerFields.LevelsShown(scaler);
             _levelCount = Mathf.Clamp(shown > 0 ? shown : values.Length > 0 ? values.Length : 4, 1, 100);
             ownCount = !follows;
@@ -196,7 +196,7 @@ namespace FarEmerald.PlayForge.Editor
             curve = new ForgeCurvePreview { name = "Curve" };
             preview.Add(curve);
             root.Add(preview);
-            // Spread, what each level reads between the points, as the scaler's table shows (ED-82)
+            // Spread, what each level reads between the points, as the scaler's table shows
             previewReads = new VisualElement { name = "PreviewReads" };
             root.Add(previewReads);
 
@@ -288,7 +288,7 @@ namespace FarEmerald.PlayForge.Editor
         }
 
         // What each of a spread scaler's levels reads between the points, as the runtime reads them, while its levels are
-        // known: the points are spread over them, not a value for each (ED-82)
+        // known: the points are spread over them, not a value for each
         private void ShowReads(float[] values)
         {
             if (previewReads == null) return;

@@ -9,7 +9,7 @@ namespace FarEmerald.PlayForge
     /// <summary>
     /// The game's own entity, a Mono hub every scene has one of, which ProcessControl hands any registration that names no
     /// handler. It runs as its Forge Project's Game Root entity: the project a scene's Bootstrapper plays, or else its own,
-    /// or else the entity it names (EP-11). It keeps through scene loads.
+    /// or else the entity it names. It keeps through scene loads.
     /// </summary>
     public class GameRoot : GameplayAbilitySystem, IManagerial
     {
@@ -18,7 +18,7 @@ namespace FarEmerald.PlayForge
         public static GameRoot Instance;
 
         // Statics outlive play mode when domain reload is off, so the last session's destroyed GameRoot was still
-        // Instance when the next began (PC-26)
+        // Instance when the next began
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ClearInstance() => Instance = null;
 
@@ -29,7 +29,7 @@ namespace FarEmerald.PlayForge
                  "default crowd control")]
         [SerializeField] private ForgeProject project;
 
-        /// <summary>The Forge Project this game runs, whose settings PlayForge reads where code uses none (TW-29).</summary>
+        /// <summary>The Forge Project this game runs, whose settings PlayForge reads where code uses none.</summary>
         public ForgeProject Project
         {
             get => project;
@@ -43,7 +43,7 @@ namespace FarEmerald.PlayForge
         
         /// <summary>
         /// Takes on its Forge Project as it starts: the one its registration names, as the Bootstrapper names the one a
-        /// scene plays, or else its own; and runs as that project's Game Root entity, where it has one (EP-11).
+        /// scene plays, or else its own; and runs as that project's Game Root entity, where it has one.
         /// </summary>
         public override void WhenInitialize()
         {
@@ -58,7 +58,7 @@ namespace FarEmerald.PlayForge
         // with domain reload off reuses the last one's
         private static EntityIdentity defaultEntity;
 
-        /// <summary>The Game Root entity a GameRoot runs as where neither its Forge Project nor it names one (EP-11).</summary>
+        /// <summary>The Game Root entity a GameRoot runs as where neither its Forge Project nor it names one.</summary>
         internal static EntityIdentity DefaultEntity
         {
             get
@@ -75,12 +75,12 @@ namespace FarEmerald.PlayForge
 
         public void Bootstrap()
         {
-            // Unity's null, so a destroyed GameRoot gives way. `is not null` kept it (PC-26)
+            // Unity's null, so a destroyed GameRoot gives way. `is not null` kept it
             if (Instance != null && Instance != this)
             {
                 Destroy(gameObject);
 
-                // On its way out, so Instance stays where it is. It took Instance anyway (PC-23)
+                // On its way out, so Instance stays where it is. It took Instance anyway
                 return;
             }
 

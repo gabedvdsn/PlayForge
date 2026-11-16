@@ -3,7 +3,7 @@ using System;
 namespace FarEmerald.PlayForge
 {
     /// <summary>
-    /// The least a number field's constant takes in the inspector (NUM-15), as Unity's <c>[Min]</c> is for a float:
+    /// The least a number field's constant takes in the inspector, as Unity's <c>[Min]</c> is for a float:
     /// <code>
     /// [NumberMin(0)] public ScalableFloat Duration = 2f;
     /// </code>
@@ -32,7 +32,7 @@ namespace FarEmerald.PlayForge
     }
 
     /// <summary>
-    /// The most a number field's constant takes in the inspector (NUM-15): <c>[NumberMax(10)]</c>. With
+    /// The most a number field's constant takes in the inspector: <c>[NumberMax(10)]</c>. With
     /// <see cref="NumberMinAttribute"/> beside it, the field takes what lies between the two. See
     /// <see cref="NumberMinAttribute"/> for what a limit reaches.
     /// </summary>
@@ -49,7 +49,7 @@ namespace FarEmerald.PlayForge
     }
 
     /// <summary>
-    /// A number field whose constant is set on a slider between two values (NUM-15), as Unity's <c>[Range]</c> is for a
+    /// A number field whose constant is set on a slider between two values, as Unity's <c>[Range]</c> is for a
     /// float: <c>[NumberRange(0, 1)] public ScalableFloat Chance = 0.5f;</c>. See <see cref="NumberMinAttribute"/> for
     /// what a limit reaches.
     /// </summary>

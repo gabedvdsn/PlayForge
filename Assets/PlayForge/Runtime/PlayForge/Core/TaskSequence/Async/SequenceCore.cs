@@ -114,7 +114,7 @@ namespace FarEmerald.PlayForge
         }
         
         // Runs the action at once, in the frame its stage starts, as Do does. It yielded a frame first, "to ensure proper
-        // async context", which nothing needs, so a sequence of these took a frame apiece (TS-Z). A throw still comes
+        // async context", which nothing needs, so a sequence of these took a frame apiece. A throw still comes
         // back as the task's error, and a cancelled stage still doesn't run it
         private static UniTask ExecuteSyncActionSafe(Action<SequenceDataPacket> action, SequenceDataPacket data, CancellationToken token)
         {
@@ -301,7 +301,7 @@ namespace FarEmerald.PlayForge
                 catch (OperationCanceledException)
                 {
                     // Cancellation doesn't complete the stage, unless it took every task: then the stage was
-                    // stopped from outside, and nothing is left that could finish it (TS-A)
+                    // stopped from outside, and nothing is left that could finish it
                     cancelled++;
                     if (cancelled >= taskUnits.Length) tcs.TrySetResult();
                 }
@@ -376,7 +376,7 @@ namespace FarEmerald.PlayForge
                     completed++;
                 }
 
-                // With every task over, N can't be reached any more: the stage was stopped from outside (TS-A)
+                // With every task over, N can't be reached any more: the stage was stopped from outside
                 ended++;
                 if (completed >= RequiredCount || ended >= taskUnits.Length)
                 {

@@ -7,7 +7,7 @@ using Object = UnityEngine.Object;
 namespace FarEmerald.PlayForge.Testing
 {
     /// <summary>
-    /// Steps the real player loop a frame at a time, so a test can say "this takes exactly N frames" (TW-26). A step ends
+    /// Steps the real player loop a frame at a time, so a test can say "this takes exactly N frames". A step ends
     /// at the frame's last player loop stage, once FixedUpdate, Update and LateUpdate have all run, so a test only ever
     /// looks at finished frames.
     /// <para>

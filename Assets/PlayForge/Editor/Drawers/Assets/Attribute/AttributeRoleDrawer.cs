@@ -4,7 +4,7 @@ using UnityEngine.UIElements;
 
 namespace FarEmerald.PlayForge.Editor
 {
-    /// <summary>A project's role on one row (TW-29): its tag, then the attribute that plays it.</summary>
+    /// <summary>A project's role on one row: its tag, then the attribute that plays it.</summary>
     [CustomPropertyDrawer(typeof(AttributeRole))]
     public class AttributeRoleDrawer : PropertyDrawer
     {

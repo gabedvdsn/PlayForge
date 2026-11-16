@@ -31,7 +31,7 @@ namespace FarEmerald.PlayForge
         protected const string MY_KEY_PREFIX = "Analysis_Worker_";
 
         // This worker's own, made as it's first asked. It was its type's name, so two workers of a type on one entity,
-        // as thresholds at a half and a quarter, shared it, and the first to fire marked the other (GAS-76)
+        // as thresholds at a half and a quarter, shared it, and the first to fire marked the other
         [NonSerialized] private Tag myKey;
         [NonSerialized] private bool keyMade;
         private static int keys;
@@ -64,7 +64,7 @@ namespace FarEmerald.PlayForge
         }
 
         /// <summary>
-        /// Ready to fire again, as an entity that revives readies its death watcher for its next death (TW-4). Each worker
+        /// Ready to fire again, as an entity that revives readies its death watcher for its next death. Each worker
         /// that fires once is re-armed so; one that keeps more overrides it.
         /// </summary>
         public virtual void Rearm(ILocalDataUser system) => ResetTriggered(system);
@@ -76,7 +76,7 @@ namespace FarEmerald.PlayForge
     {
         protected override IEnumerable<IRootAction> OnThresholdReached(IGameplayAbilitySystem system, AttributeValue value, FrameSummary frameSummary)
         {
-            // Its effects and its event, where it has them, as it dies (TW-11)
+            // Its effects and its event, where it has them, as it dies
             if (Effects is { Count: > 0 } || Event.IsValid)
                 foreach (var action in base.OnThresholdReached(system, value, frameSummary)) yield return action;
             yield return new DeathAction(system);
@@ -131,7 +131,7 @@ namespace FarEmerald.PlayForge
             if (TriggerOnce && HasTriggered(system)) yield break;
             if (!RetentionGroups.TryRead(Groups, system, Target, out AttributeValue value)) yield break;
             
-            // What it reads of the attribute: its current, as it always read, its base, what's missing or its share (TW-11)
+            // What it reads of the attribute: its current, as it always read, its base, what's missing or its share
             float read = AttributeParts.Read(value, What);
             float threshold = Threshold?.Evaluate(NumberContext.Of(system)) ?? 0f;
 
@@ -150,7 +150,7 @@ namespace FarEmerald.PlayForge
             }
             else
             {
-                // A crossing is a change of side since its last check; its first check only notes its side (TW-11)
+                // A crossing is a change of side since its last check; its first check only notes its side
                 bool above = read > threshold;
                 bool known = TryGetSide(system, out bool wasAbove);
                 SetSide(system, above);
@@ -174,7 +174,7 @@ namespace FarEmerald.PlayForge
         }
 
         /// <summary>
-        /// What it does as it fires (TW-11): its effects on the entity, from the entity or from the one whose change
+        /// What it does as it fires: its effects on the entity, from the entity or from the one whose change
         /// crossed it, as it says, and its event to the entity, its source the one who crossed it; with neither, it logs,
         /// as it did. Override it for more.
         /// </summary>
@@ -216,7 +216,7 @@ namespace FarEmerald.PlayForge
         }
 
         // Who crossed it: the source of the last workable change from another to its attribute this frame, a loss where it
-        // fires falling, a gain where it fires rising (TW-11)
+        // fires falling, a gain where it fires rising
         private ISource Crosser(IGameplayAbilitySystem system, FrameSummary frameSummary)
         {
             var received = frameSummary?.ImpactsReceived;
@@ -235,7 +235,7 @@ namespace FarEmerald.PlayForge
             return null;
         }
 
-        // Its side of its threshold at its last check, for a crossing, kept by the entity: none till its first check (TW-11)
+        // Its side of its threshold at its last check, for a crossing, kept by the entity: none till its first check
         [NonSerialized] private Tag sideKey;
         [NonSerialized] private bool sideKeyMade;
         private static int sideKeys;
@@ -265,7 +265,7 @@ namespace FarEmerald.PlayForge
             else system.SetLocalData(SideKey, new DataWrapper { intValue = above ? 2 : 1 });
         }
 
-        /// <summary>Ready to fire again, its side forgotten, so a revive's restoring isn't a crossing (TW-11).</summary>
+        /// <summary>Ready to fire again, its side forgotten, so a revive's restoring isn't a crossing.</summary>
         public override void Rearm(ILocalDataUser system)
         {
             base.Rearm(system);
@@ -282,7 +282,7 @@ namespace FarEmerald.PlayForge
         Equal
     }
 
-    /// <summary>As a threshold fires (TW-11).</summary>
+    /// <summary>As a threshold fires.</summary>
     public enum EThresholdCrossing
     {
         /// <summary>While its comparison holds, as a threshold always did.</summary>
@@ -298,7 +298,7 @@ namespace FarEmerald.PlayForge
         Either,
     }
 
-    /// <summary>Whom a threshold's effects come from (TW-11).</summary>
+    /// <summary>Whom a threshold's effects come from.</summary>
     public enum EThresholdSource
     {
         /// <summary>The entity itself.</summary>

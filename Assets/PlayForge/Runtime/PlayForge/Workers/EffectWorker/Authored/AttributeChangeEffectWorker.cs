@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
-    /// <summary>What an Attribute Change worker answers about its attribute (FEAT-29).</summary>
+    /// <summary>What an Attribute Change worker answers about its attribute.</summary>
     public enum EAttributeChangeWhat
     {
         [Tooltip("How much lower the attribute is than as the effect began; 0 where it's higher")]
@@ -21,7 +21,7 @@ namespace FarEmerald.PlayForge
     }
 
     /// <summary>
-    /// Answers how far an attribute has moved since its effect began (FEAT-29, NUM-12), for a number of the Worker kind
+    /// Answers how far an attribute has moved since its effect began, for a number of the Worker kind
     /// to read: how much health the target has lost since the curse landed, from every source. It notes the attribute as
     /// each application of its effect begins, and answers under its <see cref="Key"/>: the amount lost, gained or
     /// changed, or the attribute as it was.
@@ -74,7 +74,7 @@ namespace FarEmerald.PlayForge
             /// <summary>Whether the last tick was an Nth one, where it answers only on those.</summary>
             public bool Due;
 
-            /// <summary>Its Every Ticks, read as the effect began (FN-19).</summary>
+            /// <summary>Its Every Ticks, read as the effect began.</summary>
             public int Every;
         }
 

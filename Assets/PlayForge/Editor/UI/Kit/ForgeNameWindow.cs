@@ -6,7 +6,7 @@ using UnityEngine.UIElements;
 namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
-    /// A name asked for, as a tag's new path in The Forge's Tags view or a new tag context (FN-9): a field with the name to
+    /// A name asked for, as a tag's new path in The Forge's Tags view or a new tag context: a field with the name to
     /// type over, then the action, which Enter presses too, and Escape cancels. A name that won't do says why under the
     /// field, and the window stays.
     /// </summary>

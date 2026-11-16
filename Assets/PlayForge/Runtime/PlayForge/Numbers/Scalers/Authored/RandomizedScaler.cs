@@ -7,7 +7,7 @@ namespace FarEmerald.PlayForge
     /// Adds random variance to level-based scaling.
     /// Useful for damage ranges, proc chances, etc.
     /// Its variance and its multipliers are numbers of any kind, read with the scaler as their owner, so a variance can
-    /// widen by level and a Max multiplier can be 3 × its Min (FEAT-29).
+    /// widen by level and a Max multiplier can be 3 × its Min.
     /// </summary>
     [Serializable]
     [NumberKind("Randomized")]
@@ -41,7 +41,7 @@ namespace FarEmerald.PlayForge
             MaxMultiplier?.Initialize(deriv);
 
             // One roll per spec, kept with what the spec captures. Rolled on every evaluation, a modifier re-rolled
-            // whenever its attribute recomputed (GAS-27, Decision 12). Initialize can run twice for one spec
+            // whenever its attribute recomputed. Initialize can run twice for one spec
             var captured = deriv?.GetSourcedCapturedAttributes();
             if (!RollOncePerSpec || captured is null || captured.ContainsKey(this)) return;
 
@@ -61,7 +61,7 @@ namespace FarEmerald.PlayForge
             return ForgeRandom.Value;
         }
 
-        // Its own numbers, read where it is, with itself as their owner (FEAT-29)
+        // Its own numbers, read where it is, with itself as their owner
         private float Read(ScalableFloat number, IAttributeImpactCarrier deriv, float fallback) =>
             number?.Evaluate(NumberContext.Of(deriv), this) ?? fallback;
 
@@ -96,7 +96,7 @@ namespace FarEmerald.PlayForge
             return false;
         }
 
-        // Its base value is its values per level, through its behaviours, so it reads them all (ED-51)
+        // Its base value is its values per level, through its behaviours, so it reads them all
         public override EScalerParts Parts => EScalerParts.All;
 
         /// <summary>

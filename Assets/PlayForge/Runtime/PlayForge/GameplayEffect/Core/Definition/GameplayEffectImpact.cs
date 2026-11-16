@@ -51,7 +51,7 @@ namespace FarEmerald.PlayForge
                 });
             }
 
-            // Then each additional impact as authored, live, as the quad's magnitude is (ED-3). One with no attribute, as
+            // Then each additional impact as authored, live, as the quad's magnitude is. One with no attribute, as
             // a new row leaves it, changes nothing, and one whose delivery the duration can't make never happens, as the
             // drawer says in place
             if (AdditionalImpacts == null) return;
@@ -117,13 +117,13 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// Only meaningful when <see cref="ImpactOperation"/> is Add: how this add combines with the others on the attribute,
-        /// as its role says, a plain sum, or diminishing (TW-1).
+        /// as its role says, a plain sum, or diminishing.
         /// </summary>
         public EAddBehaviour AddBehaviour = EAddBehaviour.AttributeRole;
 
         /// <summary>
         /// The calculation each hit of the first impact goes through as it lands, as an Unreal effect names its execution
-        /// calculation: an instant impact's, each tick of a periodic one's (TW-2).
+        /// calculation: an instant impact's, each tick of a periodic one's.
         /// </summary>
         [Tooltip("The calculation each hit goes through as it lands: an instant impact's, each tick of a periodic one's")]
         public ValuePipeline Pipeline;
@@ -135,7 +135,7 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// How likely the effect is to land, from 0 to 1, drawn from <see cref="ForgeRandom"/> once each time it's
         /// applied; a miss is refused, as an immunity refuses. 1, the default, always lands and draws nothing. An effect
-        /// always landed, so a strike couldn't bleed one time in three but through a worker (FEAT-8).
+        /// always landed, so a strike couldn't bleed one time in three but through a worker.
         /// </summary>
         public ScalableFloat ChanceToApply = new() { Magnitude = 1f, RealMagnitude = EMagnitudeOperation.UseMagnitude };
 
@@ -166,7 +166,7 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// The effect's further impacts, after the one above: each with its own attribute, operation, magnitude and
         /// delivery, so one effect can lower armor while it lasts and burn each tick. The one above takes its delivery
-        /// from the duration; each of these names its own (ED-3).
+        /// from the duration; each of these names its own.
         /// </summary>
         public List<AttributeImpactEntry> AdditionalImpacts = new();
 
@@ -193,12 +193,12 @@ namespace FarEmerald.PlayForge
             MagnitudeOperation = o.MagnitudeOperation;
             ChanceToApply = o.ChanceToApply;
             ChanceRoll = o.ChanceRoll;
-            // Each its own copy, as the affiliation list is; a copy shares a magnitude, as the quad's does (ED-3)
+            // Each its own copy, as the affiliation list is; a copy shares a magnitude, as the quad's does
             AdditionalImpacts = o.AdditionalImpacts is null
                 ? new List<AttributeImpactEntry>()
                 : o.AdditionalImpacts.Select(impact => impact is null ? null : new AttributeImpactEntry(impact)).ToList();
 
-            // The affiliation above was left behind, and an impact with no packets threw here (ED-14)
+            // The affiliation above was left behind, and an impact with no packets threw here
             if (o.Packets is null) return;
 
             Packets = new ContainedEffectPacket[o.Packets.Length];
@@ -245,7 +245,7 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// The effects contained for <paramref name="policy"/>, which <c>foreach</c> walks in place without allocating.
-        /// A LINQ chain built them on every call, and a periodic effect asked on every tick (GAS-P4).
+        /// A LINQ chain built them on every call, and a periodic effect asked on every tick.
         /// </summary>
         public ContainedEffects GetContainedEffects(EApplyTickRemove policy) => new ContainedEffects(Packets, policy);
     }
@@ -311,7 +311,7 @@ namespace FarEmerald.PlayForge
         public EEffectRecipient LandsOn;
     }
 
-    /// <summary>Whom an effect another lands lands on: a contained effect, an overflow's, or one a modifier adds (TW-14).</summary>
+    /// <summary>Whom an effect another lands lands on: a contained effect, an overflow's, or one a modifier adds.</summary>
     public enum EEffectRecipient
     {
         /// <summary>The one the effect it comes from lands on.</summary>
@@ -340,10 +340,10 @@ namespace FarEmerald.PlayForge
         Current,
         Base,
 
-        /// <summary>What's missing of it: base − current, as a pool's lost Health or spent Mana (TW-9).</summary>
+        /// <summary>What's missing of it: base − current, as a pool's lost Health or spent Mana.</summary>
         Missing,
 
-        /// <summary>Its share: current ÷ base, as 0.9 for a pool at 90%; 0 where its base is 0 (TW-9).</summary>
+        /// <summary>Its share: current ÷ base, as 0.9 for a pool at 90%; 0 where its base is 0.</summary>
         Share,
     }
 

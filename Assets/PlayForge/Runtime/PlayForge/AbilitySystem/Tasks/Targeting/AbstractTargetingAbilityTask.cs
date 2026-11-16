@@ -70,7 +70,7 @@ namespace FarEmerald.PlayForge
         protected virtual bool TargetIsValid(ITarget target)
         {
             // Through the target's packet, which both hubs have. Through its GameObject, a runtime GAS, which has
-            // none, threw (GAS-29)
+            // none, threw
             if (target?.GetTargetingPacket() is not { } packet) return false;
             return packet.HasTransform ? TargetIsValid(packet.transform, out _) : TargetIsValid(packet.position, out _);
         }
@@ -90,7 +90,7 @@ namespace FarEmerald.PlayForge
 
         protected virtual bool TargetIsValid(Transform transform, out Vector3 target)
         {
-            // A missing or destroyed transform is no target. It threw (GAS-29)
+            // A missing or destroyed transform is no target. It threw
             target = default;
             return transform && TargetIsValid(transform.position, out target);
         }
@@ -104,20 +104,19 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// The target the activation's data already holds under TARGET_REAL, as an AI's or a replay's activation does.
         /// A click-targeting task takes it rather than wait for a click, so the ability an AI casts is the one a player
-        /// clicks. They waited for a click whatever the data held, so an AI couldn't cast them (GAS-66).
+        /// clicks. They waited for a click whatever the data held, so an AI couldn't cast them.
         /// </summary>
         protected static bool TryGetDataTarget(AbilityDataPacket data, out ITarget target) =>
             data.TryGet(Tags.TARGET_REAL, EDataTarget.Primary, out target) && target != null;
 
-        /// <summary>The point the activation's data already holds under POSITION, as for <see cref="TryGetDataTarget"/> (GAS-66).</summary>
+        /// <summary>The point the activation's data already holds under POSITION, as for <see cref="TryGetDataTarget"/>.</summary>
         protected static bool TryGetDataPoint(AbilityDataPacket data, out Vector3 point) =>
             data.TryGet(Tags.POSITION, EDataTarget.Primary, out point);
 
         /// <summary>
         /// Waits for the targeting input to press the button, and gives the ray it aims along as it does: by default,
         /// from the camera through the pointer. Null is a press with nothing to aim through, as with no camera. The
-        /// click-targeting tasks read the Input Manager's mouse and Camera.main themselves, and threw with no camera
-        /// (FEAT-11).
+        /// click-targeting tasks read the Input Manager's mouse and Camera.main themselves, and threw with no camera.
         /// </summary>
         protected static async UniTask<Ray?> WaitForPointerPress(int button, CancellationToken token)
         {

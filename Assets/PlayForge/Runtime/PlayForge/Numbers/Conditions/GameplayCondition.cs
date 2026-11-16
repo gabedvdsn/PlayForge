@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace FarEmerald.PlayForge
 {
     /// <summary>
-    /// A condition read against a number's context (FEAT-29, Decision 43): whether something holds where the number is
+    /// A condition read against a number's context: whether something holds where the number is
     /// read, as "the target's Health is below 0.3 of its base". A Conditional scaler reads one to choose its branch. It is
     /// a class, so a project adds its own as it adds a kind of number: override <see cref="Evaluate(in NumberContext)"/>,
     /// and name it, file it and say what it reads with <see cref="GameplayConditionAttribute"/>:
@@ -80,7 +80,7 @@ namespace FarEmerald.PlayForge
         public virtual void Initialize(IAttributeImpactCarrier carrier) { }
 
         /// <summary>
-        /// Adds the condition's parts to a trace of its read (FEAT-32): what it compared, or the conditions it joins, as
+        /// Adds the condition's parts to a trace of its read: what it compared, or the conditions it joins, as
         /// an Attribute condition adds the attribute's value and its number. A condition with none adds none.
         /// </summary>
         public virtual void Explain(in NumberContext context, NumberTrace trace) { }
@@ -130,8 +130,8 @@ namespace FarEmerald.PlayForge
     }
 
     /// <summary>
-    /// Names a condition in the condition menu and says what it reads of a number's context (FEAT-29). Its place in the
-    /// menu is its <see cref="ForgeMenuAttribute"/>'s (EP-2): it named a Category of its own. Without it, a condition takes its class's name without "Condition", and is read everywhere.
+    /// Names a condition in the condition menu and says what it reads of a number's context. Its place in the
+    /// menu is its <see cref="ForgeMenuAttribute"/>'s: it named a Category of its own. Without it, a condition takes its class's name without "Condition", and is read everywhere.
     /// </summary>
     [AttributeUsage(AttributeTargets.Class, Inherited = false)]
     public sealed class GameplayConditionAttribute : System.Attribute
@@ -160,7 +160,7 @@ namespace FarEmerald.PlayForge
         }
     }
 
-    /// <summary>A comparison between two numbers, as a condition makes one, and how a line writes it (FEAT-29).</summary>
+    /// <summary>A comparison between two numbers, as a condition makes one, and how a line writes it.</summary>
     public static class NumberComparison
     {
         /// <summary>Whether <paramref name="left"/> compares to <paramref name="right"/> as the operator says.</summary>

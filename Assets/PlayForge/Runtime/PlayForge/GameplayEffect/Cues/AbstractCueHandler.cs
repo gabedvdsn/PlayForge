@@ -8,7 +8,7 @@ namespace FarEmerald.PlayForge
     /// are. Bursts play as the effect lands, as its ticks execute and as it comes off. A lasting cue begins as the effect
     /// lands and ends as it goes, and a restore ends it and begins it again as the effect leaves and comes back, playing no
     /// burst. Each hook is a no-op until a handler overrides it. An effect changed attributes and tags and nothing else,
-    /// so what it showed was each game's own code (FEAT-1).
+    /// so what it showed was each game's own code.
     /// </summary>
     [Serializable]
     public abstract class AbstractCueHandler
@@ -29,7 +29,7 @@ namespace FarEmerald.PlayForge
         public virtual void End(CueContext cue) { }
     }
 
-    /// <summary>What a cue plays for: the entity the effect is on, the effect's spec, and for a tick, how many executed (FEAT-1).</summary>
+    /// <summary>What a cue plays for: the entity the effect is on, the effect's spec, and for a tick, how many executed.</summary>
     public readonly struct CueContext
     {
         public readonly IGameplayAbilitySystem Target;

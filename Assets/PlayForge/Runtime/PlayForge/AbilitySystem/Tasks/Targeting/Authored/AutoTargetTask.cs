@@ -61,10 +61,10 @@ namespace FarEmerald.PlayForge
         {
             var owner = data.EffectOrigin.GetSource();
             // From the caster's targeting packet, which every caster has. From its transform, a runtime caster, which has
-            // none, searched the whole scene whatever its range, and sorted nothing (GAS-38)
+            // none, searched the whole scene whatever its range, and sorted nothing
             var origin = owner?.GetTargetingPacket();
 
-            // Measured from the caster, the activation's target or its point (TW-10)
+            // Measured from the caster, the activation's target or its point
             var centre = CentreOf(data, origin);
             var candidates = GatherCandidates(centre, owner, RangeFor(data));
             var valid = FilterCandidates(candidates, NumberContext.Of(data));
@@ -78,7 +78,7 @@ namespace FarEmerald.PlayForge
             }
 
             // Every target selected, in order, the first as the primary. Each was set as the primary, so each replaced the
-            // last, and the last alone was kept (GAS-62)
+            // last, and the last alone was kept
             data.SetTargetingPackets(Tags.TARGET, selected);
 
             return UniTask.CompletedTask;
@@ -91,18 +91,18 @@ namespace FarEmerald.PlayForge
         private List<ITarget> GatherCandidates(Vector3? centre, ISource owner, float range)
         {
             // Every live entity, on both hubs, by its position, with no collider needed; physics where it asks, on its
-            // layers (TW-10)
+            // layers
             var results = new List<ITarget>();
             if (UsePhysics) ForgeEntities.Around(centre, range, DetectionLayers, owner, IncludeSelf, results);
             else ForgeEntities.Within(centre ?? Vector3.zero, centre.HasValue ? range : 0f, Flat, results, owner, IncludeSelf);
             return results;
         }
 
-        // How far it searches: its ability's Cast Range, measured from the caster, where it reads it; else its own (FN-14)
+        // How far it searches: its ability's Cast Range, measured from the caster, where it reads it; else its own
         private float RangeFor(AbilityDataPacket data) =>
             UseCastRange && Around == EAreaCentre.Caster && ForgeCastRange.TryRead(data, out float cast) ? cast : Read(Range, data);
 
-        // Where its range is measured from: the caster, the activation's target, or its point (TW-10)
+        // Where its range is measured from: the caster, the activation's target, or its point
         private Vector3? CentreOf(AbilityDataPacket data, AbstractTargetingPacket caster) => Around switch
         {
             EAreaCentre.Target when TryGetDataTarget(data, out var target) && target.GetTargetingPacket() is { } packet => packet.position,
@@ -190,7 +190,7 @@ namespace FarEmerald.PlayForge
             return true;
         }
 
-        // Flat where its range is, so its nearest is the one its search measured nearest (TW-10)
+        // Flat where its range is, so its nearest is the one its search measured nearest
         private float DistanceTo(ITarget target, Vector3 origin)
         {
             return ForgeEntities.Distance(target, origin, Flat);
@@ -234,7 +234,7 @@ namespace FarEmerald.PlayForge
         public ScalableFloat CompareValue = 0f;
 
         /// <summary>
-        /// Evaluates whether the given attribute value passes this condition, its value read where it's checked (FN-20).
+        /// Evaluates whether the given attribute value passes this condition, its value read where it's checked.
         /// </summary>
         public bool Evaluate(float currentValue, in NumberContext context)
         {

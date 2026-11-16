@@ -8,10 +8,10 @@ using UnityEngine.UIElements;
 namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
-    /// A [SerializeReference] field of an abstract type, in Docs/EDITOR_STYLE.md's terms (ED-56): Unity's field, its label
+    /// A [SerializeReference] field of an abstract type: Unity's field, its label
     /// in the label column, the kind it holds named in its box, which opens Unity's searchable dropdown of the kinds it can
     /// hold; then the kind's own fields, each Unity's, indented under it. A pick makes a new object of the kind for each
-    /// selected asset, by the kind's constructor so its initializers run, as one Undo step; drawing writes nothing (ED-12).
+    /// selected asset, by the kind's constructor so its initializers run, as one Undo step; drawing writes nothing.
     /// <para>
     /// Every element of a list shares one drawer, so each field keeps its state in its own elements. The drawer kept the
     /// last element's fields and kind in fields of its own, so an edit to one element could fill another with its fields.
@@ -30,7 +30,7 @@ namespace FarEmerald.PlayForge.Editor
         /// <summary>Which kinds the picker offers.</summary>
         protected virtual bool FilterType(Type type) => true;
 
-        /// <summary>Whether the picker offers a kind to this field, as a component of a kind its asset holds once isn't (FN-14).</summary>
+        /// <summary>Whether the picker offers a kind to this field, as a component of a kind its asset holds once isn't.</summary>
         protected virtual bool Offers(SerializedProperty prop, Type type) => true;
 
         /// <summary>A kind's class name as its name starts, before it's spaced out: by default without "AbilityTask" or "Task".</summary>
@@ -94,7 +94,7 @@ namespace FarEmerald.PlayForge.Editor
         public override VisualElement CreatePropertyGUI(SerializedProperty property)
         {
             var root = new VisualElement { name = "TypeRef" };
-            // The style sheet lays out the field, wherever it's drawn (ED-20)
+            // The style sheet lays out the field, wherever it's drawn
             ForgeTheme.Apply(root);
             root.AddToClassList(RootClass);
 
@@ -104,7 +104,7 @@ namespace FarEmerald.PlayForge.Editor
             fields.AddToClassList("pf-type-ref__fields");
             Arrange(root, property, field, fields);
 
-            // The property found again by its path each time, as a list's elements move and an Undo puts objects back (ED-49)
+            // The property found again by its path each time, as a list's elements move and an Undo puts objects back
             var serialized = property.serializedObject;
             var path = property.propertyPath;
             SerializedProperty Fresh()
@@ -146,7 +146,7 @@ namespace FarEmerald.PlayForge.Editor
                 var prop = Fresh();
                 if (prop == null) return;
                 var title = string.IsNullOrEmpty(field.label) ? KindTitle() : field.label;
-                // The kind it holds checked; none where the selection's kinds differ (EP-1)
+                // The kind it holds checked; none where the selection's kinds differ
                 var held = EachAsset.Differ(prop, each => each.managedReferenceFullTypename) ? ForgeTypePicker.Mixed : GetCurrentValue(prop);
                 new ForgeTypePicker(KindsFor(prop), AcceptClear(prop), title, type =>
                 {
@@ -155,7 +155,7 @@ namespace FarEmerald.PlayForge.Editor
                 }, held).Show(opened.Box.worldBound);
             };
             // The asset is followed, not the property: a list's element removed before Unity takes up a property's
-            // tracking threw as it did (ED-64)
+            // tracking threw as it did
             root.TrackSerializedObjectValue(serialized, _ => Show());
             Show();
             return root;
@@ -177,7 +177,7 @@ namespace FarEmerald.PlayForge.Editor
                 .OrderBy(kind => kind.Item2, StringComparer.OrdinalIgnoreCase)
                 .ToList();
 
-        // A kind's name as the field and the picker show it: the one its [ForgeMenu] gives, or the drawer's (EP-2)
+        // A kind's name as the field and the picker show it: the one its [ForgeMenu] gives, or the drawer's
         private string ShownName(SerializedProperty prop, Type type) =>
             type != null && ForgeMenuAttribute.NameOf(type) is { } named ? named : GetStringValue(prop, type);
 
@@ -214,7 +214,7 @@ namespace FarEmerald.PlayForge.Editor
             if (count > 0) fields.Bind(prop.serializedObject);
         }
 
-        // A field of the kind's object under [ShownWhen], shown only while the field it reads says so (FN-20)
+        // A field of the kind's object under [ShownWhen], shown only while the field it reads says so
         private static void ShownWhen(VisualElement each, SerializedProperty prop, string field)
         {
             var info = prop.managedReferenceValue?.GetType().GetField(field,

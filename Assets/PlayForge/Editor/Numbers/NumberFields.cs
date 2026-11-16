@@ -10,7 +10,7 @@ using UnityEngine.UIElements;
 namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
-    /// The limits a number field's constant keeps in the inspector (NUM-15), from its <see cref="NumberMinAttribute"/>,
+    /// The limits a number field's constant keeps in the inspector, from its <see cref="NumberMinAttribute"/>,
     /// <see cref="NumberMaxAttribute"/> and <see cref="NumberRangeAttribute"/>, in what the field stores.
     /// </summary>
     public readonly struct NumberLimits
@@ -52,7 +52,7 @@ namespace FarEmerald.PlayForge.Editor
     }
 
     /// <summary>
-    /// What the number field's inspector and its Problems rule know of numbers (FEAT-29): which properties are numbers,
+    /// What the number field's inspector and its Problems rule know of numbers: which properties are numbers,
     /// what a field's context provides and its unit, what a kind needs and where the kind menu files it, and what a
     /// number's kind reads, inside other scalers too.
     /// </summary>
@@ -76,7 +76,7 @@ namespace FarEmerald.PlayForge.Editor
 
         /// <summary>
         /// What a field's context provides where it doesn't say: everything but an owner, which only a field whose code
-        /// gives it one has, and says so (NUM-9).
+        /// gives it one has, and says so.
         /// </summary>
         public const NumberReads DefaultProvides = NumberReads.All & ~NumberReads.Owner;
 
@@ -91,7 +91,7 @@ namespace FarEmerald.PlayForge.Editor
         /// What a number property's context provides, found through the managed references on its path: its own field's
         /// <see cref="NumberContextAttribute"/>'s where it has one; else, for a number inside another's scaler, what the
         /// outermost number's field provides, as it's read in that number's context, with an owner where a scaler or a
-        /// condition reads it, as each reads its own numbers with itself as their owner (FEAT-29).
+        /// condition reads it, as each reads its own numbers with itself as their owner.
         /// </summary>
         public static NumberReads ProvidesOf(SerializedProperty property)
         {
@@ -113,7 +113,7 @@ namespace FarEmerald.PlayForge.Editor
             field?.GetCustomAttribute<NumberContextAttribute>()?.Unit ?? field?.GetCustomAttribute<ScalerOperationKeyword>()?.Unit;
 
         /// <summary>
-        /// The limits a number field's constant keeps (NUM-15): its <see cref="NumberRangeAttribute"/>'s, which sets it on
+        /// The limits a number field's constant keeps: its <see cref="NumberRangeAttribute"/>'s, which sets it on
         /// a slider, narrowed by a <see cref="NumberMinAttribute"/> or a <see cref="NumberMaxAttribute"/> beside it. A
         /// whole-number field keeps the whole numbers inside them.
         /// </summary>
@@ -135,7 +135,7 @@ namespace FarEmerald.PlayForge.Editor
 
         /// <summary>
         /// What's wrong with a number field that has Unity's <c>[Min]</c> or <c>[Range]</c>, naming the field and what to
-        /// use in its place (NUM-15); null for a field that isn't a number, or has neither. Unity gives such a field to
+        /// use in its place; null for a field that isn't a number, or has neither. Unity gives such a field to
         /// that attribute's drawer, which draws "Use Range with float or int" where the number was.
         /// </summary>
         public static string UnityLimitOn(FieldInfo field)
@@ -152,7 +152,7 @@ namespace FarEmerald.PlayForge.Editor
                    $"an error in place of the number. Use {use}.";
         }
 
-        // As scripts load, the console names each saved number field that has Unity's [Min] or [Range] (NUM-15)
+        // As scripts load, the console names each saved number field that has Unity's [Min] or [Range]
         [InitializeOnLoadMethod]
         private static void WarnOfUnityLimits()
         {
@@ -251,7 +251,7 @@ namespace FarEmerald.PlayForge.Editor
         }
 
         /// <summary>
-        /// The number whose owner a property's relative read reads (FEAT-29): the innermost number on its path, itself
+        /// The number whose owner a property's relative read reads: the innermost number on its path, itself
         /// among them, that a scaler or a condition holds as its own field, as each reads those with itself as their
         /// owner; else the outermost number, as a Group's members and a Threshold's tiers are read in its context. Null
         /// where the path holds no number.
@@ -299,7 +299,7 @@ namespace FarEmerald.PlayForge.Editor
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
-        // Relative to a Field: the fields a number can read on the object that holds it (NUM-9)
+        // Relative to a Field: the fields a number can read on the object that holds it
         // ═══════════════════════════════════════════════════════════════════════════
 
         /// <summary>
@@ -440,7 +440,7 @@ namespace FarEmerald.PlayForge.Editor
 
         /// <summary>
         /// The kind menu's group for a kind: the path its <see cref="ForgeMenuAttribute"/> names, or the class it's made
-        /// from names (EP-2): Scaler for a scaler, as AbstractScaler names it, but the kinds at the menu's top, By Level,
+        /// from names: Scaler for a scaler, as AbstractScaler names it, but the kinds at the menu's top, By Level,
         /// Shared, × Attribute, Set By Caller and Group, and each kind of number, which name none; or null at the top. It
         /// was a number kind's Category, and a rule for the scalers.
         /// </summary>
@@ -450,7 +450,7 @@ namespace FarEmerald.PlayForge.Editor
             return string.IsNullOrEmpty(path) ? null : path;
         }
 
-        /// <summary>What the kind menu says of each of its choices: its kind's description, by the choice's name (EP-2).</summary>
+        /// <summary>What the kind menu says of each of its choices: its kind's description, by the choice's name.</summary>
         internal static Func<string, string> ContextOf(IEnumerable<Type> kinds)
         {
             var said = new Dictionary<string, string>();
@@ -470,7 +470,7 @@ namespace FarEmerald.PlayForge.Editor
 
         /// <summary>
         /// Files a kind popup's kinds by category, as the number field's kind menu does: each at its place, as
-        /// "Scaler/Clamped", and its name alone in the box. A scaler field's popup listed its kinds flat (ED-81).
+        /// "Scaler/Clamped", and its name alone in the box. A scaler field's popup listed its kinds flat.
         /// </summary>
         internal static void FileByCategory(PopupField<string> popup, IEnumerable<Type> kinds, Type shown)
         {
@@ -507,7 +507,7 @@ namespace FarEmerald.PlayForge.Editor
         /// What a scaler reads of its context, as it's set now: a kind's needs, an attribute read from the target or the
         /// caster, a Conditional's condition, and what the scalers, conditions and numbers inside it read. A number a
         /// scaler or a condition holds as its own field reads its owner there, so what it reads of an owner isn't asked
-        /// of the field (FEAT-29).
+        /// of the field.
         /// </summary>
         public static NumberReads ReadsOf(AbstractScaler scaler) => ReadsOf(scaler, 0);
 

@@ -3,7 +3,7 @@
 namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
-    /// A purge's filter (FN-16): its kind, named without "Purge Filter", as Except Tagged, or one of your own, then the kind's
+    /// A purge's filter: its kind, named without "Purge Filter", as Except Tagged, or one of your own, then the kind's
     /// own fields.
     /// </summary>
     [CustomPropertyDrawer(typeof(AbstractPurgeFilter), true)]

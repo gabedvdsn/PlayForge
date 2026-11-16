@@ -12,7 +12,7 @@ namespace FarEmerald.PlayForge
         private Dictionary<IAttribute, List<AbstractImpactWorker>> _cache = new();
 
         // How many sources give each worker for each attribute: given again, as by a second copy of an item, a worker ran
-        // once for each; it runs once and stays until the last source takes it back (GAS-83)
+        // once for each; it runs once and stays until the last source takes it back
         private readonly Dictionary<(IAttribute, AbstractImpactWorker), int> _given = new();
         
         // References for deferred execution
@@ -82,7 +82,7 @@ namespace FarEmerald.PlayForge
             if (!_cache.ContainsKey(impactData.Attribute)) return;
 
             // The workers' holder, the dealer. It was the one hit, so a worker that took its context's System for its
-            // holder applied its holder's effects to the target (GAS-72)
+            // holder applied its holder's effects to the target
             var context = new ImpactWorkerContext(
                 holder ?? impactData.SourcedModifier.Source,
                 impactData,
@@ -90,7 +90,7 @@ namespace FarEmerald.PlayForge
                 _actionQueue
             );
             
-            // Where the dealer is heard, each worker's run is told, with what it queued (LAB-12)
+            // Where the dealer is heard, each worker's run is told, with what it queued
             var callbacks = (holder as IGameplayAbilitySystem)?.GetCallbacks();
             bool told = callbacks is { HasImpactWorkerListeners: true };
 
@@ -109,7 +109,7 @@ namespace FarEmerald.PlayForge
                 // Full validation
                 if (!worker.ValidateWorkFor(impactData)) continue;
 
-                // A kind that runs once for a hit, which another of has, runs no more for it (FN-15)
+                // A kind that runs once for a hit, which another of has, runs no more for it
                 if (worker.OncePerHit)
                 {
                     var kind = worker.GetType();
@@ -130,7 +130,7 @@ namespace FarEmerald.PlayForge
                         Queue(worker, worker.CreateDeferredActions(context), impactData, holder, told ? callbacks : null);
                         break;
 
-                    // Both halves, as attribute workers run it. With no case, it ran neither (GAS-27)
+                    // Both halves, as attribute workers run it. With no case, it ran neither
                     case EWorkerExecution.InlineAndDeferred:
                         worker.ActivateInline(impactData);
                         Queue(worker, worker.CreateDeferredActions(context), impactData, holder, told ? callbacks : null);
@@ -139,7 +139,7 @@ namespace FarEmerald.PlayForge
             }
         }
         
-        // A worker's actions, queued; told with them where its dealer is heard (LAB-12)
+        // A worker's actions, queued; told with them where its dealer is heard
         private void Queue(AbstractImpactWorker worker, IEnumerable<IRootAction> actions, in ImpactData impactData, ISource holder,
             GameplayAbilitySystemCallbacks callbacks)
         {

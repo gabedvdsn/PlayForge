@@ -6,7 +6,7 @@ namespace FarEmerald.PlayForge
 {
     /// <summary>
     /// Revives the entity its effect is on as the effect ends: a respawn timer, as a staying entity takes as it dies, whose
-    /// duration is the time it waits (TW-4). It revives where the entity was, or at a point. An entity revived already, as
+    /// duration is the time it waits. It revives where the entity was, or at a point. An entity revived already, as
     /// by a buyback, takes nothing from it.
     /// </summary>
     [Serializable]

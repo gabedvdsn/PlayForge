@@ -10,8 +10,8 @@ using Object = UnityEngine.Object;
 namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
-    /// Save as Scaler Asset, from a magnitude field's menu, as the scaler board's second step: a name and a folder, then
-    /// Save and Use, which saves the field's scaler as a Scaler asset and makes the field share it (ED-33).
+    /// Save as Scaler Asset, from a magnitude field's menu: a name and a folder, then
+    /// Save and Use, which saves the field's scaler as a Scaler asset and makes the field share it.
     /// </summary>
     public sealed class SaveScalerAssetWindow : EditorWindow
     {
@@ -94,10 +94,10 @@ namespace FarEmerald.PlayForge.Editor
     }
 
     /// <summary>
-    /// Import Values, from a magnitude field's menu, as the scaler board's fourth step: choose a Scaler asset or another
+    /// Import Values, from a magnitude field's menu: choose a Scaler asset or another
     /// asset's field, compare their values level by level, with both curves, and Copy Values into the field as one Undo
     /// step. A shorter table's last value holds for the levels past its end. It replaces the scaler import window, which
-    /// ignored the kinds a field allows and kept its list for 120 s (ED-32).
+    /// ignored the kinds a field allows and kept its list for 120 s.
     /// </summary>
     public sealed class ScalerValuesWindow : EditorWindow
     {
@@ -152,7 +152,7 @@ namespace FarEmerald.PlayForge.Editor
         private List<Source> FindSources()
         {
             var found = new List<Source>();
-            // The active Forge Project's alone (FEAT-34)
+            // The active Forge Project's alone
             var inProject = ForgeProjects.InActive();
             foreach (var asset in AssetDatabase.FindAssets($"t:{nameof(ScalerAsset)}").Select(AssetDatabase.GUIDToAssetPath)
                          .Select(AssetDatabase.LoadAssetAtPath<ScalerAsset>).Where(asset => asset != null && inProject(asset)))

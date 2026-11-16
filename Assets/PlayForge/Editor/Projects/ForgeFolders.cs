@@ -6,9 +6,9 @@ using UnityEngine;
 namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
-    /// Where PlayForge keeps a Unity project's own files (EP-10, Decision 89): its Forge Projects, each in a folder of its
+    /// Where PlayForge keeps a Unity project's own files: its Forge Projects, each in a folder of its
     /// own, as Assets/PlayForge/Arena, its assets in a folder for each type and its Game Root entity in GameRoot; and the
-    /// Bootstrap folder, the prefabs a scene brings PlayForge up with (EP-11). The PlayForge Folder is a project setting,
+    /// Bootstrap folder, the prefabs a scene brings PlayForge up with. The PlayForge Folder is a project setting,
     /// Assets/PlayForge to start, kept in ProjectSettings/PlayForge.asset so it travels with the project. Where it's the
     /// folder PlayForge's own code is in, as in a project that holds the code at Assets/PlayForge, the files go beside it,
     /// in "PlayForge Projects", so the code's folder never holds a project's files.
@@ -19,7 +19,7 @@ namespace FarEmerald.PlayForge.Editor
         /// <summary>The PlayForge Folder until it's set.</summary>
         public const string DefaultFolder = "Assets/PlayForge";
 
-        /// <summary>The Bootstrap folder's name, under the PlayForge Folder (Decision 89).</summary>
+        /// <summary>The Bootstrap folder's name, under the PlayForge Folder.</summary>
         public const string BootstrapName = "Bootstrap";
 
         [SerializeField] private string folder = DefaultFolder;
@@ -41,7 +41,7 @@ namespace FarEmerald.PlayForge.Editor
         /// </summary>
         public static string Root => RootFor(Setting, CodeFolder);
 
-        /// <summary>The Bootstrap folder, which holds the prefabs a scene brings PlayForge up with (EP-11).</summary>
+        /// <summary>The Bootstrap folder, which holds the prefabs a scene brings PlayForge up with.</summary>
         public static string Bootstrap => $"{Root}/{BootstrapName}";
 
         /// <summary>

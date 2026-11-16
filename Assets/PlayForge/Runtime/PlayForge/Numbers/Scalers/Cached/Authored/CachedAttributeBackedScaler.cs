@@ -35,7 +35,7 @@ namespace FarEmerald.PlayForge
 
             float attrCapture = ProjectToBinaryTarget(useActive ? captured.ActiveValue : captured.RootValue);
 
-            // At the level exactly, or stretched over its range (Decision 28)
+            // At the level exactly, or stretched over its range
             var level = blueprint.Derivation.GetOrigin().GetLevel();
             float scalerValue = EvaluateAtLevel(level.CurrentValue, level.ClampedRatio);
 
@@ -46,7 +46,7 @@ namespace FarEmerald.PlayForge
 
         public override bool UseScalingOptions() => true;
 
-        // Its values spread over the level's own range, never one it's given, so it reads no level range (ED-51)
+        // Its values spread over the level's own range, never one it's given, so it reads no level range
         public override EScalerParts Parts => EScalerParts.LevelValues | EScalerParts.Behaviours;
     }
 }

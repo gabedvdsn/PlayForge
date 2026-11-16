@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
-    /// <summary>What an Asset Part number looks for on an entity (FEAT-29).</summary>
+    /// <summary>What an Asset Part number looks for on an entity.</summary>
     public enum EAssetPartOf
     {
         [Tooltip("Effects on the entity, by their asset tag, a context tag or a tag they grant")]
@@ -17,7 +17,7 @@ namespace FarEmerald.PlayForge
         Item,
     }
 
-    /// <summary>What an Asset Part number reads of an effect (FEAT-29).</summary>
+    /// <summary>What an Asset Part number reads of an effect.</summary>
     public enum EEffectPart
     {
         [Tooltip("How many such effects are on the entity; an effect that stacks in one container counts once")]
@@ -51,7 +51,7 @@ namespace FarEmerald.PlayForge
         [InspectorName("Worker Value")] WorkerValue,
     }
 
-    /// <summary>What an Asset Part number reads of an ability (FEAT-29).</summary>
+    /// <summary>What an Asset Part number reads of an ability.</summary>
     public enum EAbilityPart
     {
         [Tooltip("How many such abilities the entity knows")]
@@ -70,7 +70,7 @@ namespace FarEmerald.PlayForge
         [InspectorName("Cooldown Remaining")] CooldownRemaining,
     }
 
-    /// <summary>What an Asset Part number reads of an item (FEAT-29).</summary>
+    /// <summary>What an Asset Part number reads of an item.</summary>
     public enum EItemPart
     {
         [Tooltip("How many such items the entity holds; a stack counts once")]
@@ -86,7 +86,7 @@ namespace FarEmerald.PlayForge
         [InspectorName("Is Equipped")] IsEquipped,
     }
 
-    /// <summary>How an Asset Part number reads one value from several that match (FEAT-29).</summary>
+    /// <summary>How an Asset Part number reads one value from several that match.</summary>
     public enum EAssetPartAmong
     {
         [Tooltip("All of them, added up")]
@@ -103,7 +103,7 @@ namespace FarEmerald.PlayForge
     }
 
     /// <summary>
-    /// A part of an effect, an ability or an item on the caster or the target, found by a tag (FEAT-29, NUM-13): a
+    /// A part of an effect, an ability or an item on the caster or the target, found by a tag: a
     /// Poison effect's stacks, how many Fire effects are on the target, what every Burn there has dealt, the time left
     /// on a shield, an ability's level or whether it's cooling down, how many potions are in a stack, whether a ring is
     /// equipped. An effect matches by its asset tag, a context tag or a tag it grants; an ability or an item by its

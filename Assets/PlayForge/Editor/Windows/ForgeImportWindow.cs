@@ -11,10 +11,10 @@ using Object = UnityEngine.Object;
 namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
-    /// The one Import window, from Decision 28 and the canvas's Import board (ED-32): choose a source, choose the fields
+    /// The one Import window: choose a source, choose the fields
     /// that differ, each pre-checked, and import them as one Undo step. A list is replaced, unless its row asks to add to
     /// it. It serves a section's Import, a whole asset's, and a single property's, such as a worker group. A whole asset
-    /// keeps its name, description, icons, asset tag, template and level link (ED-35). Six windows did this before, each
+    /// keeps its name, description, icons, asset tag, template and level link. Six windows did this before, each
     /// its own way: section import copied every field with no choice, and the Effect's Duration and Impact couldn't import.
     /// </summary>
     public sealed class ForgeImportWindow : EditorWindow
@@ -68,7 +68,7 @@ namespace FarEmerald.PlayForge.Editor
         /// <summary>
         /// Imports a whole asset's fields from another of its type. Its identity stays its own: the name, description and
         /// icons, the asset tag the name gives, its template and its level link. The import copied the template and the
-        /// link, and the nested Definition.Name (ED-35).
+        /// link, and the nested Definition.Name.
         /// </summary>
         public static ForgeImportWindow ShowForAsset(SerializedObject into, Action done = null)
         {
@@ -186,13 +186,13 @@ namespace FarEmerald.PlayForge.Editor
         {
             var type = into.targetObject.GetType();
             var targets = new HashSet<Object>(into.targetObjects);
-            // The type's Import defaults, from Project Settings → PlayForge, come first (Q22)
+            // The type's Import defaults, from Project Settings → PlayForge, come first
             var defaults = PlayForgeSettings.ImportDefaults(type).Cast<Object>()
                 .Where(asset => !targets.Contains(asset)).Distinct().ToList();
             foreach (var each in defaults.OrderBy(NameOf, StringComparer.OrdinalIgnoreCase)) yield return ("Defaults", each);
 
             var types = acrossTypes ? new[] { typeof(BaseForgeAsset) } : new[] { type };
-            // The active Forge Project's alone (FEAT-34)
+            // The active Forge Project's alone
             var inProject = ForgeProjects.InActive();
             var assets = types.SelectMany(each => AssetDatabase.FindAssets($"t:{each.Name}"))
                 .Distinct()

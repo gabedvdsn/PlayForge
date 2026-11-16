@@ -5,7 +5,7 @@ using UnityEngine;
 namespace FarEmerald.PlayForge.Lab
 {
     /// <summary>
-    /// A bot's mind (LAB-10), the Demo's AI and the Battle sample's fighters made general: it takes the nearest foe it can
+    /// A bot's mind, the Demo's AI and the Battle sample's fighters made general: it takes the nearest foe it can
     /// target, casts what's ready in its order when its moment fits, handing its target in the activation's data, which
     /// click targeting takes with no click, and otherwise attacks. Low, it backs off a moment once in a while.
     /// <para>
@@ -129,7 +129,7 @@ namespace FarEmerald.PlayForge.Lab
             var rules = unit.Rules;
             string when = rules != null && rules.CastWhenKey.IsValid && ability.TryGetLocalData(rules.CastWhenKey, out var whenData)
                 ? whenData.stringValue : "InRange";
-            // Its reach: its Cast Range where it has one (FN-14), else its Local Data's, 0 for anywhere
+            // Its reach: its Cast Range where it has one, else its Local Data's, 0 for anywhere
             float reach = ForgeCastRange.TryRead(unit.Gas, ability, out float cast) ? cast
                 : rules != null && rules.ReachKey.IsValid && ability.TryGetLocalData(rules.ReachKey, out var reachData) ? Read(ability, reachData.floatValue) : 0f;
             bool inReach = reach <= 0f || unit.DistanceTo(foe) <= reach;

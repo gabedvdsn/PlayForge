@@ -7,7 +7,7 @@ namespace FarEmerald.PlayForge
 {
     /// <summary>
     /// What click targeting reads of the player's input: whether a pointer's button went down this frame, and the ray the
-    /// pointer aims along (FEAT-11, Decision 30). The defaults read a mouse, a pen or a touch through a camera; a game with
+    /// pointer aims along. The defaults read a mouse, a pen or a touch through a camera; a game with
     /// a gamepad's reticle, a controller's ray or input of its own puts its own in with <see cref="ForgeInput.Use"/>.
     /// </summary>
     public interface IForgeInput
@@ -21,7 +21,7 @@ namespace FarEmerald.PlayForge
         /// <summary>The ray the pointer aims along, or false with nothing to aim through, as with no camera.</summary>
         bool TryGetPointerRay(out Ray ray);
 
-        // What the Creator Lab reads besides (LAB-3, LAB-11). Each has a default, so an input written for click targeting
+        // What the Creator Lab reads besides. Each has a default, so an input written for click targeting
         // alone still compiles, and reads as nothing held, nowhere, unscrolled and no key
 
         /// <summary>Whether a pointer's button is down now: 0 the primary, 1 the secondary, 2 the middle.</summary>
@@ -44,7 +44,7 @@ namespace FarEmerald.PlayForge
     /// <summary>
     /// The input click targeting reads: the project's own, unless <see cref="Use"/> puts another in. Targeting read the
     /// Input Manager's mouse and <c>Camera.main</c> itself, so a game on the Input System, with a camera of its own or a
-    /// test couldn't stand in, and a scene with no main camera threw at the click (FEAT-11). A source-scanning test keeps
+    /// test couldn't stand in, and a scene with no main camera threw at the click. A source-scanning test keeps
     /// Unity's input out of the rest of the runtime.
     /// </summary>
     public static class ForgeInput
@@ -108,7 +108,7 @@ namespace FarEmerald.PlayForge
     }
 
 #if ENABLE_LEGACY_INPUT_MANAGER
-    /// <summary>The Input Manager's mouse, aimed through a camera: the one given, or else <c>Camera.main</c> (FEAT-11).</summary>
+    /// <summary>The Input Manager's mouse, aimed through a camera: the one given, or else <c>Camera.main</c>.</summary>
     public sealed class LegacyPointerInput : IForgeInput
     {
         /// <summary>The camera to aim through, or null for <c>Camera.main</c>.</summary>
@@ -135,7 +135,7 @@ namespace FarEmerald.PlayForge
 #if PLAYFORGE_INPUT_SYSTEM && ENABLE_INPUT_SYSTEM
     /// <summary>
     /// The Input System's pointer, a mouse, a pen or a touch, aimed through a camera: the one given, or else
-    /// <c>Camera.main</c> (FEAT-11). A mouse presses each of its three buttons, and a pen or a touch the primary.
+    /// <c>Camera.main</c>. A mouse presses each of its three buttons, and a pen or a touch the primary.
     /// </summary>
     public sealed class InputSystemPointerInput : IForgeInput
     {

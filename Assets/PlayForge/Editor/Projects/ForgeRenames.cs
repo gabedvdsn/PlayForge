@@ -7,16 +7,16 @@ using Object = UnityEngine.Object;
 namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
-    /// Renames an asset as its inspector does, from The Forge or an asset's header (FN-8): a PlayForge asset's name, with
+    /// Renames an asset as its inspector does, from The Forge or an asset's header: a PlayForge asset's name, with
     /// the tag its name gives, as one Undo step; a Scaler asset's scaler and a Requirement template's requirements, whose
     /// names its lists show; and for an asset with no name of its own, as a Value Pipeline, its file alone. The file takes
     /// the name, with its type's prefix and suffix from Project Settings, leaving out its spaces as a new asset's file does,
-    /// and follows the name back through Undo and Redo (ED-70). A file that is its asset's only name keeps the spaces, and
+    /// and follows the name back through Undo and Redo. A file that is its asset's only name keeps the spaces, and
     /// its rename Unity doesn't undo.
     /// </summary>
     public static class ForgeRenames
     {
-        // The assets renamed here, whose files follow their names through Undo and Redo (ED-70)
+        // The assets renamed here, whose files follow their names through Undo and Redo
         private static readonly HashSet<Object> Renamed = new();
 
         [InitializeOnLoadMethod]
@@ -99,7 +99,7 @@ namespace FarEmerald.PlayForge.Editor
             Undo.CollapseUndoOperations(group);
         }
 
-        // The name as a file has it, with only the characters a file can't have on any platform left out (ED-86)
+        // The name as a file has it, with only the characters a file can't have on any platform left out
         private static string FileNameKeepingSpaces(string name)
         {
             var file = ForgeAssetCreation.WithoutUnportableCharacters((name ?? "").Trim());
@@ -120,7 +120,7 @@ namespace FarEmerald.PlayForge.Editor
             _ => null,
         };
 
-        // Each asset renamed here takes its file's name from its own again, as an Undo or a Redo changes it (ED-70)
+        // Each asset renamed here takes its file's name from its own again, as an Undo or a Redo changes it
         private static void FilesFollowNames()
         {
             foreach (var each in Renamed.ToList())
@@ -137,7 +137,7 @@ namespace FarEmerald.PlayForge.Editor
 
         /// <summary>
         /// Stores the tag a name gives, recorded for Undo and marked modified, in the same step as the name's own change,
-        /// so one Undo takes back both (ED-12). What stored the old tag stores the new one (ED-84).
+        /// so one Undo takes back both. What stored the old tag stores the new one.
         /// </summary>
         internal static void StoreAssetTag(Object asset, string assetName, string typeName, Tag stored, Action<Tag> store)
         {
@@ -154,7 +154,7 @@ namespace FarEmerald.PlayForge.Editor
         }
 
         /// <summary>
-        /// Renames an asset's file after its name, its name alone (EP-13), so the two don't drift apart (ED-70): a character a file can't have is left out, as a new asset's file leaves it, and a name
+        /// Renames an asset's file after its name, its name alone, so the two don't drift apart: a character a file can't have is left out, as a new asset's file leaves it, and a name
         /// another file in its folder has takes a number, as Unity's own duplicate does. An asset not saved yet has no file.
         /// </summary>
         internal static void FileFollows(Object asset, string name)

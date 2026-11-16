@@ -4,7 +4,7 @@ using UnityEngine;
 namespace FarEmerald.PlayForge.Lab
 {
     /// <summary>
-    /// What the lab needs to know of a project to play its units (LAB-1): the attribute that is a unit's health, the one it
+    /// What the lab needs to know of a project to play its units: the attribute that is a unit's health, the one it
     /// walks at, the tags that stop, hide or shield it, where its attack range is kept, and which of its abilities is its
     /// attack. PlayForge has no movement or health of its own, so a project says which of its attributes are these. The
     /// Demo's roster says the same of the Demo.
@@ -38,28 +38,28 @@ namespace FarEmerald.PlayForge.Lab
         /// <summary>Which of an entity's starting abilities is its attack, from 0, or -1 where none is.</summary>
         int AttackSlot { get; }
 
-        /// <summary>The Local Data key an entity's bot casting order is under, as "W Q E", or none to cast each in turn (LAB-10).</summary>
+        /// <summary>The Local Data key an entity's bot casting order is under, as "W Q E", or none to cast each in turn.</summary>
         Tag CastOrderKey { get; }
 
         /// <summary>
         /// The Local Data key for when a bot casts an ability: InRange, Hurt, Low (away from its foe), Stunned or FoeLow;
-        /// or none to cast each in range (LAB-10).
+        /// or none to cast each in range.
         /// </summary>
         Tag CastWhenKey { get; }
 
-        /// <summary>The Local Data key an ability's reach for a bot is under, 0 for anywhere, or none for anywhere (LAB-10).</summary>
+        /// <summary>The Local Data key an ability's reach for a bot is under, 0 for anywhere, or none for anywhere.</summary>
         Tag ReachKey { get; }
 
         /// <summary>
         /// The driver the author's unit is ordered about through, a project's own movement and casting, or null for the
-        /// lab's (LAB-11).
+        /// lab's.
         /// </summary>
         ILabUnitDriver Driver => null;
     }
 
     /// <summary>
-    /// A project's rules for the Creator Lab, as an asset (LAB-1). An attribute left empty is the one playing its role in
-    /// the project (TW-29), Health or Movement Speed, or else found by its name among the project's: Health, and Movement
+    /// A project's rules for the Creator Lab, as an asset. An attribute left empty is the one playing its role in
+    /// the project, Health or Movement Speed, or else found by its name among the project's: Health, and Movement
     /// Speed or Move Speed. With no asset, the lab makes one and finds both.
     /// </summary>
     [CreateAssetMenu(menuName = "PlayForge/Lab Rules", fileName = "Lab Rules", order = 60)]

@@ -7,7 +7,7 @@ namespace FarEmerald.PlayForge
     /// Runtime (non-MonoBehaviour) version of GameplayAbilitySystem.
     /// Instantiated at runtime as a plain class. Derives from LazyRuntimeProcess
     /// and implements the same IGameplayAbilitySystem interface as the MonoBehaviour version.
-    /// What makes it a GAS lives in <see cref="GASCore"/>, which it builds in its constructor and forwards to (GAS-S1).
+    /// What makes it a GAS lives in <see cref="GASCore"/>, which it builds in its constructor and forwards to.
     ///
     /// Usage:
     ///   var gas = new RuntimeGameplayAbilitySystem(entityData);
@@ -19,7 +19,7 @@ namespace FarEmerald.PlayForge
 
         private readonly GASCore core;
 
-        // What a save reads and writes past the hub's public face (FEAT-9)
+        // What a save reads and writes past the hub's public face
         internal GASCore Core => core;
 
         // Subsystems
@@ -38,7 +38,7 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// Callbacks for GAS-level events (frame completion, action queue, effects, etc.). Created with the
-        /// GAS and kept by initialization (PF-013). A runtime GAS initializes inside its constructor, so
+        /// GAS and kept by initialization. A runtime GAS initializes inside its constructor, so
         /// <c>OnSystemInitialized</c> has fired before anyone can subscribe to it.
         /// </summary>
         public GameplayAbilitySystemCallbacks Callbacks { get; private set; } = new();
@@ -71,14 +71,14 @@ namespace FarEmerald.PlayForge
                 data?.Name ?? "RuntimeGAS",
                 EProcessStepPriorityMethod.First,
                 0,
-                // Update ticks effects and tag workers; LateUpdate runs the end of frame (GAS-1)
+                // Update ticks effects and tag workers; LateUpdate runs the end of frame
                 EProcessStepTiming.UpdateAndLate,
                 EProcessLifecycle.SelfTerminating)
         {
             _targetingPacket = targetingPacket
                                ?? new StaticTargetingPacket(Vector3.zero, Quaternion.identity, Vector3.one);
             // The packet points back at its entity, as the Mono GAS's does, so what targeting finds can be resolved
-            // to it (GAS-46)
+            // to it
             _targetingPacket.target ??= this;
 
             EntityData = data;
@@ -111,10 +111,10 @@ namespace FarEmerald.PlayForge
         {
             base.WhenInitialize();
 
-            // The registration data's sides, on this entity alone: two entities can share one runtime identity (GAS-47)
+            // The registration data's sides, on this entity alone: two entities can share one runtime identity
             if (regData.TryGet(Tags.AFFILIATION, EDataTarget.Primary, out List<Tag> registered)) core.SetAffiliation(registered);
 
-            // An entity for the Runtime Entities counter as it runs (FEAT-18)
+            // An entity for the Runtime Entities counter as it runs
             if (!counted)
             {
                 ForgeCounters.RuntimeEntities.Value++;
@@ -130,7 +130,7 @@ namespace FarEmerald.PlayForge
         public override void WhenLateUpdate() => EndOfFrame();
 
         // Nothing starts on it from now on, and the base ends what it handles, its abilities among them. They ran on
-        // after it ended (GAS-52)
+        // after it ended
         public override void WhenTerminate()
         {
             if (counted)
@@ -174,7 +174,7 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// Returns the placeholder transform packet for this runtime entity.
         /// Unlike the MonoBehaviour version, this is not backed by a Unity Transform: the entity's position is this
-        /// packet's, which whoever drives the entity keeps current. Targeting and range checks read it (GAS-38).
+        /// packet's, which whoever drives the entity keeps current. Targeting and range checks read it.
         /// </summary>
         public AbstractTargetingPacket GetTargetingPacket()
         {
@@ -212,19 +212,19 @@ namespace FarEmerald.PlayForge
         public GameplayAbilitySystemCallbacks GetCallbacks() => Callbacks;
         public EffectModifierSet GetEffectModifiers() => core.EffectModifiers;
 
-        /// <summary>The auras it runs (TW-10).</summary>
+        /// <summary>The auras it runs.</summary>
         public AuraSet GetAuras() => core.Auras;
 
-        /// <summary>The crowd control rules its abilities follow (TW-16).</summary>
+        /// <summary>The crowd control rules its abilities follow.</summary>
         public CrowdControlRules GetCrowdControl() => core.CrowdControl;
 
-        /// <summary>The side changes it's under (TW-18).</summary>
+        /// <summary>The side changes it's under.</summary>
         public SideSet GetSides() => core?.Sides;
 
-        /// <summary>Its combat log (TW-22).</summary>
+        /// <summary>Its combat log.</summary>
         public CombatLog GetCombatLog() => core?.CombatLog;
 
-        /// <summary>Sets its own sides, as the game runs, which its tags follow (TW-18).</summary>
+        /// <summary>Sets its own sides, as the game runs, which its tags follow.</summary>
         public void SetAffiliation(List<Tag> sides) => core.SetAffiliation(sides);
 
         // ═══════════════════════════════════════════════════════════════════════════
@@ -253,7 +253,7 @@ namespace FarEmerald.PlayForge
         public LevelCallbackStatus ModifyLevel(Tag key, IntValuePair delta) => core.LevelSystem.TryModifyLevel(key, delta);
         public bool IsActive() => !IsDead;
 
-        // Its identity's textures, as an effect it applies may take one of them (FN-25)
+        // Its identity's textures, as an effect it applies may take one of them
         public IReadOnlyList<TextureItem> GetTextureItems() => EntityData?.Textures;
 
         // Its process's name when it has no Entity Data, which threw
@@ -261,7 +261,7 @@ namespace FarEmerald.PlayForge
 
         public void CommunicateTargetedIntent(AbstractGameplayMonoProcess entity)
         {
-            // Once: a process that runs again after a pause says it again (GAS-26)
+            // Once: a process that runs again after a pause says it again
             if (!regData.Contains(entity, Tags.TARGETED_INTENT)) regData.AddPayload(Tags.TARGETED_INTENT, entity);
         }
 
@@ -317,7 +317,7 @@ namespace FarEmerald.PlayForge
 
         public EAbilityActivationPolicy ActivationPolicy = EAbilityActivationPolicy.QueueActivationIfBusy;
 
-        // Defaults as EntityIdentity's: unset, these were null, and giving an ability or an item threw (GAS-23)
+        // Defaults as EntityIdentity's: unset, these were null, and giving an ability or an item threw
         public ScalableInt MaxAbilitiesOperation = new() { Magnitude = 99 };
         public List<Ability> StartingAbilities = new();
         public bool AllowDuplicateAbilities;
@@ -330,24 +330,24 @@ namespace FarEmerald.PlayForge
 
         public AttributeSet AttributeSet;
 
-        /// <summary>The attribute its time runs at, as <see cref="EntityIdentity.TimeScaleAttribute"/> (FEAT-22).</summary>
+        /// <summary>The attribute its time runs at, as <see cref="EntityIdentity.TimeScaleAttribute"/>.</summary>
         public Attribute TimeScaleAttribute;
 
         public StandardWorkerGroup WorkerGroup;
 
-        // An asset's Local Data. The copy left it out, so a runtime GAS made from an asset had none (GAS-S1)
+        // An asset's Local Data. The copy left it out, so a runtime GAS made from an asset had none
         public List<DataWrapper> LocalData = new();
 
-        /// <summary>What its death does, as <see cref="EntityIdentity.Death"/> (TW-4).</summary>
+        /// <summary>What its death does, as <see cref="EntityIdentity.Death"/>.</summary>
         public EntityDeath Death = new();
 
-        /// <summary>Its own modifiers of effects, as <see cref="EntityIdentity.Modifiers"/> (TW-7).</summary>
+        /// <summary>Its own modifiers of effects, as <see cref="EntityIdentity.Modifiers"/>.</summary>
         public List<EffectModifierEntry> Modifiers = new();
 
-        /// <summary>Its components, as <see cref="EntityIdentity.Components"/> (FN-14).</summary>
+        /// <summary>Its components, as <see cref="EntityIdentity.Components"/>.</summary>
         public List<AbstractEntityComponent> Components = new();
 
-        /// <summary>Its crowd control rules, as <see cref="EntityIdentity.CrowdControl"/> (TW-16).</summary>
+        /// <summary>Its crowd control rules, as <see cref="EntityIdentity.CrowdControl"/>.</summary>
         public CrowdControlRules CrowdControl;
 
         public RuntimeEntityIdentity()
@@ -415,7 +415,7 @@ namespace FarEmerald.PlayForge
             return AssetTag;
         }
 
-        // As EntityIdentity's: the affiliation is granted too, which this left out (GAS-S1)
+        // As EntityIdentity's: the affiliation is granted too, which this left out
         public IEnumerable<Tag> GetGrantedTags()
         {
             yield return AssetTag;
@@ -430,7 +430,7 @@ namespace FarEmerald.PlayForge
         {
             WorkerGroup?.ProvideWorkersTo(system);
             EffectModifiers.Provide(Modifiers, system);
-            // Its auras, its Aura components' (TW-10, FN-14)
+            // Its auras, its Aura components'
             ForgeAuras.Provide(ForgeAuras.Of(Components), system);
         }
         public void RemoveWorkers(ISource system)

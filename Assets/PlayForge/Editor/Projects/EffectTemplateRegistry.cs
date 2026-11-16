@@ -5,7 +5,7 @@ namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
     /// The effects a new Cost or Cooldown effect copies, by "Cost" or "Cooldown". Project Settings → PlayForge holds them,
-    /// with the project; they lived in EditorPrefs, which every project on the machine shares (ED-21).
+    /// with the project; they lived in EditorPrefs, which every project on the machine shares.
     /// </summary>
     public static class EffectTemplateRegistry
     {

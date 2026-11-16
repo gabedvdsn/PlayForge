@@ -4,7 +4,7 @@ using UnityEngine;
 namespace FarEmerald.PlayForge
 {
     /// <summary>
-    /// A value the caller passes in under a tag, as Unreal's SetByCaller is (FEAT-2): code that knows the amount as it
+    /// A value the caller passes in under a tag, as Unreal's SetByCaller is: code that knows the amount as it
     /// applies an effect or activates an ability sets it, and the number reads it.
     /// <para>
     /// What it checks: whether the context it's read in holds a value under exactly <see cref="Key"/>. A context holds
@@ -16,7 +16,7 @@ namespace FarEmerald.PlayForge
     /// <see cref="Default"/>.
     /// </para>
     /// <para>
-    /// It is a number kind (FEAT-29), so it reads from any context that holds values: it read only an effect spec's, so a
+    /// It is a number kind, so it reads from any context that holds values: it read only an effect spec's, so a
     /// task's or a process's number read its default. Its default is a number of any kind, read with the scaler as its
     /// owner, so where nothing is set it can read a value by level.
     /// </para>
@@ -43,7 +43,7 @@ namespace FarEmerald.PlayForge
         public override string Describe() =>
             $"the caller's {(Key.IsValid ? Key.ToString() : "value")}, else {(Default != null ? NumberText.Of(Default) : NumberText.Number(0f))}";
 
-        // The caller's value, or the default it reads where there's none (FEAT-32)
+        // The caller's value, or the default it reads where there's none
         public override void Explain(in NumberContext context, NumberTrace trace)
         {
             if (context.TryGetSetByCaller(Key, out float magnitude))

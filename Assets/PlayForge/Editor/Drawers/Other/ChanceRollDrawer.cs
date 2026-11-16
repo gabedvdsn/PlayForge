@@ -5,8 +5,8 @@ using UnityEngine.UIElements;
 namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
-    /// How a chance rolls (TW-8), as Unity's foldout of its fields: Pseudo-Random, Own Luck, and Luck while Own Luck is on,
-    /// where it's read; without it the project's Luck role is read, so Luck is hidden (FN-23).
+    /// How a chance rolls, as Unity's foldout of its fields: Pseudo-Random, Own Luck, and Luck while Own Luck is on,
+    /// where it's read; without it the project's Luck role is read, so Luck is hidden.
     /// </summary>
     [CustomPropertyDrawer(typeof(ChanceRoll))]
     public class ChanceRollDrawer : PropertyDrawer

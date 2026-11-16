@@ -3,7 +3,7 @@ using UnityEngine.UIElements;
 namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
-    /// An attribute value as a field shows it (ED-49): Unity's field, its label in the label column, then its Current and
+    /// An attribute value as a field shows it: Unity's field, its label in the label column, then its Current and
     /// Base side by side, each a number field with its name before it, as Unity's own two-part fields show X and Y. The
     /// drawer binds each part to its value.
     /// </summary>
