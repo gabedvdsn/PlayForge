@@ -25,10 +25,16 @@ asset by an ID instead, and an **Asset Catalog** finds the asset by that ID. The
 abilities and items. A **Forge Project** is the catalog of its own assets, those in its folder.
 
 1. Use your Forge Project, or create one with **Create → PlayForge → Forge Project**.
-2. In the project's inspector, open the menu in its header and choose **Add Its Assets**. It names each PlayForge asset
-   in the project's folder by its GUID, which stays the same when the asset is renamed or moved; **Add Every PlayForge
-   Asset** names every one in the Unity project. Run it again after you add assets.
+2. Its catalog keeps itself current (EP-15). Each PlayForge asset made, copied or moved into the project's folder is
+   named as it lands, by its GUID, which stays the same when the asset is renamed or moved, and a deleted one's entry
+   goes. An asset moved out stays named, so a save made before still finds it. The project catches up on assets it
+   doesn't name yet as it's imported and once each editor session, so one made before PlayForge kept catalogs catches
+   up too.
 3. Pass the project to every capture and restore.
+
+**Keep Catalog Current**, on the project, turns this off. Then, in the project's inspector, open the menu in its header
+and choose **Add Its Assets**, which names each PlayForge asset in the project's folder by its GUID; **Add Every
+PlayForge Asset** names every one in the Unity project. Run it again after you add assets.
 
 Code can add entries while the game runs, with `catalog.Add(id, asset)`. An ID or an asset can be listed only once.
 

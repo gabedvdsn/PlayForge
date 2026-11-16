@@ -7,8 +7,9 @@ namespace FarEmerald.PlayForge
     /// <summary>
     /// A Forge Project: a set of PlayForge assets of its own, those under the folder its asset is in (FEAT-34, Decision 44).
     /// The Forge shows the active project's assets alone, and makes new assets in it. A project's folder can hold another
-    /// project's, and an asset is in the innermost project whose folder holds it. It's an asset catalog too: Add Its Assets
-    /// names its assets for saves, as the catalog does (FEAT-9).
+    /// project's, and an asset is in the innermost project whose folder holds it. It's an asset catalog too, of its own
+    /// assets, for saves (FEAT-9), which it keeps current as they're made, moved in and deleted (EP-15); Add Its Assets
+    /// names them by hand.
     /// </summary>
     [CreateAssetMenu(menuName = "PlayForge/Forge Project", fileName = "Forge Project", order = 0)]
     public class ForgeProject : ForgeAssetCatalog
@@ -24,6 +25,11 @@ namespace FarEmerald.PlayForge
         [Tooltip("The entity its game's GameRoot runs as, the game's own attributes, abilities and workers, as a scene's " +
                  "Bootstrapper plays the project. The project's GameRoot folder holds it (EP-11)")]
         public EntityIdentity GameRootEntity;
+
+        [Tooltip("Names each PlayForge asset made, copied or moved into its folder for saves, by its GUID, as it lands, and lets " +
+                 "go of one deleted, so a save finds every asset with no Add Its Assets to run. One moved out stays named, so a " +
+                 "save made before still finds it. Off, the catalog is left as it is (EP-15)")]
+        public bool KeepCatalogCurrent = true;
 
         // The project code uses, in place of the GameRoot's
         private static ForgeProject used;

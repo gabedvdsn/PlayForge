@@ -10,6 +10,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## Toward 1.0.0, since 0.1.0
 
 ### Added
+- A Forge Project keeps its asset catalog current (EP-15): each PlayForge asset made, copied or moved into its folder is
+  named for saves by its GUID as it lands, and a deleted one's entry goes; a project catches up on its own assets as it's
+  imported and once each editor session. **Keep Catalog Current**, on the project, turns it off.
 - The PlayForge Folder (EP-10): where Forge Projects go, each in a folder of its own, `Assets/PlayForge` until it's set,
   on Project Settings → PlayForge. The Forge asks for a first project where there's none.
 - A Forge Project's Game Root entity, `ForgeProject.GameRootEntity`, in its GameRoot folder, and the Bootstrapper's

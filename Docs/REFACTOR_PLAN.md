@@ -1500,6 +1500,7 @@ commit's follow-up, first; then EP-1 and EP-2, EP-4, EP-7, EP-8, EP-9, EP-5, EP-
 | EP-12 | The Asset Store export installs the code at `Assets/Plugins/PlayForge`, so a buyer's projects in `Assets/PlayForge` are never in its folder (Decision 89). Done: Proving Grounds' `Tools/export-unitypackage.py` builds the package at `Assets/Plugins/PlayForge` in its throwaway project and exports that folder; the folders it makes keep the GUIDs they had, and the check opens the samples there | Packaging | verified |
 | EP-13 | The user, as the pass went on: no file prefix or suffix for new assets, on the settings page or anywhere a file is named. Done: a type's New Assets settings hold its folder alone (`NewAssetSettings`); a new asset's file, a template's copy and a renamed asset's are its name alone (`ForgeAssetCreation`, `ForgeRenames`, The Forge's New dialog); the page's table is Type and Folder, and **Use Default Folders** puts the folders back | Refactor | verified |
 | EP-14 | The user, as the pass went on: no combined tag contexts, as "AssetTag+ContextTag", which confused. A tag used in a field of several contexts is used in each, alone. Done: the tag registry files a use under each of a field's contexts, as it does a code tag's declared for several and a Tag Library entry's, and no set of them is a context of its own; so each context's fields offer the tag, and The Forge's tag detail says it's for each. It reverses TAG-4's keeping of such a field's picks to its own set | Refactor | verified |
+| EP-15 | The user, after EP-6's answer: a Forge Project's asset catalog keeps itself current, so a save finds every asset with no Add Its Assets to run. Done: `ForgeCatalogKeeper`, an asset postprocessor, names each PlayForge asset made, copied or moved into a project's folder by its GUID as it lands, in the innermost project whose folder holds it, and lets go of a deleted file's entries, matched by the file's GUID (`AssetPathToGUIDOptions.IncludeRecentlyDeletedAssets`), so an entry whose asset hasn't loaded yet, as on a fresh import, is never taken for one deleted; an asset moved out stays named, so a save made before still finds it. A project catches up on its own assets as it's imported, as a new one or a sample's is, and once each editor session, as one kept before is (`CatchUp`). `ForgeProject.KeepCatalogCurrent`, on by default, turns it off; `ForgeAssetCatalog.AddByGuid` and `RemoveFile` are what it calls, and Add Its Assets names through `AddByGuid` too. A project's inspector says what its catalog names in one line, as "Names 166 assets for saves, kept current", where it drew each entry, a list as long as the project (`ForgeProjectEditor.CatalogLine`) | Feature | verified |
 
 ## Test project: PlayForge Proving Grounds
 
@@ -1536,6 +1537,23 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-16, **EP-15: a Forge Project's catalog keeps itself current.** The user's yes to the offer that closed EP-6:
+  each PlayForge asset made, copied or moved into a project's folder is named for saves as it lands, a deleted one's
+  entry goes, and a project catches up on what it doesn't name as it's imported and once a session. Keep Catalog
+  Current turns it off. The user's Local Data change, uncommitted as EP-15 went in (its numbers made scalable), was set
+  aside in the gates' snapshot of the package, its samples and Proving Grounds' converted lab asset, so they ran on
+  HEAD and EP-15 alone; the working tree kept it. A first run copied the samples from the working tree, and its
+  PlayMode and golden didn't compile; `run_tests_mine.sh` copies them from the snapshot now.
+  - Red, on a frozen snapshot, the keeper not in yet: EP-15's tests found an asset made in a project's folder named
+    by none, one moved into another project unnamed there, and the deletion's test unable to start, its asset never
+    named.
+  - Gates: on HEAD and EP-15 alone, EditMode 1003 of 1006, the Demo sweep finding the Demo Project's 166 entries drawn
+    as a list, which its inspector says in a line now, and the undo intermittent; its PlayMode and golden didn't compile
+    then, the samples copied from the working tree. With EP-16 on top, on the whole tree: EditMode 1011 of 1011;
+    PlayMode 1992 of 2000, 8 skipped; golden 25 of 25.
+  - The export, from HEAD and EP-15: 2.1 MB; a fresh project imports it clean, the keeper naming the samples' assets
+    as they come in, its samples open with nothing missing, golden 25 of 25 there, and a Windows player builds.
 
 - 2026-11-15, **EP-3: Project Settings → PlayForge, clearer; and EP-6's answer.** The page opens on two sentences of
   what PlayForge and a Forge Project are, its parts have room, its foldout arrows keep one column, and New Assets shows

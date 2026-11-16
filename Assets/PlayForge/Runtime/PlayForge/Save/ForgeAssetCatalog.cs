@@ -10,8 +10,8 @@ namespace FarEmerald.PlayForge
     ///
     /// <para>In the editor, Add Every PlayForge Asset, in the catalog's menu, names each PlayForge asset in the project by
     /// its GUID, which lasts as the asset is renamed or moved. A game can add its own as it runs.</para>
-    /// <para>A <see cref="ForgeProject"/> is the catalog the Create menu makes, of the assets in its folder (FEAT-34); a
-    /// catalog made before goes on naming what it names.</para>
+    /// <para>A <see cref="ForgeProject"/> is the catalog the Create menu makes, of the assets in its folder (FEAT-34), which
+    /// it keeps current as they're made, moved in and deleted (EP-15); a catalog made before goes on naming what it names.</para>
     /// </summary>
     public class ForgeAssetCatalog : ScriptableObject, IAssetNames
     {
@@ -116,15 +116,37 @@ namespace FarEmerald.PlayForge
                 string path = UnityEditor.AssetDatabase.GUIDToAssetPath(guid);
                 if (within != null && !within(path)) continue;
                 foreach (var asset in UnityEditor.AssetDatabase.LoadAllAssetsAtPath(path))
-                {
-                    if (asset is not BaseForgeAsset forgeAsset) continue;
-                    if (!UnityEditor.AssetDatabase.TryGetGUIDAndLocalFileIdentifier(forgeAsset, out string fileGuid, out long localId)) continue;
-                    string id = UnityEditor.AssetDatabase.IsMainAsset(forgeAsset) ? fileGuid : $"{fileGuid}:{localId}";
-                    if (Add(id, forgeAsset)) added++;
-                }
+                    if (asset is BaseForgeAsset forgeAsset && AddByGuid(forgeAsset)) added++;
             }
             if (added > 0) UnityEditor.EditorUtility.SetDirty(this);
             return added;
+        }
+
+        /// <summary>
+        /// Names a PlayForge asset by its GUID, a sub-asset by its file's GUID and its local file ID, as Add Every PlayForge
+        /// Asset names each (EP-15). False where it's in no asset file, or where its ID or the asset is named already: an ID
+        /// any entry holds is taken, though that entry's asset hasn't loaded yet, as on a fresh import.
+        /// </summary>
+        public bool AddByGuid(BaseForgeAsset asset)
+        {
+            if (asset == null || !UnityEditor.AssetDatabase.TryGetGUIDAndLocalFileIdentifier(asset, out string fileGuid, out long localId)) return false;
+            if (string.IsNullOrEmpty(fileGuid)) return false;
+            string id = UnityEditor.AssetDatabase.IsMainAsset(asset) ? fileGuid : $"{fileGuid}:{localId}";
+            if (entries.Exists(entry => entry.Id == id)) return false;
+            return Add(id, asset);
+        }
+
+        /// <summary>
+        /// Lets go of each entry naming an asset in the file of <paramref name="fileGuid"/>, its main asset's and its
+        /// sub-assets', as the file is deleted, and says how many (EP-15).
+        /// </summary>
+        public int RemoveFile(string fileGuid)
+        {
+            if (string.IsNullOrEmpty(fileGuid)) return 0;
+            int removed = entries.RemoveAll(entry => entry.Id == fileGuid
+                                                     || entry.Id != null && entry.Id.StartsWith(fileGuid + ":", StringComparison.Ordinal));
+            if (removed > 0) Forget();
+            return removed;
         }
 #endif
     }
