@@ -21,95 +21,10 @@ MonoBehaviour:
     CombatLog:
       Keep: 100
       Records: 3
-      Events:
-      - Name: Dieds0TDTmvxUT9b7yOwFWs3t8TreBk_oBFQs0TDTmvxUT9b7yOwFWs3t8TreBk_
-        DisplayName: Died
-      - Name: EvadedDewNbJCNXHN2UmicqkhLjvr1ac9adHdcDewNbJCNXHN2UmicqkhLjvr1ac
-        DisplayName: Evaded
-      - Name: Blockedy1IwbFMJBBP2rWbI4ayzGa_Axmw_ZoSDy1IwbFMJBBP2rWbI4ayzGa_Ax
-        DisplayName: Blocked
-      - Name: KillXZxDDyRbFpGHEI9eIFJzb2LZnQ8YXRfXXZxDDyRbFpGHEI9eIFJzb2LZnQ8Y
-        DisplayName: Kill
+      Events: []
     Authoring:
-      NewAssets:
-      - Type: Ability
-        Folder: Assets/Data/Abilities
-        Prefix: 
-        Suffix: 
-      - Type: GameplayEffect
-        Folder: Assets/Data/Effects
-        Prefix: 
-        Suffix: 
-      - Type: Item
-        Folder: Assets/Data/Items
-        Prefix: 
-        Suffix: 
-      - Type: Attribute
-        Folder: Assets/Data/Attributes
-        Prefix: 
-        Suffix: 
-      - Type: AttributeSet
-        Folder: Assets/Data/AttributeSets
-        Prefix: 
-        Suffix: 
-      - Type: EntityIdentity
-        Folder: Assets/Data/Entities
-        Prefix: 
-        Suffix: 
-      - Type: ScalerAsset
-        Folder: Assets/Data/Templates/Scalers
-        Prefix: 
-        Suffix: 
-      - Type: RequirementTemplate
-        Folder: Assets/Data/Templates/Requirements
-        Prefix: 
-        Suffix: 
-      - Type: ValuePipeline
-        Folder: Assets/Data/Pipelines
-        Prefix: 
-        Suffix: 
-      - Type: EffectModifier
-        Folder: Assets/Data/Modifiers
-        Prefix: 
-        Suffix: 
-      - Type: CrowdControlRules
-        Folder: Assets/Data/Rules
-        Prefix: 
-        Suffix: 
-      Defaults:
-      - Type: Ability
-        NewAsset: {fileID: 0}
-        Import: []
-      - Type: GameplayEffect
-        NewAsset: {fileID: 0}
-        Import: []
-      - Type: Item
-        NewAsset: {fileID: 0}
-        Import: []
-      - Type: Attribute
-        NewAsset: {fileID: 0}
-        Import: []
-      - Type: AttributeSet
-        NewAsset: {fileID: 0}
-        Import: []
-      - Type: EntityIdentity
-        NewAsset: {fileID: 0}
-        Import: []
-      - Type: ScalerAsset
-        NewAsset: {fileID: 0}
-        Import: []
-      - Type: RequirementTemplate
-        NewAsset: {fileID: 0}
-        Import: []
-      - Type: ValuePipeline
-        NewAsset: {fileID: 0}
-        Import: []
-      - Type: EffectModifier
-        NewAsset: {fileID: 0}
-        Import: []
-      - Type: CrowdControlRules
-        NewAsset: {fileID: 0}
-        Import: []
+      NewAssets: []
+      Defaults: []
       CostEffect: {fileID: 0}
       CooldownEffect: {fileID: 0}
       Templates: []
@@ -120,16 +35,17 @@ MonoBehaviour:
       Name: Every Entity
       AttributeWorkers: []
       ImpactWorkers:
-      - rid: 2403794428300361728
+      - rid: 2403794467102916683
       TagWorkers: []
       AnalysisWorkers: []
   references:
     version: 2
     RefIds:
-    - rid: 2403794428300361728
+    - rid: 2403794467102916683
       type: {class: LifestealImpactWorker, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:
         AcceptUnworkableImpact: 0
         Share: {fileID: 0}
+        Receives: {fileID: 0}
         Heals: {fileID: 0}
         ImpactTypes: []

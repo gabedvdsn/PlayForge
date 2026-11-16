@@ -10,30 +10,30 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 2d34fc1f98f8a0b4c9b37da3e706e0e1, type: 3}
-  m_Name: EFFECT_NewAbilityCooldown
+  m_Name: NewGameplayEffect
   m_EditorClassIdentifier: 
   LocalData: []
   _template: {fileID: 0}
   _templateOverrides: []
   _templateListSnapshots: []
   Definition:
-    Name: New Ability Cooldown
+    Name: New Gameplay Effect
     Description: 
     Visibility:
       Name: 
       DisplayName: 
-    Textures:
-    - Tag:
-        Name: PrimaryYKmcVmH4Jn9iqWqQsYjmr_mmcquW7EYPYKmcVmH4Jn9iqWqQsYjmr_mmc
-        DisplayName: Primary
-      Texture: {fileID: 7433338533053954386, guid: 6e9992de3195461fa278b9ed4080c7ab, type: 3}
+    Textures: []
+    InheritFromOrigin: 0
+    OriginTexture:
+      Name: PrimaryYKmcVmH4Jn9iqWqQsYjmr_mmcquW7EYPYKmcVmH4Jn9iqWqQsYjmr_mmc
+      DisplayName: Primary
     RetentionGroup:
       Name: IgnoreaQ90wcmjZGnP0AQuPovNalcismrHWacbaQ90wcmjZGnP0AQuPovNalcism
       DisplayName: Ignore
   Tags:
     AssetTag:
-      Name: Effect.NewAbilityCooldown
-      DisplayName: NewAbilityCooldown
+      Name: Effect.NewGameplayEffect
+      DisplayName: NewGameplayEffect
     ContextTags: []
     GrantedTags: []
     RemovesEffectsTagged: []
@@ -46,40 +46,8 @@ MonoBehaviour:
     AppliedBy: 7
     Filters: []
   GrantedAbilities: []
-  SideChange:
-    Changes: 0
-    Source: 0
-    Sides: []
-    Priority: 0
-    Interrupts: 0
   OnHit: []
   Modifiers: []
-  Auras: []
-  legacyArea:
-    Radius:
-      Magnitude: 0
-      RealMagnitude: 2
-      Scaler:
-        rid: -2
-    Flat: 1
-    Takes: 1
-    IncludeCaster: 0
-    MaxTargets:
-      Magnitude: 0
-      RealMagnitude: 1
-      Scaler:
-        rid: -2
-      Rounding: 0
-    UseResolveOrder: 1
-  legacyTransfers: []
-  Lifesteal:
-    Share:
-      Magnitude: 0
-      RealMagnitude: 2
-      Scaler:
-        rid: -2
-    When:
-      rid: -2
   OwnProcCoefficient: 0
   ProcCoefficient:
     Magnitude: 1
@@ -210,8 +178,8 @@ MonoBehaviour:
     Application: []
     Ongoing: []
     Removal: []
-  LinkMode: 1
-  _linkedSource: {fileID: 11400000, guid: 99813d896789fb545914bbc971c9c626, type: 2}
+  LinkMode: 0
+  _linkedSource: {fileID: 0}
   references:
     version: 2
     RefIds:

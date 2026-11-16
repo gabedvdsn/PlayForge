@@ -16,11 +16,15 @@ namespace FarEmerald.PlayForge
     [Serializable]
     public class LifestealImpactWorker : AbstractImpactWorker
     {
-        [Tooltip("The attribute whose value is the share it heals, as 0.15. None, the one playing the project's Lifesteal role")]
+        [Tooltip("The attribute whose value is the share it heals, as 0.15")]
         public Attribute Share;
 
-        [Tooltip("The attribute whose losses count and it heals, as Health. None, the one playing the project's Health role")]
+        [Tooltip("The attribute whose losses count. None, the one playing the project's Health role")]
+        public Attribute Receives;
+        
+        [Tooltip("The attribute to heal, as Health. None, the one playing the project's Health role")]
         public Attribute Heals;
+        
 
         [Tooltip("Only hits of one of these types, as attacks. None, any")]
         [ForgeTagContext(ForgeContext.ImpactType)]
@@ -36,13 +40,15 @@ namespace FarEmerald.PlayForge
         [NonSerialized] private IRootAction[] oneAction;
 
         /// <summary>The attribute whose value is its share: its own, or else the Lifesteal role's, or null for none.</summary>
-        public Attribute ShareAttribute => Share ? Share : ForgeRoles.AttributeFor(Tags.ROLE_LIFESTEAL);
+        public Attribute ShareAttribute => Share;
 
+        public Attribute ReceivesAttribute => Receives ? Receives : ForgeRoles.AttributeFor(Tags.ROLE_HEALTH);
+        
         /// <summary>The attribute whose losses count and it heals: its own, or else the Health role's, or null for none.</summary>
         public Attribute HealsAttribute => Heals ? Heals : ForgeRoles.AttributeFor(Tags.ROLE_HEALTH);
 
         public override bool PreValidateWorkFor(ImpactData impactData) =>
-            HealsAttribute is { } heals && impactData.Attribute != null && impactData.Attribute.Equals(heals);
+            ReceivesAttribute is { } receives && impactData.Attribute != null && impactData.Attribute.Equals(receives);
 
         // A hit it heals for: a workable loss dealt another, of its types, with a share to heal; one it doesn't heal for
         // makes no action
@@ -61,7 +67,8 @@ namespace FarEmerald.PlayForge
         {
             var impact = ctx.ImpactData;
             var heals = HealsAttribute;
-            float amount = ForgeLifesteal.HealFor(impact, heals, ShareOf(impact));
+            var receives = ReceivesAttribute;
+            float amount = ForgeLifesteal.HealFor(impact, receives, ShareOf(impact));
             if (amount <= 0f || ctx.System is not ITarget healer || ctx.System is not ISource source) return Array.Empty<IRootAction>();
 
             // A workable gain, so what scales its holder's heals scales it (TW-15)
@@ -79,7 +86,7 @@ namespace FarEmerald.PlayForge
         public float ShareOf(in ImpactData impact)
         {
             var dealer = impact.SourcedModifier.Source;
-            return dealer != null && ShareAttribute is { } attribute && dealer.TryGetAttributeValue(attribute, out var value)
+            return dealer != null && ShareAttribute != null && ShareAttribute is { } attribute && dealer.TryGetAttributeValue(attribute, out var value)
                 ? value.CurrentValue
                 : 0f;
         }

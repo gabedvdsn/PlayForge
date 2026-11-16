@@ -18,14 +18,10 @@ MonoBehaviour:
   _templateListSnapshots: []
   Name: Game Root
   Description: 
-  Textures:
-  - Tag:
-      Name: Primary
-      DisplayName: 
-    Texture: {fileID: 0}
+  Textures: []
   Affiliation:
-  - Name: Game RootmyZY1dFN98Sd0ORv96TQENlnm4Y172mmmyZY1dFN98Sd0ORv96TQENl
-    DisplayName: 
+  - Name: SystemOLQ9qO2QNi90czFATHnI2QYqY3e7WzWAOLQ9qO2QNi90czFATHnI2QYqY3
+    DisplayName: System
   AssetTag:
     Name: Entity.GameRoot
     DisplayName: GameRoot

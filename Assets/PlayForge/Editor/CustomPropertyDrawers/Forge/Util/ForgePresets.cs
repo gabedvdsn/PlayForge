@@ -133,8 +133,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 (asset, _) => ((Item)asset).OnHit.Add(new OnHitEntry { To = EOnHitTo.Target })),
             new("Active", typeof(Item), "Active Item", "An item that grants an ability of its own, with a cost and a cooldown",
                 (asset, making) => ((Item)asset).ActiveAbility = making.Make<Ability>(making.Name, Active)),
-            new("Passive (Triggered)", typeof(Ability), "Passive Ability",
-                "An ability its holder's hits taken set off, which applies the effects its stage names", Passive),
+            new("Passive", typeof(Ability), "Passive Ability",
+                "An ability that passively provides effects to the holder", Passive),
             new("Hero", typeof(EntityIdentity), "Hero",
                 "An entity with an attribute set of its own: the attributes playing the project's roles, Health first", Hero),
         };
@@ -223,11 +223,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         {
             var ability = (Ability)asset;
             ability.Definition ??= new AbilityDefinition();
-            ability.Definition.Triggers ??= new List<AbilityTrigger>();
-            ability.Definition.Triggers.Add(new AbilityTrigger
-            {
-                Source = EAbilityTriggerSource.GameplayEvent, Tag = Tags.IMPACT_TAKEN, Attribute = making.Health, Sign = ETriggerImpactSign.Loss,
-            });
+            ability.Definition.ActivateImmediately = true;
             Applying(ability);
         }
 

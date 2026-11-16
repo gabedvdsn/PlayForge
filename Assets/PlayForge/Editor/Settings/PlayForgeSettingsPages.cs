@@ -348,8 +348,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         {
             (Tags.ROLE_HEALTH, new[] { "health" }),
             (Tags.ROLE_LUCK, new[] { "luck" }),
-            (Tags.ROLE_MOVEMENT_SPEED, new[] { "movementspeed", "movespeed" }),
-            (Tags.ROLE_LIFESTEAL, new[] { "lifesteal", "lifeleech" }),
+            (Tags.ROLE_MOVEMENT_SPEED, new[] { "movementspeed", "movespeed" })
         };
 
         /// <summary>

@@ -71,12 +71,6 @@ namespace FarEmerald.PlayForge
         /// <summary>The attribute the Creator Lab's units walk at, in units a second, where its rules name none.</summary>
         [ForgeTagExposed(ForgeContext.AttributeRole)] public static Tag ROLE_MOVEMENT_SPEED { get; } = Tag.GenerateAsUnique("Movement Speed");
 
-        /// <summary>
-        /// The attribute whose value is the share of each loss its holder deals that the Lifesteal worker heals it, as 0.15
-        /// for 15%, where the worker names none of its own (FN-15).
-        /// </summary>
-        [ForgeTagExposed(ForgeContext.AttributeRole)] public static Tag ROLE_LIFESTEAL { get; } = Tag.GenerateAsUnique("Lifesteal");
-
         // ═══════════════════════════════════════════════════════════════════════════
         // Events
         // ═══════════════════════════════════════════════════════════════════════════
@@ -122,17 +116,17 @@ namespace FarEmerald.PlayForge
         [ForgeTagExposed(ForgeContext.DataKey)] public static Tag AFFILIATION { get; } = Tag.GenerateAsUnique("Affiliation");
         [ForgeTagExposed(ForgeContext.DataKey)] public static Tag SOURCE { get; } = Tag.GenerateAsUnique("Source");
         [ForgeTagExposed(ForgeContext.DataKey)] public static Tag TARGET { get; } = Tag.GenerateAsUnique("Target");
-        [ForgeTagExposed(ForgeContext.DataKey)] public static Tag TARGET_REAL { get; } = Tag.GenerateAsUnique("TargetReal");
-        [ForgeTagExposed(ForgeContext.DataKey)] public static Tag TARGET_POS { get; } = Tag.GenerateAsUnique("TargetPosition");
+        [ForgeTagExposed(ForgeContext.DataKey)] public static Tag TARGET_REAL { get; } = Tag.GenerateAsUnique("Target Real");
+        [ForgeTagExposed(ForgeContext.DataKey)] public static Tag TARGET_POS { get; } = Tag.GenerateAsUnique("Target Position");
 
         /// <summary>A core event's subject: the one hit, the one killed, or the entity itself (TW-5).</summary>
-        [ForgeTagExposed(ForgeContext.DataKey)] public static Tag EVENT_SUBJECT { get; } = Tag.GenerateAsUnique("EventSubject");
+        [ForgeTagExposed(ForgeContext.DataKey)] public static Tag EVENT_SUBJECT { get; } = Tag.GenerateAsUnique("Event Subject");
 
         /// <summary>An impact event's impact, an <see cref="ImpactData"/> (TW-5).</summary>
         [ForgeTagExposed(ForgeContext.DataKey)] public static Tag EVENT_IMPACT { get; } = Tag.GenerateAsUnique("EventImpact");
 
         /// <summary>Used to communicate the act of targeting to the targeted entity</summary>
-        [ForgeTagExposed(ForgeContext.DataKey)] public static Tag TARGETED_INTENT { get; } = Tag.GenerateAsUnique("TargetedIntent");
+        [ForgeTagExposed(ForgeContext.DataKey)] public static Tag TARGETED_INTENT { get; } = Tag.GenerateAsUnique("Targeted Intent");
 
         [ForgeTagExposed(ForgeContext.DataKey)] public static Tag DATA { get; } = Tag.GenerateAsUnique("Data");
         [ForgeTagExposed(ForgeContext.DataKey)] public static Tag ASSETS { get; } = Tag.GenerateAsUnique("Assets");
@@ -140,7 +134,7 @@ namespace FarEmerald.PlayForge
         [ForgeTagExposed(ForgeContext.DataKey)] public static Tag ABILITIES { get; } = Tag.GenerateAsUnique("Abilities");
         [ForgeTagExposed(ForgeContext.DataKey)] public static Tag ENTITIES { get; } = Tag.GenerateAsUnique("Entities");
         [ForgeTagExposed(ForgeContext.DataKey)] public static Tag ATTRIBUTES { get; } = Tag.GenerateAsUnique("Attributes");
-        [ForgeTagExposed(ForgeContext.DataKey)] public static Tag ATTRIBUTE_SETS { get; } = Tag.GenerateAsUnique("AttributeSets");
+        [ForgeTagExposed(ForgeContext.DataKey)] public static Tag ATTRIBUTE_SETS { get; } = Tag.GenerateAsUnique("Attribute Sets");
         [ForgeTagExposed(ForgeContext.DataKey)] public static Tag TAGS { get; } = Tag.GenerateAsUnique("Tags");
 
         // ═══════════════════════════════════════════════════════════════════════════
@@ -149,7 +143,7 @@ namespace FarEmerald.PlayForge
         // Ready-made keys a project's coded behaviours carry their values under, in the data packets of the processes
         // they run; PlayForge's own code reads none (TAG-8)
 
-        [ForgeTagExposed(ForgeContext.DataKey)] public static Tag GAMEPLAY_ABILITY_SYSTEM { get; } = Tag.GenerateAsUnique("GameplayAbilitySystem");
+        [ForgeTagExposed(ForgeContext.DataKey)] public static Tag GAMEPLAY_ABILITY_SYSTEM { get; } = Tag.GenerateAsUnique("Gameplay Ability System");
         [ForgeTagExposed(ForgeContext.DataKey)] public static Tag INDEX { get; } = Tag.GenerateAsUnique("Index");
         [ForgeTagExposed(ForgeContext.DataKey)] public static Tag OBJECT { get; } = Tag.GenerateAsUnique("Object");
         [ForgeTagExposed(ForgeContext.DataKey)] public static Tag GAMEOBJECT { get; } = Tag.GenerateAsUnique("GameObject");
@@ -165,12 +159,12 @@ namespace FarEmerald.PlayForge
         [ForgeTagExposed(ForgeContext.DataKey)] public static Tag VECTOR2 { get; } = Tag.GenerateAsUnique("Vector2");
         [ForgeTagExposed(ForgeContext.DataKey)] public static Tag VECTOR3 { get; } = Tag.GenerateAsUnique("Vector3");
         [ForgeTagExposed(ForgeContext.DataKey)] public static Tag HEIGHT { get; } = Tag.GenerateAsUnique("Height");
-        [ForgeTagExposed(ForgeContext.DataKey)] public static Tag WAIT_FOR { get; } = Tag.GenerateAsUnique("WaitFor");
+        [ForgeTagExposed(ForgeContext.DataKey)] public static Tag WAIT_FOR { get; } = Tag.GenerateAsUnique("Wait For");
         [ForgeTagExposed(ForgeContext.DataKey)] public static Tag ITERATIONS { get; } = Tag.GenerateAsUnique("Iterations");
         [ForgeTagExposed(ForgeContext.DataKey)] public static Tag VALID { get; } = Tag.GenerateAsUnique("Valid");
         [ForgeTagExposed(ForgeContext.DataKey)] public static Tag INVALID { get; } = Tag.GenerateAsUnique("Invalid");
         [ForgeTagExposed(ForgeContext.DataKey)] public static Tag CAMERA { get; } = Tag.GenerateAsUnique("Camera");
-        [ForgeTagExposed(ForgeContext.DataKey)] public static Tag PROCESS_RELAY { get; } = Tag.GenerateAsUnique("ProcessRelay");
+        [ForgeTagExposed(ForgeContext.DataKey)] public static Tag PROCESS_RELAY { get; } = Tag.GenerateAsUnique("Process Relay");
         [ForgeTagExposed(ForgeContext.DataKey)] public static Tag CONTAINER { get; } = Tag.GenerateAsUnique("Container");
         [ForgeTagExposed(ForgeContext.DataKey)] public static Tag UI { get; } = Tag.GenerateAsUnique("UI");
 
@@ -179,16 +173,16 @@ namespace FarEmerald.PlayForge
         // ═══════════════════════════════════════════════════════════════════════════
 
         /// <summary>The role a projectile reads its speed by, among the attributes it carries or its origin's (FEAT-24)</summary>
-        [ForgeTagExposed(ForgeContext.SetByCallerKey)] public static Tag PROJECTILE_SPEED { get; } = Tag.GenerateAsUnique("ProjectileSpeed");
+        [ForgeTagExposed(ForgeContext.SetByCallerKey)] public static Tag PROJECTILE_SPEED { get; } = Tag.GenerateAsUnique("Projectile Speed");
 
         // ═══════════════════════════════════════════════════════════════════════════
         // Process Statuses
         // ═══════════════════════════════════════════════════════════════════════════
 
         /// <summary>A process's status as it failed as it began (TAG-5)</summary>
-        [ForgeTagExposed] public static Tag FAILED_TO_INITIALIZE { get; } = Tag.GenerateAsUnique("FailedToInitialize");
+        [ForgeTagExposed] public static Tag FAILED_TO_INITIALIZE { get; } = Tag.GenerateAsUnique("Failed To Initialize");
 
         /// <summary>A process's status as it failed while it ran (TAG-5)</summary>
-        [ForgeTagExposed] public static Tag FAILED_WHILE_ACTIVE { get; } = Tag.GenerateAsUnique("FailedWhileActive");
+        [ForgeTagExposed] public static Tag FAILED_WHILE_ACTIVE { get; } = Tag.GenerateAsUnique("Failed While Active");
     }
 }

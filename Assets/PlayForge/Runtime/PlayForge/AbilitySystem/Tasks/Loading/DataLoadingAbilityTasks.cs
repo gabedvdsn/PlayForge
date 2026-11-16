@@ -78,7 +78,7 @@ namespace FarEmerald.PlayForge
     {
         
         [ForgeTagContext(ForgeContext.DataKey)]  public Tag Tag = Tags.ATTRIBUTES;
-        public BaseForgeAsset[] Attributes;
+        public Attribute[] Attributes;
 
         public override bool IsCriticalSection => false;
         
