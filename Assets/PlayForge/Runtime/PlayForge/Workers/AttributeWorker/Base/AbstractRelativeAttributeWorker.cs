@@ -10,7 +10,6 @@ namespace FarEmerald.PlayForge
     [Serializable]
     public abstract class AbstractRelativeAttributeWorker : AbstractFocusedAttributeWorker
     {
-        [Header("Relative Attribute")]
         [Tooltip("Where to get the relative attribute from")]
         public EFromSelfSource From;
         

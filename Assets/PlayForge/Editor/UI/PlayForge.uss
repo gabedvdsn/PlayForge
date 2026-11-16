@@ -2735,12 +2735,12 @@
     flex-grow: 0;
 }
 
-.pf-root .pf-levels__range > #From {
-    flex-grow: 1;
-}
-
-.pf-root .pf-levels__range > #To {
+/* The row's two levels in number fields alike, each a few digits wide, the first after its label: the first stretched
+   across the whole row, beside a last 48 px wide (EP-18) */
+.pf-root .pf-levels__range > .unity-integer-field > .unity-base-field__input {
     width: 48px;
+    flex-grow: 0;
+    flex-shrink: 0;
 }
 
 .pf-root .pf-levels__table {

@@ -82,7 +82,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 items.Add(new Item("Move to Project", false, null));
                 items.Add(new Item("Copy to Project", false, null));
             }
-            items.Add(new Item("Move to Trash", one, () => ForgeAssetDeletion.MoveToTrash(first)));
+            // Each, as one question names them all (EP-19)
+            items.Add(new Item("Move to Trash", one, () => ForgeAssetDeletion.MoveToTrash(all)));
             return items;
         }
 

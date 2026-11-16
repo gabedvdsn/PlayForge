@@ -6,7 +6,6 @@ namespace FarEmerald.PlayForge
 {
     public abstract class TargetAttributeThresholdEffectWorker : AbstractEffectWorker
     {
-        [Header("Focused Effect Worker")]
         
         public Attribute TargetAttribute;
         public AttributeValue Threshold;

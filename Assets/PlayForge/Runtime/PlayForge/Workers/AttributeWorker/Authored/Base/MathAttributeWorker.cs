@@ -10,7 +10,6 @@ namespace FarEmerald.PlayForge
     [ForgeMenu(Description = "Changes each change to its attribute by another attribute.")]
     public class MathAttributeWorker : AbstractRelativeAttributeWorker
     {
-        [Header("Math Operation")]
         public ECalculationOperation Operation = ECalculationOperation.Multiply;
         public EAttributeTarget OperationTarget;
         public EMathApplicationPolicy OperationPolicy;

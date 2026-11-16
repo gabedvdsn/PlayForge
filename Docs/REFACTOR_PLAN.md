@@ -1483,6 +1483,7 @@ The fixes the tag review found (FN-10, `Docs/TAG_REVIEW.md`), as Decision 71 dec
 
 The user's editor pass of 2026-11-15, as they gave it, with Decision 89's answers. Worked in this order: FN-27, their
 commit's follow-up, first; then EP-1 and EP-2, EP-4, EP-7, EP-8, EP-9, EP-5, EP-10 to EP-12, EP-3, and EP-6's answer.
+EP-13 to EP-16 came as the pass went on; EP-17 to EP-25 are the user's notes of 2026-11-16, worked in their order.
 
 | ID | Note | Kind | Status |
 |---|---|---|---|
@@ -1502,6 +1503,15 @@ commit's follow-up, first; then EP-1 and EP-2, EP-4, EP-7, EP-8, EP-9, EP-5, EP-
 | EP-14 | The user, as the pass went on: no combined tag contexts, as "AssetTag+ContextTag", which confused. A tag used in a field of several contexts is used in each, alone. Done: the tag registry files a use under each of a field's contexts, as it does a code tag's declared for several and a Tag Library entry's, and no set of them is a context of its own; so each context's fields offer the tag, and The Forge's tag detail says it's for each. It reverses TAG-4's keeping of such a field's picks to its own set | Refactor | verified |
 | EP-15 | The user, after EP-6's answer: a Forge Project's asset catalog keeps itself current, so a save finds every asset with no Add Its Assets to run. Done: `ForgeCatalogKeeper`, an asset postprocessor, names each PlayForge asset made, copied or moved into a project's folder by its GUID as it lands, in the innermost project whose folder holds it, and lets go of a deleted file's entries, matched by the file's GUID (`AssetPathToGUIDOptions.IncludeRecentlyDeletedAssets`), so an entry whose asset hasn't loaded yet, as on a fresh import, is never taken for one deleted; an asset moved out stays named, so a save made before still finds it. A project catches up on its own assets as it's imported, as a new one or a sample's is, and once each editor session, as one kept before is (`CatchUp`). `ForgeProject.KeepCatalogCurrent`, on by default, turns it off; `ForgeAssetCatalog.AddByGuid` and `RemoveFile` are what it calls, and Add Its Assets names through `AddByGuid` too. A project's inspector says what its catalog names in one line, as "Names 166 assets for saves, kept current", where it drew each entry, a list as long as the project (`ForgeProjectEditor.CatalogLine`) | Feature | verified |
 | EP-16 | The user, as the pass went on: Local Data's Int and Float are numbers that can scale, a `ScalableInt` and a `ScalableFloat`. Done: a Local Data number reads in its reader's context, its own in the number's and an entity's at that entity's own level (`NumberContext.TryGetLocalData`), and each reader follows: the analysis worker's side, the range validation, the Lab bot's reach at the unit's level of the ability, a Lab unit's own and the Demo's Volley. One that reads its own key through a Local Data kind stops at the kind's Default, 16 reads deep, where it overflowed the stack. A wrapper made in code holds 0 in each, where it held null, and the Local Data row draws them with PlayForge's number field, where an Integer or Float field couldn't bind. The Demo's Local Data numbers, saved as plain values, which loaded as 0, are written in the new form, 100 in 24 assets, and the Dota lab's Mana Void with them | Refactor | verified |
+| EP-17 | The user, 2026-11-16: no worker's field carries a `[Header(...)]`. Done: the 15 headers of the eight worker kinds and bases that had them are gone, `MathAttributeWorker`, `AbstractFocusedAttributeWorker`, `AbstractRelativeAttributeWorker`, `TargetAttributeThresholdEffectWorker`, `RelativeOperationContextImpactWorker`, `AbstractContextImpactWorker`, `AbstractImpactWorker` and `AbstractTagWorker`; a worker's fields stand in one column under its kind, each saying what it is in its tooltip | UI | verified |
+| EP-18 | The user, 2026-11-16: a Scaler asset's Try section drew its Levels row's two number fields at two sizes, the first stretched across the row, the second 48 px. Done: a Levels row's two numbers, the Try's and an effect's Levels', are alike, each 48 px, neither growing nor shrinking (`.pf-levels__range`); the rule had stretched the first field, label and all | UI | verified |
+| EP-19 | The user, 2026-11-16: The Forge deletes a selection of several assets, and with the Delete key. Done: Move to Trash takes the whole selection and asks once, "These 3 assets", naming each one's users outside the selection, and moves them together (`ForgeAssetDeletion.MoveToTrash(IReadOnlyList<Object>)`, the one-asset call its case of one); the list's Delete key, or ⌘⌫ on a Mac, does the same, and F2 renames the selected asset | UI | verified |
+| EP-20 | The user, 2026-11-16: The Forge's tag view listed tags only another Forge Project's assets use. Done: it lists the tags the active project's tag pickers offer (`ForgeProjects.OffersTag`): those its assets use, those no asset uses yet, and PlayForge's own; a tag's uses, its detail's list of users and the view's summary count the active project's assets alone, and the status bar names the project | Bug | verified |
+| EP-21 | The user, 2026-11-16: no doc names the refactor's own process, its tracker IDs and decisions, as "(TW-30)" or "Decision 89" | Docs | open |
+| EP-22 | The user, 2026-11-16: the samples' descriptions apt for a buyer, and each sample's content imported as a Forge Project of its own | Packaging | open |
+| EP-23 | The user, 2026-11-16: a Try section for the Value Pipeline inspector | Feature | open |
+| EP-24 | The user, 2026-11-16: nothing meant only for testing ships, but the testing infrastructure agreed on | Packaging | open |
+| EP-25 | The user, 2026-11-16: the project's file structure and namespaces, one final sweep: each script where its name, its base class and its neighbours say it belongs, in the namespace its folder says | Refactor | open |
 
 ## Test project: PlayForge Proving Grounds
 
@@ -1538,6 +1548,17 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-16, **EP-17 to EP-20: workers without headers, a Levels row's numbers alike, deleting a selection, and the
+  tag view's project.** The user's notes of 2026-11-16, the first four: no worker field carries a `[Header]`; a Levels
+  row's two numbers are one width; The Forge deletes its whole selection, asking once, and with the Delete key; and its
+  tag view keeps to the active Forge Project. The user's two uncommitted edits, an ability's implicit targeting and a
+  position task's distance, were set aside in the gates' snapshot, as were EP-21's and EP-22's changes in progress.
+  - Red, on a frozen snapshot: EP-17's test found 15 headers in eight worker kinds; EP-19's, The Forge deleting
+    nothing on Delete; EP-20's, the tag only another project's assets use listed. EP-18's first test couldn't make
+    the views; written again, on HEAD it found the row's fields 315 and 48 px.
+  - Gates, on HEAD and EP-17 to EP-20 alone: EditMode 1016 of 1016; PlayMode 1992 of 2000, 8 skipped; golden 25 of 25.
+    The deletion test of one asset, ED-8, names the one-asset call by its parameter, as it has two now.
 
 - 2026-11-16, **EP-16: Local Data's numbers can scale.** The user's change, which they asked to have fixed and then
   committed: an entry's Int and Float are a ScalableInt and a ScalableFloat, read in their reader's context; a wrapper

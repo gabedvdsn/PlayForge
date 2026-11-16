@@ -22,7 +22,6 @@ namespace FarEmerald.PlayForge
     [Serializable]
     public abstract class AbstractTagWorker
     {
-        [Header("Tag Worker")]
         [Tooltip("Tag requirements for this worker to be active")]
         public TagWorkerRequirements Requirements;
         
@@ -91,7 +90,6 @@ namespace FarEmerald.PlayForge
     [Serializable]
     public class TagWorkerRequirements
     {
-        [Header("Requirements")]
         public List<TagWorkerRequirementPacket> TagPackets = new();
     }
     

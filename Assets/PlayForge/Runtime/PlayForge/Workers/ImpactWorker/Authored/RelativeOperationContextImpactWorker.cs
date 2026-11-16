@@ -11,19 +11,16 @@ namespace FarEmerald.PlayForge
     [ForgeMenu(Description = "Changes an attribute of its holder by a share of each impact.")]
     public class RelativeOperationContextImpactWorker : AbstractContextImpactWorker
     {
-        [Header("Relative & Operation")]
         
         [Tooltip("The attribute to use relative to the impact data")]
         public Attribute RelativeAttribute;
         public ECalculationOperation Operation;
         public ESourceTarget WithRespectTo;
         
-        [Header("Execution Mode")]
         [Tooltip("Inline executes immediately, Deferred queues for end-of-frame. InlineAndDeferred runs deferred, as " +
                  "both halves do the same work")]
         public EWorkerExecution ExecutionMode = EWorkerExecution.Deferred;
         
-        [Header("Danger! [ KEEP FALSE ]")]
         [Tooltip("Only set TRUE if you know what you are doing. FALSE breaks infinite cycles.")]
         public bool WorkerImpactWorkable = false;
         

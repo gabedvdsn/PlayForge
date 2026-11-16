@@ -12,17 +12,14 @@ namespace FarEmerald.PlayForge
     [Serializable]
     public abstract class AbstractFocusedAttributeWorker : AbstractAttributeWorker
     {
-        [Header("Timing")]
         [Tooltip("When this worker executes in the modification pipeline")]
         public EChangeEventTiming TimingConfig = EChangeEventTiming.PostChange;
         
         public override EChangeEventTiming Timing => TimingConfig;
         
-        [Header("Target Attribute")]
         [Tooltip("The attribute to monitor for changes")]
         public Attribute TargetAttribute;
         
-        [Header("Change Validation")]
         [Tooltip("Include changes where the source and target are the same entity")]
         public bool AllowSelfModification;
         
@@ -44,7 +41,6 @@ namespace FarEmerald.PlayForge
         [ForgeTagContext(ForgeContext.ImpactType)]
         public List<Tag> ImpactTypes;
         
-        [Header("Context Validation")]
         [Tooltip("Accept changes from any context")]
         public bool AnyContextTag = true;
 

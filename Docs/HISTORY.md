@@ -10,6 +10,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## Toward 1.0.0, since 0.1.0
 
 ### Added
+- The Forge deletes its whole selection (EP-19): Move to Trash, and the Delete key (⌘⌫ on a Mac), ask once for the
+  assets selected, naming each one's users outside the selection; F2 renames the selected asset.
 - A Forge Project keeps its asset catalog current (EP-15): each PlayForge asset made, copied or moved into its folder is
   named for saves by its GUID as it lands, and a deleted one's entry goes; a project catches up on its own assets as it's
   imported and once each editor session. **Keep Catalog Current**, on the project, turns it off.
@@ -928,6 +930,11 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   Asking whether its sequence was paused took 24 bytes a frame.
 
 ### Fixed
+- The Forge's tag view keeps to the active Forge Project (EP-20): it listed tags only another project's assets use,
+  and counted their uses; it lists those the project's pickers offer, and counts its own assets' uses.
+- A Levels row's two numbers are one width (EP-18), the Scaler Try's and an effect's Levels'; the first was stretched
+  across the row.
+- No worker's field carries a header (EP-17): the eight worker kinds and bases that had them read in one column.
 - The shipped GameRoot prefab stepped in neither Update nor LateUpdate; the GameRoot made by code steps in both, as a
   GAS must for its end of frame (EP-11, GAS-1).
 - Rows out of line in two inspectors (EP-4): an effect's Purges hung its arrow 12 px to the left of the lists' around

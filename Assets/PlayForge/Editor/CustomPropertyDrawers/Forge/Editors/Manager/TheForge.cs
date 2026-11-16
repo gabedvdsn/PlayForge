@@ -53,6 +53,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
         // The types the toolbar shows as toggles: the PlayForge assets; the rest are under More (FN-12, Decision 72)
         private static bool IsCommon(Type type) => typeof(BaseForgeAsset).IsAssignableFrom(type);
         private List<ScriptableObject> allAssets = new();
+
+        // Whether an asset is in the active Forge Project, as the list and the tag view read it; all, while there's none
+        private Func<Object, bool> inActive = _ => true;
         private List<ScriptableObject> shownAssets = new();
         private List<ForgeTagRegistry.TagUsageRecord> shownTags = new();
         private UnityEditor.Editor detailEditor;
@@ -434,14 +437,17 @@ namespace FarEmerald.PlayForge.Extended.Editor
             };
             list.itemsChosen += chosen => ShowInProject(chosen.OfType<Object>().FirstOrDefault());
             list.AddManipulator(new ContextualMenuManipulator(AssetMenu));
-            // F2 renames the selected asset, as in the Project window (FN-8)
+            // F2 renames the selected asset, as in the Project window (FN-8); Delete, or Command-Backspace on a Mac, moves the
+            // selection to the trash, asking first, as the menu's Move to Trash does (EP-19)
             list.RegisterCallback<KeyDownEvent>(key =>
             {
-                if (key.keyCode != KeyCode.F2) return;
-                var asset = SelectedAssets().FirstOrDefault();
-                if (asset == null) return;
+                bool delete = key.keyCode == KeyCode.Delete || key.keyCode == KeyCode.Backspace && key.commandKey;
+                if (key.keyCode != KeyCode.F2 && !delete) return;
+                var assets = SelectedAssets();
+                if (assets.Count == 0) return;
                 key.StopPropagation();
-                ForgeRenameWindow.Show(asset);
+                if (delete) ForgeAssetDeletion.MoveToTrash(assets);
+                else ForgeRenameWindow.Show(assets[0]);
             });
             return list;
         }
@@ -502,7 +508,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             list.AddToClassList("pf-forge__list");
             list.columns.Add(TagColumn("Tag", "Tag", 180, record => TagText(record.Tag), true));
             list.columns.Add(TagColumn("Contexts", "For", 120, ContextsOf, false));
-            list.columns.Add(TagColumn("Uses", "Uses", 50, record => record.TotalAssetCount.ToString(), false));
+            list.columns.Add(TagColumn("Uses", "Uses", 50, record => UsesOf(record).ToString(), false));
             ForgeColumnWidths.Remember(list.columns, "Forge.Tags");
             list.sortColumnDescriptions.Add(new SortColumnDescription(tagSortColumn, tagSortAscending ? SortDirection.Ascending : SortDirection.Descending));
             list.columnSortingChanged += () =>
@@ -613,7 +619,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         {
             ShowFirstProject();
             // The active Forge Project's assets alone; every asset, while the project has none (FEAT-34)
-            var inActive = ForgeProjects.InActive();
+            inActive = ForgeProjects.InActive();
             allAssets = ForgeValidator.ProjectAssets().Where(asset => inActive(asset)).ToList();
             ShowProject();
             if (selected == null) selected = null;
@@ -634,8 +640,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
             if (tagsShown)
             {
-                shownTags = SortedTags(ForgeTagRegistry.GetAllTagRecords()
-                    .Where(record => Matches(TagText(record.Tag)) || Matches(TagDisplaySettings.PathOf(record.Tag))), tagSortColumn, tagSortAscending);
+                shownTags = SortedTags(ProjectTags()
+                    .Where(record => Matches(TagText(record.Tag)) || Matches(TagDisplaySettings.PathOf(record.Tag))), tagSortColumn, tagSortAscending, UsesOf);
                 tagList.itemsSource = shownTags;
                 tagList.RefreshItems();
                 int at = shownTags.FindIndex(record => record.Tag.Name == selectedTag);
@@ -703,11 +709,12 @@ namespace FarEmerald.PlayForge.Extended.Editor
             problemCount.text = problems.Count == 0 ? "No problems" : CountOf(problems.Count, "problem", "problems");
             problemCount.EnableInClassList("pf-forge__problems--some", problems.Count > 0);
             problemCount.EnableInClassList("pf-forge__problems--error", errors > 0);
+            int tags = tagsShown ? ProjectTags().Count() : 0;
             var listed = tagsShown
-                ? (shownTags.Count == ForgeTagRegistry.GetAllTagRecords().Count() ? CountOf(shownTags.Count, "tag", "tags") : $"{shownTags.Count} of {CountOf(ForgeTagRegistry.GetAllTagRecords().Count(), "tag", "tags")}")
+                ? (shownTags.Count == tags ? CountOf(shownTags.Count, "tag", "tags") : $"{shownTags.Count} of {CountOf(tags, "tag", "tags")}")
                 : (shownAssets.Count == allAssets.Count ? CountOf(allAssets.Count, "asset", "assets") : $"{shownAssets.Count} of {CountOf(allAssets.Count, "asset", "assets")}");
-            // The Forge Project the assets are of (FEAT-34)
-            var project = tagsShown ? null : ForgeProjects.Active;
+            // The Forge Project the assets and the tags are of (FEAT-34, EP-20)
+            var project = ForgeProjects.Active;
             var where = project != null ? $" in {project.name}" : "";
             status.text = $"{listed}{where} · {(problems.Count == 0 ? "no problems" : CountOf(problems.Count, "problem", "problems"))}";
         }
@@ -820,7 +827,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 summary.Add(whole);
             }
             summary.Add(Row("For", ContextsOf(record)));
-            summary.Add(Row("Uses", CountOf(record.TotalAssetCount, "asset", "assets")));
+            summary.Add(Row("Uses", CountOf(UsesOf(record), "asset", "assets")));
             detail.Add(summary);
 
             // The contexts it's declared for, which put it in those contexts' pickers as well as its uses' (ED-83)
@@ -840,8 +847,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
             var users = new VisualElement { name = "TagUsers" };
             users.AddToClassList("pf-forge__users");
+            // The active project's assets alone, as its uses count them (EP-20)
             var usages = record.UsageByContext.Values.SelectMany(usage => usage.Usages)
-                .Where(usage => usage.Asset != null)
+                .Where(usage => usage.Asset != null && inActive(usage.Asset))
                 .GroupBy(usage => usage.Asset)
                 .OrderBy(group => NameOf(group.Key), StringComparer.OrdinalIgnoreCase);
             foreach (var group in usages)
@@ -1008,15 +1016,33 @@ namespace FarEmerald.PlayForge.Extended.Editor
         private static string ContextsOf(ForgeTagRegistry.TagUsageRecord record) => string.Join(", ", record.UsageByContext.Keys.OrderBy(key => key));
 
         /// <summary>
+        /// The tags the tag view shows: the active Forge Project's, as the tag picker offers them, those its assets use and
+        /// those no asset uses, as a default; a tag only another project's assets use, it showed (EP-20, the user's report).
+        /// </summary>
+        private IEnumerable<ForgeTagRegistry.TagUsageRecord> ProjectTags()
+        {
+            var offers = ForgeProjects.OffersTag();
+            return ForgeTagRegistry.GetAllTagRecords().Where(record => offers(record.Tag));
+        }
+
+        // How many of the active project's assets use a tag, which its Uses column and its detail say (EP-20)
+        private int UsesOf(ForgeTagRegistry.TagUsageRecord record) => record.UsageByContext.Values
+            .SelectMany(usage => usage.Usages).Select(usage => usage.Asset)
+            .Where(asset => asset != null && inActive(asset)).Distinct().Count();
+
+        /// <summary>
         /// The tags in a column's order: by the tag as the list shows it, by what it's for, or by its uses as a number,
         /// each compared in natural order, then by the tag (ED-59).
         /// </summary>
-        internal static List<ForgeTagRegistry.TagUsageRecord> SortedTags(IEnumerable<ForgeTagRegistry.TagUsageRecord> records, string column, bool ascending)
+        internal static List<ForgeTagRegistry.TagUsageRecord> SortedTags(IEnumerable<ForgeTagRegistry.TagUsageRecord> records, string column, bool ascending,
+            Func<ForgeTagRegistry.TagUsageRecord, int> uses = null)
         {
+            // A tag's uses, the active project's alone where the view gives them, else all (EP-20)
+            uses ??= record => record.TotalAssetCount;
             Func<ForgeTagRegistry.TagUsageRecord, string> key = column switch
             {
                 "Contexts" => ContextsOf,
-                "Uses" => record => record.TotalAssetCount.ToString(),
+                "Uses" => record => uses(record).ToString(),
                 _ => record => TagText(record.Tag),
             };
             var natural = Comparer<string>.Create(EditorUtility.NaturalCompare);

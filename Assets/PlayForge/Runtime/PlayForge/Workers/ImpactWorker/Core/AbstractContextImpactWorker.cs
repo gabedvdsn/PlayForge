@@ -12,7 +12,6 @@ namespace FarEmerald.PlayForge
     [Serializable]
     public abstract class AbstractContextImpactWorker : AbstractImpactWorker
     {
-        [Header("Impact Context")]
         [Tooltip("The attribute that must be impacted")]
         public Attribute ImpactedAttribute;
         
@@ -44,7 +43,6 @@ namespace FarEmerald.PlayForge
         [ForgeTagContext(ForgeContext.ContextTag)]
         public List<Tag> ImpactAbilityContextTags;
         
-        [Header("Work Context")]
         [Tooltip("The attribute to apply work on")]
         public Attribute WorkAttribute;
         

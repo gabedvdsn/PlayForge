@@ -111,7 +111,7 @@ The only other colors:
   reads, as Try and Used By, has no Import or Clear.
 - **Fields** are Unity's text and number fields, with any unit after the field in secondary text, as in
   "6 seconds". Choices use Unity's popup. A field that depends on another indents 14 px under it, as Tick Every does
-  under Periodic Ticks.
+  under Periodic Ticks. A range's two numbers, as a Levels row's, are alike, 48 px each (EP-18).
 - **A field that doesn't apply is hidden**, by what another field says, not disabled, and shows again as that one
   changes, an Undo among its changes (FN-23): an ability's Buffer Window and Buffer Priority under Queue or its
   entity's policy, which may be Queue; an effect's Proc Coefficient under Own Proc Coefficient; a roll only for a
@@ -172,11 +172,15 @@ The only other colors:
 - **The list** has sortable columns for the name (with its type icon), the type, the asset tag and the levels, and a
   last column for the problem glyph. Rows alternate between the panel and alternate-row colors, and the selected row
   takes Unity's selection blue. A row shows the asset's name alone; its file name is in its header.
-- **The tag view** lists the project's tags, with sortable columns for the tag, what it's for and its uses. A tag's
+- **The tag view** lists the active project's tags, those its pickers offer: its assets' tags, those no asset uses
+  yet and PlayForge's own, with sortable columns for the tag, what it's for and its uses, which count the project's
+  assets alone (EP-20). A tag's
   detail declares the contexts it's for in the Tag Library, from a popup whose menu checks them (ED-83); those its code
   declares show among them, checked and locked (EP-7).
 - **The detail pane** shows the selected asset's inspector, opening on a Summary of what it does and what uses it
   (Q6).
+- **Delete** (⌘⌫ on a Mac) moves the list's selection to the trash, as Move to Trash in its menu does, asking once for
+  all of it; F2 renames (EP-19).
 - **The status bar** holds the asset count and the problem count.
 
 ## The Debugger
