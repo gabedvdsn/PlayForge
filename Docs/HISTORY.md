@@ -10,6 +10,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## Toward 1.0.0, since 0.1.0
 
 ### Added
+- A Value Pipeline's **Try** section (EP-23): a value put through its stages at each level, against a stand-in caster,
+  target and caller as a Scaler asset's Try reads against, with **Chances Come Up** settling each roll, an **Out** row
+  for each level and the steps behind the selected one. `ValuePipelineTry` does the same in code, and
+  `ValuePipeline.Run(value, in context)` runs a pipeline against a number context of your own.
 - The Forge deletes its whole selection (EP-19): Move to Trash, and the Delete key (⌘⌫ on a Mac), ask once for the
   assets selected, naming each one's users outside the selection; F2 renames the selected asset.
 - A Forge Project keeps its asset catalog current (EP-15): each PlayForge asset made, copied or moved into its folder is
@@ -934,6 +938,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   Asking whether its sequence was paused took 24 bytes a frame.
 
 ### Fixed
+- An Absorb stage soaks against a side whose entity isn't an ability system, as a try's stand-in, and says what it
+  takes; it passed the hit by (EP-23).
 - The Forge's tag view keeps to the active Forge Project (EP-20): it listed tags only another project's assets use,
   and counted their uses; it lists those the project's pickers offer, and counts its own assets' uses.
 - A Levels row's two numbers are one width (EP-18), the Scaler Try's and an effect's Levels'; the first was stretched

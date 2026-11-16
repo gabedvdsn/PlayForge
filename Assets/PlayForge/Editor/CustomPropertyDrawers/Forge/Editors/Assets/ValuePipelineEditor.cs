@@ -6,7 +6,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
 {
     /// <summary>
     /// A Value Pipeline's inspector (TW-2): what it's for, its stages in order, each of a kind with its fields, and a line
-    /// that says them. Unity's own fields, as <c>Docs/EDITOR_STYLE.md</c> has it.
+    /// that says them; then its Try section, a value put through its stages at each level, as a Scaler asset's Try reads its
+    /// scaler (EP-23). Unity's own fields, as <c>Docs/EDITOR_STYLE.md</c> has it.
     /// </summary>
     [CustomEditor(typeof(ValuePipeline))]
     public class ValuePipelineEditor : UnityEditor.Editor
@@ -40,6 +41,28 @@ namespace FarEmerald.PlayForge.Extended.Editor
             ForgeLists.AddsEmpty(stages, serializedObject, nameof(ValuePipeline.Stages));
             stages.RegisterCallback<SerializedPropertyChangeEvent>(_ => line.text = pipeline.Describe());
             root.Add(stages);
+
+            // A value through its stages at each level, against a caster, a target and a caller the author gives it, typed
+            // or filled from an entity; it only reads the asset, so it has no Import or Clear (EP-23)
+            var tryIt = ForgeDrawerStyles.CreateCollapsibleSection(new ForgeDrawerStyles.SectionConfig
+            {
+                Name = "Try",
+                Title = "Try",
+                IncludeButtons = new[] { false, false, false },
+            });
+            var tried = new ValuePipelineTryView(pipeline);
+            tryIt.Content.Add(tried);
+            tryIt.Summary.text = tried.Summary;
+            tried.Ran += () => tryIt.Summary.text = tried.Summary;
+            root.Add(tryIt.Section);
+
+            // An edit to its stages runs it again
+            root.TrackSerializedObjectValue(serializedObject, _ =>
+            {
+                if (target == null) return;
+                line.text = pipeline.Describe();
+                tried.Refresh();
+            });
             return root;
         }
     }

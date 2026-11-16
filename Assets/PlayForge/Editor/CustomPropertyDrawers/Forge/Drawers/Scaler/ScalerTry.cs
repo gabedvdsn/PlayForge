@@ -261,9 +261,15 @@ namespace FarEmerald.PlayForge.Extended.Editor
         }
 
         /// <summary>A Scaler asset's try, as it was left this session, or a new one.</summary>
-        public static ScalerTry For(ScalerAsset asset)
+        public static ScalerTry For(ScalerAsset asset) => ForKey(SessionKey(asset, nameof(ScalerTry)));
+
+        /// <summary>
+        /// The try kept under a session key, as it was left this session, or a new one; with none, one kept nowhere. A Value
+        /// Pipeline's try keeps its numbers in one (EP-23).
+        /// </summary>
+        internal static ScalerTry ForKey(string key)
         {
-            var tried = new ScalerTry { key = KeyOf(asset) };
+            var tried = new ScalerTry { key = key };
             var json = tried.key == null ? null : SessionState.GetString(tried.key, null);
             if (string.IsNullOrEmpty(json)) return tried;
 
@@ -307,20 +313,25 @@ namespace FarEmerald.PlayForge.Extended.Editor
             .Select(row => new AttributeRow { Attribute = ObjectOf<Attribute>(row.Attribute), Has = row.Has, Current = row.Current, Base = row.Base });
 
         /// <summary>Forgets a Scaler asset's try, so the next starts anew.</summary>
-        public static void Forget(ScalerAsset asset)
+        public static void Forget(ScalerAsset asset) => ForgetKey(SessionKey(asset, nameof(ScalerTry)));
+
+        /// <summary>Forgets the try kept under a session key.</summary>
+        internal static void ForgetKey(string key)
         {
-            var key = KeyOf(asset);
             if (key != null) SessionState.EraseString(key);
         }
 
-        // By the asset's GUID, or its instance for one not saved
-        private static string KeyOf(ScalerAsset asset)
+        /// <summary>
+        /// The session key an asset's try of a kind is kept under, as "PlayForge.ScalerTry.&lt;GUID&gt;": by the asset's
+        /// GUID, or its instance for one not saved; none for none.
+        /// </summary>
+        internal static string SessionKey(Object asset, string kind)
         {
             if (asset == null) return null;
             string id = AssetDatabase.TryGetGUIDAndLocalFileIdentifier(asset, out string guid, out long _) && !string.IsNullOrEmpty(guid)
                 ? guid
                 : asset.GetInstanceID().ToString();
-            return $"PlayForge.ScalerTry.{id}";
+            return $"PlayForge.{kind}.{id}";
         }
     }
 

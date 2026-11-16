@@ -109,8 +109,9 @@ The only other colors:
   Status.Wet".
 - **Every asset type keeps one section order** (Q9): Identity, Leveling, Tags, the type's own sections, then
   Requirements, Workers and Local Data. An Effect's own sections are Duration and Impact, and after Requirements its
-  Components and Cues (FEAT-1, the user's order, Decision 87); an Ability's are Activation and Stages. A section that only
-  reads, as Try and Used By, has no Import or Clear.
+  Components and Cues (FEAT-1, the user's order, Decision 87); an Ability's are Activation and Stages; a Scaler asset's
+  are Values, Try and Used By, and a Value Pipeline's are its stages and Try (EP-23). A section that only reads, as Try
+  and Used By, has no Import or Clear.
 - **Fields** are Unity's text and number fields, with any unit after the field in secondary text, as in
   "6 seconds". Choices use Unity's popup. A field that depends on another indents 14 px under it, as Tick Every does
   under Periodic Ticks. A range's two numbers, as a Levels row's, are alike, 48 px each (EP-18).

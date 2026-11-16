@@ -1509,7 +1509,7 @@ EP-13 to EP-16 came as the pass went on; EP-17 to EP-25 are the user's notes of 
 | EP-20 | The user, 2026-11-16: The Forge's tag view listed tags only another Forge Project's assets use. Done: it lists the tags the active project's tag pickers offer (`ForgeProjects.OffersTag`): those its assets use, those no asset uses yet, and PlayForge's own; a tag's uses, its detail's list of users and the view's summary count the active project's assets alone, and the status bar names the project | Bug | verified |
 | EP-21 | The user, 2026-11-16: no doc names the refactor's own process, its tracker IDs and decisions, as "(TW-30)" or "Decision 89". Done: the package's docs and its samples' READMEs lose 187 such parentheticals, and 18 lines where one held a sentence's sense are said again without it; the two internal docs, the impact model's design plan `IMPACT_MODEL_REFACTOR.md` and the publishing checklist `PUBLISHING.md`, live in the repository's `Docs/`, outside the package, so the export leaves nothing out; and the strings the editor shows, the tooltips and notes of 38 files, lose theirs. The code's comments keep their IDs, for the people who work on it | Docs | verified |
 | EP-22 | The user, 2026-11-16: the samples' descriptions apt for a buyer, and each sample's content imported as a Forge Project of its own. Done: Additional Content is a Forge Project of its own, as the Demo is, **Additional Content** at its root with a Game Root entity of its own, and its Sparring scene plays it, as the Demo's arena plays the Demo Project; Proving Grounds' recipe export names the project whose folder holds the scene it saves. Code Examples' description says what it is, not how it came to be; the Demo's and Additional Content's say their assets are a Forge Project of their own, as Additional Content's README does; and a Game Root entity says what it is. The Battle sample and Code Examples hold no assets, so no project | Packaging | verified |
-| EP-23 | The user, 2026-11-16: a Try section for the Value Pipeline inspector | Feature | open |
+| EP-23 | The user, 2026-11-16: a Try section for the Value Pipeline inspector. Done: under its stages, as a Scaler asset's Try reads a scaler: a Value In, a blow of 100 being −100; Chances Come Up, so each chance a stage rolls comes up where it can, or misses where it can, and a try gives the same each time; the levels; and the Scaler Try's caster, target and caller, a row for each attribute or key a stage reads, typed or filled from an entity. An Out row says what lands at each level, and the selected level's steps show under it, each stage's value in and out and its note; a Block or Evade stage rolls first, as it does as an effect lands, and one that comes up stops the hit. The section's line says the value in and the levels. `ValuePipelineTry` holds it, kept for the session, never in the asset; the Scaler Try's sides and caller are one view now, `TryNumbersView`, which both draw; `ValuePipeline.Run(value, in context)` runs a pipeline against a number context with no hit behind it; and an Absorb stage soaks where its side's entity isn't an ability system, as a try's stand-in, saying what it takes, where it passed the hit by | Feature | verified |
 | EP-24 | The user, 2026-11-16: nothing meant only for testing ships, but the testing infrastructure agreed on | Packaging | open |
 | EP-25 | The user, 2026-11-16: the project's file structure and namespaces, one final sweep: each script where its name, its base class and its neighbours say it belongs, in the namespace its folder says | Refactor | open |
 
@@ -1548,6 +1548,17 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-16, **EP-23: a Value Pipeline's Try section.** The user's notes of 2026-11-16, the seventh: a value through a
+  pipeline's stages at each level, against the stand-ins a Scaler asset's Try reads against, its chances coming up or
+  missing as the author says, and the steps behind each level. The user's two edits were set aside in the gates'
+  snapshot, and EP-24's work in progress with them.
+  - Red: its tests don't compile on HEAD, which has no try. With the try in and the Absorb stage as HEAD had it, the
+    Absorb test found a 30 Barrier taking nothing of a blow of 100, the stage passing a stand-in's hit by; and two tests
+    of the first run were wrong, an Add stage adding to a blow's size and an amplification of 0 leaving no blow to
+    execute, which they say now.
+  - Gates: EditMode 1025 of 1027, the two tests as first written; written again, EP-23's, LVL-5's and EP-18's tests
+    pass on the same snapshot. PlayMode 1992 of 2000, 8 skipped; golden 25 of 25.
 
 - 2026-11-16, **EP-21 and EP-22: docs without the refactor's process; each sample with assets a Forge Project.** The
   user's notes of 2026-11-16, the fifth and sixth: the package's docs, its samples' READMEs and the strings the editor

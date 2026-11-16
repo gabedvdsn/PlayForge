@@ -81,3 +81,27 @@ kind's from its template.
 An effect's spec keeps its last run as a **Breakdown**: the value in, each stage's before and after with its note, and
 the value out. `spec.Breakdown.ToString()` says it in a line: `-100 → Amplification -150 → Resistance -120`. A combat
 log, a debugger or a test reads it.
+
+## Trying a pipeline
+
+A Value Pipeline's inspector has a **Try** section under its stages, which puts a value through them at each level of
+a range, as a Scaler asset's Try reads a scaler:
+
+- **Value In** is the value a hit lands with, going in: a loss below 0, as a blow of 100 is −100, and a gain above.
+- **Chances Come Up** settles each roll, so a try gives the same each time: on, each chance a stage rolls comes up
+  where it can, a critical strike doubling the hit and a block stopping it; off, each misses where it can. A chance of
+  1 always comes up and one of 0 never does.
+- **Levels**, 1 to 5 to start, are the hit's levels, for a stage whose number scales by level.
+- Its **Caster**, **Target** and **Caller** are a Scaler asset's Try's: a row for each attribute a stage reads on a
+  side, as a Multiply stage's Damage Amplification or an Absorb stage's Barrier, typed or filled from an **Entity**,
+  and a row for each key a caller sets.
+
+Its **Out** row says what lands at each level. Click one to see its steps under the table: the value in, each stage's
+value in and out with its note, as "critical", and what comes out. A Block or Evade stage rolls first, as it does as an
+effect lands, and one that comes up stops the hit: nothing of it lands, and its level shows "—". No effect is behind a
+try, so what an Absorb stage soaks comes off no one, and a stage of your own that reads `run.Carrier` reads none.
+What's typed is kept for the session, never in the asset.
+
+`ValuePipelineTry` does the same in code, `new ValuePipelineTry { Value = -100f }.Read(pipeline)`, and
+`pipeline.Run(value, in context)` puts a value through a pipeline against a number context of your own, with no
+effect behind it.

@@ -135,9 +135,10 @@ namespace FarEmerald.PlayForge
             if (value >= 0f || Into == null || !run.Context.TryGetAttribute(On, Into, out var pool)) return value;
             float soaked = Mathf.Min(pool.CurrentValue, -value);
             if (soaked <= 0f) return value;
+            // It comes off the side's entity at the frame's end; a stand-in, as a Value Pipeline's try reads in the editor, has
+            // no entity to take it from, and the stage still says what it soaks (EP-23)
             var system = run.Context.SystemOf(On);
-            if (system == null) return value;
-            system.GetActionQueue()?.Enqueue(new ModifyAttributeAction(system, Into,
+            system?.GetActionQueue()?.Enqueue(new ModifyAttributeAction(system, Into,
                 SourcedModifiedAttributeValue.GenerateUnworkable(system, Into, -soaked, 0f)));
             run.Note($"{soaked:0.##} to {Into.GetName()}");
             return value + soaked;

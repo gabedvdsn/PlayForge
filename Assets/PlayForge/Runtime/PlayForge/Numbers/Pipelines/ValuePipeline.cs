@@ -35,10 +35,20 @@ namespace FarEmerald.PlayForge
         /// <paramref name="value"/> through each stage in turn, each reading the hit's context: its caster, its target, its
         /// level. <paramref name="breakdown"/>, where given, keeps what each stage took and gave.
         /// </summary>
-        public float Run(float value, IAttributeImpactCarrier carrier, ValueBreakdown breakdown = null)
+        public float Run(float value, IAttributeImpactCarrier carrier, ValueBreakdown breakdown = null) =>
+            Run(value, new ValueRun(carrier, NumberContext.Of(carrier), breakdown));
+
+        /// <summary>
+        /// <paramref name="value"/> through each stage in turn, each reading <paramref name="context"/>, with no hit behind
+        /// it: as a try in the editor runs one, or a test. A stage that reads the hit's carrier reads none.
+        /// </summary>
+        public float Run(float value, in NumberContext context, ValueBreakdown breakdown = null) =>
+            Run(value, new ValueRun(null, context, breakdown));
+
+        private float Run(float value, in ValueRun run)
         {
+            var breakdown = run.Breakdown;
             breakdown?.Begin(this, value);
-            var run = new ValueRun(carrier, NumberContext.Of(carrier), breakdown);
             if (Stages != null)
             {
                 for (int i = 0; i < Stages.Count; i++)

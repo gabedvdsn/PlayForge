@@ -10,7 +10,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
     /// target, each an Entity field that fills it and a row for each attribute the scaler reads there, whether the side has
     /// it, its current value and its base; a row for each key a caller sets, whether it's set and its value; then a row of
     /// the scaler's value at each level, as an effect's Levels shows, with the parts behind the selected level under it.
-    /// What's typed reads at once, and is kept for the session, never in the asset.
+    /// What's typed reads at once, and is kept for the session, never in the asset. The sides and the caller are a
+    /// <see cref="TryNumbersView"/>, as a Value Pipeline's try draws them too.
     /// </summary>
     internal sealed class ScalerTryView : VisualElement
     {
@@ -18,13 +19,12 @@ namespace FarEmerald.PlayForge.Extended.Editor
         private readonly ScalerTry tried;
         private readonly IntegerField from;
         private readonly IntegerField to;
-        private readonly VisualElement sides;
+        private readonly TryNumbersView sides;
         private readonly VisualElement table;
         private readonly Label parts;
         private readonly List<Label> cells = new();
         private ScalerTry.Reading reading;
         private int selectedLevel;
-        private string drawnRows;
 
         public ScalerTryView(ScalerAsset asset)
         {
@@ -34,19 +34,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
             AddToClassList("pf-levels");
             AddToClassList("pf-try");
 
-            var range = new VisualElement { name = "Range" };
-            range.AddToClassList("pf-levels__range");
-            from = new IntegerField("Levels") { name = "From", value = tried.From, tooltip = "The first level it reads" };
-            from.AddToClassList(BaseField<int>.alignedFieldUssClassName);
-            to = new IntegerField { name = "To", value = tried.To, tooltip = $"The last level it reads, up to {ScalerTry.MostLevels} after the first" };
-            from.RegisterValueChangedCallback(_ => Refresh());
-            to.RegisterValueChangedCallback(_ => Refresh());
-            range.Add(from);
-            range.Add(new Label("to") { name = "RangeTo" });
-            range.Add(to);
-            Add(range);
+            Add(LevelsRow(tried.From, tried.To, "it reads", ScalerTry.MostLevels, Refresh, out from, out to));
 
-            sides = new VisualElement { name = "TrySides" };
+            sides = new TryNumbersView(tried, Refresh, "the scaler");
             Add(sides);
             table = new VisualElement { name = "TryTable" };
             table.AddToClassList("pf-levels__table");
@@ -55,6 +45,26 @@ namespace FarEmerald.PlayForge.Extended.Editor
             parts.AddToClassList("pf-levels__parts");
             Add(parts);
             Refresh();
+        }
+
+        /// <summary>
+        /// A try's range of levels, as "Levels 1 to 5": its first level after the row's label, and its last, each in a number
+        /// field 48 px wide.
+        /// </summary>
+        internal static VisualElement LevelsRow(int first, int last, string what, int most, System.Action changed,
+            out IntegerField from, out IntegerField to)
+        {
+            var range = new VisualElement { name = "Range" };
+            range.AddToClassList("pf-levels__range");
+            from = new IntegerField("Levels") { name = "From", value = first, tooltip = $"The first level {what}" };
+            from.AddToClassList(BaseField<int>.alignedFieldUssClassName);
+            to = new IntegerField { name = "To", value = last, tooltip = $"The last level {what}, up to {most} after the first" };
+            from.RegisterValueChangedCallback(_ => changed());
+            to.RegisterValueChangedCallback(_ => changed());
+            range.Add(from);
+            range.Add(new Label("to") { name = "RangeTo" });
+            range.Add(to);
+            return range;
         }
 
         /// <summary>The section's line: the levels it reads, as "Levels 1–5".</summary>
@@ -66,164 +76,11 @@ namespace FarEmerald.PlayForge.Extended.Editor
             tried.From = from.value;
             tried.To = to.value;
             reading = tried.Read(asset != null ? asset.Scaler : null);
-            // A read may ask for an attribute or a key it hadn't, so the rows are drawn after it; and again only then, so a
-            // field being typed in stays
-            var rows = RowsKey();
-            if (rows != drawnRows)
-            {
-                drawnRows = rows;
-                DrawSides();
-            }
+            // A read may ask for an attribute or a key it hadn't, so the rows follow it
+            sides.Follow();
             DrawTable();
             ShowParts();
             tried.Keep();
-        }
-
-        // ═══════════════════════════════════════════════════════════════════════════
-        // The sides and the caller
-        // ═══════════════════════════════════════════════════════════════════════════
-
-        private string RowsKey()
-        {
-            var key = new System.Text.StringBuilder();
-            foreach (var side in new[] { tried.Caster, tried.Target })
-            {
-                key.Append(side.Which).Append(side.Entity != null ? side.Entity.GetInstanceID() : 0).Append(':');
-                foreach (var row in side.Attributes) key.Append(row.Attribute != null ? row.Attribute.GetInstanceID() : 0).Append(',');
-            }
-            key.Append("|");
-            foreach (var row in tried.Caller) key.Append(row.Key.Name).Append(',');
-            return key.ToString();
-        }
-
-        private void DrawSides()
-        {
-            sides.Clear();
-            sides.Add(SideBlock(tried.Caster, "Caster", "the caster"));
-            sides.Add(SideBlock(tried.Target, "Target", "the target"));
-            sides.Add(CallerBlock());
-        }
-
-        private VisualElement SideBlock(ScalerTry.Side side, string title, string what)
-        {
-            var block = new VisualElement { name = $"Try{title}" };
-            block.AddToClassList("pf-try__side");
-            var fill = new ObjectField(title)
-            {
-                name = $"{title} Entity",
-                objectType = typeof(EntityIdentity),
-                allowSceneObjects = false,
-                value = side.Entity,
-                tooltip = $"An entity to fill {what}'s attributes from: what its attribute set starts each at, at its starting level",
-            };
-            fill.AddToClassList(BaseField<Object>.alignedFieldUssClassName);
-            fill.RegisterValueChangedCallback(change =>
-            {
-                side.FillFrom(change.newValue as EntityIdentity);
-                drawnRows = null;
-                schedule.Execute(Refresh);
-            });
-            block.Add(fill);
-
-            if (side.Attributes.Count == 0)
-            {
-                var none = new Label($"It reads nothing of {what}.");
-                none.AddToClassList("pf-note");
-                block.Add(none);
-                return block;
-            }
-            foreach (var row in side.Attributes) block.Add(AttributeRow(row, title, what));
-            return block;
-        }
-
-        private VisualElement AttributeRow(ScalerTry.AttributeRow row, string title, string what)
-        {
-            string attribute = row.Attribute.GetName();
-            var line = new VisualElement { name = $"{title} {attribute}" };
-            line.AddToClassList("pf-try__row");
-            var label = new Label(attribute) { tooltip = $"{attribute}, as {what} holds it for the read" };
-            label.AddToClassList("pf-try__name");
-            line.Add(label);
-
-            var has = new Toggle { name = $"{title} {attribute} Has", value = row.Has, tooltip = $"Whether {what} has {attribute}: without it, it reads as an entity without the attribute" };
-            has.AddToClassList("pf-try__has");
-            var current = new FloatField { name = $"{title} {attribute} Current", value = row.Current, isDelayed = true, tooltip = $"{attribute}'s current value" };
-            current.AddToClassList("pf-try__value");
-            var baseValue = new FloatField { name = $"{title} {attribute} Base", value = row.Base, isDelayed = true, tooltip = $"{attribute}'s base value" };
-            baseValue.AddToClassList("pf-try__value");
-            current.SetEnabled(row.Has);
-            baseValue.SetEnabled(row.Has);
-
-            has.RegisterValueChangedCallback(change =>
-            {
-                row.Has = change.newValue;
-                current.SetEnabled(row.Has);
-                baseValue.SetEnabled(row.Has);
-                Refresh();
-            });
-            current.RegisterValueChangedCallback(change =>
-            {
-                // A base typed as the current was keeps in step with it, until it's typed apart
-                if (Mathf.Approximately(row.Base, row.Current)) row.Base = change.newValue;
-                row.Current = change.newValue;
-                baseValue.SetValueWithoutNotify(row.Base);
-                Refresh();
-            });
-            baseValue.RegisterValueChangedCallback(change =>
-            {
-                row.Base = change.newValue;
-                Refresh();
-            });
-            line.Add(has);
-            line.Add(current);
-            line.Add(baseValue);
-            return line;
-        }
-
-        private VisualElement CallerBlock()
-        {
-            var block = new VisualElement { name = "TryCaller" };
-            block.AddToClassList("pf-try__side");
-            var title = new Label("Caller") { tooltip = "The values a caller sets, by key, as Set By Caller reads them" };
-            title.AddToClassList("pf-try__title");
-            block.Add(title);
-            if (tried.Caller.Count == 0)
-            {
-                var none = new Label("It reads no caller's value.");
-                none.AddToClassList("pf-note");
-                block.Add(none);
-                return block;
-            }
-            foreach (var row in tried.Caller)
-            {
-                var each = row;
-                string key = each.Key.ToString();
-                var line = new VisualElement { name = $"Caller {key}" };
-                line.AddToClassList("pf-try__row");
-                var label = new Label(key) { tooltip = $"{key}: unset, the scaler takes its default" };
-                label.AddToClassList("pf-try__name");
-                line.Add(label);
-                var set = new Toggle { name = $"Caller {key} Set", value = each.Set, tooltip = $"Whether the caller sets {key}" };
-                set.AddToClassList("pf-try__has");
-                var value = new FloatField { name = $"Caller {key} Value", value = each.Value, isDelayed = true, tooltip = $"The value the caller sets {key} to" };
-                value.AddToClassList("pf-try__value");
-                value.SetEnabled(each.Set);
-                set.RegisterValueChangedCallback(change =>
-                {
-                    each.Set = change.newValue;
-                    value.SetEnabled(each.Set);
-                    Refresh();
-                });
-                value.RegisterValueChangedCallback(change =>
-                {
-                    each.Value = change.newValue;
-                    Refresh();
-                });
-                line.Add(set);
-                line.Add(value);
-                block.Add(line);
-            }
-            return block;
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
@@ -262,14 +119,14 @@ namespace FarEmerald.PlayForge.Extended.Editor
             selectedLevel = Mathf.Clamp(selectedLevel, 0, reading.Values.Length - 1);
         }
 
-        private static Label Name(string text, string tooltip)
+        internal static Label Name(string text, string tooltip)
         {
             var label = new Label(text) { tooltip = tooltip ?? "" };
             label.AddToClassList("pf-levels__name");
             return label;
         }
 
-        private static Label Cell(string text, string tooltip)
+        internal static Label Cell(string text, string tooltip)
         {
             var label = new Label(text) { tooltip = tooltip ?? text };
             label.AddToClassList("pf-levels__cell");
