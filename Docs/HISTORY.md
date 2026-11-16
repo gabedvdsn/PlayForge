@@ -503,6 +503,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   page, through one table of links in the editor.
 
 ### Changed
+- A tag used in a field of several contexts is used in each, alone, so each one's fields offer it, and The Forge says
+  it's for each; no set of contexts is a context of its own, as "AssetTag+ContextTag" was (EP-14).
 - Lifesteal (the user's edit, FN-27): the Lifesteal worker heals its **Heals** attribute for its **Receives** attribute's
   losses, each the Health role's where it names none, by the **Share** attribute it names; the Lifesteal role is gone,
   so a project names the worker's Share. The Passive preset, which was Passive (Triggered), activates as its entity
@@ -1147,6 +1149,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   or turning `Enabled` off. Once the first had ended, it threw, and the rest ran on.
 
 ### Removed
+- A new asset's file prefix and suffix, from Project Settings → PlayForge and wherever a file is named: a new asset's
+  file is its name alone, and Use Default Folders and Names is Use Default Folders (EP-13).
 - Legacy, obsolete and asset-updating code (FN-21, Decision 83), every asset of the package, its samples and Proving
   Grounds saved as it is now first: the moves of an older save's fields into components, with `IMovesToComponents` and
   `MovedToComponents`, and the hidden fields they moved from (an ability's charges, recharge, toggle and auras, an

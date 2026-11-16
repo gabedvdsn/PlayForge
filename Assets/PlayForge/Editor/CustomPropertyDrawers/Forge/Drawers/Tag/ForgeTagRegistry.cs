@@ -326,21 +326,13 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 return _allTags;
             
             var result = new HashSet<Tag>();
-            var context = new TagContext(contextStrings);
-            
-            // Get tags from exact context match
-            if (_contextToTags.TryGetValue(context.ContextKey, out var contextSet))
+
+            // Each context's own tags, by its exact key: a key that only held a context's name was taken too, "Impact
+            // Retention" by an Impact field (TAG-4). A tag used in a field of several contexts is used in each, so each one's
+            // fields offer it; no key joins several, which kept such a field's picks to its own set (EP-14)
+            foreach (var context in Each(contextStrings))
             {
-                foreach (var tag in contextSet)
-                    result.Add(tag);
-            }
-            
-            // Each context's own tags, by its exact key. A key that only holds a context's name was taken too: "Impact
-            // Retention" by an Impact field, and a field of several contexts, whose key joins them, by each one's pickers,
-            // so a tag picked there went everywhere its contexts did (TAG-4)
-            foreach (var ctxStr in contextStrings)
-            {
-                if (!_contextToTags.TryGetValue(new TagContext(new[] { ctxStr }).ContextKey, out var single)) continue;
+                if (!_contextToTags.TryGetValue(context.ContextKey, out var single)) continue;
                 foreach (var tag in single)
                     result.Add(tag);
             }
@@ -449,24 +441,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
         {
             if (!IsValidTag(tag)) return;
             if (asset == null) return;
-            
-            var context = new TagContext(contextStrings);
-            
-            if (!_tagCache.TryGetValue(tag, out var record))
-            {
-                record = new TagUsageRecord(tag);
-                _tagCache[tag] = record;
-                _allTags.Add(tag);
-            }
-            
-            record.AddUsage(context, asset, fieldPath);
-            
-            if (!_contextToTags.TryGetValue(context.ContextKey, out var contextSet))
-            {
-                contextSet = new HashSet<Tag>();
-                _contextToTags[context.ContextKey] = contextSet;
-            }
-            contextSet.Add(tag);
+
+            // Under each of its field's contexts, alone (EP-14)
+            RegisterTagInCacheForAsset(tag, new TagContext(contextStrings), asset, fieldPath);
         }
         
         /// <summary>
@@ -481,9 +458,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
             if (!_tagCache.TryGetValue(tag, out var record))
                 return;
             
-            var context = new TagContext(contextStrings);
-            record.RemoveUsage(context, asset);
-            
+            // From each of its field's contexts, as it was used in each (EP-14)
+            foreach (var context in Each(contextStrings)) record.RemoveUsage(context, asset);
+
             // If tag has no more usages, remove it entirely (unless it's a system default)
             if (record.TotalUsageCount == 0 && !record.IsSystemDefault)
             {
@@ -492,7 +469,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             else
             {
                 // Clean up context-to-tag mapping if needed
-                CleanupContextMapping(tag, context);
+                foreach (var context in Each(contextStrings)) CleanupContextMapping(tag, context);
             }
         }
         
@@ -780,19 +757,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
         /// </summary>
         private static void RegisterSystemDefaultTag(Tag tag, string[] contexts, string sourcePath)
         {
-            // Register the tag for each context individually
-            foreach (var contextStr in contexts)
-            {
-                var context = new TagContext(new[] { contextStr });
-                RegisterTagInCacheAsSystemDefault(tag, context, sourcePath);
-            }
-            
-            // Also register with the combined context if there are multiple
-            if (contexts.Length > 1)
-            {
-                var combinedContext = new TagContext(contexts);
-                RegisterTagInCacheAsSystemDefault(tag, combinedContext, sourcePath);
-            }
+            // For each context alone: the set of them is no context of its own (EP-14). None, none at all, as before
+            if (contexts == null || contexts.Length == 0) return;
+            RegisterTagInCacheAsSystemDefault(tag, new TagContext(contexts), sourcePath);
         }
         
         /// <summary>
@@ -825,15 +792,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
                         : new[] { ForgeContext.Universal };
                     if (contexts.Length == 0) contexts = new[] { ForgeContext.Universal };
 
-                    foreach (var contextString in contexts)
-                    {
-                        RegisterTagInCacheForAsset(tag, new TagContext(new[] { contextString }), library, "Entries");
-                    }
-
-                    if (contexts.Length > 1)
-                    {
-                        RegisterTagInCacheForAsset(tag, new TagContext(contexts), library, "Entries");
-                    }
+                    // For each context alone: the set of them is no context of its own (EP-14)
+                    RegisterTagInCacheForAsset(tag, new TagContext(contexts), library, "Entries");
 
                     count++;
                 }
@@ -842,29 +802,22 @@ namespace FarEmerald.PlayForge.Extended.Editor
             return count;
         }
 
-        private static void RegisterTagInCacheForAsset(Tag tag, TagContext context, ScriptableObject asset, string fieldPath)
-        {
-            if (!_tagCache.TryGetValue(tag, out var record))
-            {
-                record = new TagUsageRecord(tag);
-                _tagCache[tag] = record;
-                _allTags.Add(tag);
-            }
-
-            record.AddUsage(context, asset, fieldPath, isSystemDefault: false);
-
-            if (!_contextToTags.TryGetValue(context.ContextKey, out var contextSet))
-            {
-                contextSet = new HashSet<Tag>();
-                _contextToTags[context.ContextKey] = contextSet;
-            }
-            contextSet.Add(tag);
-        }
+        private static void RegisterTagInCacheForAsset(Tag tag, TagContext context, ScriptableObject asset, string fieldPath) =>
+            FileUse(tag, context, asset, fieldPath, systemDefault: false);
 
         /// <summary>
         /// Registers a tag in the cache as a system default.
         /// </summary>
-        private static void RegisterTagInCacheAsSystemDefault(Tag tag, TagContext context, string sourcePath)
+        private static void RegisterTagInCacheAsSystemDefault(Tag tag, TagContext context, string sourcePath) =>
+            // With no asset, a system default, and its source's path
+            FileUse(tag, context, null, sourcePath, systemDefault: true);
+
+        /// <summary>
+        /// Files a use of a tag under each of a context's strings, alone: a field of several contexts, a code tag declared
+        /// for several and a Tag Library entry of several each use it in each. Their set was a context of its own, "A+B",
+        /// which The Forge showed beside the rest and only a field of that very set offered (EP-14).
+        /// </summary>
+        private static void FileUse(Tag tag, TagContext context, ScriptableObject asset, string fieldPath, bool systemDefault)
         {
             if (!_tagCache.TryGetValue(tag, out var record))
             {
@@ -872,16 +825,29 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 _tagCache[tag] = record;
                 _allTags.Add(tag);
             }
-            
-            // Register with null asset (system default) and the source path
-            record.AddUsage(context, null, sourcePath, isSystemDefault: true);
-            
-            if (!_contextToTags.TryGetValue(context.ContextKey, out var contextSet))
+
+            foreach (var each in Each(context.ContextStrings))
             {
-                contextSet = new HashSet<Tag>();
-                _contextToTags[context.ContextKey] = contextSet;
+                record.AddUsage(each, asset, fieldPath, systemDefault);
+                if (!_contextToTags.TryGetValue(each.ContextKey, out var contextSet))
+                {
+                    contextSet = new HashSet<Tag>();
+                    _contextToTags[each.ContextKey] = contextSet;
+                }
+                contextSet.Add(tag);
             }
-            contextSet.Add(tag);
+        }
+
+        /// <summary>A field's contexts, each alone, or the one for none (EP-14).</summary>
+        private static IEnumerable<TagContext> Each(string[] contextStrings)
+        {
+            var strings = (contextStrings ?? Array.Empty<string>()).Where(each => !string.IsNullOrWhiteSpace(each)).Distinct().ToArray();
+            if (strings.Length == 0)
+            {
+                yield return new TagContext(Array.Empty<string>());
+                yield break;
+            }
+            foreach (var each in strings) yield return new TagContext(new[] { each });
         }
         
         private static void ScanAssetsOfType(string typeName, HashSet<string> scanned)
@@ -1035,21 +1001,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
         
         private static void RegisterTagInCache(Tag tag, TagContext context, ScriptableObject asset, string fieldPath)
         {
-            if (!_tagCache.TryGetValue(tag, out var record))
-            {
-                record = new TagUsageRecord(tag);
-                _tagCache[tag] = record;
-                _allTags.Add(tag);
-            }
-
-            record.AddUsage(context, asset, fieldPath);
-
-            if (!_contextToTags.TryGetValue(context.ContextKey, out var contextSet))
-            {
-                contextSet = new HashSet<Tag>();
-                _contextToTags[context.ContextKey] = contextSet;
-            }
-            contextSet.Add(tag);
+            // Under each of its field's contexts, alone (EP-14)
+            FileUse(tag, context, asset, fieldPath, systemDefault: false);
 
             // Rebuild the runtime TagRegistry from serialized asset data so that
             // TagRegistry.Resolve() works correctly after a domain reload.

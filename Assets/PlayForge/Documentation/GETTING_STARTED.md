@@ -158,7 +158,8 @@ string perLevel = impact.FormatTotal();           // "20/30/40/50"
   summary: its description, then a line for each of its sections, or for a Scaler asset or a Requirement Template, of
   its parts. A double click shows it in the Project window, and a row of an asset's Used By opens that asset in The
   Forge. Tags lists the project's tags and what uses each. A context is a kind of tag, as Granted, Event, Impact Type or
-  Local Data Key, and a tag field's picker offers the kinds it takes. A tag's **Declared For** declares it for contexts, so their fields' pickers offer it, in a Tag
+  Local Data Key, and a tag field's picker offers the kinds it takes. A tag used in a field of several contexts is
+  for each of them, alone, so each one's fields offer it. A tag's **Declared For** declares it for contexts, so their fields' pickers offer it, in a Tag
   Library asset (`Create → PlayForge → Tag Library`), made where Project Settings
   puts new assets while there's none. A Tag Library belongs to no Forge Project: every library in the project is read,
   wherever it sits, so one library can serve them all. New Tag's **Contexts** start as its field's, and another chosen

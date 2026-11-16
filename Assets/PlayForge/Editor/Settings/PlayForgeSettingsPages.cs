@@ -27,7 +27,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             activateHandler = (_, root) => BuildProjectPage(root),
             keywords = new HashSet<string>
             {
-                "PlayForge", "Folder", "Prefix", "Suffix", "Defaults", "New Asset", "Import", "Cost", "Cooldown",
+                "PlayForge", "Folder", "Defaults", "New Asset", "Import", "Cost", "Cooldown",
                 "Attributes", "Health", "Mana", "Luck", "Movement Speed",
             },
         };
@@ -51,8 +51,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
         // ═══════════════════════════════════════════════════════════════════════════
 
         /// <summary>
-        /// Builds the project's page in a root: the active Forge Project's settings (TW-30), where each type's new assets go
-        /// and how they're named, each type's defaults, the Cost and Cooldown effects, its roles and its crowd control. Its
+        /// Builds the project's page in a root: the active Forge Project's settings (TW-30), where each type's new assets go,
+        /// each type's defaults, the Cost and Cooldown effects, its roles and its crowd control. Its
         /// fields bind to the project, so an edit undoes, and each edit is saved in its asset. With no Forge Project, a
         /// button makes one. They were the whole Unity project's, in ProjectSettings/PlayForgeSettings.asset.
         /// </summary>
@@ -76,20 +76,19 @@ namespace FarEmerald.PlayForge.Extended.Editor
             var section = new VisualElement { name = "Authoring" };
 
             Heading(section, "New Assets");
-            section.Add(Note("Where The Forge and a field's New put each type's new assets, within the project's folder, and how " +
-                             "their files are named."));
+            section.Add(Note("Where The Forge and a field's New put each type's new assets, within the project's folder."));
             section.Add(NewAssetsTable(authoring.FindPropertyRelative(nameof(ForgeAuthoringSettings.NewAssets))));
             var buttons = new VisualElement();
             buttons.AddToClassList("pf-settings__buttons");
             buttons.Add(new Button(() =>
             {
-                PlayForgeSettings.UseDefaultFoldersAndNames();
+                PlayForgeSettings.UseDefaultFolders();
                 serialized.Update();
             })
             {
-                name = "UseDefaultFoldersAndNames",
-                text = "Use Default Folders and Names",
-                tooltip = "Put every type's folder, prefix and suffix back to their defaults. The defaults below stay",
+                name = "UseDefaultFolders",
+                text = "Use Default Folders",
+                tooltip = "Put every type's folder back to its default. The defaults below stay",
             });
             section.Add(buttons);
 
@@ -126,8 +125,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
             return page;
         }
 
-        // A row for each type: its name, then its folder, with a button that picks one, and its file name's prefix and
-        // suffix
+        // A row for each type: its name, then its folder, with a button that picks one. A new asset's file is its name
+        // alone: the prefix and suffix columns are gone (EP-13)
         private static VisualElement NewAssetsTable(SerializedProperty newAssets)
         {
             var table = new VisualElement { name = "NewAssets" };
@@ -136,8 +135,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
             header.AddToClassList("pf-table__header");
             header.Add(Cell(new Label("Type"), "pf-settings__type"));
             header.Add(Cell(new Label("Folder"), "pf-settings__folder"));
-            header.Add(Cell(new Label("Prefix"), "pf-settings__affix"));
-            header.Add(Cell(new Label("Suffix"), "pf-settings__affix"));
             table.Add(header);
 
             for (int i = 0; i < newAssets.arraySize; i++)
@@ -169,10 +166,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
                     tooltip = $"Choose the folder a new {ForgeAssetTypes.NameOf(type)} goes in",
                 });
                 row.Add(Cell(folder, "pf-settings__folder"));
-                row.Add(Cell(Text(entry.FindPropertyRelative(nameof(NewAssetSettings.Prefix)), "Prefix",
-                    "Text a new asset's file name starts with"), "pf-settings__affix"));
-                row.Add(Cell(Text(entry.FindPropertyRelative(nameof(NewAssetSettings.Suffix)), "Suffix",
-                    "Text a new asset's file name ends with"), "pf-settings__affix"));
                 table.Add(row);
             }
             return table;

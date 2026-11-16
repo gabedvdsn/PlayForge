@@ -1498,6 +1498,8 @@ commit's follow-up, first; then EP-1 and EP-2, EP-4, EP-7, EP-8, EP-9, EP-5, EP-
 | EP-10 | Forge Projects' files: a base folder, `Assets/PlayForge` by default and a project setting (Decision 89); a new project made at once in a folder of its own there, `Assets/PlayForge/<Project>/<Project>.asset`, its assets in `<Project>/<Type>/`; The Forge asks for a first project where there's none; and none ships in the package | Refactor | open |
 | EP-11 | The Bootstrapper, GameRoot and ProcessControl prefabs: none ships; code makes them in `Assets/PlayForge/Bootstrap` as the first project is made, and again where one's gone. Each Forge Project carries its own Game Root entity, `<Project>/GameRoot/GameRoot.asset`, and the Bootstrapper names the project a scene plays, whose Game Root entity and settings the GameRoot takes on (Decision 89) | Refactor | open |
 | EP-12 | The Asset Store export installs the code at `Assets/Plugins/PlayForge`, so a buyer's projects in `Assets/PlayForge` are never in its folder (Decision 89) | Packaging | open |
+| EP-13 | The user, as the pass went on: no file prefix or suffix for new assets, on the settings page or anywhere a file is named. Done: a type's New Assets settings hold its folder alone (`NewAssetSettings`); a new asset's file, a template's copy and a renamed asset's are its name alone (`ForgeAssetCreation`, `ForgeRenames`, The Forge's New dialog); the page's table is Type and Folder, and **Use Default Folders** puts the folders back | Refactor | verified |
+| EP-14 | The user, as the pass went on: no combined tag contexts, as "AssetTag+ContextTag", which confused. A tag used in a field of several contexts is used in each, alone. Done: the tag registry files a use under each of a field's contexts, as it does a code tag's declared for several and a Tag Library entry's, and no set of them is a context of its own; so each context's fields offer the tag, and The Forge's tag detail says it's for each. It reverses TAG-4's keeping of such a field's picks to its own set | Refactor | verified |
 
 ## Test project: PlayForge Proving Grounds
 
@@ -1534,6 +1536,14 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-15, **EP-13 and EP-14: no file prefix or suffix, and no combined tag contexts.** The user's two notes as the
+  editor pass went on. A new asset's file is its name alone, and the settings page shows a type's folder alone; a tag
+  used in a field of several contexts is used in each, alone.
+  - Red, on a frozen snapshot: EP-13's test found `NewAssetSettings.Prefix`; EP-14's found the tag used under
+    "Asset Tag+Granted" alone.
+  - Gates, on a frozen snapshot of the package with the Demo imported, editor code and two authoring fields changing:
+    EditMode 963 of 963; golden 25 of 25.
 
 - 2026-11-15, **FN-27: the user's Lifesteal edit, followed.** The user's commit of their editor-pass edits (PF f71e1af):
   Lifesteal heals its Heals attribute for its Receives attribute's losses, by the Share it names, the Lifesteal role

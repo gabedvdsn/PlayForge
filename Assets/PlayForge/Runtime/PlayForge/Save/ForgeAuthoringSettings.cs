@@ -4,7 +4,9 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
-    /// <summary>Where a type's new assets go, and how their files are named.</summary>
+    /// <summary>
+    /// Where a type's new assets go. A new asset's file is its name alone: the file prefix and suffix are gone (EP-13).
+    /// </summary>
     [Serializable]
     public sealed class NewAssetSettings
     {
@@ -12,10 +14,6 @@ namespace FarEmerald.PlayForge
         public string Type;
         [Tooltip("The folder a new asset of this type goes in, within the project's folder")]
         public string Folder;
-        [Tooltip("Text a new asset's file name starts with")]
-        public string Prefix;
-        [Tooltip("Text a new asset's file name ends with")]
-        public string Suffix;
     }
 
     /// <summary>A type's defaults: the asset a new one starts as a copy of, and the assets Import lists first.</summary>
@@ -31,14 +29,14 @@ namespace FarEmerald.PlayForge
     }
 
     /// <summary>
-    /// How The Forge makes a Forge Project's assets (TW-30, Decision 57): where each type's new assets go and how their
-    /// files are named, each type's defaults, and the effects a new Cost or Cooldown copies. They were the whole Unity
+    /// How The Forge makes a Forge Project's assets (TW-30, Decision 57): where each type's new assets go, each type's
+    /// defaults, and the effects a new Cost or Cooldown copies. They were the whole Unity
     /// project's, in ProjectSettings/PlayForgeSettings.asset; each game keeps its own now. A game's build ignores them.
     /// </summary>
     [Serializable]
     public sealed class ForgeAuthoringSettings
     {
-        [Tooltip("Where each type's new assets go, within the project's folder, and how their files are named")]
+        [Tooltip("Where each type's new assets go, within the project's folder")]
         public List<NewAssetSettings> NewAssets = new();
 
         [Tooltip("Each type's defaults: the asset a new one starts as a copy of, and the assets Import lists first")]

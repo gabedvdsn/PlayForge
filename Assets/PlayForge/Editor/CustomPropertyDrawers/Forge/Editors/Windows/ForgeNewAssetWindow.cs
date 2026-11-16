@@ -117,11 +117,11 @@ namespace FarEmerald.PlayForge.Extended.Editor
             });
         }
 
-        // The file the asset will be, with the type's prefix and suffix
+        // The file the asset will be, its name alone (EP-13)
         private void ShowFile()
         {
             if (fileLabel == null || type == null) return;
-            fileLabel.text = $"File: {PlayForgeSettings.PrefixFor(type)}{ForgeAssetCreation.FileNameOf(assetName)}{PlayForgeSettings.SuffixFor(type)}.asset";
+            fileLabel.text = $"File: {ForgeAssetCreation.FileNameOf(assetName)}.asset";
         }
     }
 }

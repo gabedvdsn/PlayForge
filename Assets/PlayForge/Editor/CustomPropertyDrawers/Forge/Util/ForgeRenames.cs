@@ -154,8 +154,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         }
 
         /// <summary>
-        /// Renames an asset's file after its name, with its type's prefix and suffix from Project Settings, so the two
-        /// don't drift apart (ED-70): a character a file can't have is left out, as a new asset's file leaves it, and a name
+        /// Renames an asset's file after its name, its name alone (EP-13), so the two don't drift apart (ED-70): a character a file can't have is left out, as a new asset's file leaves it, and a name
         /// another file in its folder has takes a number, as Unity's own duplicate does. An asset not saved yet has no file.
         /// </summary>
         internal static void FileFollows(Object asset, string name)
@@ -168,8 +167,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         {
             var path = AssetDatabase.GetAssetPath(asset);
             if (string.IsNullOrEmpty(path) || !AssetDatabase.IsMainAsset(asset) || string.IsNullOrWhiteSpace(name)) return;
-            var type = asset.GetType();
-            var wanted = $"{PlayForgeSettings.PrefixFor(type)}{fileName}{PlayForgeSettings.SuffixFor(type)}";
+            var wanted = fileName;
             var current = System.IO.Path.GetFileNameWithoutExtension(path);
             if (current == wanted) return;
             int slash = path.LastIndexOf('/');

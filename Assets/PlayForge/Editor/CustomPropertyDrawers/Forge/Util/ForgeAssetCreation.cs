@@ -22,7 +22,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
         /// <summary>
         /// Saves an asset not yet in the project, such as a copy of a template, where The Forge makes its type: named, with
-        /// the tag its name gives, and its file named with The Forge's prefix and suffix.
+        /// the tag its name gives, and its file named by its name.
         /// </summary>
         public static T Save<T>(T asset, string name) where T : BaseForgeAsset
         {
@@ -32,9 +32,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             ForgeProjects.EnsureActive();
             var folder = FolderFor(type);
             EnsureFolder(folder);
-            var prefix = PlayForgeSettings.PrefixFor(type);
-            var suffix = PlayForgeSettings.SuffixFor(type);
-            var path = AssetDatabase.GenerateUniqueAssetPath($"{folder}/{prefix}{FileNameOf(name)}{suffix}.asset");
+            var path = AssetDatabase.GenerateUniqueAssetPath($"{folder}/{FileNameOf(name)}.asset");
             AssetDatabase.CreateAsset(asset, path);
             return asset;
         }
@@ -47,8 +45,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
         /// <summary>
         /// Makes a new asset of any type The Forge lists, as its Create does: a copy of the type's New Asset default when
-        /// Project Settings names one, named, with the tag its name gives, in the folder given or the type's, with its file
-        /// prefix and suffix. One factory makes every new asset (Q20); the copy is the default's values, not a link to it
+        /// Project Settings names one, named, with the tag its name gives, in the folder given or the type's, its file named
+        /// by its name. One factory makes every new asset (Q20); the copy is the default's values, not a link to it
         /// (Q22).
         /// </summary>
         public static ScriptableObject CreateNew(Type type, string name, string folder = null) => CreateFrom(type, name, folder, null);
@@ -74,8 +72,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             }
             NameAny(asset, name);
             EnsureFolder(folder);
-            var path = AssetDatabase.GenerateUniqueAssetPath(
-                $"{folder}/{PlayForgeSettings.PrefixFor(type)}{FileNameOf(name)}{PlayForgeSettings.SuffixFor(type)}.asset");
+            var path = AssetDatabase.GenerateUniqueAssetPath($"{folder}/{FileNameOf(name)}.asset");
             AssetDatabase.CreateAsset(asset, path);
             making?.Finish();
             return asset;

@@ -1556,12 +1556,6 @@
     margin: 0 0 0 2px;
 }
 
-.pf-root .pf-settings__affix {
-    width: 110px;
-    flex-grow: 0;
-    flex-shrink: 0;
-}
-
 .pf-root .pf-settings__text {
     flex-grow: 1;
     flex-shrink: 1;

@@ -8,8 +8,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
 {
     /// <summary>
     /// PlayForge's authoring settings, a Forge Project's, so they travel with the project under version control (TW-30):
-    /// where each type's new assets go and how their files are named, the defaults a new asset copies and Import lists
-    /// first, and the effects a new Cost or Cooldown copies. The Project Settings page edits them; the view toggles stay in
+    /// where each type's new assets go, the defaults a new asset copies and Import lists first, and the effects a new Cost
+    /// or Cooldown copies. A new asset's file is its name alone (EP-13). The Project Settings page edits them; the view toggles stay in
     /// Preferences (<see cref="PlayForgePreferences"/>). The file and the EditorPrefs a project took them from once are
     /// gone with that taking (FN-21).
     /// </summary>
@@ -93,12 +93,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
             return (string.IsNullOrWhiteSpace(folder) ? DefaultFolder(type) : folder.Trim()).TrimEnd('/');
         }
 
-        /// <summary>The text a new asset's file name starts with.</summary>
-        public static string PrefixFor(Type type) => NewAssetsFor(AuthoringOf(Project)?.NewAssets, type)?.Prefix ?? "";
-
-        /// <summary>The text a new asset's file name ends with.</summary>
-        public static string SuffixFor(Type type) => NewAssetsFor(AuthoringOf(Project)?.NewAssets, type)?.Suffix ?? "";
-
         /// <summary>The asset a new asset of the type starts as a copy of, or null.</summary>
         public static ScriptableObject NewAssetDefault(Type type)
         {
@@ -138,8 +132,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
             Save(project);
         }
 
-        /// <summary>Sets where a type's new assets go and how their files are named, as one Undo step.</summary>
-        public static void SetNewAssets(Type type, string folder, string prefix, string suffix)
+        /// <summary>Sets where a type's new assets go, as one Undo step.</summary>
+        public static void SetNewAssets(Type type, string folder)
         {
             var project = ProjectToWrite();
             if (project == null) return;
@@ -149,8 +143,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
             var entry = authoring.NewAssets.FirstOrDefault(found => found.Type == type.Name);
             if (entry == null) authoring.NewAssets.Add(entry = new NewAssetSettings { Type = type.Name });
             entry.Folder = folder;
-            entry.Prefix = prefix ?? "";
-            entry.Suffix = suffix ?? "";
             Save(project);
         }
 
@@ -170,15 +162,15 @@ namespace FarEmerald.PlayForge.Extended.Editor
         }
 
         /// <summary>
-        /// Puts every type's folder and file names back to their defaults, as one Undo step. The defaults and the Cost and
-        /// Cooldown effects are content you chose, so they stay.
+        /// Puts every type's folder back to its default, as one Undo step. The defaults and the Cost and Cooldown effects are
+        /// content you chose, so they stay.
         /// </summary>
-        public static void UseDefaultFoldersAndNames()
+        public static void UseDefaultFolders()
         {
             var project = ProjectToWrite();
             if (project == null) return;
             var authoring = project.Settings.Authoring;
-            Undo.RecordObject(project, "Use Default Folders and Names");
+            Undo.RecordObject(project, "Use Default Folders");
             authoring.NewAssets.Clear();
             EnsureKinds(authoring.NewAssets, authoring.Defaults);
             Save(project);
@@ -226,7 +218,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             foreach (var (type, folder) in Kinds)
             {
                 if (newAssets.All(entry => entry?.Type != type.Name))
-                    newAssets.Add(new NewAssetSettings { Type = type.Name, Folder = folder, Prefix = "", Suffix = "" });
+                    newAssets.Add(new NewAssetSettings { Type = type.Name, Folder = folder });
                 if (defaults.All(entry => entry?.Type != type.Name))
                     defaults.Add(new TypeDefaults { Type = type.Name });
             }
