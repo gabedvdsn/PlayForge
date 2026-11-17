@@ -14,7 +14,8 @@
         
         /// <summary>
         /// Check if action is still valid for execution.
-        /// Invalid actions are skipped but still trigger OnActionInvalidated callback.
+        /// Invalid actions are skipped but still trigger OnActionInvalidated callback. One whose IsValid throws fails,
+        /// heard through OnActionFailed, and the rest of the queue runs on.
         /// </summary>
         bool IsValid { get; }
         
@@ -25,7 +26,8 @@
 
         /// <summary>
         /// Execute the action. Only called if IsValid returns true.
-        /// May queue additional actions during execution.
+        /// May queue additional actions during execution. One that throws fails, heard through OnActionFailed, and the
+        /// rest of the queue runs on.
         /// </summary>
         /// <param name="system">The gameplay ability system context</param>
         void Execute(ISource system);
@@ -33,7 +35,8 @@
 
     /// <summary>
     /// An action the system takes back once the queue has run it, to use again. A listener handed one reads it
-    /// during the call. One the queue invalidates isn't taken back: it stays with the frame summary that records it.
+    /// during the call. One the queue drops unrun, or that fails, isn't taken back: it stays with the frame summary that
+    /// records it.
     /// </summary>
     internal interface IReusableAction
     {

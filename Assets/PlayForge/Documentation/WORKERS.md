@@ -45,6 +45,34 @@ its end of frame, where they can change anything. A focused attribute worker, on
 sets its **Timing** (Pre Change, Post Change or both), its **Sign Policy** (the changes it takes: losses, gains or
 either), and **Allow Self Modification** (whether it takes changes whose source and target are the same entity).
 
+## The action queue
+
+What a deferred worker returns, and whatever else is queued to an entity (`GetActionQueue().Enqueue`), waits in the
+entity's action queue for its end of frame.
+
+- **When it runs.** Four passes in each end of frame: the actions queued since the last; then those the tag workers'
+  activations and resolutions queue; then those their ticks queue; then those the analysis workers, the Health watch
+  and the effects' conditions queue. An action queued as a pass runs joins that pass.
+- **In what order.** By priority, higher first (`ActionPriority`, from Critical's 100 down to Cleanup's −300), and in
+  the order queued within one. `Enqueue(action, priorityOverride)` puts one at another priority.
+- **What's heard.** Each action is heard as it's queued (`OnActionQueued`), then once more as it's done with:
+  - run (`OnActionExecuted`);
+  - dropped unrun (`OnActionInvalidated`): its `IsValid` said no as its turn came, it was taken off, or its entity had
+    ended;
+  - failed (`OnActionFailed`, with what it threw): its `IsValid` or its `Execute` threw. It's written to the Console
+    as well, and the rest of the queue runs on.
+
+  The queue's events and the entity's callbacks both tell them. The frame's summary keeps the dropped and the failed,
+  and an `EffectJournal` settles a worker's action as Ran, Dropped or Failed.
+- **Taken off.** `Remove(action)` takes one off, `RemoveWhere(match)` every one it picks, and `Clear()` all of them,
+  each heard as dropped; the rest keep their order.
+- **An entity that ends.** Its queue closes (`IsClosed`): what waited is dropped and heard, and an action queued to it
+  after is dropped at once, so nothing waits on it for good.
+- **Another entity's queue.** An action queued to another entity runs at that entity's end of frame: this frame if its
+  end of frame is still to come, by the order the entities step in, or else the next.
+- **The guard.** A pass runs 10,000 actions at most, so an action that queues another for good can't hold the frame.
+  Those left past it wait for the next pass, and the queue writes an error.
+
 ## Hearing workers run
 
 An entity tells its workers' runs to whoever listens to its callbacks, and to no one else, so a worker no one hears

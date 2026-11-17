@@ -52,8 +52,11 @@ namespace FarEmerald.PlayForge
         // NON-IMPACT STORAGE (unchanged)
         // ═══════════════════════════════════════════════════════════════
 
-        /// <summary>Actions that were queued but invalidated before execution.</summary>
+        /// <summary>Actions dropped unrun: invalid as their turn came, or taken off the queue.</summary>
         public List<IRootAction> InvalidatedActions { get; } = new();
+
+        /// <summary>Actions that failed as their turn came: their IsValid or their Execute threw.</summary>
+        public List<IRootAction> FailedActions { get; } = new();
 
         /// <summary>Tag workers that activated this frame.</summary>
         public List<AbstractTagWorker> ActivatedTagWorkers { get; } = new();
@@ -159,6 +162,9 @@ namespace FarEmerald.PlayForge
 
         /// <summary>Record an invalidated action.</summary>
         public void RecordInvalidatedAction(IRootAction action) => InvalidatedActions.Add(action);
+
+        /// <summary>Record an action that failed.</summary>
+        public void RecordFailedAction(IRootAction action) => FailedActions.Add(action);
 
         /// <summary>Record a tag worker activation.</summary>
         public void RecordTagWorkerActivated(AbstractTagWorker worker) => ActivatedTagWorkers.Add(worker);
@@ -323,6 +329,7 @@ namespace FarEmerald.PlayForge
             ReturnLists(ImpactsDealtByTarget);
             ReturnLists(ImpactsReceivedBySource);
             InvalidatedActions.Clear();
+            FailedActions.Clear();
             ActivatedTagWorkers.Clear();
             ResolvedTagWorkers.Clear();
             AppliedEffects.Clear();
@@ -362,6 +369,7 @@ namespace FarEmerald.PlayForge
         private readonly List<ImpactData> _impactsDealt = new();
         private readonly List<ImpactData> _impactsReceived = new();
         private readonly List<IRootAction> _invalidatedActions = new();
+        private readonly List<IRootAction> _failedActions = new();
         private readonly List<AbstractTagWorker> _activatedTagWorkers = new();
         private readonly List<AbstractTagWorker> _resolvedTagWorkers = new();
         private readonly List<GameplayEffectSpec> _appliedEffects = new();
@@ -373,6 +381,9 @@ namespace FarEmerald.PlayForge
         public IReadOnlyList<ImpactData> ImpactsDealt => _impactsDealt;
         public IReadOnlyList<ImpactData> ImpactsReceived => _impactsReceived;
         public IReadOnlyList<IRootAction> InvalidatedActions => _invalidatedActions;
+
+        /// <summary>The actions that failed as their turn came: their IsValid or their Execute threw.</summary>
+        public IReadOnlyList<IRootAction> FailedActions => _failedActions;
         public IReadOnlyList<AbstractTagWorker> ActivatedTagWorkers => _activatedTagWorkers;
         public IReadOnlyList<AbstractTagWorker> ResolvedTagWorkers => _resolvedTagWorkers;
         public IReadOnlyList<GameplayEffectSpec> AppliedEffects => _appliedEffects;
@@ -382,6 +393,9 @@ namespace FarEmerald.PlayForge
 
         public int Executed { get; private set; }
         public int Invalidated { get; private set; }
+
+        /// <summary>How many actions failed this frame.</summary>
+        public int Failed { get; private set; }
 
         internal FrameSummarySnapshot() { }
 
@@ -394,6 +408,7 @@ namespace FarEmerald.PlayForge
             Refill(_impactsDealt, summary.ImpactsDealt);
             Refill(_impactsReceived, summary.ImpactsReceived);
             Refill(_invalidatedActions, summary.InvalidatedActions);
+            Refill(_failedActions, summary.FailedActions);
             Refill(_activatedTagWorkers, summary.ActivatedTagWorkers);
             Refill(_resolvedTagWorkers, summary.ResolvedTagWorkers);
 
@@ -405,6 +420,7 @@ namespace FarEmerald.PlayForge
 
             Executed = executed;
             Invalidated = summary.InvalidatedActions.Count;
+            Failed = summary.FailedActions.Count;
         }
 
         private static void Refill<T>(List<T> into, List<T> from)

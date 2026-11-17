@@ -10,6 +10,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## Toward 1.0.0, since 0.1.0
 
 ### Added
+- **An action queue's failures and cancelling** (EP-43, EP-44): `ActionQueue.OnActionFailed`, and an entity's
+  `OnActionFailed`, hear an action whose `IsValid` or `Execute` threw, with what it threw; a frame's summary keeps them
+  (`FailedActions`, `Failed`), and an `EffectJournal` settles one as `Failed`. `Remove` and `RemoveWhere` take queued
+  actions off unrun, and `IsClosed` says an ended entity's queue runs no more.
 - **One dispatch for every cue** (EP-46): `ForgeCues.Burst`, `Begin` and `End` play a cue whatever raised it, a
   game's own code among them, as sparks at a ray's hit. `CueContext` says what raised it (`ECueMoment`), its tag,
   who's behind it, its origin and data, a magnitude, a point and a normal, and a key pairing a lasting cue's
@@ -602,6 +606,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   page, through one table of links in the editor.
 
 ### Changed
+- `ActionQueue.Clear()` tells each action it drops through `OnActionInvalidated` (EP-44), and an entity's queue closes
+  as it ends: what waited is dropped and heard, and an action queued to it after is dropped at once, where they waited
+  for good.
 - An effect's cues play through `ForgeCues` (EP-46), as they did; a handler written for effects plays its
   `OnApplied` wherever else it's listed. Sound and Camera Shake play for any moment, and a Prefab cue in a list
   of lasting cues lasts, whatever its While Active says.
@@ -1056,6 +1063,11 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   Asking whether its sequence was paused took 24 bytes a frame.
 
 ### Fixed
+- An action whose `IsValid` threw took its entity's end of frame with it (EP-43), leaving the actions after it, its
+  tag and analysis workers and its death for a later frame. It fails, and the rest run on.
+- An action that threw as it ran was heard by no one, and an effect journal showed it queued for good (EP-43).
+- The action queue's loop guard wrote "possible infinite loop" when a pass ran exactly its limit and left nothing
+  (EP-43).
 - A component's refusal of the target its targeting picked, as a Cast Range's of one beyond it, is told through
   `OnAbilityRefused` (EP-48), as the kind its `RefusedAs` says, Range for a Cast Range, its reason in `Rule` and
   `Detail`; the activation ended there untold.

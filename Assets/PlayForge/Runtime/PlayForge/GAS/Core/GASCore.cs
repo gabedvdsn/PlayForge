@@ -183,8 +183,14 @@ namespace FarEmerald.PlayForge
             ActionQueue.OnActionExecuted += action => Callbacks.ActionExecuted(action);
             ActionQueue.OnActionInvalidated += action =>
             {
-                FrameSummary.RecordInvalidatedAction(action);
+                // An ended entity's summary is cleared no more, so what its closed queue drops isn't kept in it
+                if (!ActionQueue.IsClosed) FrameSummary.RecordInvalidatedAction(action);
                 Callbacks.ActionInvalidated(action);
+            };
+            ActionQueue.OnActionFailed += (action, error) =>
+            {
+                FrameSummary.RecordFailedAction(action);
+                Callbacks.ActionFailed(action, error);
             };
 
             TagCache.SetDeferredContext(owner, ActionQueue, FrameSummary);
@@ -341,6 +347,10 @@ namespace FarEmerald.PlayForge
             // Its effects leave the Effects Active counter with it
             ForgeCounters.EffectsActive.Value -= countedEffects;
             countedEffects = 0;
+
+            // Its end of frame runs no more, so what it had queued is dropped unrun and heard, and so is any queued to it
+            // from now on: a listener waiting on one waited for good
+            ActionQueue?.Close();
         }
 
         // The effects on its shelf as the Effects Active counter last had them, which each step brings up to date

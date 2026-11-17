@@ -34,8 +34,13 @@ namespace FarEmerald.PlayForge
         /// <summary>Its queue ran it.</summary>
         Ran,
 
-        /// <summary>Its queue dropped it, as an action no longer valid.</summary>
+        /// <summary>
+        /// Its queue dropped it unrun: no longer valid as its turn came, taken off the queue, or its entity had ended.
+        /// </summary>
         Dropped,
+
+        /// <summary>Its queue tried to run it, and it threw.</summary>
+        Failed,
     }
 
     /// <summary>An action a worker queued, as a journal keeps it: what it said it was, and whether it ran.</summary>
@@ -343,6 +348,7 @@ namespace FarEmerald.PlayForge
             private readonly GameplayAbilitySystemCallbacks.EffectWorkerDelegate effectWorker;
             private readonly GameplayAbilitySystemCallbacks.ImpactWorkerDelegate impactWorker;
             private readonly GameplayAbilitySystemCallbacks.ActionQueuedDelegate ran, dropped;
+            private readonly GameplayAbilitySystemCallbacks.ActionFailedDelegate failed;
 
             public Hearing(EffectJournal journal, IGameplayAbilitySystem entity, GameplayAbilitySystemCallbacks callbacks)
             {
@@ -358,6 +364,7 @@ namespace FarEmerald.PlayForge
                 impactWorker = ImpactWorkerRan;
                 ran = action => journal.Settled(action, EJournalActionState.Ran);
                 dropped = action => journal.Settled(action, EJournalActionState.Dropped);
+                failed = (action, _) => journal.Settled(action, EJournalActionState.Failed);
             }
 
             public void Start()
@@ -371,6 +378,7 @@ namespace FarEmerald.PlayForge
                 callbacks.OnImpactWorkerRan += impactWorker;
                 callbacks.OnActionExecuted += ran;
                 callbacks.OnActionInvalidated += dropped;
+                callbacks.OnActionFailed += failed;
             }
 
             public void Stop()
@@ -384,6 +392,7 @@ namespace FarEmerald.PlayForge
                 callbacks.OnImpactWorkerRan -= impactWorker;
                 callbacks.OnActionExecuted -= ran;
                 callbacks.OnActionInvalidated -= dropped;
+                callbacks.OnActionFailed -= failed;
             }
 
             private void Applied(GameplayEffectSpec spec)

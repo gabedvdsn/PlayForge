@@ -65,8 +65,8 @@ namespace FarEmerald.PlayForge
         public void ActionExecuted(IRootAction action) => _onActionExecuted?.Invoke(action);
         
         /// <summary>
-        /// Invoked when an action is skipped due to being invalidated.
-        /// Useful for debugging and understanding what actions were prevented.
+        /// Invoked when an action is dropped unrun: its IsValid said no as its turn came, it was taken off its queue or the
+        /// queue cleared, or its entity had ended. Useful for debugging and understanding what actions were prevented.
         /// </summary>
         private ActionQueuedDelegate _onActionInvalidated;
         public event ActionQueuedDelegate OnActionInvalidated
@@ -76,6 +76,21 @@ namespace FarEmerald.PlayForge
         }
         
         public void ActionInvalidated(IRootAction action) => _onActionInvalidated?.Invoke(action);
+
+        /// <summary>
+        /// Invoked when an action fails as its turn comes: its IsValid or its Execute threw. It's written to the Console
+        /// too, and the rest of the queue runs on.
+        /// </summary>
+        public delegate void ActionFailedDelegate(IRootAction action, System.Exception error);
+
+        private ActionFailedDelegate _onActionFailed;
+        public event ActionFailedDelegate OnActionFailed
+        {
+            add => _onActionFailed += value;
+            remove => _onActionFailed -= value;
+        }
+
+        public void ActionFailed(IRootAction action, System.Exception error) => _onActionFailed?.Invoke(action, error);
         
         // ═══════════════════════════════════════════════════════════════════════════
         // EFFECT LIFECYCLE
