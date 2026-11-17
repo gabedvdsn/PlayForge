@@ -1052,6 +1052,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   Asking whether its sequence was paused took 24 bytes a frame.
 
 ### Fixed
+- An attribute read's Groups, as an × Attribute scaler's, and Turn To Face's Turn keep the column of the rows around
+  them (ED-89), where each arrow hung 12 px into the margin; a read's list of groups shows only for Only These and
+  All But These.
 - The Is Alive rule refuses a missing entity (EP-35), where it threw; Cost and Cooldown refuse when handed no packet.
 - The Forge's summary drops a problem once it's fixed (ED-88), by its asset's edit or another's; it kept it until the
   asset was shown again.
