@@ -285,7 +285,15 @@ list:
 A cue plays its bursts as the effect lands, as its ticks execute and as it comes off, and a lasting cue, such as a
 While Active prefab, while the effect is on. A re-application that an effect on already takes in plays its burst
 again. A save's load ends each lasting cue and begins it again as the effect leaves and comes back, and plays no burst.
-Write a cue of your own by deriving from `AbstractCueHandler` and overriding the moments it plays at.
+Write a cue of your own by deriving from `AbstractCueHandler` and overriding the moments it plays at, or `Burst`
+to play every burst one way, reading the moment that raised it from `cue.Moment`.
+
+Every cue plays through `ForgeCues`, an effect's as any other's. A game's own code raises one there too, as
+sparks where a ray hit: `ForgeCues.Burst(sparks, new CueContext(entity, ECueMoment.Raised, point: hit.point))`.
+A cue's context says what raised it, who's behind it, where it plays and, for a lasting cue, the key its
+beginning and its end share. `ForgeCues.Enabled = false` silences every cue, as on a server or while a
+simulation runs ahead, and `ForgeCues.Mute(entity, true)` one entity's, as one off screen; a lasting cue that
+began still ends. `ForgeCues.Played` hears each cue as it plays, for a debugger or a recorder.
 
 ## Requirements
 

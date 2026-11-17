@@ -10,6 +10,12 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## Toward 1.0.0, since 0.1.0
 
 ### Added
+- **One dispatch for every cue** (EP-46): `ForgeCues.Burst`, `Begin` and `End` play a cue whatever raised it, a
+  game's own code among them, as sparks at a ray's hit. `CueContext` says what raised it (`ECueMoment`), its tag,
+  who's behind it, its origin and data, a magnitude, a point and a normal, and a key pairing a lasting cue's
+  beginning with its end. A handler can override `Burst` to play every burst one way. `ForgeCues.Enabled` and
+  `ForgeCues.Mute(entity)` silence every cue or an entity's, a lasting cue that began still ending, and
+  `ForgeCues.Played` hears each as it plays.
 - **A component's rules and its part of a line** (EP-40): `ForgeComponentRule<T>`, a rule of one kind of component,
   which the Problems view runs on every asset that holds one, its problems said under an ability's Components list; and
   `DescribeUsage`, what a component adds to its ability's Activation line, as Charges' "3 charges".
@@ -596,6 +602,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   page, through one table of links in the editor.
 
 ### Changed
+- An effect's cues play through `ForgeCues` (EP-46), as they did; a handler written for effects plays its
+  `OnApplied` wherever else it's listed. Sound and Camera Shake play for any moment, and a Prefab cue in a list
+  of lasting cues lasts, whatever its While Active says.
 - The core names no component (EP-41): the GAS's core, an ability's spec, the ability and effect systems, purging, items,
   the ability proxy, the targeting tasks, the Problems view's rules and the ability inspector name none of them, nor
   what's declared beside one, so a project's own component reaches as far as the built-ins, which are written on the

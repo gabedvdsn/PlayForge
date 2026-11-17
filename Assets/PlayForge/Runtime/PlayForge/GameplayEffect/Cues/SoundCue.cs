@@ -3,9 +3,12 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
-    /// <summary>Plays a sound at the effect's target as the effect lands, and on each tick where set.</summary>
+    /// <summary>
+    /// Plays a sound at the cue's target as its moment comes, as an effect lands, and on an effect's each tick where
+    /// set.
+    /// </summary>
     [Serializable]
-    [ForgeMenu(Description = "Plays a sound at the target as the effect lands, and on each tick where set.")]
+    [ForgeMenu(Description = "Plays a sound at the target as its moment comes, and on an effect's each tick where set.")]
     public class SoundCue : AbstractCueHandler
     {
         public AudioClip Clip;

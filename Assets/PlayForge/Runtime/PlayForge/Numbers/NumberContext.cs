@@ -227,12 +227,22 @@ namespace FarEmerald.PlayForge
         public static NumberContext Of(ItemSpec item) =>
             item == null ? default : new NumberContext(item.GetSource(), null, item.GetLevel(), true, item, localData: LocalDataOf(item));
 
-        /// <summary>The context of a cue as it fires: its effect's, landing on the cue's entity.</summary>
+        /// <summary>
+        /// The context of a cue as it plays: an effect's cue, its effect's, landing on the cue's entity; an ability's, its
+        /// activation's data; another's, its origin's caster and level, as an item's; else the entity's own.
+        /// </summary>
         public static NumberContext Of(in CueContext cue)
         {
-            if (cue.Spec == null) return Of(cue.Target);
-            var context = Of(cue.Spec);
-            return cue.Target is ITarget target ? context.WithTarget(target) : context;
+            if (cue.Spec != null)
+            {
+                var context = Of(cue.Spec);
+                return cue.Target is ITarget target ? context.WithTarget(target) : context;
+            }
+            if (cue.Data != null) return Of(cue.Data);
+            if (cue.Origin != null)
+                return new NumberContext(cue.Origin.GetSource(), cue.Target as ITarget, cue.Origin.GetLevel(), true, cue.Origin,
+                    localData: LocalDataOf(cue.Origin));
+            return Of(cue.Target);
         }
 
         /// <summary>
