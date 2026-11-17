@@ -27,6 +27,22 @@ namespace FarEmerald.PlayForge
 
         public override bool AllowsSeveral => false;
 
+        /// <summary>
+        /// Whether its charges may be counted, as far as the asset says: more than 1, a number that scales, or a recharge
+        /// that counts a single charge. With 1 and a built-in recharge, it's an ordinary cooldown.
+        /// </summary>
+        public bool CountsCharges =>
+            Charges != null && (!Charges.IsConstant || Charges.Constant > 1) || (Recharge?.CountsASingleCharge ?? false);
+
+        /// <summary>Its charges, as the Activation line counts them, "3 charges", where they're counted.</summary>
+        public override string DescribeUsage()
+        {
+            if (!CountsCharges || Charges == null) return null;
+            if (!Charges.IsConstant) return NumberText.Of(Charges, "charges");
+            int count = Charges.Constant;
+            return count == 0 ? "None" : count == 1 ? "1 charge" : $"{count} charges";
+        }
+
         /// <summary>Its charges on an entity's ability, kept with the ability as its entity holds it, made as they're first asked for.</summary>
         public AbilityCharges ChargesOf(AbilitySpec spec)
         {

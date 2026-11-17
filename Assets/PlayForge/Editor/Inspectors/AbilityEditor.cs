@@ -31,8 +31,8 @@ namespace FarEmerald.PlayForge.Editor
         private string shownLeveling;
         private PropertyField implicitTagField;
 
-        // Under the cooldown, while no stage applies the usage effects
-        private HelpBox chargesNote;
+        // Under the components, a note for each problem a component's rule finds, as charges that never run out
+        private VisualElement componentNotes;
 
         // Under each list of checks, the checks its components stand behind, as a Cast Range's Check Range
         private VisualElement casterComponentChecks;
@@ -449,13 +449,19 @@ namespace FarEmerald.PlayForge.Editor
             if (implicitTagField != null) implicitTagField.style.display = shown ? DisplayStyle.Flex : DisplayStyle.None;
         }
 
-        // The note under the components while its charges never run out, in the Problems view's words
-        private void ShowCharges()
+        // The notes under the components, each a problem a component's rule finds, in the Problems view's words
+        private void ShowComponentNotes()
         {
-            if (chargesNote == null) return;
-            var message = IsMultiple ? null : ChargesRule.NeverRunOut(ability);
-            chargesNote.text = message ?? "";
-            chargesNote.style.display = message != null ? DisplayStyle.Flex : DisplayStyle.None;
+            if (componentNotes == null) return;
+            componentNotes.Clear();
+            if (IsMultiple) return;
+            foreach (var problem in ForgeValidator.Check(ability))
+            {
+                if (problem.Rule is not IForgeComponentRule || problem.Severity == ForgeProblemSeverity.Note) continue;
+                var type = problem.Severity == ForgeProblemSeverity.Error ? HelpBoxMessageType.Error : HelpBoxMessageType.Warning;
+                componentNotes.Add(new HelpBox(problem.Message, type) { name = "ComponentNote" });
+            }
+            componentNotes.style.display = componentNotes.childCount > 0 ? DisplayStyle.Flex : DisplayStyle.None;
         }
 
         // The asset loaders and the stages: what the ability does as it runs. They sat in Runtime Behaviour, between
@@ -621,10 +627,10 @@ namespace FarEmerald.PlayForge.Editor
             }
             componentsSection.Content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(Ability.Components)), "Components", ""));
 
-            // Its charges, a component, with a note under the list where they never run out
-            chargesNote = new HelpBox("", HelpBoxMessageType.Warning) { name = "ChargesNeverRunOut" };
-            componentsSection.Content.Add(chargesNote);
-            ShowCharges();
+            // A note under the list for each problem a component's rule finds, as charges that never run out
+            componentNotes = new VisualElement { name = "ComponentNotes" };
+            componentsSection.Content.Add(componentNotes);
+            ShowComponentNotes();
         }
 
         private void BuildWorkersSection(VisualElement parent)
@@ -702,7 +708,7 @@ namespace FarEmerald.PlayForge.Editor
             if (!IsMultiple && nameField != null && !IsFocused(nameField) && nameField.value != (ability.Definition.Name ?? ""))
                 nameField.SetValueWithoutNotify(ability.Definition.Name ?? "");
             ShowImplicitTag(ability.Behaviour.UseImplicitTargeting);
-            ShowCharges();
+            ShowComponentNotes();
             ShowComponentChecks();
             UpdateAssetTagDisplay();
             UpdateSummaries();
@@ -751,9 +757,9 @@ namespace FarEmerald.PlayForge.Editor
                 parts.Add(NumberText.Of(cost.Amount, cost.Attribute != null ? cost.Attribute.Name : cost.Role.IsValid ? cost.Role.ToString() : "?"));
             }
             if (ability.Cooldown != null) parts.Add(NameOf(ability.Cooldown));
-            // Its charges, as "3 charges"
-            if (ChargesRule.Counted(ability) && ability.Charges() != null)
-                parts.Add(ability.Charges().IsConstant ? CountOf(ability.Charges().Constant, "charge", "charges") : NumberText.Of(ability.Charges(), "charges"));
+            // What each component adds to its use, as Charges' "3 charges"
+            foreach (var component in ability.Components ?? new List<AbstractAbilityComponent>())
+                if (component?.DescribeUsage() is { Length: > 0 } usage) parts.Add(usage);
             return string.Join(" · ", parts);
         }
 

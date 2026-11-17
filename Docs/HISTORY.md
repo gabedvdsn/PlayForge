@@ -10,6 +10,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## Toward 1.0.0, since 0.1.0
 
 ### Added
+- **A component's rules and its part of a line** (EP-40): `ForgeComponentRule<T>`, a rule of one kind of component,
+  which the Problems view runs on every asset that holds one, its problems said under an ability's Components list; and
+  `DescribeUsage`, what a component adds to its ability's Activation line, as Charges' "3 charges".
 - **Entity services** (EP-39): `AbstractEntityService`, a per-entity object an entity's components share, made the first
   time it's asked for, `gas.GetService<T>()`, found with `FindService<T>()`, stepped by the entity's own time, told as it
   revives and ended with it. The auras an entity runs are one, `AuraSet`, and a Respawn's wait another,
@@ -593,6 +596,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   page, through one table of links in the editor.
 
 ### Changed
+- The Problems view's Transfers and toggles rule is two (EP-40): Transfers that never move, and Toggles that never turn
+  off. An ability's inspector says every component rule's problem under its Components list, where it said the
+  Charges' alone.
 - Each Aura component gives its aura in its own hooks (EP-39), where the ability, the item, the runtime identity and the
   effect system gave them; `gas.GetAuras()` is an extension beside the auras, and `ForgeAuras.Provide` and `Remove` take
   one aura.

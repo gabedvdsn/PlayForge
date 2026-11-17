@@ -333,7 +333,11 @@ An ability's components are features it carries, each a class with hooks into it
 A component of your own derives from `AbstractAbilityComponent` and overrides the hooks it needs, each a no-op
 otherwise. It's the ability's, shared by everything that holds it, so what it keeps for one entity's ability it keeps through its
 context: `ctx.GetState<T>(this)`. **Describe** says what it does in one line with its numbers, as a Cast Range's "Range
-600", which the Components section's line, The Forge's summary and the ability's breakdown say beside its name.
+600", which the Components section's line, The Forge's summary and the ability's breakdown say beside its name; and
+**DescribeUsage** what it adds to the ability's use, as Charges' "3 charges", which the Activation section's line says
+after its cost and cooldown. Its rules in the editor derive from `ForgeComponentRule<T>`, in the editor's assembly, with a
+public constructor that takes nothing: the Problems view runs each on every asset that holds a component of its kind,
+and the ability's inspector says what it finds under its Components list, as it says the Charges'.
 
 Code finds a component by what it does, not by its class: `Find<T>()`, on an ability, its spec, an effect, an item and an
 entity, gives the first of its components that is a `T`, a kind or an interface it implements. An ability's reach is an

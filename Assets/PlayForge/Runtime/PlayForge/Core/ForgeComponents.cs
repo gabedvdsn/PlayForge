@@ -277,6 +277,12 @@ namespace FarEmerald.PlayForge
         public virtual void End(AbilityComponentContext ctx, EAbilityEnd how) { }
 
         /// <summary>
+        /// What it adds to its ability's use, in a few words, which the ability's Activation line says after its cost and
+        /// its cooldown, as Charges' "3 charges"; null, as here, for nothing.
+        /// </summary>
+        public virtual string DescribeUsage() => null;
+
+        /// <summary>
         /// The check the component stands behind among its ability's Target Checks, shown there while the ability holds
         /// it, as Cast Range's Check Range; null, as it is here, for none. The component enforces what it says, as the
         /// check, an <see cref="AbstractComponentValidationRule{TComponent}"/>, passes.
