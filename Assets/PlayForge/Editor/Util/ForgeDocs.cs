@@ -76,6 +76,9 @@ namespace FarEmerald.PlayForge.Editor
             ["attributesets/settings"]     = ("ATTRIBUTE_SETS.md", "Collision Settings"),
             ["attributesets/workers"]      = ("ATTRIBUTE_SETS.md", "Workers"),
             ["attributesets/localdata"]    = ("ATTRIBUTE_SETS.md", "Local Data"),
+            ["cues"]                       = ("CUES.md", null),
+            ["cues/routes"]                = ("CUES.md", "Routes"),
+            ["cues/raised"]                = ("CUES.md", "Raised"),
         };
 
         /// <summary>The page and heading a topic names. An unknown topic gives the getting-started page.</summary>

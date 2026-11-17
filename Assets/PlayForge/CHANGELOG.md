@@ -18,6 +18,9 @@ The first release.
 - **Abilities**: staged task workflows with targeting, costs and cooldowns, triggers, a buffer, and cancelling and
   blocking by tag; tasks to apply effects, wait, send events and move.
 - **Tags**, hierarchical and weighted, with tag workers; and **items**, with stacks, levels and what they grant.
+- **Cues**: what effects, abilities, entities and items show and sound, played through `ForgeCues` at their
+  moments. A Cue Tag plays what the project's Cue Library routes its tag to, or an entity's Cue Receiver its own
+  way, and prefab cues pool.
 - **Number fields**: every authored number a constant, a value by level or a scaler, read against its caster and its
   target and explained part by part.
 - **Saving and loading** an entity's state, a **combat log** for each entity, and numbers and item stats to and from

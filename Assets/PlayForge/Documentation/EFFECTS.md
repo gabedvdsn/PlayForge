@@ -303,7 +303,8 @@ entity can each raise Cue.Hit.Fire and one place says how it looks. The project'
 settings name, plays the route for the tag, or else for its nearest parent, and a route that doesn't **Override**
 plays its parent's after it. An entity's **Cue Receiver** component plays a tag its own way first, in place of the
 library's, or before it with **Pass Through**; its **Variant** plays the library's route under its name, as
-Cue.Hit.Golem for Cue.Hit, where the library has one.
+Cue.Hit.Golem for Cue.Hit, where the library has one. [CUES.md](CUES.md) brings cues together: where each
+is raised, the library's routes, what each tag plays, and pooling.
 
 ## Requirements
 

@@ -221,9 +221,9 @@ namespace FarEmerald.PlayForge.Editor
         {
             if (asset == null || !EditorUtility.IsPersistent(asset)) return false;
             // An asset that now gives the linter other facts, as an effect that deals another impact type or a pipeline
-            // whose stage sends another event, has every asset checked again, the next time someone asks, as another's
-            // check reads them
-            if (ForgeLint.Moved(asset))
+            // whose stage sends another event, or one a rule reads, as a cue library's routes, has every asset checked
+            // again, the next time someone asks, as another's check reads them
+            if (ForgeLint.Moved(asset) || Rules.Any(rule => rule.Reads(asset)))
             {
                 scanned = false;
                 return true;

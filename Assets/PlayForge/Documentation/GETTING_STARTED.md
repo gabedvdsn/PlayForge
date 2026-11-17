@@ -40,6 +40,8 @@ sequences), with cost and cooldown expressed as effects. Full pipeline reference
 
 [RECIPES.md](RECIPES.md) builds ten common rules from these pieces with no code, a crit, an execute, a counter and more,
 each in the Additional Content sample; [WORKERS.md](WORKERS.md) maps when each kind of worker runs, and for whom.
+[CUES.md](CUES.md) brings together what effects, abilities, entities and items show and sound: their cues, and
+the Cue Library that routes cue tags to them.
 
 ## Quickstart: a damage ability in ~10 minutes
 

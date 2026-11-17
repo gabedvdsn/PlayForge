@@ -10,6 +10,11 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## Toward 1.0.0, since 0.1.0
 
 ### Added
+- **Cue tooling** (EP-52): the Problems view notes a Cue Tag cue that plays nowhere, and the Cue Library's inspector
+  lists under Raised each cue tag the project raises through it, what plays it and the assets that raise it.
+  `Documentation/CUES.md` brings cues together.
+- `ForgeValidationRule.Reads`: a rule says which assets it reads to check others, and an edit to one checks every
+  asset again (EP-52).
 - **Pooled cues** (EP-51): a Prefab cue with **Pooled** takes its objects from `ForgeCuePool` and gives them back,
   its pool making **Preallocate** of them ahead; an `IPooledCue` on the prefab resets it as it's taken and given
   back.

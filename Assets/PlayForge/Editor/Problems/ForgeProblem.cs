@@ -85,6 +85,13 @@ namespace FarEmerald.PlayForge.Editor
         public abstract void Check(Object asset, List<ForgeProblem> problems);
 
         /// <summary>
+        /// Whether the rule reads an asset to check others, as a cue library's routes say which cue tags play
+        /// nowhere: an edit to one has every asset checked again, the next time someone asks. None, unless a rule
+        /// says.
+        /// </summary>
+        public virtual bool Reads(Object asset) => false;
+
+        /// <summary>
         /// What the rule finds, as the Problems view's By Rule view names its problems' group: by default its class's name,
         /// spaced out, without "Rule".
         /// </summary>

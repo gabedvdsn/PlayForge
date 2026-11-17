@@ -1503,6 +1503,39 @@
     color: var(--pf-secondary-text);
 }
 
+/* ─── Raised: each cue tag the project's assets raise, what plays it, and the assets that raise it ───────────────── */
+
+/* The tag, then what plays it, on one line; the tag clips its own text */
+.pf-root .pf-cue-raised__line {
+    flex-direction: row;
+    align-items: center;
+    height: 20px;
+    padding: 0 4px;
+}
+
+.pf-root .pf-cue-raised__tag {
+    flex-shrink: 1;
+    min-width: 0;
+    margin: 0 8px 0 0;
+    padding: 0;
+    color: var(--pf-strong-text);
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.pf-root .pf-cue-raised__route {
+    flex-shrink: 0;
+    margin: 0;
+    padding: 0;
+    color: var(--pf-secondary-text);
+}
+
+/* Each asset that raises it, under the tag */
+.pf-root .pf-cue-raised__asset {
+    padding-left: 16px;
+}
+
 /* ─── Settings pages: Project Settings and Preferences, each a title, then headings over Unity's own fields ───────── */
 
 /* The page has room on every side, and each part room above its heading */

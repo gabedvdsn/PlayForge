@@ -23,6 +23,23 @@ namespace FarEmerald.PlayForge
             set => library = value;
         }
 
+        /// <summary>
+        /// The route a library plays for a tag: the tag's own, or else its nearest parent's, a variant's under each step's
+        /// name first; null where none routes it, so the tag plays only where an entity's Cue Receiver plays it.
+        /// </summary>
+        public static CueRoute RouteFor(CueLibrary library, Tag tag, string variant = null)
+        {
+            var routes = library != null ? library.Routes : null;
+            var path = tag.Path;
+            if (routes == null || string.IsNullOrEmpty(path)) return null;
+            for (var at = path; at != null; at = ParentOf(at))
+            {
+                if (variant != null && Find(routes, at + "." + variant) is { } varied) return varied;
+                if (Find(routes, at) is { } own) return own;
+            }
+            return null;
+        }
+
         /// <summary>Plays the bursts of the cue's tag.</summary>
         public static void Burst(in CueContext cue) => Route(ECueEvent.Burst, cue);
 
