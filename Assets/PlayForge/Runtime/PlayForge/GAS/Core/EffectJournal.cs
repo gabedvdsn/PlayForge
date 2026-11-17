@@ -344,7 +344,7 @@ namespace FarEmerald.PlayForge
             private readonly GameplayAbilitySystemCallbacks.EffectRefusedDelegate refused;
             private readonly GameplayAbilitySystemCallbacks.EffectTickDelegate ticked;
             private readonly GameplayAbilitySystemCallbacks.ImpactDelegate impact;
-            private readonly GameplayAbilitySystemCallbacks.EffectRemovedDelegate removed;
+            private readonly GameplayAbilitySystemCallbacks.EffectDelegate removed;
             private readonly GameplayAbilitySystemCallbacks.EffectWorkerDelegate effectWorker;
             private readonly GameplayAbilitySystemCallbacks.ImpactWorkerDelegate impactWorker;
             private readonly GameplayAbilitySystemCallbacks.ActionQueuedDelegate ran, dropped;
@@ -433,8 +433,9 @@ namespace FarEmerald.PlayForge
                 journal.Write(entry);
             }
 
-            private void Removed(GameplayEffect effect)
+            private void Removed(GameplayEffectSpec spec)
             {
+                var effect = spec?.Base;
                 if (effect == null) return;
                 journal.Write(journal.Entry(EEffectJournalKind.Removed, entity, effect, null, null));
             }

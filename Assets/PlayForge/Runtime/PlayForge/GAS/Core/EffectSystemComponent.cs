@@ -1186,7 +1186,7 @@ namespace FarEmerald.PlayForge
 
                 // Recorded where the callback fires, as an application is
                 Self.GetFrameSummary()?.RecordEffectRemoved(container.Spec.Base);
-                Self.GetCallbacks()?.EffectRemoved(container.Spec.Base);
+                Self.GetCallbacks()?.EffectRemoved(container.Spec);
                 ForgeCounters.EffectsRemoved.Value++;
 
                 // Its burst, and its lasting cues end

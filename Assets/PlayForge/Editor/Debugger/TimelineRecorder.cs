@@ -90,7 +90,7 @@ namespace FarEmerald.PlayForge.Editor
             public AbilitySystemCallbacks.AbilitySystemCallbackDelegate Activated, StageStarted, StageEnded, Ended;
             public AbilitySystemCallbacks.AbilityRefusedDelegate Refused;
             public GameplayAbilitySystemCallbacks.EffectDelegate Applied;
-            public GameplayAbilitySystemCallbacks.EffectRemovedDelegate Removed;
+            public GameplayAbilitySystemCallbacks.EffectDelegate Removed;
             public GameplayAbilitySystemCallbacks.EffectRefusedDelegate EffectRefused;
         }
 
@@ -120,7 +120,7 @@ namespace FarEmerald.PlayForge.Editor
             hearing.Ended = status => Ended(status);
             hearing.Refused = refusal => Refused(gas, refusal);
             hearing.Applied = spec => Applied(gas, spec);
-            hearing.Removed = effect => Removed(gas, effect);
+            hearing.Removed = spec => Removed(gas, spec?.Base);
             hearing.EffectRefused = (spec, why) => EffectRefused(gas, spec, why);
             if (hearing.Abilities != null)
             {

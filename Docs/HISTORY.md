@@ -639,6 +639,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   page, through one table of links in the editor.
 
 ### Changed
+- `OnEffectRemoved` hands over the spec that left, as `OnEffectApplied` does; its asset is the spec's `Base`
+  (NET-1).
 - `ForgeCues.Burst`, `Begin` and `End` take what the raise belongs to, a game's own code where they're given
   nothing; a Cue Tag cue plays its routes within its list's raise (NET-2).
 - An effect's components hear a tick only as it executes; one its ongoing condition stops isn't heard (EP-53).

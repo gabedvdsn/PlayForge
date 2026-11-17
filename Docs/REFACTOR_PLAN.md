@@ -1597,7 +1597,7 @@ Only NET-1 and NET-2 land before the freeze.
 
 | ID | Phase | Row | Lands | Shows itself in | Status |
 |---|---|---|---|---|---|
-| NET-1 | A | **Effect-removed callback names the instance.** `OnEffectRemoved` hands over the spec that left, as `OnEffectApplied` does | Before 1.0.0 | `GameplayAbilitySystemCallbacks.cs:119-125` | open |
+| NET-1 | A | **Effect-removed callback names the instance.** `OnEffectRemoved` hands over the spec that left, as `OnEffectApplied` does Done, 2026-11-17: `OnEffectRemoved` is an `EffectDelegate`, as `OnEffectApplied` is, and hands over the spec that left; its asset is the spec's `Base`. The effect journal, the Debugger's timeline, the Battle sample and the labs read it so | Before 1.0.0 | `GameplayAbilitySystemCallbacks.cs:119-125` | verified |
 | NET-2 | A | **The cue raise and its sink.** The raise carries its source; a per-world sink with virtual no-op methods is asked once per raise, before any handler; its default plays everything. An effect's raise also carries the hit's point, normal and magnitude, where its applier gave them Done, 2026-11-17: `CueSource` on every raise, its kind (code, an effect, an ability, an entity, an item, or a tag) and its asset or tag; `CueRaise`, the cue and its source; `ForgeCueSink`, whose `WillPlay` a raise's world asks once before any cue of it plays, whatever mutes it, the default playing everything; `ForgeCues.Sink`, `UseSink(world, sink)` and `SinkFor(entity)`. A cue tag raised from code asks once, and its routes, a Cue Tag within them too, play inside that raise, unasked. `GameplayEffectSpec.WithHit(point, normal, magnitude)`, which an effect's cues play at; `RuntimeEntityIdentity.Asset`, which an entity's raise names | Before 1.0.0 | `GameplayEffect/Cues/ForgeCues.cs`, the raise sites, `EffectSystemComponent.cs:1194`, `AbstractCueHandler.cs:147-153` | verified |
 | NET-3 | A | **Net manifest.** Compact, stable indices for every catalog asset (sorted by ID) and every library tag (sorted by path), and a hash of the whole for the handshake. Built in the editor beside the catalog | 1.x | `Save/ForgeAssetCatalog.cs`, `Tag/Tag.cs` (`TagIds`) | open |
 | NET-4 | A | **Entity net IDs.** `IForgeNetIds`, int IDs on both hubs, which `IForgeEntityIds` can wrap | 1.x | `Save/ForgeSave.cs:14` | open |
@@ -1670,6 +1670,10 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-17, **NET-1: the effect-removed callback names the application.** Before the 1.0.0 freeze (Decision 92).
+  - Red, on HEAD, the callback handing over the asset: the two PlayMode cases failed: the removal handed over the Ward asset, not the spec that left.
+  - Gates, in `pg_cues`, on HEAD and NET-1: EditMode 1081/1081, PlayMode 2219 passed, 8 skipped, of 2227, golden 25/25.
 
 - 2026-11-17, **NET-2: the cue raise and its sink.** Before the 1.0.0 freeze (Decision 92).
   - Red, on HEAD with NET-2's sink never asked: the six PlayMode cases failed: the stub never asked the sink, so no raise was heard.

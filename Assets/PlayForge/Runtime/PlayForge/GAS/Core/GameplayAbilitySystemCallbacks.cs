@@ -111,18 +111,17 @@ namespace FarEmerald.PlayForge
         public void EffectApplied(GameplayEffectSpec spec) => _onEffectApplied?.Invoke(spec);
         
         /// <summary>
-        /// Invoked when an effect is removed.
+        /// Invoked when an effect is removed, with the application that left, as <see cref="OnEffectApplied"/> is with
+        /// the one that landed; its asset is the spec's <c>Base</c>.
         /// </summary>
-        public delegate void EffectRemovedDelegate(GameplayEffect effect);
-        
-        private EffectRemovedDelegate _onEffectRemoved;
-        public event EffectRemovedDelegate OnEffectRemoved
+        private EffectDelegate _onEffectRemoved;
+        public event EffectDelegate OnEffectRemoved
         {
             add => _onEffectRemoved += value;
             remove => _onEffectRemoved -= value;
         }
-        
-        public void EffectRemoved(GameplayEffect effect) => _onEffectRemoved?.Invoke(effect);
+
+        public void EffectRemoved(GameplayEffectSpec spec) => _onEffectRemoved?.Invoke(spec);
         
         /// <summary>
         /// Invoked when an effect ticks.
