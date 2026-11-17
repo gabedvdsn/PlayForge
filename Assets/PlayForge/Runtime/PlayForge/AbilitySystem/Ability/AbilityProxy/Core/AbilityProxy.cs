@@ -138,12 +138,23 @@ namespace FarEmerald.PlayForge
                 throw new OperationCanceledException();
             }
 
-            // A target its targeting picked beyond its Cast Range, whichever task picked it, ends it here
-            if (ForgeCastRange.PickedBeyond(implicitData))
+            // A target its targeting picked that one of its components refuses, whichever task picked it, ends it here, as a
+            // Cast Range refuses one beyond it
+            if (TargetRefused(implicitData))
             {
                 implicitData.TargetingFailed = true;
                 throw new OperationCanceledException();
             }
+        }
+
+        // Whether one of its ability's components refuses the target or the point its targeting picked
+        private static bool TargetRefused(AbilityDataPacket data)
+        {
+            if (data?.EffectOrigin is not AbilitySpec spec || spec.Base?.Components is not { } components) return false;
+            var ctx = new AbilityComponentContext(spec, data);
+            for (int i = 0; i < components.Count; i++)
+                if (components[i]?.CanTakeTarget(ctx) != null) return true;
+            return false;
         }
 
         /// <summary>

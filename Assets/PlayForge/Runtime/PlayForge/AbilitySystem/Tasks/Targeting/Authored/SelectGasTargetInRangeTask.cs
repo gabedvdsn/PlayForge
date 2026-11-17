@@ -29,8 +29,8 @@ namespace FarEmerald.PlayForge
         [Tooltip("When true, the range check ignores the Y axis (horizontal distance only)")]
         public bool FlattenRangeCheck;
 
-        [Tooltip("Its range is its ability's Cast Range, flat as the Cast Range says, where the ability has one; off, its own " +
-                 "Max Target Range")]
+        [Tooltip("Its range is its ability's reach, its Cast Range or a reach of your own, flat as the reach says, where the " +
+                 "ability has one; off, its own Max Target Range")]
         public bool UseCastRange = true;
 
         [Tooltip("When true, an invalid click re-prompts instead of failing")]
@@ -99,7 +99,7 @@ namespace FarEmerald.PlayForge
             }
         }
 
-        // Within its range: its ability's Cast Range where it reads it, else its own
+        // Within its range: its ability's reach where it reads it, its Cast Range or another, else its own
         private bool IsWithinRange(AbilityDataPacket data, AbstractTargetingPacket caster, ITarget target)
         {
             var targetTransform = target.GetTargetingPacket();
@@ -107,7 +107,7 @@ namespace FarEmerald.PlayForge
 
             float castRange = 0f;
             bool castFlat = false;
-            bool cast = UseCastRange && ForgeCastRange.TryRead(data, out castRange, out castFlat);
+            bool cast = UseCastRange && ForgeReach.TryRead(data, out castRange, out castFlat);
             float range = cast ? castRange : Read(MaxTargetRange, data);
             var delta = targetTransform.position - caster.position;
             if (cast ? castFlat : FlattenRangeCheck) delta.y = 0f;

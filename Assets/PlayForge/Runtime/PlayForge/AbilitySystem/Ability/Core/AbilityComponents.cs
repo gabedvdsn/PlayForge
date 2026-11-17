@@ -49,16 +49,20 @@ namespace FarEmerald.PlayForge
     }
 
     /// <summary>
-    /// Cast Range: how far from its caster an ability's target may be, the one range it has, read at its level.
-    /// An activation handed a target or a point beyond it is refused as out of range; targeting that picks
-    /// one beyond it ends the activation there; a targeting task with a range of its own searches within it, from the
-    /// caster; and the lab's bots cast it only once their foe is within it. 0 reaches anywhere. An ability holds one at
-    /// most. Its ability's Target Checks show its Check Range while it holds the component, which this enforces.
+    /// Cast Range: how far from its caster an ability's target may be, the one range it has, read at its level: the
+    /// ability's reach, an <see cref="IAbilityReach"/>. An activation handed a target or a point beyond it is refused as
+    /// Range, and targeting that picks one beyond it ends the activation there; a targeting task with a range of its own
+    /// searches within it, from the caster; and the lab's bots cast it only once their foe is within it, each asking the
+    /// ability's reach through <see cref="ForgeReach"/>. 0 reaches anywhere. An ability holds one at most. Its ability's
+    /// Target Checks show its Check Range while it holds the component, which this enforces.
     /// </summary>
     [Serializable]
     [ForgeMenu(Description = "How far from the caster the ability's target may be.")]
-    public sealed class CastRangeAbilityComponent : AbstractAbilityComponent
+    public sealed class CastRangeAbilityComponent : AbstractAbilityComponent, IAbilityReach
     {
+        /// <summary>Why an activation handed a target beyond its range, or whose targeting picked one, is refused.</summary>
+        public const string OutOfRange = "Its target is beyond its Cast Range";
+
         /// <summary>What it does, in one line.</summary>
         public override string Describe() => $"Range {NumberText.Of(Range)}";
 
@@ -76,80 +80,46 @@ namespace FarEmerald.PlayForge
 
         public override bool AllowsSeveral => false;
 
+        /// <summary>Its range, read at the ability's level, and whether along the ground; false where it reaches anywhere.</summary>
+        public bool TryReadReach(AbilitySpec spec, ProcessDataPacket data, out float range, out bool flat)
+        {
+            range = spec == null ? 0f : spec.Read(Range, data);
+            flat = Flat;
+            return range > 0f;
+        }
+
+        /// <summary>Its refusal is Range, so an AI can walk closer and ask again.</summary>
+        public override EActivationRefusal RefusedAs => EActivationRefusal.Range;
+
         // Handed a target or a point beyond it, as an AI's activation hands it, the activation doesn't start, so nothing of
         // it is paid
         public override string CanStart(AbilityComponentContext ctx) =>
-            ctx.Data is AbilityDataPacket data && ForgeCastRange.HandedBeyond(data) ? ForgeCastRange.Refusal : null;
+            ctx.Data is AbilityDataPacket data && ForgeReach.HandedBeyond(this, data) ? OutOfRange : null;
+
+        // Its targeting picked a target beyond it, whichever task picked it: the activation ends there
+        public override string CanTakeTarget(AbilityComponentContext ctx) =>
+            ctx.Data is AbilityDataPacket data && ForgeReach.PickedBeyond(this, data) ? OutOfRange : null;
     }
 
     /// <summary>
-    /// What reads an ability's Cast Range: how far it reaches, at the ability's level, and whether a target or a
-    /// point lies beyond it, from its caster.
+    /// Check Range: the Cast Range component's check, its target within the component's range of its caster, among the
+    /// ability's Target Checks while the ability holds the component. The component enforces it, refusing a target or a
+    /// point handed beyond it and ending targeting that picks one, so this passes: it's the range's place among the
+    /// checks, and comes and goes with the component. It read its range from a tag's weight or the ability's Local Data
+    /// before the component held it.
     /// </summary>
-    public static class ForgeCastRange
+    [ValidationSide(EValidationSide.Target)]
+    [ForgeMenu(Name = "Check Range", Description = "The Cast Range component's check: its target within the component's range of its caster. It comes and goes with the component.")]
+    public sealed class CheckRangeValidation : AbstractComponentValidationRule<CastRangeAbilityComponent>
     {
-        /// <summary>The reason an activation handed a target beyond its Cast Range is refused with.</summary>
-        public const string Refusal = "Its target is beyond its Cast Range";
+        public CheckRangeValidation(CastRangeAbilityComponent component) : base(component) { }
 
-        /// <summary>An ability's Cast Range component, or null where it has none.</summary>
-        public static CastRangeAbilityComponent Of(Ability ability)
+        /// <summary>What it checks, with its component's range: "Its target within 6 of its caster, along the ground".</summary>
+        public override string Describe()
         {
-            if (ability == null || ability.Components == null) return null;
-            foreach (var component in ability.Components)
-                if (component is CastRangeAbilityComponent cast) return cast;
-            return null;
+            if (Component?.Range == null) return null;
+            if (Component.Range.IsConstant && Component.Range.Constant <= 0f) return "Its target anywhere: its Cast Range of 0 reaches anywhere";
+            return $"Its target within {NumberText.Of(Component.Range)} of its caster{(Component.Flat ? ", along the ground" : "")}";
         }
-
-        /// <summary>
-        /// How far an activation's ability reaches, read at its level in the activation's data, and whether flat; false
-        /// where it has no Cast Range, or one that reaches anywhere.
-        /// </summary>
-        public static bool TryRead(AbilityDataPacket data, out float range, out bool flat)
-        {
-            range = 0f;
-            flat = true;
-            if (data?.EffectOrigin is not AbilitySpec spec || Of(spec.Base) is not { } cast) return false;
-            range = spec.Read(cast.Range, data);
-            flat = cast.Flat;
-            return range > 0f;
-        }
-
-        /// <summary>How far an activation's ability reaches, as <see cref="TryRead(AbilityDataPacket, out float, out bool)"/>.</summary>
-        public static bool TryRead(AbilityDataPacket data, out float range) => TryRead(data, out range, out _);
-
-        /// <summary>
-        /// How far an entity's ability reaches, at the entity's level of it; false where it has no Cast Range, one that
-        /// reaches anywhere, or the entity doesn't know it.
-        /// </summary>
-        public static bool TryRead(IGameplayAbilitySystem caster, Ability ability, out float range)
-        {
-            range = 0f;
-            if (Of(ability) is not { } cast || caster?.GetAbilitySystem() is not { } abilities
-                || !abilities.TryGetAbilityContainer(ability, out var container) || container?.Spec == null) return false;
-            range = container.Spec.Read(cast.Range);
-            return range > 0f;
-        }
-
-        /// <summary>Whether a point lies beyond an activation's Cast Range from its caster; false where it has none.</summary>
-        public static bool Beyond(AbilityDataPacket data, Vector3 point)
-        {
-            if (!TryRead(data, out float range, out bool flat)) return false;
-            if (data.EffectOrigin.GetSource()?.GetTargetingPacket() is not { } caster) return false;
-            var offset = point - caster.position;
-            if (flat) offset.y = 0f;
-            return offset.sqrMagnitude > range * range;
-        }
-
-        // Whether the target or the point the activation was handed, under Target Real or Position, lies beyond it
-        internal static bool HandedBeyond(AbilityDataPacket data)
-        {
-            if (data.TryGet(Tags.TARGET_REAL, EDataTarget.Primary, out ITarget target) && target?.GetTargetingPacket() is { } packet)
-                return Beyond(data, packet.position);
-            return data.TryGet(Tags.POSITION, EDataTarget.Primary, out Vector3 point) && Beyond(data, point);
-        }
-
-        // Whether the target its targeting picked, its first under Target, lies beyond it
-        internal static bool PickedBeyond(AbilityDataPacket data) =>
-            data.TryGetFirst(Tags.TARGET, out AbstractTargetingPacket picked) && picked != null && Beyond(data, picked.position);
     }
 }

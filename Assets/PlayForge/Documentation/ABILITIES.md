@@ -298,12 +298,14 @@ The check types, by the list that offers them:
   - **Check Range**: the Cast Range component's, which no list offers. It shows while the ability holds a Cast Range,
     saying its range, and passes, as the component enforces the range (see Cast Range).
 
-A failed Caster Check refuses the activation as Cooldown, Cost or Dead for those three, and as Rule, naming the check,
-for any other; a failed Target Check ends it after targeting, told as Target, naming the check (see Activation). Each
-says why in `Validate`'s `error`, which the refusal carries as its `Detail`, as "Its caster's Mana, 20, can't pay 30".
+A failed Caster Check refuses the activation as the kind its `RefusedAs` says: Cooldown, Cost or Dead for those three,
+which name none, and Rule, naming the check, for any other; a failed Target Check ends it after targeting, told as
+Target, naming the check (see Activation). Each says why in `Validate`'s `error`, which the refusal carries as its
+`Detail`, as "Its caster's Mana, 20, can't pay 30".
 
 A check of your own implements `IAbilityValidationRule`: `Validate` says whether the activation passes, and why not,
-and `GetName` names it. `[ForgeMenu]` names and describes it in the list, and `[ValidationSide]` says which list offers
+and `GetName` names it; `RefusedAs`, Rule unless it says otherwise, is the kind its refusal of the caster is told as, so
+an ammunition check can say Cooldown as the built-in does. `[ForgeMenu]` names and describes it in the list, and `[ValidationSide]` says which list offers
 it, Caster or Target; without it, both do. A component stands behind a check by overriding its `TargetCheck` or
 `CasterCheck` with an `AbstractComponentValidationRule<T>` of its own kind: the check shows under the list while the
 ability holds the component, and the component enforces it, in `CanStart`.
@@ -326,12 +328,17 @@ ability's **Ignores Crowd Control** (see Activation) opts it out of the rules it
 
 ## Components
 
-An ability's components are features it carries, each a class with hooks into its life, added with the list's **+**. A component hears the ability **Granted** to an entity and **Removed** from it; is asked whether an activation may start, **CanStart**, where a reason it gives refuses the activation, named by it; is waited on as an activation winds up, **WindUp**, after its target checks and before its cost, as a turn to face its target is; and hears an activation **Start**, **Commit** its cost and cooldown, and **End**, by how it ended: done, cancelled or failed. A kind that makes no sense twice is offered only while the ability holds none of it.
+An ability's components are features it carries, each a class with hooks into its life, added with the list's **+**. A component hears the ability **Granted** to an entity and **Removed** from it; is asked whether an activation may start, **CanStart**, where a reason it gives refuses the activation, named by it, as the kind its **RefusedAs** says, Rule unless it says otherwise; is asked whether the target its targeting picked may be taken, **CanTakeTarget**, where a reason it gives ends the activation there, before anything of it is paid; is waited on as an activation winds up, **WindUp**, after its target checks and before its cost, as a turn to face its target is; and hears an activation **Start**, **Commit** its cost and cooldown, and **End**, by how it ended: done, cancelled or failed. A kind that makes no sense twice is offered only while the ability holds none of it.
 
 A component of your own derives from `AbstractAbilityComponent` and overrides the hooks it needs, each a no-op
 otherwise. It's the ability's, shared by everything that holds it, so what it keeps for one entity's ability it keeps through its
 context: `ctx.GetState<T>(this)`. **Describe** says what it does in one line with its numbers, as a Cast Range's "Range
 600", which the Components section's line, The Forge's summary and the ability's breakdown say beside its name.
+
+Code finds a component by what it does, not by its class: `Find<T>()`, on an ability, its spec, an effect, an item and an
+entity, gives the first of its components that is a `T`, a kind or an interface it implements. An ability's reach is an
+`IAbilityReach`, which Cast Range implements; the targeting tasks, the Creator Lab's bots and your own code read it
+through `ForgeReach`, so a component of your own that implements it is asked as a Cast Range is.
 
 ### Cast Range
 
@@ -342,7 +349,9 @@ as **Range**, so nothing of it is paid and an AI can walk closer and ask again; 
 whichever task picked it, ends the activation before its stages. The auto-targeting tasks measured from the caster, and
 Select GAS Target In Range, search within it where their **Use Cast Range** is on, as it is by default, their own range
 set aside. The Creator Lab's units attack from their attack's Cast Range, and its bots cast an ability once their foe is
-within its Cast Range, where it has one ([CREATOR_LAB.md](CREATOR_LAB.md)). Code reads it through `ForgeCastRange`.
+within its Cast Range, where it has one ([CREATOR_LAB.md](CREATOR_LAB.md)). It's the ability's reach, an
+`IAbilityReach`: code reads it through `ForgeReach`, as `ForgeReach.TryRead(caster, ability, out range)`, and a reach
+of your own takes its place in each of these.
 While the ability holds it, its Target Checks show its **Check Range**, locked, saying the range (see Requirements). An
 ability holds one at most.
 

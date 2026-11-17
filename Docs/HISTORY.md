@@ -10,6 +10,12 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## Toward 1.0.0, since 0.1.0
 
 ### Added
+- **Components found by what they do** (EP-37): `Find<T>()` on an ability, its spec, an effect, an item and an entity
+  gives the first component that is a `T`, its kind or an interface it implements. An ability's reach is an
+  `IAbilityReach`, which Cast Range implements, read through `ForgeReach`, so the targeting tasks, the Creator Lab's bots
+  and a game's code ask a reach of your own as they ask Cast Range. A component's refusal is the kind its `RefusedAs`
+  says, as Cast Range's is Range, and a validation rule's too, as Cooldown, Cost and Is Alive say theirs; and a component
+  may refuse the target its targeting picked, `CanTakeTarget`, ending the activation there.
 - **A refusal's reason** (EP-42): `ActivationRefusal.Detail`, the refusing check's own words, as "Its caster's Mana,
   10, can't pay 50", which the refusal's text says too, and `EActivationRefusal.Target`: a Target Check that refuses
   after targeting is told through `OnAbilityRefused`, naming the check, where the activation ended untold. The
@@ -1299,6 +1305,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   or turning `Enabled` off. Once the first had ended, it threw, and the rest ran on.
 
 ### Removed
+- `ForgeCastRange` (EP-37): its reads are `ForgeReach`'s, over any ability's reach, and its refusal's words are
+  `CastRangeAbilityComponent.OutOfRange`.
 - Code Examples (EP-29): its task sequences are Task Sequence Examples, and its group processes Process Group Examples.
 - The task sequence framework's README in the runtime's folder (EP-28): it's PROCESSES.md and TASK_SEQUENCES.md.
 - Types nothing used (EP-25): `ManagementInitDeferment`, `ValidationRuleset`, `EntitySpec`, `EffectContainerFactory`

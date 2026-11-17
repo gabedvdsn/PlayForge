@@ -353,6 +353,9 @@ namespace FarEmerald.PlayForge
         /// <summary>Its components, as <see cref="EntityIdentity.Components"/>.</summary>
         public List<AbstractEntityComponent> Components = new();
 
+        /// <summary>Its first component that is a <typeparamref name="T"/>, as <see cref="EntityIdentity.Find{T}"/>.</summary>
+        public T Find<T>() where T : class => AbstractForgeComponent.Find<T>(Components);
+
         /// <summary>Its crowd control rules, as <see cref="EntityIdentity.CrowdControl"/>.</summary>
         public CrowdControlRules CrowdControl;
 

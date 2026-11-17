@@ -142,6 +142,12 @@ namespace FarEmerald.PlayForge
         [SerializeReference]
         public List<AbstractItemComponent> Components = new();
 
+        /// <summary>
+        /// Its first component that is a <typeparamref name="T"/>, its kind or a capability it implements; null where none
+        /// is.
+        /// </summary>
+        public T Find<T>() where T : class => AbstractForgeComponent.Find<T>(Components);
+
         // ═══════════════════════════════════════════════════════════════════════════
         // Generation
         // ═══════════════════════════════════════════════════════════════════════════

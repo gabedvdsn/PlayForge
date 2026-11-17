@@ -275,10 +275,10 @@ namespace FarEmerald.PlayForge.Lab
                 : fallback;
 
         /// <summary>
-        /// How near it must stand to attack: its attack's Cast Range where it has one, else its Local Data's or its
-        /// rules'.
+        /// How near it must stand to attack: its attack's reach, its Cast Range or another, where it has one, else its
+        /// Local Data's or its rules'.
         /// </summary>
-        public float AttackRange => AttackAbility is { } attack && ForgeCastRange.TryRead(Gas, attack, out float cast) ? cast
+        public float AttackRange => AttackAbility is { } attack && ForgeReach.TryRead(Gas, attack, out float cast) ? cast
             : Rules == null ? 2f : LocalFloat(Rules.AttackRangeKey, Rules.AttackRange);
 
         /// <summary>

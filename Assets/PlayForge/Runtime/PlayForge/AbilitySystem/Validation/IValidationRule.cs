@@ -30,6 +30,13 @@ namespace FarEmerald.PlayForge
         bool Validate(AbilityDataPacket data, Func<ITarget> getSource, out string error);
 
         public string GetName();
+
+        /// <summary>
+        /// The kind of refusal it's told as where it refuses among the Caster Checks: Rule, as here, which its name names;
+        /// Cooldown, Cost and Is Alive say Cooldown, Cost and Dead, which name none. Its error is the refusal's words
+        /// whatever its kind; among the Target Checks, every refusal is the target's.
+        /// </summary>
+        public EActivationRefusal RefusedAs => EActivationRefusal.Rule;
     }
 
     /// <summary>Which of an ability's checks a rule belongs among: its Caster Checks, its Target Checks, or either.</summary>

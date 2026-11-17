@@ -129,8 +129,8 @@ namespace FarEmerald.PlayForge.Lab
             var rules = unit.Rules;
             string when = rules != null && rules.CastWhenKey.IsValid && ability.TryGetLocalData(rules.CastWhenKey, out var whenData)
                 ? whenData.stringValue : "InRange";
-            // Its reach: its Cast Range where it has one, else its Local Data's, 0 for anywhere
-            float reach = ForgeCastRange.TryRead(unit.Gas, ability, out float cast) ? cast
+            // Its reach: the ability's, its Cast Range or another, where it has one, else its Local Data's, 0 for anywhere
+            float reach = ForgeReach.TryRead(unit.Gas, ability, out float cast) ? cast
                 : rules != null && rules.ReachKey.IsValid && ability.TryGetLocalData(rules.ReachKey, out var reachData) ? Read(ability, reachData.floatValue) : 0f;
             bool inReach = reach <= 0f || unit.DistanceTo(foe) <= reach;
             away = when == "Low";

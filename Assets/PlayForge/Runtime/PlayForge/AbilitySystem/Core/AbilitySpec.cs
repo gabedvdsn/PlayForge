@@ -18,6 +18,12 @@ namespace FarEmerald.PlayForge
             Charges = new AbilityCharges(this);
         }
 
+        /// <summary>
+        /// Its ability's first component that is a <typeparamref name="T"/>, its kind or a capability it implements, as its
+        /// reach, <see cref="IAbilityReach"/>; null where none is.
+        /// </summary>
+        public T Find<T>() where T : class => Base?.Find<T>();
+
         private ComponentStates componentStates;
 
         /// <summary>What its ability's components keep for this entity's ability.</summary>
@@ -202,8 +208,8 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// What of the caster refuses the activation, or None: its tags against the ability's source requirements, then
-        /// each caster check, which a cooldown, a cost or a death names, and any other by its name, then its components,
-        /// each by its reason; and why, in the words of the check or the component that refused it.
+        /// each caster check, as the kind it says it's refused as, a Rule by its name; then its components, each as the
+        /// kind it says, by its reason; and why, in the words of the check or the component that refused it.
         /// </summary>
         internal EActivationRefusal SourceRefusal(AbilityDataPacket data, out string rule, out string detail)
         {
@@ -224,34 +230,32 @@ namespace FarEmerald.PlayForge
                 return EActivationRefusal.CrowdControl;
             }
 
-            // An empty rule slot, which a list's "+" can leave, asks nothing; it threw
+            // An empty rule slot, which a list's "+" can leave, asks nothing; it threw. Each is refused as the kind it says,
+            // a cooldown's, a cost's and a death's naming none, and any other by its name
             foreach (var check in Base.SourceActivationRules)
             {
                 if (check == null || check.Validate(data, () => owner, out var error)) continue;
                 detail = error;
-                switch (check)
-                {
-                    case CooldownValidation: return EActivationRefusal.Cooldown;
-                    case CostValidation: return EActivationRefusal.Cost;
-                    case IsAliveValidation: return EActivationRefusal.Dead;
-                    default:
-                        rule = check.GetName();
-                        return EActivationRefusal.Rule;
-                }
+                var kind = KindOf(check.RefusedAs);
+                if (kind == EActivationRefusal.Rule) rule = check.GetName();
+                return kind;
             }
 
-            // Its components, any of which may refuse it, named by its reason
+            // Its components, any of which may refuse it, each as the kind it says, named by its reason
             if (Base.Components != null)
             {
                 foreach (var component in Base.Components)
                 {
                     if (component?.CanStart(new AbilityComponentContext(this, data)) is not { } reason) continue;
                     rule = detail = reason;
-                    return component is CastRangeAbilityComponent ? EActivationRefusal.Range : EActivationRefusal.Rule;
+                    return KindOf(component.RefusedAs);
                 }
             }
             return EActivationRefusal.None;
         }
+
+        // A refusal's kind as its check or component says it; one that says None is a Rule, as it did refuse
+        private static EActivationRefusal KindOf(EActivationRefusal said) => said == EActivationRefusal.None ? EActivationRefusal.Rule : said;
 
         public bool ValidateAllActivationRequirements(ITarget target, AbilityDataPacket data) =>
             TargetRefusal(target, data, out _, out _) == EActivationRefusal.None;

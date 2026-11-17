@@ -59,6 +59,9 @@ namespace FarEmerald.PlayForge
         }
 
         public string GetName() => "Cost";
+
+        /// <summary>Told as Cost.</summary>
+        public EActivationRefusal RefusedAs => EActivationRefusal.Cost;
     }
 
     [Serializable]
@@ -91,6 +94,9 @@ namespace FarEmerald.PlayForge
         }
 
         public string GetName() => "Cooldown";
+
+        /// <summary>Told as Cooldown.</summary>
+        public EActivationRefusal RefusedAs => EActivationRefusal.Cooldown;
     }
 
     [Serializable]
@@ -111,6 +117,9 @@ namespace FarEmerald.PlayForge
         }
 
         public string GetName() => "Is Alive";
+
+        /// <summary>Told as Dead, where it refuses its caster.</summary>
+        public EActivationRefusal RefusedAs => EActivationRefusal.Dead;
     }
 
     [Serializable]
@@ -319,28 +328,6 @@ namespace FarEmerald.PlayForge
         }
 
         public string GetName() => "Ability Level";
-    }
-
-    /// <summary>
-    /// Check Range: the Cast Range component's check, its target within the component's range of its caster, among the
-    /// ability's Target Checks while the ability holds the component. The component enforces it, refusing a target or a
-    /// point handed beyond it and ending targeting that picks one, so this passes: it's the range's place among the
-    /// checks, and comes and goes with the component. It read its range from a tag's weight or the ability's Local Data
-    /// before the component held it.
-    /// </summary>
-    [ValidationSide(EValidationSide.Target)]
-    [ForgeMenu(Name = "Check Range", Description = "The Cast Range component's check: its target within the component's range of its caster. It comes and goes with the component.")]
-    public sealed class CheckRangeValidation : AbstractComponentValidationRule<CastRangeAbilityComponent>
-    {
-        public CheckRangeValidation(CastRangeAbilityComponent component) : base(component) { }
-
-        /// <summary>What it checks, with its component's range: "Its target within 6 of its caster, along the ground".</summary>
-        public override string Describe()
-        {
-            if (Component?.Range == null) return null;
-            if (Component.Range.IsConstant && Component.Range.Constant <= 0f) return "Its target anywhere: its Cast Range of 0 reaches anywhere";
-            return $"Its target within {NumberText.Of(Component.Range)} of its caster{(Component.Flat ? ", along the ground" : "")}";
-        }
     }
 
     /// <summary>How a rule names what it checks as it says why it refused.</summary>

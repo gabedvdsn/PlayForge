@@ -27,6 +27,19 @@ namespace FarEmerald.PlayForge
         /// </summary>
         public virtual string Describe() => null;
 
+        /// <summary>
+        /// The first of a list's components that is a <typeparamref name="T"/>, its kind or a capability it implements, as
+        /// an <see cref="IAbilityReach"/>; null where none is. Ask for an interface, not a class, and a component of your
+        /// own that implements it is found as PlayForge's are. An asset's own <c>Find</c> asks its list.
+        /// </summary>
+        public static T Find<T>(IReadOnlyList<AbstractForgeComponent> components) where T : class
+        {
+            if (components == null) return null;
+            for (int i = 0; i < components.Count; i++)
+                if (components[i] is T found) return found;
+            return null;
+        }
+
         /// <summary>A component's name, as its picker and The Forge show it: its [ForgeMenu] name, or its class's.</summary>
         public static string NameOf(AbstractForgeComponent component) => component == null ? "" : NameOf(component.GetType());
 
@@ -154,8 +167,24 @@ namespace FarEmerald.PlayForge
         /// <summary>As an entity loses the ability.</summary>
         public virtual void Removed(AbilityComponentContext ctx) { }
 
-        /// <summary>Why an activation may not start, or null where it may; the reason names the refusal.</summary>
+        /// <summary>
+        /// Why an activation may not start, or null where it may; the reason names the refusal and says why, and
+        /// <see cref="RefusedAs"/> is its kind.
+        /// </summary>
         public virtual string CanStart(AbilityComponentContext ctx) => null;
+
+        /// <summary>
+        /// The kind of refusal its <see cref="CanStart"/> is told as, its reason naming it: Rule, as here; a Cast Range's
+        /// is Range, so an AI can walk closer and ask again.
+        /// </summary>
+        public virtual EActivationRefusal RefusedAs => EActivationRefusal.Rule;
+
+        /// <summary>
+        /// Why the target or the point the activation's targeting picked is refused, which ends the activation there, as
+        /// its targeting ends, before its wind-up, its cost and its stages; or null, as here, where it's taken. The pick
+        /// is in its data under Target: a Cast Range refuses one beyond its range, whichever task picked it.
+        /// </summary>
+        public virtual string CanTakeTarget(AbilityComponentContext ctx) => null;
 
         /// <summary>
         /// What an activation waits on as it winds up, after its targeting and its target checks and before its cost

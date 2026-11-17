@@ -77,6 +77,12 @@ namespace FarEmerald.PlayForge
         [SerializeReference]
         public List<AbstractEffectComponent> Components = new();
 
+        /// <summary>
+        /// Its first component that is a <typeparamref name="T"/>, its kind or a capability it implements; null where none
+        /// is.
+        /// </summary>
+        public T Find<T>() where T : class => AbstractForgeComponent.Find<T>(Components);
+
         [Tooltip("Workers it gives the one it's on while it lasts, and takes back as it goes: attribute, impact, tag and " +
                  "analysis workers, as a debuff that changes how its target takes damage, or shatters it below 13%")]
         public StandardWorkerGroup WorkerGroup;

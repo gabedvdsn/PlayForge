@@ -30,8 +30,8 @@ namespace FarEmerald.PlayForge
         [Tooltip("Detection radius from the caster (0 = infinite, uses FindObjectsByType)")]
         [NumberMin(0f)] public ScalableFloat Range = 20f;
 
-        [Tooltip("Searches within its ability's Cast Range, where the ability has one and its range is measured from the " +
-                 "caster; off, within its own Range")]
+        [Tooltip("Searches within its ability's reach, its Cast Range or a reach of your own, where the ability has one and its " +
+                 "range is measured from the caster; off, within its own Range")]
         public bool UseCastRange = true;
 
         [Tooltip("Layers to detect targets on, where it uses physics")]
@@ -98,9 +98,10 @@ namespace FarEmerald.PlayForge
             return results;
         }
 
-        // How far it searches: its ability's Cast Range, measured from the caster, where it reads it; else its own
+        // How far it searches: its ability's reach, its Cast Range or another, measured from the caster, where it reads it;
+        // else its own
         private float RangeFor(AbilityDataPacket data) =>
-            UseCastRange && Around == EAreaCentre.Caster && ForgeCastRange.TryRead(data, out float cast) ? cast : Read(Range, data);
+            UseCastRange && Around == EAreaCentre.Caster && ForgeReach.TryRead(data, out float cast) ? cast : Read(Range, data);
 
         // Where its range is measured from: the caster, the activation's target, or its point
         private Vector3? CentreOf(AbilityDataPacket data, AbstractTargetingPacket caster) => Around switch
