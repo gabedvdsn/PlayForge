@@ -271,14 +271,12 @@ namespace FarEmerald.PlayForge
             WorkerGroup?.ProvideWorkersTo(system);
             OnHits.Provide(OnHit, system);
             EffectModifiers.Provide(Modifiers, system);
-            ForgeAuras.Provide(ForgeAuras.Of(Components), system);
         }
         public void RemoveWorkers(ISource system)
         {
             WorkerGroup?.RemoveWorkersFrom(system);
             OnHits.Remove(OnHit, system);
             EffectModifiers.Remove(Modifiers, system);
-            ForgeAuras.Remove(ForgeAuras.Of(Components), system);
         }
     }
 

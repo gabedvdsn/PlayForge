@@ -49,8 +49,14 @@ namespace FarEmerald.PlayForge
         /// <summary>The modifiers it holds now, which change its own effects and those landing on it.</summary>
         public EffectModifierSet GetEffectModifiers() => null;
 
-        /// <summary>The auras it runs, which hold their effects on those near it.</summary>
-        public AuraSet GetAuras() => null;
+        /// <summary>
+        /// Its service of a kind, a per-entity object its components share, as the auras it runs: made the first time it's
+        /// asked for, stepped by its own time, told as it revives and ended with it. Null for an entity that keeps none.
+        /// </summary>
+        public T GetService<T>() where T : AbstractEntityService, new() => null;
+
+        /// <summary>Its service of a kind, where one was made; null where none was, as <see cref="GetService{T}"/> would make it.</summary>
+        public T FindService<T>() where T : AbstractEntityService => null;
 
         /// <summary>The crowd control rules its abilities follow: its own, or the project's.</summary>
         public CrowdControlRules GetCrowdControl() => null;

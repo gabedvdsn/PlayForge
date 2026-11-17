@@ -212,8 +212,11 @@ namespace FarEmerald.PlayForge
         public GameplayAbilitySystemCallbacks GetCallbacks() => Callbacks;
         public EffectModifierSet GetEffectModifiers() => core.EffectModifiers;
 
-        /// <summary>The auras it runs.</summary>
-        public AuraSet GetAuras() => core.Auras;
+        /// <summary>Its service of a kind, made the first time it's asked for.</summary>
+        public T GetService<T>() where T : AbstractEntityService, new() => core.Services.Get<T>();
+
+        /// <summary>Its service of a kind, where one was made.</summary>
+        public T FindService<T>() where T : AbstractEntityService => core.Services.Find<T>();
 
         /// <summary>The crowd control rules its abilities follow.</summary>
         public CrowdControlRules GetCrowdControl() => core.CrowdControl;
@@ -439,14 +442,11 @@ namespace FarEmerald.PlayForge
         {
             WorkerGroup?.ProvideWorkersTo(system);
             EffectModifiers.Provide(Modifiers, system);
-            // Its auras, its Aura components'
-            ForgeAuras.Provide(ForgeAuras.Of(Components), system);
         }
         public void RemoveWorkers(ISource system)
         {
             WorkerGroup?.RemoveWorkersFrom(system);
             EffectModifiers.Remove(Modifiers, system);
-            ForgeAuras.Remove(ForgeAuras.Of(Components), system);
         }
     }
 }

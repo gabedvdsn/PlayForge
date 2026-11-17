@@ -10,6 +10,13 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## Toward 1.0.0, since 0.1.0
 
 ### Added
+- **Entity services** (EP-39): `AbstractEntityService`, a per-entity object an entity's components share, made the first
+  time it's asked for, `gas.GetService<T>()`, found with `FindService<T>()`, stepped by the entity's own time, told as it
+  revives and ended with it. The auras an entity runs are one, `AuraSet`, and a Respawn's wait another,
+  `RespawnTimer`, whose `Waiting` and `TimeLeft` a HUD reads. A lasting effect's components hear it `Lend` and
+  `TakeBack` what it gives while it lasts, where its Land and End miss a load, a replacement and a move; an entity
+  component's context carries its `Identity`; and `spec.Claimed` is the purge categories what applied an effect claims
+  it as.
 - **A cooldown model, a component's usage, waived checks and claimed effects** (EP-38): an ability's uses come back as
   its `ICooldownModel` says, which Charges implements and `SingleCooldown`, one use back as its Cooldown ends, is where
   none does; the Cooldown check asks it, the ability spends through it, and `spec.CooldownModel` reads it. A component
@@ -586,6 +593,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   page, through one table of links in the editor.
 
 ### Changed
+- Each Aura component gives its aura in its own hooks (EP-39), where the ability, the item, the runtime identity and the
+  effect system gave them; `gas.GetAuras()` is an extension beside the auras, and `ForgeAuras.Provide` and `Remove` take
+  one aura.
 - The Charges and Toggle shortcuts are extension methods beside their components (EP-38, Decision 90):
   `ability.Charges()`, `ability.Recharge()` and `ability.Toggles()`, where they were properties of `Ability`, and
   `spec.Charges()` and `spec.IsToggledOn()`, where they were `AbilitySpec`'s; `spec.Charges()` is null for an ability
@@ -1316,6 +1326,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   or turning `Enabled` off. Once the first had ended, it threw, and the rest ran on.
 
 ### Removed
+- `GameplayEffectSpec.LentByAura` and `ForgeAuras.Of` (EP-39): an aura's effects are `Claimed` Lent, and no core code
+  reads a list of auras.
 - `ForgeCastRange` (EP-37): its reads are `ForgeReach`'s, over any ability's reach, and its refusal's words are
   `CastRangeAbilityComponent.OutOfRange`.
 - Code Examples (EP-29): its task sequences are Task Sequence Examples, and its group processes Process Group Examples.

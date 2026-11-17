@@ -342,7 +342,10 @@ while the effect lasts, as no tag needs to change for an attribute they read to,
 
 An effect's components are features it carries, each a class with hooks into its life, added with the list's **+**. A component hears the effect **Land** on the entity it's on, **Tick** each period, **Hit** as an impact it deals lands, and **End** as it comes off: an instant effect at once, a lasting one as it's removed, at the moments its workers do; and
 **Death** as the one it's on dies while it's on them, whether the entity stays or ends, before what the death ends comes
-off. A kind that makes no sense twice is offered only while the effect holds none of it.
+off. A lasting effect's components hear it **Lend** what it gives while it lasts, as it starts to last: as it lands,
+before its Land, as it takes another's place under its tag, and as a load or a move puts it back, where it doesn't land
+again; and **TakeBack**, as it stops: as it comes off, before its End, as another takes its place, and as a load clears
+it or a move takes it away. An Aura lends its aura so. A kind that makes no sense twice is offered only while the effect holds none of it.
 
 A component of your own derives from `AbstractEffectComponent` and overrides the hooks it needs, each a no-op
 otherwise. It's the effect's, shared by everything that holds it, so what it keeps for one application of it it keeps through its
@@ -357,7 +360,10 @@ whom it **Takes** from its holder's sides, its holder too where **Include Holder
 default, at which it checks who's near, by its holder's own time. It puts its effect on each that comes near, from an
 origin of its own, and takes it off as they leave, die or end, as its holder dies or ends, or as the aura goes; an
 effect of its that ends on its own, a durational one, goes on again at its next check. An Infinite effect holds as long
-as they're near. Two of an item hold two, as their effect's stacking says.
+as they're near. Two of an item hold two, as their effect's stacking says. A purge counts an aura's effect Lent. Each
+Aura component gives its aura in its own hooks: an effect's as it lends, an ability's as it's granted, an item's as
+it's equipped, an entity's as it registers. An entity's auras are its `AuraSet`, `gas.GetAuras()`, a service it steps
+([ENTITIES.md](ENTITIES.md#services)), and `ForgeAuras.Provide(entry, holder)` and `Remove` give one of your own.
 
 ### Area
 

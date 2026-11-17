@@ -622,8 +622,9 @@ namespace FarEmerald.PlayForge
         // The modifiers each container gave its target, kept apart as its On Hits are
         private readonly Dictionary<AbstractEffectContainer, List<EffectModifierEntry>> modifiersLent = new();
 
-        // The auras each container gave its target, kept apart as its modifiers are
-        private readonly Dictionary<AbstractEffectContainer, List<AuraEntry>> aurasLent = new();
+        // The application whose components each container lent through, to hear them take back what they lent, kept apart as
+        // its modifiers are: a replacement by another effect gives the container the other's spec first
+        private readonly Dictionary<AbstractEffectContainer, GameplayEffectSpec> componentsLent = new();
 
         // The containers whose side change their target is under, each held by its container
         private readonly HashSet<AbstractEffectContainer> sidesLent = new();
@@ -680,13 +681,11 @@ namespace FarEmerald.PlayForge
                 sides.Add(container, given, priority, change.Interrupts);
             }
 
-            // Its auras, its Aura components', while it lasts
-            var auras = ForgeAuras.Of(container.Spec.Base.Components);
-            if (auras is { Count: > 0 })
+            // What its components give while it lasts, as an aura, each lending it as it hears
+            if (container.Spec.Base.Components is { Count: > 0 })
             {
-                var given = auras;
-                ForgeAuras.Provide(given, Self);
-                aurasLent[container] = given;
+                componentsLent[container] = container.Spec;
+                container.Spec.HearLend(new EffectWorkerContext(Self, container.Spec, Self.GetFrameSummary(), Self.GetActionQueue()));
             }
 
             var abilities = container.Spec.Base.GrantedAbilities;
@@ -729,7 +728,8 @@ namespace FarEmerald.PlayForge
         {
             if (onHitsLent.Count > 0 && onHitsLent.Remove(container, out var onHit)) OnHits.Remove(onHit, Self);
             if (modifiersLent.Count > 0 && modifiersLent.Remove(container, out var modifiers)) EffectModifiers.Remove(modifiers, Self);
-            if (aurasLent.Count > 0 && aurasLent.Remove(container, out var auras)) ForgeAuras.Remove(auras, Self);
+            if (componentsLent.Count > 0 && componentsLent.Remove(container, out var lending))
+                lending.HearTakeBack(new EffectWorkerContext(Self, lending, Self.GetFrameSummary(), Self.GetActionQueue()));
             if (groupsLent.Count > 0 && groupsLent.Remove(container, out var group)) TakeBackGroup(group);
             if (sidesLent.Count > 0 && sidesLent.Remove(container))
                 Self.GetSides()?.Remove(container, container.Spec.Base.SideChange?.Interrupts ?? false);
@@ -1252,8 +1252,9 @@ namespace FarEmerald.PlayForge
             onHitsLent.Clear();
             foreach (var modifiers in modifiersLent.Values) EffectModifiers.Remove(modifiers, Self);
             modifiersLent.Clear();
-            foreach (var auras in aurasLent.Values) ForgeAuras.Remove(auras, Self);
-            aurasLent.Clear();
+            foreach (var lending in componentsLent.Values)
+                lending.HearTakeBack(new EffectWorkerContext(Self, lending, Self.GetFrameSummary(), Self.GetActionQueue()));
+            componentsLent.Clear();
             foreach (var group in groupCounts.Keys) group.RemoveWorkersFrom(Self);
             groupCounts.Clear();
             groupsLent.Clear();

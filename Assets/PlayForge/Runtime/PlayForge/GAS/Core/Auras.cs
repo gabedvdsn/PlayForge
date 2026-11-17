@@ -32,34 +32,28 @@ namespace FarEmerald.PlayForge
         [NumberMin(0f)] public ScalableFloat Interval = 0.25f;
     }
 
-    /// <summary>Gives a holder the auras it has, and takes them back.</summary>
+    /// <summary>
+    /// Gives a holder an aura, and takes it back: what each Aura component does in its own hooks, and a game's code may do
+    /// for an aura of its own. An entity's auras are its <see cref="AuraSet"/>, a service it steps.
+    /// </summary>
     public static class ForgeAuras
     {
-        /// <summary>Gives <paramref name="holder"/> each aura, which holds its effect on those near it from its next step.</summary>
-        public static void Provide(List<AuraEntry> entries, ISource holder)
+        /// <summary>Gives <paramref name="holder"/> an aura, which holds its effect on those near it from its next step.</summary>
+        public static void Provide(AuraEntry entry, ISource holder)
         {
-            if (entries == null || entries.Count == 0 || (holder as IGameplayAbilitySystem)?.GetAuras() is not { } auras) return;
-            foreach (var entry in entries)
-                if (entry?.Effect != null) auras.Add(entry, holder);
+            if (entry?.Effect == null || (holder as IGameplayAbilitySystem)?.GetAuras() is not { } auras) return;
+            auras.Add(entry, holder);
         }
 
-        /// <summary>Takes back what <see cref="Provide"/> gave, its effects off each it held them on.</summary>
-        public static void Remove(List<AuraEntry> entries, ISource holder)
+        /// <summary>Takes back one run of an aura <see cref="Provide"/> gave, its effects off each it held them on.</summary>
+        public static void Remove(AuraEntry entry, ISource holder)
         {
-            if (entries == null || entries.Count == 0 || (holder as IGameplayAbilitySystem)?.GetAuras() is not { } auras) return;
-            foreach (var entry in entries)
-                if (entry != null) auras.Remove(entry);
+            if (entry == null || (holder as IGameplayAbilitySystem)?.FindService<AuraSet>() is not { } auras) return;
+            auras.Remove(entry);
         }
 
-        /// <summary>The auras a list of components holds, each an Aura component's; null where it holds none.</summary>
-        public static List<AuraEntry> Of<T>(List<T> components) where T : AbstractForgeComponent
-        {
-            if (components == null) return null;
-            List<AuraEntry> auras = null;
-            foreach (var component in components)
-                if (component is IAuraComponent held && held.Aura != null) (auras ??= new List<AuraEntry>()).Add(held.Aura);
-            return auras;
-        }
+        /// <summary>The auras an entity runs, its service, made as it's first asked for; null for an entity that keeps none.</summary>
+        public static AuraSet GetAuras(this IGameplayAbilitySystem gas) => gas?.GetService<AuraSet>();
     }
 
     /// <summary>A component that holds an aura: its holder's effect on those near it.</summary>
@@ -79,6 +73,10 @@ namespace FarEmerald.PlayForge
 
         public AuraEntry Aura = new();
         AuraEntry IAuraComponent.Aura => Aura;
+
+        // While its effect lasts on the one it's on, held by them
+        public override void Lend(EffectComponentContext ctx) => ForgeAuras.Provide(Aura, ctx.System);
+        public override void TakeBack(EffectComponentContext ctx) => ForgeAuras.Remove(Aura, ctx.System);
     }
 
     /// <summary>An aura an ability holds while its holder knows it, on those near its holder.</summary>
@@ -91,6 +89,10 @@ namespace FarEmerald.PlayForge
 
         public AuraEntry Aura = new();
         AuraEntry IAuraComponent.Aura => Aura;
+
+        // While its holder knows the ability
+        public override void Granted(AbilityComponentContext ctx) => ForgeAuras.Provide(Aura, ctx.Source);
+        public override void Removed(AbilityComponentContext ctx) => ForgeAuras.Remove(Aura, ctx.Source);
     }
 
     /// <summary>An aura an item holds while it's equipped, on those near its holder.</summary>
@@ -103,6 +105,10 @@ namespace FarEmerald.PlayForge
 
         public AuraEntry Aura = new();
         AuraEntry IAuraComponent.Aura => Aura;
+
+        // While it's equipped, a load's putting it on and taking it off among it
+        public override void Equipped(ItemComponentContext ctx) => ForgeAuras.Provide(Aura, ctx.Source);
+        public override void Unequipped(ItemComponentContext ctx) => ForgeAuras.Remove(Aura, ctx.Source);
     }
 
     /// <summary>An aura an entity holds while it lives, on those near it.</summary>
@@ -115,14 +121,18 @@ namespace FarEmerald.PlayForge
 
         public AuraEntry Aura = new();
         AuraEntry IAuraComponent.Aura => Aura;
+
+        // From its registration; its aura ends with the entity's auras as it ends
+        public override void Register(EntityComponentContext ctx) => ForgeAuras.Provide(Aura, ctx.System);
     }
 
     /// <summary>
     /// An entity's running auras: each checks who's near at its interval, by its holder's time, holds its effect on
     /// each it takes, from an origin of its own, and takes it off as they leave, die or end, as its holder dies, or as the
-    /// aura goes. Two of one aura, as two of an item, are two runs, each holding its own.
+    /// aura goes. Two of one aura, as two of an item, are two runs, each holding its own. It's a service of its entity,
+    /// <see cref="ForgeAuras.GetAuras"/>, which the entity steps by its own time and ends as the entity ends.
     /// </summary>
-    public sealed class AuraSet
+    public sealed class AuraSet : AbstractEntityService
     {
         private sealed class Run
         {
@@ -164,7 +174,7 @@ namespace FarEmerald.PlayForge
         }
 
         /// <summary>Steps each aura by its holder's time, checking who's near where its interval has passed.</summary>
-        public void Step(float deltaTime)
+        public override void Step(float deltaTime)
         {
             for (int i = 0; i < runs.Count; i++)
             {
@@ -182,6 +192,9 @@ namespace FarEmerald.PlayForge
             foreach (var run in runs) TakeOffAll(run);
             runs.Clear();
         }
+
+        /// <summary>As its entity ends, every aura stops, as <see cref="Clear"/>.</summary>
+        public override void End() => Clear();
 
         // Who's near now, of the sides it takes; then its effect off each that left and on each that came
         private void Check(Run run)
@@ -217,7 +230,7 @@ namespace FarEmerald.PlayForge
                 if (holds && Holds(target, entry.Effect, run.Origin)) continue;
                 var spec = target.GenerateEffectSpec(run.Origin, entry.Effect);
                 if (spec == null) continue;
-                spec.LentByAura = true;
+                spec.Claimed |= EEffectCategory.Lent;
                 if (!target.ApplyGameplayEffect(spec)) continue;
                 if (!holds) run.Held.Add(target);
             }

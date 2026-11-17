@@ -106,10 +106,26 @@ namespace FarEmerald.PlayForge
     // Effects
     // ═══════════════════════════════════════════════════════════════════════════
 
-    /// <summary>A component of an effect: it hears the effect land, tick, hit and end, at the moments its workers do.</summary>
+    /// <summary>
+    /// A component of an effect: it hears the effect land, tick, hit and end, at the moments its workers do, and a lasting
+    /// effect lend and take back what it gives while it lasts.
+    /// </summary>
     [Serializable]
     public abstract class AbstractEffectComponent : AbstractForgeComponent
     {
+        /// <summary>
+        /// As a lasting effect starts to last on the one it's on, and lends what it gives while it lasts, as an aura: as it
+        /// lands, before its Land; as it takes the place of another effect under its tag; and as a load or a move puts it
+        /// back, where it doesn't land again. Each is matched by a <see cref="TakeBack"/>. An instant effect lends nothing.
+        /// </summary>
+        public virtual void Lend(EffectComponentContext ctx) { }
+
+        /// <summary>
+        /// As a lasting effect stops lasting on the one it's on, taking back what it lent: as it comes off, before its End;
+        /// as another effect takes its place; and as a load clears it or a move takes it to another.
+        /// </summary>
+        public virtual void TakeBack(EffectComponentContext ctx) { }
+
         /// <summary>As the effect lands on the entity it's on.</summary>
         public virtual void Land(EffectComponentContext ctx) { }
 
@@ -340,13 +356,18 @@ namespace FarEmerald.PlayForge
         /// </summary>
         public readonly ISource Killer;
 
+        /// <summary>The entity's settings as its GAS uses them, its Death among them; null for a hub given none.</summary>
+        public readonly RuntimeEntityIdentity Identity;
+
         private readonly ComponentStates states;
 
-        public EntityComponentContext(IGameplayAbilitySystem system, ComponentStates states, ISource killer = null)
+        public EntityComponentContext(IGameplayAbilitySystem system, ComponentStates states, ISource killer = null,
+            RuntimeEntityIdentity identity = null)
         {
             System = system;
             this.states = states;
             Killer = killer;
+            Identity = identity;
         }
 
         /// <summary>What <paramref name="component"/> keeps for this entity.</summary>

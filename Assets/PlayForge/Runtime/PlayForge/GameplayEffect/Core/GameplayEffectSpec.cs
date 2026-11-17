@@ -119,8 +119,11 @@ namespace FarEmerald.PlayForge
         /// </summary>
         public int SpreadHop { get; internal set; }
 
-        /// <summary>Whether an aura lent it, which takes it back as its holder goes or the one it's on leaves.</summary>
-        public bool LentByAura { get; internal set; }
+        /// <summary>
+        /// The categories what applied it claims it as, for a purge, beside those its origin gives it: an aura claims the
+        /// effects it holds on those near it Lent, as it takes them back as its holder goes or they leave.
+        /// </summary>
+        public EEffectCategory Claimed { get; set; }
 
         /// <summary>Whether a lasting impact of its fades with it, a barrier's, so its shelf refreshes it as it ticks.</summary>
         internal bool Fades { get; private set; }
@@ -282,6 +285,20 @@ namespace FarEmerald.PlayForge
         {
             if (Base.Components == null) return;
             foreach (var component in Base.Components) component?.Death(new EffectComponentContext(ctx));
+        }
+
+        /// <summary>Its components hear it start to last on the one it's on, lending what they give while it lasts.</summary>
+        internal void HearLend(EffectWorkerContext ctx)
+        {
+            if (Base.Components == null) return;
+            foreach (var component in Base.Components) component?.Lend(new EffectComponentContext(ctx));
+        }
+
+        /// <summary>Its components hear it stop lasting on the one it's on, taking back what they lent.</summary>
+        internal void HearTakeBack(EffectWorkerContext ctx)
+        {
+            if (Base.Components == null) return;
+            foreach (var component in Base.Components) component?.TakeBack(new EffectComponentContext(ctx));
         }
 
         public void RunWorkerImpact(EffectWorkerContext ctx)

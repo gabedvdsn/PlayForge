@@ -221,7 +221,10 @@ namespace FarEmerald.PlayForge
                 if (ability.Base.Definition is { ActivateImmediately: true } && ReferenceEquals(ability.GetSource(), on))
                     categories |= EEffectCategory.Lent;
             }
-            if (origin is ItemSpec || spec.LentByAura) categories |= EEffectCategory.Lent;
+            if (origin is ItemSpec) categories |= EEffectCategory.Lent;
+
+            // What applied it claims it as, as an aura claims the effects it holds on others Lent
+            categories |= spec.Claimed;
 
             // Its own, but its cooldowns, lent effects and toggles, each a category of its own
             if (categories == EEffectCategory.None && ReferenceEquals(origin?.GetSource(), on)) categories = EEffectCategory.Own;

@@ -127,7 +127,16 @@ turn to face its target is. A kind that makes no sense twice is offered only whi
 
 A component of your own derives from `AbstractEntityComponent` and overrides the hooks it needs, each a no-op
 otherwise. It's the entity's, shared by everything that holds it, so what it keeps for one entity it keeps through its
-context: `ctx.GetState<T>(this)`.
+context: `ctx.GetState<T>(this)`. Its context's `Identity` is the entity's settings, its Death among them.
+
+### Services
+
+A service is a per-entity object an entity's components share, as the auras it runs, `AuraSet`, and the wait a Respawn
+counts down, `RespawnTimer`. One is made the first time it's asked for, `gas.GetService<T>()`, and found without
+making one, `gas.FindService<T>()`. The entity steps each by its own time each frame, `Step`, after its effects and
+before its turn and its barriers; tells each as it revives, `Revive`, before anything else of the revive; and ends each
+as it ends, `End`. A service of your own derives from `AbstractEntityService` and overrides what it needs, as a heat
+meter that cools by the entity's time; a save keeps none.
 
 ### Auras
 
@@ -167,7 +176,8 @@ each step of a turn in PlayForge's place. The Creator Lab's units stop a turn as
 A **Respawn** component revives an entity that stays as it dies once its **Delay**, in seconds of its own time and read
 at its level, has passed, at its **Home**, where it stood as it registered, **Where It Died**, or a **Point**,
 as a hero comes back at its fountain. Its Death's On Revive effects land as it does, as any revive's do, and a revive
-before its time, as a buyback, ends the wait. An entity that ends as it dies has nothing to revive, which the Problems
+before its time, as a buyback, ends the wait. The wait is the entity's `RespawnTimer`, a service: a HUD reads
+`gas.FindService<RespawnTimer>()`'s `Waiting` and `TimeLeft`. An entity that ends as it dies has nothing to revive, which the Problems
 view says. A save keeps neither the entity's death nor its wait. An entity holds one at most.
 
 ## Workers
@@ -221,7 +231,7 @@ doesn't kill it.
   abilities are refused while it's dead.
 - **Purges**, on by default: its death purges its effects, all but those it keeps, as the games' deaths do ([EFFECTS.md](EFFECTS.md#purging)). It keeps the **categories** it keeps whatever their effects' tiers: an ability's
   **Cooldown**, what's **Lent** (by an equipped item, a set bonus, an aura, or a passive, an ability that activates as
-  it's granted), a **Toggle** (a Toggle component's effect, or one an ability's component claims as a toggle's), and
+  it's granted, or claimed so by what applied it, as `spec.Claimed`), a **Toggle** (a Toggle component's effect, or one an ability's component claims as a toggle's), and
   its **Own**, the rest it applied to itself; and the **tiers** it keeps. **Keeps As
   Project**, on, keeps what its project's Purge Levels keep on death, each tier's Kept On Death and their Kept On Death
   categories, cooldowns, lent effects and toggles as a project starts, and those with no project; **Keeps Tiers** and

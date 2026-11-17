@@ -62,7 +62,8 @@ namespace FarEmerald.PlayForge
     /// <summary>
     /// Respawn: revives an entity that stays as it dies a while after, in its own time, at its home, where it died, or a
     /// point, as a hero comes back at its fountain. Its Death's On Revive effects land as it does, as
-    /// any revive's do; a revive before its time, as a buyback, ends the wait. An entity that ends as it dies has nothing to
+    /// any revive's do; a revive before its time, as a buyback, ends the wait. The wait is its entity's
+    /// <see cref="RespawnTimer"/>, a service a HUD can read. An entity that ends as it dies has nothing to
     /// revive, which the Problems view says. An entity holds one at most.
     /// </summary>
     [Serializable]
@@ -98,10 +99,10 @@ namespace FarEmerald.PlayForge
             spawn.Home = packet.position;
         }
 
+        // Dead and staying, it waits its delay by its own time, then revives where it says
         public override void Death(EntityComponentContext ctx)
         {
-            var core = GASCore.Of(ctx.System);
-            if (core == null || !EntityDeath.Stays(core.Identity?.Death)) return;
+            if (ctx.System == null || !EntityDeath.Stays(ctx.Identity?.Death)) return;
             float delay = Delay == null ? 0f : Delay.Evaluate(NumberContext.Of(ctx.System));
             var spawn = ctx.GetState<Spawn>(this);
             Vector3? where = At switch
@@ -110,7 +111,56 @@ namespace FarEmerald.PlayForge
                 ERespawnPlace.Point => Point,
                 _ => null,
             };
-            core.ReviveIn(delay, where);
+            ctx.System.GetService<RespawnTimer>()?.ReviveIn(delay, where);
+        }
+    }
+
+    /// <summary>
+    /// An entity's wait to revive, as its Respawn starts it: the time left, by the entity's own clock, and where it
+    /// revives, at the end of the frame its time runs out. A revive before its time, as a buyback, ends the wait. A service
+    /// of the entity, so a HUD reads it as <c>gas.FindService&lt;RespawnTimer&gt;()</c>.
+    /// </summary>
+    public sealed class RespawnTimer : AbstractEntityService
+    {
+        // The time left, NaN while none waits, and where
+        private float left = float.NaN;
+        private Vector3? at;
+
+        /// <summary>Whether a revive waits.</summary>
+        public bool Waiting => !float.IsNaN(left);
+
+        /// <summary>The seconds of the entity's own time left before it revives; 0 where none waits.</summary>
+        public float TimeLeft => Waiting ? Mathf.Max(0f, left) : 0f;
+
+        /// <summary>
+        /// Revives the entity, where it stays dead, once <paramref name="seconds"/> of its own time pass, at
+        /// <paramref name="where"/> or where it is, at the end of that frame; in place of a wait it had.
+        /// </summary>
+        public void ReviveIn(float seconds, Vector3? where)
+        {
+            left = Mathf.Max(0f, seconds);
+            at = where;
+        }
+
+        // The wait counted down; at its end, the revive queued for the frame's end, as a respawn timer's worker revives
+        public override void Step(float deltaTime)
+        {
+            if (float.IsNaN(left)) return;
+            left -= deltaTime;
+            if (left > 0f) return;
+            left = float.NaN;
+            QueueRevive(at);
+        }
+
+        // A revive, whatever brought it, ends the wait
+        public override void Revive() => left = float.NaN;
+
+        // The revive queued in a method of its own: a closure in the step's own body was made as the step began, every
+        // frame, whether it revived or not
+        private void QueueRevive(Vector3? where)
+        {
+            var entity = System;
+            entity?.GetActionQueue()?.Enqueue(new LambdaAction(_ => entity.Revive(where), "Respawn"));
         }
     }
 }

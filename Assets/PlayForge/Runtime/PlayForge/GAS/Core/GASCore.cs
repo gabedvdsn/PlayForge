@@ -34,8 +34,11 @@ namespace FarEmerald.PlayForge
         /// <summary>The modifiers the entity holds now: its own, its items', its abilities' and its effects'.</summary>
         public EffectModifierSet EffectModifiers { get; } = new();
 
-        /// <summary>The auras the entity runs, its items', abilities', effects' and its own.</summary>
-        public AuraSet Auras { get; } = new();
+        /// <summary>
+        /// Its services, the per-entity objects its components share, as the auras it runs: each made as it's first asked
+        /// for, stepped by its own time, told as it revives and ended with it.
+        /// </summary>
+        internal EntityServices Services { get; }
 
         /// <summary>The side changes it's under, which go over its own sides while they last.</summary>
         public SideSet Sides { get; } = new();
@@ -61,7 +64,7 @@ namespace FarEmerald.PlayForge
         {
             var components = Identity?.Components;
             if (components == null) return;
-            var ctx = new EntityComponentContext(owner, componentStates, killer);
+            var ctx = new EntityComponentContext(owner, componentStates, killer, Identity);
             foreach (var component in components)
                 if (component != null) moment(component, ctx);
         }
@@ -73,7 +76,7 @@ namespace FarEmerald.PlayForge
         {
             var components = Identity?.Components;
             if (components == null) return;
-            var ctx = new EntityComponentContext(owner, componentStates);
+            var ctx = new EntityComponentContext(owner, componentStates, null, Identity);
             foreach (var component in components)
                 if (component != null) AbilitySpecContainer.Pend(component.WindUp(ctx, ability, token), ref pending);
         }
@@ -97,6 +100,7 @@ namespace FarEmerald.PlayForge
             this.owner = owner;
             Callbacks = callbacks;
             Turn = new EntityTurn(owner);
+            Services = new EntityServices(owner);
 
             AttributeSystem = new AttributeSystemComponent(owner);
             AbilitySystem = new AbilitySystemComponent(owner);
@@ -219,11 +223,8 @@ namespace FarEmerald.PlayForge
                 // The input buffer's windows count down by the entity's own time
                 AbilitySystem.StepBuffer(Clock.DeltaTime);
 
-                // Its auras check who's near by its own time too
-                Auras.Step(Clock.DeltaTime);
-
-                // And a revive its Respawn waits on counts down by it
-                StepRevive(Clock.DeltaTime);
+                // Its services step by its own time too, as its auras check who's near and a Respawn's wait counts down
+                Services.Step(Clock.DeltaTime);
 
                 // And its turn steps by it, as its abilities or its game ordered
                 Turn.Step(Clock.DeltaTime);
@@ -327,8 +328,8 @@ namespace FarEmerald.PlayForge
             // Its components hear it end, before what it holds goes
             HearComponents((component, ctx) => component.End(ctx));
 
-            // Its auras' effects come off each they held them on
-            Auras.Clear();
+            // Its services end, as its auras' effects come off each they held them on
+            Services.End();
 
             // What its effects' lasting transfers hold, given back, as they go with it
             EffectSystem.GiveBackTransfers();
@@ -412,7 +413,9 @@ namespace FarEmerald.PlayForge
         {
             if (!IsDead || !EntityDeath.Stays(Identity?.Death)) return false;
             IsDead = false;
-            reviveIn = float.NaN;
+
+            // Its services hear it first, as a Respawn's wait ends with a revive before its time, as a buyback
+            Services.Revive();
             pendingDeath = false;
             foreach (var worker in AnalysisCache.Workers) worker?.Rearm(owner);
             if (at.HasValue && owner.GetTargetingPacket() is { } packet) packet.position = at.Value;
@@ -425,35 +428,6 @@ namespace FarEmerald.PlayForge
             HearComponents((component, ctx) => component.Revive(ctx));
             return true;
         }
-
-        // A revive a Respawn waits on: the time left, by the entity's own clock, and where; none waits while it's NaN. A
-        // revive before its time, as a buyback, ends the wait
-        private float reviveIn = float.NaN;
-        private UnityEngine.Vector3? reviveAt;
-
-        /// <summary>
-        /// Revives the entity, where it stays dead, once <paramref name="seconds"/> of its own time pass, at
-        /// <paramref name="at"/> or where it is, at the end of that frame.
-        /// </summary>
-        internal void ReviveIn(float seconds, UnityEngine.Vector3? at)
-        {
-            reviveIn = UnityEngine.Mathf.Max(0f, seconds);
-            reviveAt = at;
-        }
-
-        // The wait counted down; at its end, the revive queued for the frame's end, as a respawn timer's worker revives
-        private void StepRevive(float deltaTime)
-        {
-            if (float.IsNaN(reviveIn)) return;
-            reviveIn -= deltaTime;
-            if (reviveIn > 0f) return;
-            reviveIn = float.NaN;
-            QueueRevive(reviveAt);
-        }
-
-        // The revive queued in a method of its own: a closure in the step's own body was made as the step began, every
-        // frame, whether it revived or not, 40 bytes an entity
-        private void QueueRevive(UnityEngine.Vector3? at) => QueueAction(new LambdaAction(_ => Revive(at), "Respawn"));
 
         /// <summary>The core a hub forwards to, or null for another kind of entity.</summary>
         internal static GASCore Of(IGameplayAbilitySystem gas) => gas switch
