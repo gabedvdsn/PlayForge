@@ -10,6 +10,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## Toward 1.0.0, since 0.1.0
 
 ### Added
+- **Cue tags and a cue library** (EP-47): a **Cue Tag** cue plays what its tag routes to. The project's **Cue
+  Library**, named in its settings, plays a tag's route or its nearest parent's, a route that doesn't override
+  playing its parent's too. An entity's **Cue Receiver** plays a tag its own way first, and its **Variant** plays
+  the library's route under its name, as Cue.Hit.Golem for Cue.Hit.
 - **An action queue's failures and cancelling** (EP-43, EP-44): `ActionQueue.OnActionFailed`, and an entity's
   `OnActionFailed`, hear an action whose `IsValid` or `Execute` threw, with what it threw; a frame's summary keeps them
   (`FailedActions`, `Failed`), and an `EffectJournal` settles one as `Failed`. `Remove` and `RemoveWhere` take queued

@@ -62,6 +62,9 @@ namespace FarEmerald.PlayForge
         /// <summary>A texture item's slot</summary>
         public const string TextureSlot = "Texture Slot";
 
+        /// <summary>A cue tag, as Cue.Hit.Fire, which a Cue Tag cue raises and a cue library routes</summary>
+        public const string Cue = "Cue";
+
         // ═══════════════════════════════════════════════════════════════════════════
         // Keys
         // ═══════════════════════════════════════════════════════════════════════════

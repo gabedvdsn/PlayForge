@@ -33,6 +33,9 @@ namespace FarEmerald.PlayForge
         [Tooltip("The crowd control rules an entity follows where it names none of its own")]
         public CrowdControlRules CrowdControl;
 
+        [Tooltip("The cue library the project's cue tags route through: what each Cue Tag cue plays")]
+        public CueLibrary Cues;
+
         [Tooltip("The order an area's effects land on those it takes, by the tags they carry: each entry a tag and an Order, " +
                  "lower first; one carrying none is at 0, one carrying several takes the first entry's")]
         public List<ResolveOrderEntry> ResolveOrder = new();

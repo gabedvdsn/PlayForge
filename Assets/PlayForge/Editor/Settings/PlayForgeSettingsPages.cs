@@ -353,6 +353,7 @@ namespace FarEmerald.PlayForge.Editor
             var settings = serialized.FindProperty(nameof(ForgeProject.Settings));
             section.Add(new PropertyField(settings.FindPropertyRelative(nameof(ProjectSettingsData.Roles)), "Roles") { name = "Roles" });
             section.Add(new PropertyField(settings.FindPropertyRelative(nameof(ProjectSettingsData.CrowdControl)), "Crowd Control") { name = "CrowdControl" });
+            section.Add(new PropertyField(settings.FindPropertyRelative(nameof(ProjectSettingsData.Cues)), "Cue Library") { name = "Cues" });
 
             // The order an area's effects land on those it takes, by the tags they carry
             section.Add(new PropertyField(settings.FindPropertyRelative(nameof(ProjectSettingsData.ResolveOrder)), "Resolve Order") { name = "ResolveOrder" });

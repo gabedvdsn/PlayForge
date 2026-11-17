@@ -25,6 +25,7 @@ namespace FarEmerald.PlayForge.Editor
     [CustomPropertyDrawer(typeof(AbilityTrigger))]
     [CustomPropertyDrawer(typeof(AttributeMagnitudeSpec))]
     [CustomPropertyDrawer(typeof(CombatLogSettings))]
+    [CustomPropertyDrawer(typeof(CueRoute))]
     [CustomPropertyDrawer(typeof(EffectConditions))]
     [CustomPropertyDrawer(typeof(EffectModifierEntry))]
     [CustomPropertyDrawer(typeof(EffectModifierRule))]

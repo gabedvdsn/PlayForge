@@ -295,6 +295,13 @@ beginning and its end share. `ForgeCues.Enabled = false` silences every cue, as 
 simulation runs ahead, and `ForgeCues.Mute(entity, true)` one entity's, as one off screen; a lasting cue that
 began still ends. `ForgeCues.Played` hears each cue as it plays, for a debugger or a recorder.
 
+A **Cue Tag** cue plays what its tag routes to, in place of naming what it shows, so an effect, an ability and an
+entity can each raise Cue.Hit.Fire and one place says how it looks. The project's **Cue Library**, an asset its
+settings name, plays the route for the tag, or else for its nearest parent, and a route that doesn't **Override**
+plays its parent's after it. An entity's **Cue Receiver** component plays a tag its own way first, in place of the
+library's, or before it with **Pass Through**; its **Variant** plays the library's route under its name, as
+Cue.Hit.Golem for Cue.Hit, where the library has one.
+
 ## Requirements
 
 **Chance to Apply** comes first: how likely the effect is to land, from 0 to 1, which can scale by level. It gates
