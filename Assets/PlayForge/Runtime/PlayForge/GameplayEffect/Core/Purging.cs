@@ -203,8 +203,9 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// The categories an effect on an entity is of: an ability's cooldown; lent, by an equipped item, a set
-        /// bonus, an aura, or a passive ability on its holder, one that activates as it's granted; an ability's toggle; and
-        /// its own, applied by itself, where it's none of the others.
+        /// bonus, an aura, or a passive ability on its holder, one that activates as it's granted; what its ability's
+        /// components claim it as, as a Toggle claims its effect a toggle's; and its own, applied by itself, where it's none
+        /// of the others.
         /// </summary>
         public static EEffectCategory CategoriesOf(AbstractEffectContainer container, IGameplayAbilitySystem on)
         {
@@ -216,7 +217,7 @@ namespace FarEmerald.PlayForge
             if (origin is AbilitySpec ability && ability.Base != null)
             {
                 if (ReferenceEquals(ability.Base.Cooldown, effect)) categories |= EEffectCategory.Cooldown;
-                if (ReferenceEquals(ability.Base.Toggles, effect)) categories |= EEffectCategory.Toggle;
+                categories |= ability.CategoryOf(spec);
                 if (ability.Base.Definition is { ActivateImmediately: true } && ReferenceEquals(ability.GetSource(), on))
                     categories |= EEffectCategory.Lent;
             }

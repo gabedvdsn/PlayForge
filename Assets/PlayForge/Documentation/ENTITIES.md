@@ -221,7 +221,8 @@ doesn't kill it.
   abilities are refused while it's dead.
 - **Purges**, on by default: its death purges its effects, all but those it keeps, as the games' deaths do ([EFFECTS.md](EFFECTS.md#purging)). It keeps the **categories** it keeps whatever their effects' tiers: an ability's
   **Cooldown**, what's **Lent** (by an equipped item, a set bonus, an aura, or a passive, an ability that activates as
-  it's granted), a **Toggle**, and its **Own**, the rest it applied to itself; and the **tiers** it keeps. **Keeps As
+  it's granted), a **Toggle** (a Toggle component's effect, or one an ability's component claims as a toggle's), and
+  its **Own**, the rest it applied to itself; and the **tiers** it keeps. **Keeps As
   Project**, on, keeps what its project's Purge Levels keep on death, each tier's Kept On Death and their Kept On Death
   categories, cooldowns, lent effects and toggles as a project starts, and those with no project; **Keeps Tiers** and
   **Keeps Categories** keep more. An effect at no tier goes, unless a category it's of is kept. It took the place of

@@ -6,21 +6,22 @@ namespace FarEmerald.PlayForge
     /// <summary>
     /// An ability's charges on its caster: several uses, each spending a charge that comes back as the
     /// ability's Recharge says, by default on a cooldown of its own. An ability of 1 charge, with a recharge of PlayForge's
-    /// own, is an ordinary cooldown.
+    /// own, is an ordinary cooldown. Its Charges component keeps them with the ability as its caster holds it, and is the
+    /// ability's cooldown model through them.
     /// </summary>
     public sealed class AbilityCharges
     {
         /// <summary>The ability, as its caster knows it.</summary>
         public AbilitySpec Spec { get; }
 
-        internal AbilityCharges(AbilitySpec spec) => Spec = spec;
+        public AbilityCharges(AbilitySpec spec) => Spec = spec;
 
         /// <summary>The most it holds, at its level: its Charges, and never fewer than 1.</summary>
         public int Max
         {
             get
             {
-                var charges = Spec.Base.Charges;
+                var charges = Spec.Base.Charges();
                 if (charges == null) return 1;
                 int max = charges.IsConstant ? charges.Constant
                     : charges.Evaluate(new NumberContext(Spec.Source, null, Spec.GetLevel(), true, Spec));
@@ -39,7 +40,7 @@ namespace FarEmerald.PlayForge
             Spec.Base.Cooldown is { } cooldown && Spec.Source.ToGAS()?.GetEffectSystem() is { } effects ? effects.CountFrom(cooldown, Spec) : 0;
 
         // Its recharge, or the default where none is set
-        private AbstractChargeRecharge Recharge => Spec.Base.Recharge ?? EachChargeRecharge.Default;
+        private AbstractChargeRecharge Recharge => Spec.Base.Recharge() ?? EachChargeRecharge.Default;
 
         /// <summary>Whether its charges are counted, or it's an ordinary cooldown: 1 charge, with a built-in recharge.</summary>
         public bool Counted => Recharge.CountsASingleCharge || Max > 1;
@@ -53,8 +54,8 @@ namespace FarEmerald.PlayForge
         /// </summary>
         public void StartCooldown(ProcessDataPacket data = null) => Spec.ApplyCooldown(data, ownContainer: true);
 
-        // A use spent, as its recharge says
-        internal void Spend(ProcessDataPacket data) => Recharge.Spend(this, data);
+        /// <summary>A use spent, as its recharge says.</summary>
+        public void Spend(ProcessDataPacket data) => Recharge.Spend(this, data);
     }
 
     /// <summary>

@@ -81,6 +81,25 @@ namespace FarEmerald.PlayForge
             states[component] = made;
             return made;
         }
+
+        /// <summary>
+        /// What <paramref name="component"/> keeps here, where it keeps a <typeparamref name="T"/>; false where it keeps
+        /// none yet. With <see cref="Keep"/>, a state made with what it needs, as a Charges component's charges need their
+        /// ability.
+        /// </summary>
+        public bool TryGet<T>(AbstractForgeComponent component, out T state) where T : class
+        {
+            state = null;
+            return component != null && states != null && states.TryGetValue(component, out var kept) && (state = kept as T) != null;
+        }
+
+        /// <summary>Keeps <paramref name="state"/> here for <paramref name="component"/>, in place of what it kept.</summary>
+        public void Keep(AbstractForgeComponent component, object state)
+        {
+            if (component == null) return;
+            states ??= new Dictionary<AbstractForgeComponent, object>();
+            states[component] = state;
+        }
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
@@ -155,6 +174,22 @@ namespace FarEmerald.PlayForge
     }
 
     /// <summary>
+    /// The checks of an ability's use a component may waive, <see cref="AbstractAbilityComponent.Waives"/>: its cost, as the
+    /// Cost check asks, and its cooldown, as the Cooldown check asks.
+    /// </summary>
+    [Flags]
+    public enum EUsageCheck
+    {
+        None = 0,
+
+        /// <summary>Its cost: its Cost effect and its attribute costs.</summary>
+        Cost = 1,
+
+        /// <summary>Its cooldown: a use in hand, as its cooldown model says.</summary>
+        Cooldown = 2,
+    }
+
+    /// <summary>
     /// A component of an ability: it hears the ability granted and removed, may refuse an activation, and hears an
     /// activation start, wind up, which the activation waits on, commit its cost and cooldown, and end, by how it did.
     /// </summary>
@@ -197,8 +232,30 @@ namespace FarEmerald.PlayForge
         /// <summary>As an activation starts, its claim taken.</summary>
         public virtual void Start(AbilityComponentContext ctx) { }
 
+        /// <summary>
+        /// Applies its ability's usage in the ability's place, and says it did, as a Toggle turns its effect on, paying the
+        /// cost, or off, spending the cooldown; false, as here, leaves it to the ability, which spends its cooldown through
+        /// its cooldown model and pays its costs. The first component that applies it does. A component composes its own
+        /// from the spec's <see cref="AbilitySpec.PayCosts"/> and <see cref="AbilitySpec.SpendCooldown"/>; its commit is
+        /// heard either way.
+        /// </summary>
+        public virtual bool ApplyUsage(AbilityComponentContext ctx) => false;
+
+        /// <summary>
+        /// The checks of its ability's use it waives for an activation, which pass while it does: a Toggle that's on waives
+        /// its cost and its cooldown, so it can always turn off. None, as here.
+        /// </summary>
+        public virtual EUsageCheck Waives(AbilityComponentContext ctx) => EUsageCheck.None;
+
         /// <summary>As an activation's cost and cooldown apply.</summary>
         public virtual void Commit(AbilityComponentContext ctx) { }
+
+        /// <summary>
+        /// The categories an effect its ability put on is of, for a purge, beside those the ability gives it, as its
+        /// Cooldown's: a Toggle's effect is a Toggle's. None, as here. Asked of the effect as a purge finds it, so a load
+        /// that puts the effect back keeps its category.
+        /// </summary>
+        public virtual EEffectCategory CategoryOf(AbilityComponentContext ctx, GameplayEffectSpec effect) => EEffectCategory.None;
 
         /// <summary>As an activation ends, by how it did.</summary>
         public virtual void End(AbilityComponentContext ctx, EAbilityEnd how) { }

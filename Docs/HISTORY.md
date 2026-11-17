@@ -10,6 +10,13 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## Toward 1.0.0, since 0.1.0
 
 ### Added
+- **A cooldown model, a component's usage, waived checks and claimed effects** (EP-38): an ability's uses come back as
+  its `ICooldownModel` says, which Charges implements and `SingleCooldown`, one use back as its Cooldown ends, is where
+  none does; the Cooldown check asks it, the ability spends through it, and `spec.CooldownModel` reads it. A component
+  may apply its ability's usage in its place, `ApplyUsage`, from the spec's `PayCosts` and `SpendCooldown`, public now
+  with `ApplyCooldown`, `OnCooldown` and `GenerateUsageEffect`; may waive the Cost and Cooldown checks while it says so,
+  `Waives`; and claims the purge categories of the effects its ability puts on, `CategoryOf`. Toggle and Charges are
+  written on them. A component's state that needs its holder is kept with `ComponentStates.TryGet` and `Keep`.
 - **Components found by what they do** (EP-37): `Find<T>()` on an ability, its spec, an effect, an item and an entity
   gives the first component that is a `T`, its kind or an interface it implements. An ability's reach is an
   `IAbilityReach`, which Cast Range implements, read through `ForgeReach`, so the targeting tasks, the Creator Lab's bots
@@ -579,6 +586,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   page, through one table of links in the editor.
 
 ### Changed
+- The Charges and Toggle shortcuts are extension methods beside their components (EP-38, Decision 90):
+  `ability.Charges()`, `ability.Recharge()` and `ability.Toggles()`, where they were properties of `Ability`, and
+  `spec.Charges()` and `spec.IsToggledOn()`, where they were `AbilitySpec`'s; `spec.Charges()` is null for an ability
+  with no Charges component, whose uses in hand `spec.CooldownModel` says.
 - **Check Range** is the Cast Range component's (EP-34): the Target Checks show it while the ability holds a Cast
   Range, saying the range the component enforces, and no list offers it or holds it. It read a range of its own from a
   tag's weight on the caster or the ability's Local Data. The Demo's Shield Bash holds a Cast Range in its place.

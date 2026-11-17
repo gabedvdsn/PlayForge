@@ -396,8 +396,8 @@ namespace FarEmerald.PlayForge.Editor
         /// that counts a single charge. With 1 and a built-in recharge, it's an ordinary cooldown.
         /// </summary>
         internal static bool Counted(Ability ability) =>
-            ability.Charges != null && (!ability.Charges.IsConstant || ability.Charges.Constant > 1)
-            || (ability.Recharge?.CountsASingleCharge ?? false);
+            ability.Charges() != null && (!ability.Charges().IsConstant || ability.Charges().Constant > 1)
+            || (ability.Recharge()?.CountsASingleCharge ?? false);
 
         // Each Charge and All At Once, exactly: a recharge of one's own, even one made from them, decides for itself
         private static bool BuiltIn(AbstractChargeRecharge recharge) =>
@@ -406,7 +406,7 @@ namespace FarEmerald.PlayForge.Editor
         /// <summary>Why its charges never run out, said as the inspector says it, or null where they do or aren't counted.</summary>
         internal static string NeverRunOut(Ability ability)
         {
-            if (ability.Cooldown != null || !BuiltIn(ability.Recharge) || !Counted(ability)) return null;
+            if (ability.Cooldown != null || !BuiltIn(ability.Recharge()) || !Counted(ability)) return null;
             return "Its charges never run out, as it has no Cooldown to bring them back. Give it a Cooldown, or a recharge of " +
                    "your own.";
         }
@@ -461,8 +461,8 @@ namespace FarEmerald.PlayForge.Editor
 
         public override void Check(Object asset, List<ForgeProblem> problems)
         {
-            if (asset is Ability ability && ability.Toggles != null
-                && ability.Toggles.DurationSpecification?.DurationPolicy == EEffectDurationPolicy.Instant)
+            if (asset is Ability ability && ability.Toggles() != null
+                && ability.Toggles().DurationSpecification?.DurationPolicy == EEffectDurationPolicy.Instant)
                 problems.Add(new ForgeProblem(asset, ForgeProblemSeverity.Warning,
                     "It toggles an Instant effect, which is never on to turn off. Toggle a lasting one.", nameof(Ability.Components)));
 

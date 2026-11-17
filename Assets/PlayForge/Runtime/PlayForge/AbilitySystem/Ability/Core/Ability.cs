@@ -64,27 +64,6 @@ namespace FarEmerald.PlayForge
         [ForgeEffectTemplate("Cooldown", "Cooldown")]
         public GameplayEffect Cooldown;
 
-        /// <summary>Its charges: its Charges component's, or one, an ordinary cooldown.</summary>
-        public ScalableInt Charges => FirstComponent<ChargesAbilityComponent>() is { Charges: { } charges } ? charges : OneCharge;
-
-        /// <summary>How its spent charges come back: its Charges component's, or each on a cooldown of its own.</summary>
-        public AbstractChargeRecharge Recharge => FirstComponent<ChargesAbilityComponent>() is { Recharge: { } recharge } ? recharge : EachCharge;
-
-        /// <summary>The effect it toggles on its caster: its Toggle component's, or none, where it doesn't toggle.</summary>
-        public GameplayEffect Toggles => FirstComponent<ToggleAbilityComponent>()?.Effect;
-
-        private static readonly ScalableInt OneCharge = 1;
-        private static readonly AbstractChargeRecharge EachCharge = new EachChargeRecharge();
-
-        // Its first component of a kind, or null
-        private T FirstComponent<T>() where T : AbstractAbilityComponent
-        {
-            if (Components == null) return null;
-            foreach (var component in Components)
-                if (component is T found) return found;
-            return null;
-        }
-
         /// <summary>
         /// Whether a stage marked Apply Usage Effects takes its cost and cooldown; where none does, they apply as it starts,
         /// after its targeting.

@@ -328,7 +328,7 @@ ability's **Ignores Crowd Control** (see Activation) opts it out of the rules it
 
 ## Components
 
-An ability's components are features it carries, each a class with hooks into its life, added with the list's **+**. A component hears the ability **Granted** to an entity and **Removed** from it; is asked whether an activation may start, **CanStart**, where a reason it gives refuses the activation, named by it, as the kind its **RefusedAs** says, Rule unless it says otherwise; is asked whether the target its targeting picked may be taken, **CanTakeTarget**, where a reason it gives ends the activation there, before anything of it is paid; is waited on as an activation winds up, **WindUp**, after its target checks and before its cost, as a turn to face its target is; and hears an activation **Start**, **Commit** its cost and cooldown, and **End**, by how it ended: done, cancelled or failed. A kind that makes no sense twice is offered only while the ability holds none of it.
+An ability's components are features it carries, each a class with hooks into its life, added with the list's **+**. A component hears the ability **Granted** to an entity and **Removed** from it; is asked whether an activation may start, **CanStart**, where a reason it gives refuses the activation, named by it, as the kind its **RefusedAs** says, Rule unless it says otherwise; is asked whether the target its targeting picked may be taken, **CanTakeTarget**, where a reason it gives ends the activation there, before anything of it is paid; is waited on as an activation winds up, **WindUp**, after its target checks and before its cost, as a turn to face its target is; and hears an activation **Start**, **Commit** its cost and cooldown, and **End**, by how it ended: done, cancelled or failed. As the activation's usage applies, a component may apply it in the ability's place, **ApplyUsage**, as a Toggle does, composing its own from the spec's `PayCosts` and `SpendCooldown`; may waive the Cost and Cooldown checks while it says so, **Waives**; and claims the categories of the effects its ability puts on for a purge, **CategoryOf**, as a Toggle claims its effect a toggle's. A kind that makes no sense twice is offered only while the ability holds none of it.
 
 A component of your own derives from `AbstractAbilityComponent` and overrides the hooks it needs, each a no-op
 otherwise. It's the ability's, shared by everything that holds it, so what it keeps for one entity's ability it keeps through its
@@ -338,7 +338,12 @@ context: `ctx.GetState<T>(this)`. **Describe** says what it does in one line wit
 Code finds a component by what it does, not by its class: `Find<T>()`, on an ability, its spec, an effect, an item and an
 entity, gives the first of its components that is a `T`, a kind or an interface it implements. An ability's reach is an
 `IAbilityReach`, which Cast Range implements; the targeting tasks, the Creator Lab's bots and your own code read it
-through `ForgeReach`, so a component of your own that implements it is asked as a Cast Range is.
+through `ForgeReach`, so a component of your own that implements it is asked as a Cast Range is. How its uses come back
+is an `ICooldownModel`, which Charges implements: how many it holds, how many are in hand, what a use spends, and why
+the Cooldown check refuses it with none; an ability with none has `SingleCooldown`, one use, back as its Cooldown ends.
+The Cooldown check asks it, the ability spends through it, and a HUD reads it as `spec.CooldownModel`. A component's
+state that needs its holder, as a Charges component's charges need their ability, is kept with
+`spec.ComponentStates.TryGet` and `Keep`.
 
 ### Cast Range
 
@@ -364,8 +369,10 @@ own whatever the effect does when applied again, and each brings its charge back
 apart come back a second apart; **All At Once** starts the Cooldown only as the last is spent, and its end brings them
 all back. Write a recharge of your own by extending `AbstractChargeRecharge`: override `InHand` (how many are in
 hand) and `Spend` (what a use does), using `AbilityCharges`' `Max`, `Spent`, `Cooldowns` and `StartCooldown`; one
-of your own counts even a single charge, unless its `CountsASingleCharge` says not. Code reads an ability's charges
-through its spec's `Charges`, as `container.Spec.Charges.InHand`. The section's line counts them, as "3 charges",
+of your own counts even a single charge, unless its `CountsASingleCharge` says not. Charges are the ability's cooldown
+model (see Components), so code reads what's in hand of any ability as `spec.CooldownModel.InHand(spec)`, and an
+ability's charges through `spec.Charges()`, as `container.Spec.Charges().InHand`, null where it has none; the
+ability's own `ability.Charges()` and `ability.Recharge()` say what its component holds. The section's line counts them, as "3 charges",
 and a warning under the Components list, as in the
 Problems view, says where built-in charges have no Cooldown to bring them
 back, so they never run out. An ability holds one at most.
@@ -375,8 +382,10 @@ back, so they never run out. An ability holds one at most.
 A **Toggle** component holds an **Effect** the ability turns on and off on its caster, as a mana shield: used, it puts the effect
 on where its usage would be paid, paying its Cost and Attribute Costs and starting no cooldown; used again, it takes
 the effect off, paying nothing and asking no cost, and starts its Cooldown, or spends a charge. Neither its cost nor
-its cooldown stops it turning off. It counts only the effect it put on; one another put there leaves it off. Code asks
-through its spec's `IsToggledOn`. The Problems view warns where it toggles an Instant effect, which is never on. As its holder forgets the ability, the effect comes off; it stayed on. An ability
+its cooldown stops it turning off. It counts only the effect it put on; one another put there leaves it off. A purge
+counts its effect a Toggle's, as a death that keeps toggles keeps it. Code asks through `spec.IsToggledOn()`, and
+`ability.Toggles()` gives the effect. It's written on the components' hooks alone: it applies the usage in its ability's
+place, waives the cost and the cooldown while it's on, and claims its effect. The Problems view warns where it toggles an Instant effect, which is never on. As its holder forgets the ability, the effect comes off; it stayed on. An ability
 holds one at most.
 
 ### Turn To Face

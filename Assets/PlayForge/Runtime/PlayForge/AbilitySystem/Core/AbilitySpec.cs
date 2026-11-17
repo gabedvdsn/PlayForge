@@ -8,14 +8,10 @@ namespace FarEmerald.PlayForge
     public class AbilitySpec : BasicEffectOrigin
     {
         public Ability Base;
-        
-        /// <summary>Its charges on its caster: how many it holds, how many are in hand, and what its recharge counts.</summary>
-        public AbilityCharges Charges { get; }
 
         public AbilitySpec(ISource source, Ability ability, int level) : base(source, new IntValuePairClamped(level, ability.StartingLevel, ability.MaxLevel), ability.Tags.AssetTag)
         {
             Base = ability;
-            Charges = new AbilityCharges(this);
         }
 
         /// <summary>
@@ -68,75 +64,89 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// Applies the ability's cooldown and cost to its caster, each with the magnitudes the caller set on the
-        /// activation's data, so a caller can size them as it sizes the ability's other effects.
+        /// activation's data, so a caller can size them as it sizes the ability's other effects. A component may apply them
+        /// in their place, as a Toggle turns its effect on or off: the first whose
+        /// <see cref="AbstractAbilityComponent.ApplyUsage"/> says it did. Its components hear the commit either way.
         /// </summary>
         public void ApplyUsageEffects(ProcessDataPacket data = null)
         {
-            // One that toggles an effect turns it on or off in their place
-            if (Base.Toggles is not null)
+            if (!ComponentAppliesUsage(data))
             {
-                Toggle(data);
-                HearCommit(data);
-                return;
+                SpendCooldown(data);
+                PayCosts(data);
             }
-
-            SpendCooldown(data);
-            PayCosts(data);
             HearCommit(data);
         }
 
-        // A charge spent, as its Recharge says, where its charges are counted; or else its cooldown
-        private void SpendCooldown(ProcessDataPacket data)
+        // Whether one of its components applied its usage in its place
+        private bool ComponentAppliesUsage(ProcessDataPacket data)
         {
-            if (Charges.Counted) Charges.Spend(data);
-            else ApplyCooldown(data, ownContainer: false);
+            if (Base.Components == null) return false;
+            foreach (var component in Base.Components)
+                if (component != null && component.ApplyUsage(new AbilityComponentContext(this, data))) return true;
+            return false;
         }
 
-        // Its Cost effect, and beside it each of its attribute costs
-        private void PayCosts(ProcessDataPacket data)
+        /// <summary>
+        /// How its uses come back: its first component that gives a cooldown model, as Charges, or else the single
+        /// cooldown, one use, back as its Cooldown ends. A HUD reads what's in hand through it, whatever the ability's
+        /// components are.
+        /// </summary>
+        public ICooldownModel CooldownModel => Find<ICooldownModel>() ?? SingleCooldown.Instance;
+
+        /// <summary>
+        /// Spends a use through its cooldown model, with the activation's magnitudes: a charge, as its Charges say, or else
+        /// its Cooldown applied.
+        /// </summary>
+        public void SpendCooldown(ProcessDataPacket data = null) => CooldownModel.Spend(this, data);
+
+        /// <summary>Pays what it costs, with the activation's magnitudes: its Cost effect, and beside it each attribute cost.</summary>
+        public void PayCosts(ProcessDataPacket data = null)
         {
-            if (Base.Cost is not null) Source.ApplyCarrier(Usage(Base.Cost, data));
+            if (Base.Cost is not null) Source.ApplyCarrier(GenerateUsageEffect(Base.Cost, data));
             PayAttributeCosts(data);
         }
 
-        /// <summary>Whether the effect it toggles is on its caster, put there by it.</summary>
-        /// <summary>Takes its toggled effect off its caster, where it's on: as its holder forgets the ability.</summary>
-        internal void ToggleOff()
+        /// <summary>
+        /// Whether any of its components waives one of <paramref name="checks"/> for an activation, as a Toggle that's on
+        /// waives its cost and its cooldown, which the Cost and Cooldown checks then pass.
+        /// </summary>
+        public bool Waives(EUsageCheck checks, ProcessDataPacket data = null)
         {
-            if (IsToggledOn) Source.ToGAS()?.GetEffectSystem()?.RemoveGameplayEffect(Base.Toggles, this);
+            if (Base.Components == null || checks == EUsageCheck.None) return false;
+            foreach (var component in Base.Components)
+                if (component != null && (component.Waives(new AbilityComponentContext(this, data)) & checks) != 0) return true;
+            return false;
         }
 
-        public bool IsToggledOn =>
-            Base.Toggles is { } toggles && Source?.ToGAS()?.GetEffectSystem() is { } effects && effects.CountFrom(toggles, this) > 0;
-
-        // On, with the activation's magnitudes, paying its cost; or off, paying nothing and starting its cooldown
-        private void Toggle(ProcessDataPacket data)
+        /// <summary>
+        /// The categories its components claim an effect it put on is of, for a purge, as a Toggle claims the effect it
+        /// toggles; None where none claims it.
+        /// </summary>
+        public EEffectCategory CategoryOf(GameplayEffectSpec effect)
         {
-            if (IsToggledOn)
-            {
-                Source.ToGAS()?.GetEffectSystem()?.RemoveGameplayEffect(Base.Toggles, this);
-                SpendCooldown(data);
-                return;
-            }
-            Source.ApplyCarrier(Usage(Base.Toggles, data));
-            PayCosts(data);
+            var categories = EEffectCategory.None;
+            if (Base.Components == null || effect == null) return categories;
+            foreach (var component in Base.Components)
+                if (component != null) categories |= component.CategoryOf(new AbilityComponentContext(this), effect);
+            return categories;
         }
 
         /// <summary>
         /// Applies its Cooldown to its caster, with the activation's magnitudes; as a container of its own where a spent
-        /// charge's runs alone. Nothing, where it has no Cooldown.
+        /// charge's runs alone, whatever the effect does when it's applied again. Nothing, where it has no Cooldown.
         /// </summary>
-        internal void ApplyCooldown(ProcessDataPacket data, bool ownContainer)
+        public void ApplyCooldown(ProcessDataPacket data, bool ownContainer)
         {
             if (Base.Cooldown is null) return;
-            var spec = Usage(Base.Cooldown, data);
+            var spec = GenerateUsageEffect(Base.Cooldown, data);
             if (spec == null) return;
             spec.OwnContainer = ownContainer;
             Source.ApplyCarrier(spec);
         }
 
-        /// <summary>Whether its caster carries its Cooldown's asset tag, as an ordinary cooldown's check asks.</summary>
-        internal bool OnCooldown => Base.Cooldown is { } cooldown && Source.GetTagCache().TryGetWeight(cooldown.Tags.AssetTag, out _);
+        /// <summary>Whether its caster carries its Cooldown's asset tag, as the single cooldown's check asks.</summary>
+        public bool OnCooldown => Base.Cooldown is { } cooldown && Source.GetTagCache().TryGetWeight(cooldown.Tags.AssetTag, out _);
 
         /// <summary>
         /// What an attribute cost comes to for an activation, at the ability's level, read in the activation's data where
@@ -197,7 +207,11 @@ namespace FarEmerald.PlayForge
             }
         }
 
-        private GameplayEffectSpec Usage(GameplayEffect effect, ProcessDataPacket data)
+        /// <summary>
+        /// An effect of the ability's use, from it onto its caster, with the activation's set-by-caller magnitudes, as its
+        /// Cost and Cooldown are made, and a Toggle's effect.
+        /// </summary>
+        public GameplayEffectSpec GenerateUsageEffect(GameplayEffect effect, ProcessDataPacket data = null)
         {
             var spec = Source.GenerateEffectSpec(this, effect);
             if (data != null) spec?.TakeSetByCaller(data.SetByCallerMagnitudes);

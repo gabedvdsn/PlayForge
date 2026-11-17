@@ -17,8 +17,8 @@ namespace FarEmerald.PlayForge
                 return false;
             }
 
-            // A toggle turning off pays nothing, so it asks nothing
-            if (ability.IsToggledOn) return true;
+            // A component that waives the cost asks nothing of it, as a toggle turning off pays nothing
+            if (ability.Waives(EUsageCheck.Cost, data)) return true;
 
             // Its attribute costs, each paid beside its Cost effect
             if (!ability.CanPayAttributeCosts(data))
@@ -78,18 +78,15 @@ namespace FarEmerald.PlayForge
                 return false;
             }
 
-            // A toggle can always turn off; its cooldown starts as it does
-            if (ability.IsToggledOn) return true;
+            // A component that waives the cooldown passes it, as a toggle can always turn off, its cooldown starting as it
+            // does
+            if (ability.Waives(EUsageCheck.Cooldown, data)) return true;
 
-            // With its charges counted, it's refused only with none in hand, whatever else carries its cooldown's tag
-            if (ability.Charges.Counted)
-            {
-                if (ability.Charges.InHand > 0) return true;
-                error = "It has no charges in hand";
-                return false;
-            }
-            if (!ability.OnCooldown) return true;
-            error = "It's cooling down";
+            // Refused only with no use in hand, as its cooldown model says: with its charges counted, none in hand,
+            // whatever else carries its cooldown's tag; with the single cooldown, while it's on
+            var model = ability.CooldownModel;
+            if (model.InHand(ability) > 0) return true;
+            error = model.NoneInHand(ability);
             return false;
         }
 

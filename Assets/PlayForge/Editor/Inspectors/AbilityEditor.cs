@@ -752,8 +752,8 @@ namespace FarEmerald.PlayForge.Editor
             }
             if (ability.Cooldown != null) parts.Add(NameOf(ability.Cooldown));
             // Its charges, as "3 charges"
-            if (ChargesRule.Counted(ability) && ability.Charges != null)
-                parts.Add(ability.Charges.IsConstant ? CountOf(ability.Charges.Constant, "charge", "charges") : NumberText.Of(ability.Charges, "charges"));
+            if (ChargesRule.Counted(ability) && ability.Charges() != null)
+                parts.Add(ability.Charges().IsConstant ? CountOf(ability.Charges().Constant, "charge", "charges") : NumberText.Of(ability.Charges(), "charges"));
             return string.Join(" · ", parts);
         }
 
