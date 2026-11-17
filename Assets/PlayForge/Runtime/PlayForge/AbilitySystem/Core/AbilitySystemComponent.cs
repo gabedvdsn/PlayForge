@@ -62,9 +62,34 @@ namespace FarEmerald.PlayForge
         public bool IsClaimingPolicyCritical(EAbilityActivationPolicy policy)
             => IsClaimingPolicy(policy) && ActiveCache[policy].Any(idx => AbilityCache[idx].IsClaiming && IsCritical(idx));
 
+        /// <summary>
+        /// True if an ability with a critical section holds its claim, under any policy. A critical ability asked for
+        /// meanwhile waits it out, whatever policy either was asked under.
+        /// </summary>
+        public bool IsClaimingCritical
+        {
+            get
+            {
+                foreach (var active in ActiveCache.Values)
+                    foreach (int index in active)
+                        if (AbilityCache.TryGetValue(index, out var running) && running.IsClaiming && IsCritical(index)) return true;
+                return false;
+            }
+        }
+
+        /// <summary>Whether the ability in the slot has a critical section: a stage that holds a critical task.</summary>
         public bool IsCritical(int index)
-            => AbilityCache[index].Spec.Base.Behaviour.Stages.Any(
-                stage => stage.Tasks.Any(task => task.IsCriticalSection));
+        {
+            var stages = AbilityCache[index].Spec.Base.Behaviour.Stages;
+            if (stages == null) return false;
+            for (int i = 0; i < stages.Count; i++)
+                if (stages[i] != null && stages[i].IsCritical) return true;
+            return false;
+        }
+
+        // Whether the ability in the slot has a critical section and another's holds its claim, so it waits that out:
+        // a critical section keeps every other out, whatever policy either was asked under
+        private bool CriticalKeptOut(int index) => IsCritical(index) && IsClaimingCritical;
 
         //public bool CriticalPolicyExecutionCheck()
         
@@ -698,19 +723,21 @@ namespace FarEmerald.PlayForge
         /// still runs, from its own callbacks or from another ability's that it started, starts next frame instead, so
         /// a loop of instant activations goes round once a frame.
         /// </summary>
-        /// <returns>True if the ability activated, waits in the input buffer, or was put off to the next frame.</returns>
-        public bool TryActivateAbility(AbilityActivationRequest req) => TryActivateAbility(req, out _);
+        /// <returns>
+        /// What came of it: it started, waits in the input buffer, starts in the next frame, or was refused, and why. It
+        /// reads as true where it wasn't refused.
+        /// </returns>
+        public ActivationResult TryActivateAbility(AbilityActivationRequest req) => TryActivateAbility(req, out _);
 
         /// <summary>
         /// Activates the ability the request names, as <see cref="TryActivateAbility(AbilityActivationRequest)"/> does, and
-        /// says why where it's refused, as the callbacks' <see cref="AbilitySystemCallbacks.OnAbilityRefused"/> tells it. A
-        /// refused activation said only false.
+        /// says why where it's refused, as the callbacks' <see cref="AbilitySystemCallbacks.OnAbilityRefused"/> tells it.
         /// </summary>
-        public bool TryActivateAbility(AbilityActivationRequest req, out ActivationRefusal refusal)
+        public ActivationResult TryActivateAbility(AbilityActivationRequest req, out ActivationRefusal refusal)
         {
-            if (TryActivate(req, fromBuffer: false, out refusal)) return true;
-            Refuse(refusal, req.Data);
-            return false;
+            var status = TryActivate(req, fromBuffer: false, out refusal);
+            if (status == EActivationStatus.Refused) Refuse(refusal, req.Data);
+            return new ActivationResult(status, refusal);
         }
 
         /// <summary>
@@ -728,7 +755,7 @@ namespace FarEmerald.PlayForge
         /// Activates the ability by its asset, in the first slot that holds it, and says why where it's refused. An
         /// ability activated only by its slot.
         /// </summary>
-        public bool TryActivateAbility(Ability ability, out ActivationRefusal refusal, ProcessDataPacket data = null,
+        public ActivationResult TryActivateAbility(Ability ability, out ActivationRefusal refusal, ProcessDataPacket data = null,
             EAbilityActivationPolicyExtended? policy = null)
         {
             if (ability != null && TryGetCacheIndexOf(ability, out int index))
@@ -736,11 +763,11 @@ namespace FarEmerald.PlayForge
 
             refusal = new ActivationRefusal(ability, -1, EActivationRefusal.NotKnown);
             Refuse(refusal, data);
-            return false;
+            return new ActivationResult(EActivationStatus.Refused, refusal);
         }
 
         /// <inheritdoc cref="TryActivateAbility(Ability, out ActivationRefusal, ProcessDataPacket, EAbilityActivationPolicyExtended?)"/>
-        public bool TryActivateAbility(Ability ability, ProcessDataPacket data = null, EAbilityActivationPolicyExtended? policy = null) =>
+        public ActivationResult TryActivateAbility(Ability ability, ProcessDataPacket data = null, EAbilityActivationPolicyExtended? policy = null) =>
             TryActivateAbility(ability, out _, data, policy);
 
         /// <summary>
@@ -748,7 +775,7 @@ namespace FarEmerald.PlayForge
         /// says why where none activates: the first one's refusal, or not known where none carries the tag. One call
         /// activates one ability.
         /// </summary>
-        public bool TryActivateAbility(Tag tag, out ActivationRefusal refusal, ProcessDataPacket data = null,
+        public ActivationResult TryActivateAbility(Tag tag, out ActivationRefusal refusal, ProcessDataPacket data = null,
             EAbilityActivationPolicyExtended? policy = null)
         {
             refusal = new ActivationRefusal(null, -1, EActivationRefusal.NotKnown);
@@ -758,21 +785,22 @@ namespace FarEmerald.PlayForge
                 foreach (int index in AbilityCache.Keys.OrderBy(slot => slot).ToList())
                 {
                     if (!AbilityCache.TryGetValue(index, out var container) || !Carries(container.Spec.Base, tag)) continue;
-                    if (TryActivate(CreateActivationRequest(index, data, policy), fromBuffer: false, out var tried))
+                    var status = TryActivate(CreateActivationRequest(index, data, policy), fromBuffer: false, out var tried);
+                    if (status != EActivationStatus.Refused)
                     {
                         refusal = tried;
-                        return true;
+                        return new ActivationResult(status, tried);
                     }
                     if (!found) refusal = tried;
                     found = true;
                 }
             }
             Refuse(refusal, data);
-            return false;
+            return new ActivationResult(EActivationStatus.Refused, refusal);
         }
 
         /// <inheritdoc cref="TryActivateAbility(Tag, out ActivationRefusal, ProcessDataPacket, EAbilityActivationPolicyExtended?)"/>
-        public bool TryActivateAbility(Tag tag, ProcessDataPacket data = null, EAbilityActivationPolicyExtended? policy = null) =>
+        public ActivationResult TryActivateAbility(Tag tag, ProcessDataPacket data = null, EAbilityActivationPolicyExtended? policy = null) =>
             TryActivateAbility(tag, out _, data, policy);
 
         // Whether the ability's asset tag, or one of its context tags, is the tag or under it
@@ -787,9 +815,10 @@ namespace FarEmerald.PlayForge
         }
 
         // A request from the buffer doesn't go back in it: it waits on in its own slot, with the time it has left
-        private bool TryActivate(AbilityActivationRequest req, bool fromBuffer) => TryActivate(req, fromBuffer, out _);
+        private bool TryActivate(AbilityActivationRequest req, bool fromBuffer) =>
+            TryActivate(req, fromBuffer, out _) != EActivationStatus.Refused;
 
-        private bool TryActivate(AbilityActivationRequest req, bool fromBuffer, out ActivationRefusal refusal)
+        private EActivationStatus TryActivate(AbilityActivationRequest req, bool fromBuffer, out ActivationRefusal refusal)
         {
             // Under its own marker in the Profiler
             using var sample = ForgeProfiler.ActivateAbility.Auto();
@@ -813,7 +842,8 @@ namespace FarEmerald.PlayForge
             // A running stage's block refuses it, unless, under the Queue policy, it may wait for the block to lift
             if (IsBlocked(ability))
             {
-                if (!fromBuffer && req.Policy == EAbilityActivationPolicy.QueueActivationIfBusy && BufferActivation(req)) return true;
+                if (!fromBuffer && req.Policy == EAbilityActivationPolicy.QueueActivationIfBusy && BufferActivation(req))
+                    return EActivationStatus.Buffered;
                 return Refuse(out refusal, ability, req.Index, EActivationRefusal.Blocked);
             }
 
@@ -822,11 +852,12 @@ namespace FarEmerald.PlayForge
             if (container.IsActivating)
             {
                 ActivateNextFrame(container, req).Forget();
-                return true;
+                return EActivationStatus.NextFrame;
             }
 
-            // Busy, a request from the buffer waits on in its slot
-            if (fromBuffer && IsClaimingPolicy(req.Policy)) return Refuse(out refusal, ability, req.Index, EActivationRefusal.Busy);
+            // Busy, or kept out by another's critical section, a request from the buffer waits on in its slot
+            if (fromBuffer && (IsClaimingPolicy(req.Policy) || CriticalKeptOut(req.Index)))
+                return Refuse(out refusal, ability, req.Index, EActivationRefusal.Busy);
 
             // Its chance to activate, rolled once for the activation, as it would start
             if (!RollsToActivate(ability, data)) return Refuse(out refusal, ability, req.Index, EActivationRefusal.Chance);
@@ -834,9 +865,9 @@ namespace FarEmerald.PlayForge
             // Each running ability in a stage this one cancels ends first, so this one starts clear of it
             CancelAbilitiesCancelledBy(ability);
 
-            why = ProcessActivationRequest(data);
-            if (why != EActivationRefusal.None) return Refuse(out refusal, ability, req.Index, why);
-            return true;
+            var status = ProcessActivationRequest(data, out why);
+            if (status == EActivationStatus.Refused) return Refuse(out refusal, ability, req.Index, why);
+            return status;
         }
 
         // Whether an ability's chance to activate comes up; one that can't miss draws nothing
@@ -848,11 +879,11 @@ namespace FarEmerald.PlayForge
             return ForgeChance.Roll(chance.Evaluate(context), in context, ability.Definition.ActivationRoll, ability);
         }
 
-        private static bool Refuse(out ActivationRefusal refusal, Ability ability, int index, EActivationRefusal why, string rule = null,
-            string detail = null)
+        private static EActivationStatus Refuse(out ActivationRefusal refusal, Ability ability, int index, EActivationRefusal why,
+            string rule = null, string detail = null)
         {
             refusal = new ActivationRefusal(ability, index, why, rule, detail);
-            return false;
+            return EActivationStatus.Refused;
         }
 
         // Asked for again next frame, as long as its slot still holds it
@@ -863,39 +894,53 @@ namespace FarEmerald.PlayForge
             if (AbilityCache.TryGetValue(req.Index, out var cached) && cached == container) TryActivateAbility(req);
         }
         
-        // What the policy refuses, or None where the ability activated or waits in the buffer
-        private EActivationRefusal ProcessActivationRequest(AbilityDataPacket data)
+        // What came of the request under its policy: it started, waits in the buffer, or was refused, and why. Its claim
+        // keeps out abilities of its own policy alone; a critical section keeps out every critical ability, whatever
+        // policy either was asked under, as a critical task promises
+        private EActivationStatus ProcessActivationRequest(AbilityDataPacket data, out EActivationRefusal why)
         {
             var container = AbilityCache[data.Request.Index];
+            bool keptOut = CriticalKeptOut(data.Request.Index);
             switch (data.Request.Policy)
             {
                 case EAbilityActivationPolicy.AlwaysActivate:
-                    if (!AlwaysActivateTargetingValidation(data.Request.Index)) return EActivationRefusal.Critical;
-                    return ActivateAbility(container, data) ? EActivationRefusal.None : EActivationRefusal.Busy;
+                    if (keptOut) return Refused(out why, EActivationRefusal.Critical);
+                    return Start(container, data, out why);
 
                 case EAbilityActivationPolicy.ActivateIfIdle:
-                    if (IsClaimingPolicy(EAbilityActivationPolicy.ActivateIfIdle)) return EActivationRefusal.Busy;
-                    return ActivateAbility(container, data) ? EActivationRefusal.None : EActivationRefusal.Busy;
+                    if (IsClaimingPolicy(EAbilityActivationPolicy.ActivateIfIdle)) return Refused(out why, EActivationRefusal.Busy);
+                    if (keptOut) return Refused(out why, EActivationRefusal.Critical);
+                    return Start(container, data, out why);
 
                 case EAbilityActivationPolicy.QueueActivationIfBusy:
-                    if (!IsClaimingPolicy(EAbilityActivationPolicy.QueueActivationIfBusy))
-                        return ActivateAbility(container, data) ? EActivationRefusal.None : EActivationRefusal.Busy;
-                    return BufferActivation(data.Request) ? EActivationRefusal.None : EActivationRefusal.Busy;
+                    if (!keptOut && !IsClaimingPolicy(EAbilityActivationPolicy.QueueActivationIfBusy)) return Start(container, data, out why);
+                    if (BufferActivation(data.Request))
+                    {
+                        why = EActivationRefusal.None;
+                        return EActivationStatus.Buffered;
+                    }
+                    return Refused(out why, EActivationRefusal.Busy);
 
                 default:
                     throw new ArgumentOutOfRangeException();
             }
         }
-        
-        private bool AlwaysActivateTargetingValidation(int abilityIndex)
+
+        private static EActivationStatus Refused(out EActivationRefusal why, EActivationRefusal reason)
         {
-            if (!IsClaimingPolicyCritical(EAbilityActivationPolicy.AlwaysActivate)) return true;
-            return !IsCritical(abilityIndex);
+            why = reason;
+            return EActivationStatus.Refused;
         }
 
-        private bool ActivateAbility(AbilitySpecContainer container, AbilityDataPacket data)
+        // Started, or busy where its own activation still holds its claim
+        private static EActivationStatus Start(AbilitySpecContainer container, AbilityDataPacket data, out EActivationRefusal why)
         {
-            return container.ActivateAbility(data);
+            if (container.ActivateAbility(data))
+            {
+                why = EActivationRefusal.None;
+                return EActivationStatus.Started;
+            }
+            return Refused(out why, EActivationRefusal.Busy);
         }
 
         // Puts a request in its ability's slot in the buffer, which a new press refreshes, with its window. A window of 0

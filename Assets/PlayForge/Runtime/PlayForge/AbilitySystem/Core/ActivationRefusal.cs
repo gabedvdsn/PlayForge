@@ -48,7 +48,10 @@ namespace FarEmerald.PlayForge
         /// </summary>
         Busy,
 
-        /// <summary>An Activate Anyway ability's critical section keeps another out.</summary>
+        /// <summary>
+        /// Another ability's critical section holds its claim, and this ability has one too, so it's kept out, whatever
+        /// policy either was asked under. Under Queue, it waits in the input buffer instead.
+        /// </summary>
         Critical,
 
         /// <summary>Its chance to activate didn't come up.</summary>

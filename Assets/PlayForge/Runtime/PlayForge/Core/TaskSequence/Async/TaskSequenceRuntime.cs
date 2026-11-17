@@ -107,6 +107,49 @@ namespace FarEmerald.PlayForge
             }
         }
 
+        // The tokens a task linked to this run's through CreateLinkedTokenSource, this run's until their sources are
+        // disposed or the run ends
+        private List<CancellationToken> _linkedTokens;
+
+        private void OwnLinked(CancellationToken token)
+        {
+            lock (RunsByToken)
+            {
+                RunsByToken[token] = this;
+                (_linkedTokens ??= new List<CancellationToken>()).Add(token);
+            }
+        }
+
+        private void DisownLinked(CancellationToken token)
+        {
+            lock (RunsByToken)
+            {
+                if (_linkedTokens == null) return;
+                // By hand: the default comparer boxes a token under Unity's Mono
+                for (int i = 0; i < _linkedTokens.Count; i++)
+                {
+                    if (!_linkedTokens[i].Equals(token)) continue;
+                    _linkedTokens.RemoveAt(i);
+                    if (RunsByToken.TryGetValue(token, out var run) && run == this) RunsByToken.Remove(token);
+                    return;
+                }
+            }
+        }
+
+        // As the run ends, a linked token whose source wasn't disposed is let go of with the run's own
+        private void DisownAllLinked()
+        {
+            lock (RunsByToken)
+            {
+                if (_linkedTokens == null) return;
+                for (int i = 0; i < _linkedTokens.Count; i++)
+                {
+                    if (RunsByToken.TryGetValue(_linkedTokens[i], out var run) && run == this) RunsByToken.Remove(_linkedTokens[i]);
+                }
+                _linkedTokens.Clear();
+            }
+        }
+
         // Cancellation management
         private CancellationTokenSource _sequenceCts;
         private readonly Dictionary<int, CancellationTokenSource> _stageSources = new();
@@ -252,6 +295,75 @@ namespace FarEmerald.PlayForge
             lock (RunsByToken)
             {
                 return RunsByToken.TryGetValue(token, out var run) && run.IsPaused;
+            }
+        }
+
+        /// <summary>
+        /// A token source linked to <paramref name="token"/>, and to <paramref name="other"/> where one is given, so it's
+        /// cancelled as either is, whose token belongs to the run <paramref name="token"/> belongs to. A task that links its
+        /// token, as for a timeout or a wait of its own, keeps its run's clock and pause this way: the library's waits and
+        /// tweens, <see cref="ClockOfRun"/>, <see cref="IsPausedRun"/> and <see cref="DataOfRun"/> know its token as the
+        /// run's. A token that CancellationTokenSource.CreateLinkedTokenSource links belongs to no run, so its waits go by
+        /// the game's clock and don't hold while the run is paused. Dispose it once done, as any token source: the run lets
+        /// go of its token then, or as the run ends. For a token of no run, it's a plain linked source.
+        /// </summary>
+        public static CancellationTokenSource CreateLinkedTokenSource(CancellationToken token, CancellationToken other = default)
+        {
+            TaskSequenceRuntime run;
+            lock (RunsByToken)
+            {
+                RunsByToken.TryGetValue(token, out run);
+            }
+
+            if (run != null) return new RunLinkedSource(run, token, other);
+            return other.CanBeCanceled
+                ? CancellationTokenSource.CreateLinkedTokenSource(token, other)
+                : CancellationTokenSource.CreateLinkedTokenSource(token);
+        }
+
+        // A source linked to its parents by hand, as CancellationTokenSource links them, whose token is its run's while it
+        // lasts: the run lets go of it as it's disposed
+        private sealed class RunLinkedSource : CancellationTokenSource
+        {
+            private static readonly Action<object> CancelLinked = state => ((RunLinkedSource)state).CancelFromParent();
+
+            private readonly TaskSequenceRuntime _run;
+            private readonly CancellationToken _token;
+            private CancellationTokenRegistration _first, _second;
+            private bool _disposed;
+
+            public RunLinkedSource(TaskSequenceRuntime run, CancellationToken token, CancellationToken other)
+            {
+                _run = run;
+                _token = Token;
+                run.OwnLinked(_token);
+                // A parent cancelled already cancels it here, as it's linked
+                _first = token.Register(CancelLinked, this);
+                if (other.CanBeCanceled) _second = other.Register(CancelLinked, this);
+            }
+
+            private void CancelFromParent()
+            {
+                try
+                {
+                    Cancel();
+                }
+                catch (ObjectDisposedException)
+                {
+                    // Disposed as its parent was cancelled: nothing waits on it
+                }
+            }
+
+            protected override void Dispose(bool disposing)
+            {
+                if (disposing && !_disposed)
+                {
+                    _disposed = true;
+                    _first.Dispose();
+                    _second.Dispose();
+                    _run.DisownLinked(_token);
+                }
+                base.Dispose(disposing);
             }
         }
 
@@ -419,6 +531,7 @@ namespace FarEmerald.PlayForge
                 {
                     CleanupAllActiveTasks();
                     Disown(token);
+                    DisownAllLinked();
                     Cleanup();
                     IsRunning = false;
                     ForgeCounters.SequencesRunning.Value--;

@@ -852,7 +852,9 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// This frame's step of the task's run's clock (<see cref="TaskSequenceRuntime.Clock"/>), which is 0 while the
         /// task's sequence is paused. A task that uses this rather than the game's time holds with its sequence and keeps
-        /// its clock: a slowed caster's waits last longer, and a menu's go on while the game's time stands.
+        /// its clock: a slowed caster's waits last longer, and a menu's go on while the game's time stands. A token the
+        /// task links through <see cref="TaskSequenceRuntime.CreateLinkedTokenSource"/> is its run's too; one that
+        /// CancellationTokenSource links belongs to no run, so it gets the game's step.
         /// </summary>
         public static float DeltaTime(CancellationToken token)
         {

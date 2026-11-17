@@ -10,6 +10,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## Toward 1.0.0, since 0.1.0
 
 ### Added
+- **`TaskSequenceRuntime.CreateLinkedTokenSource`** (EP-58): a token source a task links to its token, whose token
+  belongs to the task's run, so a wait on it keeps the run's clock and holds while the run is paused.
+- **`ActivationResult`** (EP-60): what came of a request to activate an ability, its `Status` Started, Buffered,
+  NextFrame or Refused, and its `Refusal`.
 - **The cue raise and its sink** (NET-2): each raise names what its cues belong to (`CueSource`), and its world's
   sink is asked once before any of them plays (`ForgeCueSink.WillPlay`, `ForgeCues.UseSink`); the default plays
   everything. An applier gives an application where it hit, `spec.WithHit(point, normal, magnitude)`, which its
@@ -639,6 +643,13 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   page, through one table of links in the editor.
 
 ### Changed
+- `TryActivateAbility` returns an `ActivationResult` (EP-60), where it returned true whether its ability started,
+  waits in the input buffer or starts next frame. It reads as true where it wasn't refused, so code that tested the
+  bool reads as before; NUnit's `Is.True` and `Is.False` want a bool, so assert it with `Assert.IsTrue` or its
+  `Status`.
+- A critical section keeps out every ability with one, whatever policy either was asked under (EP-57): one under
+  Activate Anyway or Refuse is refused as Critical, and one under Queue waits in the input buffer. A claim without a
+  critical section keeps out its own policy's alone, as before.
 - `OnEffectRemoved` hands over the spec that left, as `OnEffectApplied` does; its asset is the spec's `Base`
   (NET-1).
 - `ForgeCues.Burst`, `Begin` and `End` take what the raise belongs to, a game's own code where they're given
@@ -1103,6 +1114,12 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   Asking whether its sequence was paused took 24 bytes a frame.
 
 ### Fixed
+- A critical section kept out only critical abilities asked for under its own activation policy (EP-57), where a
+  critical task promises to keep out any.
+- A task that linked its token got the game's clock and ran on while its sequence was paused (EP-58). It links through
+  `TaskSequenceRuntime.CreateLinkedTokenSource`.
+- A sequence's packet made from another dropped its set-by-caller magnitudes (EP-59), so a sequence run as a process
+  with a plain packet, or on a copy of a sequence's packet, read none of the caller's.
 - An entity's Time Scale attribute overwrote a clock scale set in code each step, so a hit-stop set in code was
   undone a step later: the clock reads code's scale times the attribute's, and a save keeps code's (EP-56).
 - An action whose `IsValid` threw took its entity's end of frame with it (EP-43), leaving the actions after it, its

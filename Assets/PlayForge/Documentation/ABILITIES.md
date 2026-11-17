@@ -82,8 +82,12 @@ and it takes no more activations.
 
 Code asks for an ability by its slot, with a request from `CreateActivationRequest`, by its asset
 (`TryActivateAbility(ability)`), or by a tag (`TryActivateAbility(tag)`). A tag activates the first ability, by slot,
-whose asset tag or one of whose context tags is that tag or under it. Each form can say why it was refused, through an
-`out ActivationRefusal`: its `Reason`, such as Cooldown, Cost, Requirements, Blocked or Busy, and for another caster
+whose asset tag or one of whose context tags is that tag or under it. Each form returns an `ActivationResult`, whose
+`Status` says what came of the request: **Started**, **Buffered** (it waits in the input buffer), **NextFrame** (it was
+asked for while its own activation call still ran, so it starts in the next frame), or **Refused**. The result reads as
+true where the request wasn't refused, so `if (abilities.TryActivateAbility(ability))` asks whether it was taken.
+Each form can say why it was refused, through its result's `Refusal` or an `out ActivationRefusal`: its `Reason`, such
+as Cooldown, Cost, Requirements, Blocked or Busy, and for another caster
 check, that check's name in `Rule`; for Crowd Control, `Rule` is the rule's tag, as Stunned. Where a check or a
 component refused it, its `Detail` says why in the check's own words, as "Its caster's Mana, 10, can't pay 50". The
 ability system's `OnAbilityRefused` callback tells each refusal as it happens.
@@ -100,12 +104,15 @@ passes it in, and one effect serves every strength.
 - **When Busy**: what happens when the ability is asked to activate while another ability is busy. An activation is
   busy, or holds its *claim*, while its targeting and its critical tasks run. A critical task is one that must not
   overlap another ability's critical work, such as an attack animation. The inspector marks critical tasks and stages
-  Critical. An ability only waits on abilities that use the same choice.
+  Critical. An ability waits on the claims of abilities that use the same choice, and an ability with critical tasks
+  also waits on any ability with critical tasks that holds its claim, whatever its choice.
   - **Entity's Policy** (default): use the entity's When Busy, set in the Entity asset's Abilities section.
-  - **Activate Anyway**: start at once. It is refused only when it has critical tasks and another Activate Anyway
+  - **Activate Anyway**: start at once. It is refused, as **Critical**, only when it has critical tasks and another
     ability with critical tasks holds its claim.
-  - **Refuse**: start only when no Refuse ability holds its claim. Otherwise the request is refused.
-  - **Queue**: when a Queue ability holds its claim, or a running stage blocks this ability (see Stages), wait in the
+  - **Refuse**: start only when no Refuse ability holds its claim. Otherwise the request is refused, as **Busy**. With
+    critical tasks, it is also refused, as **Critical**, while another ability with critical tasks holds its claim.
+  - **Queue**: when a Queue ability holds its claim, or, for an ability with critical tasks, any ability with critical
+    tasks holds its claim, or a running stage blocks this ability (see Stages), wait in the
     input buffer for up to **Buffer Window** seconds of the caster's time, then let go. The buffer holds one request
     for each ability, and a new press replaces it, with its window afresh. As a claim is released, and each frame, the
     request with the highest **Buffer Priority** that can start does, and of equals, the newest. While the entity is

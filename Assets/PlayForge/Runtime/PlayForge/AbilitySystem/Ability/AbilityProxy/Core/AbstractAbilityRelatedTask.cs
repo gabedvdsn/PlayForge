@@ -17,6 +17,7 @@ namespace FarEmerald.PlayForge
         /// For example, a proxy with some animation events has a critical section, and another proxy with a critical section must not interrupt the conclusion of the animation (and the injections relevant to the animation).
         /// 
         /// If a proxy with a critical section is active, no other proxy with a critical section can be active, regardless of ability activation policy.
+        /// Under Activate Anyway or Refuse, the other is refused as Critical; under Queue, it waits in the input buffer.
         /// </summary>
         public abstract bool IsCriticalSection { get; }
         

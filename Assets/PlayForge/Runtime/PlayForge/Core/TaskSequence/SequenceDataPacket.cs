@@ -234,21 +234,11 @@ namespace FarEmerald.PlayForge
         
         protected SequenceDataPacket() { }
 
-        public SequenceDataPacket(ProcessDataPacket other) : base()
-        {
-            _payload = new Dictionary<Tag, List<object>>();
-
-            if (other is null) return;
-            
-            foreach (var kvp in other.Payload)
-            {
-                _payload[kvp.Key] = new List<object>();
-                foreach (object data in kvp.Value) _payload[kvp.Key].Add(data);
-            }
-
-            InUse = other.InUse;
-            Clock = other.Clock;
-        }
+        /// <summary>
+        /// A packet of its own with what another holds, as a packet made from another takes it: its data, its clock and the
+        /// magnitudes its caller set, so a sequence run from an ability's packet reads them as the ability does.
+        /// </summary>
+        public SequenceDataPacket(ProcessDataPacket other) : base(other) { }
         
         /// <summary>
         /// Empty data packet handled by GameRoot.

@@ -60,6 +60,20 @@ Each of the library's waits holds while its sequence is paused, and a press whil
 keeps time itself should read `SequenceTaskLibrary.DeltaTime(token)`, a step of its run's clock (below), which is 0 while
 the sequence is paused.
 
+A task that links its token, to cancel a wait of its own without its stage, links it through
+`TaskSequenceRuntime.CreateLinkedTokenSource(token)`, whose token belongs to the task's run, so a wait on it keeps the
+run's clock and holds while the run is paused. A token that `CancellationTokenSource.CreateLinkedTokenSource` links
+belongs to no run, so its waits go by the game's clock and don't hold. Dispose the source once done, as any:
+
+```csharp
+.Task(async (data, token) =>
+{
+    // Cancelled with the stage, or on its own through charge.Cancel(), and by the run's clock either way
+    using var charge = TaskSequenceRuntime.CreateLinkedTokenSource(token);
+    await SequenceTaskLibrary.Delay(1.5f, charge.Token);
+})
+```
+
 ## Repeating
 
 - `WithRepeat(true)` on the builder repeats the whole sequence until it's interrupted.
