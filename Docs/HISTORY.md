@@ -604,12 +604,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   off. An ability's inspector says every component rule's problem under its Components list, where it said the
   Charges' alone.
 - Each Aura component gives its aura in its own hooks (EP-39), where the ability, the item, the runtime identity and the
-  effect system gave them; `gas.GetAuras()` is an extension beside the auras, and `ForgeAuras.Provide` and `Remove` take
-  one aura.
-- The Charges and Toggle shortcuts are extension methods beside their components (EP-38, Decision 90):
-  `ability.Charges()`, `ability.Recharge()` and `ability.Toggles()`, where they were properties of `Ability`, and
-  `spec.Charges()` and `spec.IsToggledOn()`, where they were `AbilitySpec`'s; `spec.Charges()` is null for an ability
-  with no Charges component, whose uses in hand `spec.CooldownModel` says.
+  effect system gave them, and `ForgeAuras.Provide` and `Remove` take one aura.
 - **Check Range** is the Cast Range component's (EP-34): the Target Checks show it while the ability holds a Cast
   Range, saying the range the component enforces, and no list offers it or holds it. It read a range of its own from a
   tag's weight on the caster or the ability's Local Data. The Demo's Shield Bash holds a Cast Range in its place.
@@ -1339,6 +1334,12 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   or turning `Enabled` off. Once the first had ended, it threw, and the rest ran on.
 
 ### Removed
+- The components' shortcuts (EP-45, Decision 90): `Ability`'s `Charges`, `Recharge` and `Toggles`, `AbilitySpec`'s
+  `Charges` and `IsToggledOn`, and the hubs' `GetAuras()`. Code reads a component through `Find<T>()` or the component
+  itself: `spec.Find<ChargesAbilityComponent>()` holds an ability's charges and their recharge, and its
+  `ChargesOf(spec)` the ability's charges on its caster; `spec.Find<ToggleAbilityComponent>()?.IsOn(spec)` says
+  whether a toggle is on; what's in hand of any ability is `spec.CooldownModel`'s; and an entity's auras are
+  `gas.GetService<AuraSet>()`.
 - `GameplayEffectSpec.LentByAura` and `ForgeAuras.Of` (EP-39): an aura's effects are `Claimed` Lent, and no core code
   reads a list of auras.
 - `ForgeCastRange` (EP-37): its reads are `ForgeReach`'s, over any ability's reach, and its refusal's words are

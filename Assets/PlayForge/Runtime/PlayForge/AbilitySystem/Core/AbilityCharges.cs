@@ -21,7 +21,7 @@ namespace FarEmerald.PlayForge
         {
             get
             {
-                var charges = Spec.Base.Charges();
+                var charges = Spec.Find<ChargesAbilityComponent>()?.Charges;
                 if (charges == null) return 1;
                 int max = charges.IsConstant ? charges.Constant
                     : charges.Evaluate(new NumberContext(Spec.Source, null, Spec.GetLevel(), true, Spec));
@@ -40,7 +40,7 @@ namespace FarEmerald.PlayForge
             Spec.Base.Cooldown is { } cooldown && Spec.Source.ToGAS()?.GetEffectSystem() is { } effects ? effects.CountFrom(cooldown, Spec) : 0;
 
         // Its recharge, or the default where none is set
-        private AbstractChargeRecharge Recharge => Spec.Base.Recharge() ?? EachChargeRecharge.Default;
+        private AbstractChargeRecharge Recharge => Spec.Find<ChargesAbilityComponent>()?.Recharge ?? EachChargeRecharge.Default;
 
         /// <summary>Whether its charges are counted, or it's an ordinary cooldown: 1 charge, with a built-in recharge.</summary>
         public bool Counted => Recharge.CountsASingleCharge || Max > 1;

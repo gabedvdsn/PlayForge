@@ -41,7 +41,7 @@ namespace FarEmerald.PlayForge
         /// <summary>Gives <paramref name="holder"/> an aura, which holds its effect on those near it from its next step.</summary>
         public static void Provide(AuraEntry entry, ISource holder)
         {
-            if (entry?.Effect == null || (holder as IGameplayAbilitySystem)?.GetAuras() is not { } auras) return;
+            if (entry?.Effect == null || (holder as IGameplayAbilitySystem)?.GetService<AuraSet>() is not { } auras) return;
             auras.Add(entry, holder);
         }
 
@@ -51,9 +51,6 @@ namespace FarEmerald.PlayForge
             if (entry == null || (holder as IGameplayAbilitySystem)?.FindService<AuraSet>() is not { } auras) return;
             auras.Remove(entry);
         }
-
-        /// <summary>The auras an entity runs, its service, made as it's first asked for; null for an entity that keeps none.</summary>
-        public static AuraSet GetAuras(this IGameplayAbilitySystem gas) => gas?.GetService<AuraSet>();
     }
 
     /// <summary>A component that holds an aura: its holder's effect on those near it.</summary>
@@ -130,7 +127,7 @@ namespace FarEmerald.PlayForge
     /// An entity's running auras: each checks who's near at its interval, by its holder's time, holds its effect on
     /// each it takes, from an origin of its own, and takes it off as they leave, die or end, as its holder dies, or as the
     /// aura goes. Two of one aura, as two of an item, are two runs, each holding its own. It's a service of its entity,
-    /// <see cref="ForgeAuras.GetAuras"/>, which the entity steps by its own time and ends as the entity ends.
+    /// <c>gas.GetService&lt;AuraSet&gt;()</c>, which the entity steps by its own time and ends as the entity ends.
     /// </summary>
     public sealed class AuraSet : AbstractEntityService
     {

@@ -799,7 +799,11 @@ from. It lives outside `Assets/` so it never ships in the package.
   `ability.Toggles()` and `spec.IsToggledOn()` beside Toggle, where they were members of `Ability` and `AbilitySpec`. A
   project's own component gives its shortcuts the same way. `ForgeCastRange` goes: what it read is an ability's reach,
   `ForgeReach` over `IAbilityReach`, which a reach of a project's own answers as Cast Range does. The other answers
-  offered: keep them as thin facades over the lookup, or drop them before 1.0.0.
+  offered: keep them as thin facades over the lookup, or drop them before 1.0.0. **Amended the same day (EP-45): drop
+  them too.** The user had answered a second asking, keep or drop, with "drop"; asked which answer stands, they chose
+  "Delete them too". Code reads a component through `Find<T>()` or the component itself, and an entity's service through
+  `GetService<T>()`, as `gas.GetService<AuraSet>()` for `GetAuras()`. No file that declares a component declares an
+  extension method, which Proving Grounds' `RuntimeSourceTests` keeps so.
 
 **Open. Ask the user; do not assume:**
 1. ~~**Uncommitted changes**~~: decided, see above.
@@ -1540,6 +1544,7 @@ EP-13 to EP-16 came as the pass went on; EP-17 to EP-25 are the user's notes of 
 | EP-40 | The component API in the editor: the Problems view's rules held the Charges, Toggle, Uses, Respawn and Transfer components' rules, and the ability inspector named the Charges for its note and its Activation line. Done: a rule of one kind of component, `ForgeComponentRule<T>`, found as every rule is, hears each component of its kind an asset holds, with its place and its count among its kind; the five built-ins' rules are written on it, out of `ForgeRules`, the Toggle's apart from the Transfers', each named for what it finds. The ability inspector says every component rule's problem under its Components list, where it said the Charges' alone, and its Activation line says what each component adds to the ability's use, `DescribeUsage`, as Charges' "3 charges" | Components | verified |
 | EP-41 | The component API's guard: a Proving Grounds source test that the core names no component, nor what's declared beside one, its helpers and its shortcuts. Done: `RuntimeSourceTests` finds every component and entity service by reflection, and every type and shortcut declared in a file that declares a component, and reads `GASCore`, `AbilitySpec`, `AbilitySystemComponent`, `EffectSystemComponent`, `Purging`, `Item`, `AbilityProxy`, the targeting tasks, `ForgeRules` and `AbilityEditor` for them, their comments and strings aside. The built-ins are written on the public API alone, and `Docs/CODE_TOUR.md` walks the phase | Components | verified |
 | EP-42 | The user's word of 2026-11-17, after EP-35: activation refusals carry each rule's reason. EP-35's rules say why they refuse, but a refusal named the rule alone, its reason dropped, and a Target Check that refused after targeting ended the activation as Cancelled, told as nothing, so neither a game's UI nor an AI could hear why. Done: `ActivationRefusal.Detail`, the refusing check's own words, a validation rule's error or a component's reason, as "Its caster's Mana, 10, can't pay 50", which the refusal's text says too; `Rule` is as it was, a check's name, a component's reason or a crowd control rule's tag. A Target Check, or the target's tag requirements, refusing after targeting is told through `OnAbilityRefused` as the new `EActivationRefusal.Target`, `Rule` naming the check, before any wind-up and with nothing of the activation paid: `AbilitySpec.TargetRefusal` says it, and `ValidateAllActivationRequirements` asks it. The Debugger's timeline shows a refusal's words. Not done: targeting that picks a target beyond the Cast Range ends the activation untold, as it did | Abilities | verified |
+| EP-45 | Decision 90's amendment, the user's answer of 2026-11-17: the components' shortcuts, extension methods beside them since EP-38 and EP-39 (`ability.Charges()`, `Recharge()` and `Toggles()`, `spec.Charges()` and `IsToggledOn()`, `gas.GetAuras()`), go before 1.0.0, so a built-in component is read as a project's own is. Done: `ForgeCharges` and `ForgeToggles` are gone, and `ForgeAuras.GetAuras`; `AbilityCharges` reads its ability's Charges component through `Find<T>()`, with the defaults the shortcuts gave, one charge and Each Charge; `ForgeAuras.Provide` asks the entity's `GetService<AuraSet>()`. Proving Grounds' `RuntimeSourceTests` finds no extension method in a file that declares a component or an entity service | Components | verified |
 
 ## Test project: PlayForge Proving Grounds
 
@@ -1576,6 +1581,18 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-17, **EP-45: the components keep no shortcuts.** Decision 90 had put the built-in components' shortcuts
+  beside them as extension methods; asked which of their two answers stood, the user chose to delete them too. A
+  built-in component is read as a project's own is: through `Find<T>()` or the component itself, and an entity's service
+  through `GetService<T>()`. `AbilityCharges` reads its ability's Charges component with the defaults the shortcuts gave,
+  one charge and Each Charge, and Proving Grounds' charges tests read what's in hand through `spec.CooldownModel`.
+  - Red, on HEAD (58a7350) and the test alone: `RuntimeSourceTests`' EP-45 case failed, naming the six shortcuts,
+    `GetAuras` in Auras.cs and `Charges`, `Recharge`, `Charges`, `Toggles` and `IsToggledOn` in AbilityComponents.cs.
+    Its other six cases passed, EP-41's guard among them, on the helpers the two now share.
+  - Gates, on 58a7350 and EP-45, both samples imported, other sessions' uncommitted work set aside: EditMode 1067 of
+    1067; PlayMode 2142 of 2150, 8 skipped; golden 25 of 25. ED-89 landed during the run (PF af1919c, PG 9954683); on
+    it and EP-45, the source tests and ED-89's row tests passed again, 17 of 17.
 
 - 2026-11-17, **ED-89: an attribute read's Groups and Turn To Face's Turn in line.** The user's screenshot of
   2026-11-17: under an × Attribute scaler, Groups hung its arrow out to the block's edge; then the user's word: Turn To

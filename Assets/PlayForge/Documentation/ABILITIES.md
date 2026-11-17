@@ -348,8 +348,8 @@ the Cooldown check refuses it with none; an ability with none has `SingleCooldow
 The Cooldown check asks it, the ability spends through it, and a HUD reads it as `spec.CooldownModel`. A component's
 state that needs its holder, as a Charges component's charges need their ability, is kept with
 `spec.ComponentStates.TryGet` and `Keep`. The built-in components are written on this API alone, and PlayForge's core
-names none of them, so a component of your own reaches as far as they do; each one's shortcuts sit beside it, as
-`spec.IsToggledOn()` beside Toggle.
+names none of them, so a component of your own reaches as far as they do. None has a shortcut: code reads one through
+`Find<T>()` or the component itself, as `spec.Find<ToggleAbilityComponent>()?.IsOn(spec)` says whether a Toggle is on.
 
 ### Cast Range
 
@@ -376,9 +376,9 @@ apart come back a second apart; **All At Once** starts the Cooldown only as the 
 all back. Write a recharge of your own by extending `AbstractChargeRecharge`: override `InHand` (how many are in
 hand) and `Spend` (what a use does), using `AbilityCharges`' `Max`, `Spent`, `Cooldowns` and `StartCooldown`; one
 of your own counts even a single charge, unless its `CountsASingleCharge` says not. Charges are the ability's cooldown
-model (see Components), so code reads what's in hand of any ability as `spec.CooldownModel.InHand(spec)`, and an
-ability's charges through `spec.Charges()`, as `container.Spec.Charges().InHand`, null where it has none; the
-ability's own `ability.Charges()` and `ability.Recharge()` say what its component holds. The section's line counts them, as "3 charges",
+model (see Components), so code reads what's in hand of any ability as `spec.CooldownModel.InHand(spec)`. The
+component itself, `spec.Find<ChargesAbilityComponent>()`, holds its **Charges** and **Recharge**, and its
+`ChargesOf(spec)` gives the ability's charges on its caster, an `AbilityCharges`. The section's line counts them, as "3 charges",
 and a warning under the Components list, as in the
 Problems view, says where built-in charges have no Cooldown to bring them
 back, so they never run out. An ability holds one at most.
@@ -389,8 +389,8 @@ A **Toggle** component holds an **Effect** the ability turns on and off on its c
 on where its usage would be paid, paying its Cost and Attribute Costs and starting no cooldown; used again, it takes
 the effect off, paying nothing and asking no cost, and starts its Cooldown, or spends a charge. Neither its cost nor
 its cooldown stops it turning off. It counts only the effect it put on; one another put there leaves it off. A purge
-counts its effect a Toggle's, as a death that keeps toggles keeps it. Code asks through `spec.IsToggledOn()`, and
-`ability.Toggles()` gives the effect. It's written on the components' hooks alone: it applies the usage in its ability's
+counts its effect a Toggle's, as a death that keeps toggles keeps it. Code asks the component,
+`spec.Find<ToggleAbilityComponent>()`: its `IsOn(spec)` says whether its effect is on, and its **Effect** is the effect. It's written on the components' hooks alone: it applies the usage in its ability's
 place, waives the cost and the cooldown while it's on, and claims its effect. The Problems view warns where it toggles an Instant effect, which is never on. As its holder forgets the ability, the effect comes off; it stayed on. An ability
 holds one at most.
 

@@ -3231,8 +3231,8 @@ The core named the components it served: Cast Range in an ability's spec, its pr
 Charges in the spec's commit, the Cost and Cooldown rules and purging; the auras in `Ability`, `Item`, the runtime
 identity, the effect system and `GASCore`; a Respawn's wait in `GASCore`; and the components' rules in the Problems view
 and the ability inspector. A project's own component couldn't reach as far. Now the built-ins are written on a public
-API alone and the core names none of them (Decision 90 put their shortcuts beside them). The entries name the methods to
-search for.
+API alone and the core names none of them, and none keeps a shortcut: code reads one through `Find<T>()` (EP-45). The
+entries name the methods to search for.
 
 ### Found by what they do; a reach; refusals (EP-37)
 

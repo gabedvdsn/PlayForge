@@ -43,7 +43,11 @@ namespace FarEmerald.PlayForge
             return count == 0 ? "None" : count == 1 ? "1 charge" : $"{count} charges";
         }
 
-        /// <summary>Its charges on an entity's ability, kept with the ability as its entity holds it, made as they're first asked for.</summary>
+        /// <summary>
+        /// Its charges on an entity's ability: how many it holds, how many are in hand, and what its recharge counts, kept
+        /// with the ability as its entity holds it, made as they're first asked for. What's in hand of any ability, with
+        /// this component or without, is its <see cref="AbilitySpec.CooldownModel"/>'s.
+        /// </summary>
         public AbilityCharges ChargesOf(AbilitySpec spec)
         {
             if (spec == null) return null;
@@ -65,30 +69,6 @@ namespace FarEmerald.PlayForge
 
         string ICooldownModel.NoneInHand(AbilitySpec spec) =>
             ChargesOf(spec) is { Counted: true } ? "It has no charges in hand" : SingleCooldown.Instance.NoneInHand(spec);
-    }
-
-    /// <summary>
-    /// The Charges component's shortcuts: an ability's charges and their recharge, as its Charges component says them, and
-    /// an entity's ability's charges.
-    /// </summary>
-    public static class ForgeCharges
-    {
-        private static readonly ScalableInt OneCharge = 1;
-        private static readonly AbstractChargeRecharge EachCharge = new EachChargeRecharge();
-
-        /// <summary>Its charges: its Charges component's, or one, an ordinary cooldown.</summary>
-        public static ScalableInt Charges(this Ability ability) =>
-            ability != null && ability.Find<ChargesAbilityComponent>() is { Charges: { } charges } ? charges : OneCharge;
-
-        /// <summary>How its spent charges come back: its Charges component's, or each on a cooldown of its own.</summary>
-        public static AbstractChargeRecharge Recharge(this Ability ability) =>
-            ability != null && ability.Find<ChargesAbilityComponent>() is { Recharge: { } recharge } ? recharge : EachCharge;
-
-        /// <summary>
-        /// Its charges on its caster: how many it holds, how many are in hand, and what its recharge counts; null where the
-        /// ability has no Charges component. What's in hand of any ability is its <see cref="AbilitySpec.CooldownModel"/>'s.
-        /// </summary>
-        public static AbilityCharges Charges(this AbilitySpec spec) => spec?.Find<ChargesAbilityComponent>()?.ChargesOf(spec);
     }
 
     /// <summary>
@@ -147,16 +127,6 @@ namespace FarEmerald.PlayForge
         // Its effect is a toggle's, for a purge
         public override EEffectCategory CategoryOf(AbilityComponentContext ctx, GameplayEffectSpec effect) =>
             Effect != null && ReferenceEquals(effect?.Base, Effect) ? EEffectCategory.Toggle : EEffectCategory.None;
-    }
-
-    /// <summary>The Toggle component's shortcuts: the effect an ability toggles, and whether an entity's ability has it on.</summary>
-    public static class ForgeToggles
-    {
-        /// <summary>The effect it toggles on its caster: its Toggle component's, or none, where it doesn't toggle.</summary>
-        public static GameplayEffect Toggles(this Ability ability) => ability?.Find<ToggleAbilityComponent>()?.Effect;
-
-        /// <summary>Whether the effect it toggles is on its caster, put there by it.</summary>
-        public static bool IsToggledOn(this AbilitySpec spec) => spec?.Find<ToggleAbilityComponent>() is { } toggle && toggle.IsOn(spec);
     }
 
     /// <summary>

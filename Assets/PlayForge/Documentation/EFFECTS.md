@@ -362,7 +362,7 @@ origin of its own, and takes it off as they leave, die or end, as its holder die
 effect of its that ends on its own, a durational one, goes on again at its next check. An Infinite effect holds as long
 as they're near. Two of an item hold two, as their effect's stacking says. A purge counts an aura's effect Lent. Each
 Aura component gives its aura in its own hooks: an effect's as it lends, an ability's as it's granted, an item's as
-it's equipped, an entity's as it registers. An entity's auras are its `AuraSet`, `gas.GetAuras()`, a service it steps
+it's equipped, an entity's as it registers. An entity's auras are its `AuraSet`, `gas.GetService<AuraSet>()`, a service it steps
 ([ENTITIES.md](ENTITIES.md#services)), and `ForgeAuras.Provide(entry, holder)` and `Remove` give one of your own.
 
 ### Area
