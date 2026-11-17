@@ -53,7 +53,7 @@ namespace FarEmerald.PlayForge
     /// An activation handed a target or a point beyond it is refused as out of range; targeting that picks
     /// one beyond it ends the activation there; a targeting task with a range of its own searches within it, from the
     /// caster; and the lab's bots cast it only once their foe is within it. 0 reaches anywhere. An ability holds one at
-    /// most.
+    /// most. Its ability's Target Checks show its Check Range while it holds the component, which this enforces.
     /// </summary>
     [Serializable]
     [ForgeMenu(Description = "How far from the caster the ability's target may be.")]
@@ -61,6 +61,12 @@ namespace FarEmerald.PlayForge
     {
         /// <summary>What it does, in one line.</summary>
         public override string Describe() => $"Range {NumberText.Of(Range)}";
+
+        // Its Check Range, made as it's first asked for and kept with it
+        [NonSerialized] private CheckRangeValidation check;
+
+        /// <summary>Check Range, its place among its ability's Target Checks: the range this enforces.</summary>
+        public override IAbilityValidationRule TargetCheck => check ??= new CheckRangeValidation(this);
 
         [Tooltip("How far from its caster its target or point may be, read at the ability's level; 0 reaches anywhere")]
         public ScalableFloat Range = 6f;

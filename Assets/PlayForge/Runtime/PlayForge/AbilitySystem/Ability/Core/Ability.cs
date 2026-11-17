@@ -21,12 +21,35 @@ namespace FarEmerald.PlayForge
             new IsAliveValidation()
         };
 
-        [SerializeReference] 
+        [SerializeReference]
         public List<IAbilityValidationRule> TargetActivationRules = new()
         {
             new IsAliveValidation()
         };
-        
+
+        /// <summary>
+        /// Its Caster Checks: the rules it holds, then the checks its components stand behind, which the components
+        /// enforce.
+        /// </summary>
+        public IEnumerable<IAbilityValidationRule> CasterChecks => ChecksOf(SourceActivationRules, false);
+
+        /// <summary>
+        /// Its Target Checks: the rules it holds, then the checks its components stand behind, as its Cast Range's Check
+        /// Range, which the components enforce.
+        /// </summary>
+        public IEnumerable<IAbilityValidationRule> TargetChecks => ChecksOf(TargetActivationRules, true);
+
+        // The rules a list holds, then the checks the components stand behind on its side
+        private IEnumerable<IAbilityValidationRule> ChecksOf(List<IAbilityValidationRule> held, bool target)
+        {
+            if (held != null)
+                foreach (var rule in held)
+                    if (rule != null) yield return rule;
+            if (Components == null) yield break;
+            foreach (var component in Components)
+                if ((target ? component?.TargetCheck : component?.CasterCheck) is { } check) yield return check;
+        }
+
         [Min(0)] public int StartingLevel = 1;
         [Min(0)] public int MaxLevel = 4;
         public bool IgnoreWhenLevelZero = true;

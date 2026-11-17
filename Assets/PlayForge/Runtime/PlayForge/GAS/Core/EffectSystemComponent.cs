@@ -1420,6 +1420,30 @@ namespace FarEmerald.PlayForge
             return containers.Length > 0;
         }
 
+        /// <summary>Whether the effect is on the shelf and not leaving it. Allocates nothing.</summary>
+        public bool HasEffect(GameplayEffect effect)
+        {
+            if (effect == null || !byTag.TryGetValue(effect.Tags.AssetTag, out var same)) return false;
+            for (int i = 0; i < same.Count; i++)
+                if (same[i].Spec.Base == effect && !finishedSet.Contains(same[i])) return true;
+            return false;
+        }
+
+        /// <summary>
+        /// Whether an effect on the shelf, and not leaving it, is tagged with the tag or one under it, by its asset tag, a
+        /// context tag or a tag it grants, as a cleanse names them. Allocates nothing.
+        /// </summary>
+        public bool HasEffectTagged(Tag tag)
+        {
+            if (!tag.IsValid) return false;
+            for (int i = 0; i < EffectShelf.Count; i++)
+            {
+                var container = EffectShelf[i];
+                if (container != null && !finishedSet.Contains(container) && GameplayEffectTags.Names(tag, container.Spec.Base)) return true;
+            }
+            return false;
+        }
+
         /// <summary>
         /// How many containers of <paramref name="effect"/> that <paramref name="origin"/> applied are on the shelf and not
         /// leaving it: an ability's charges count their cooldowns so. Allocates nothing.

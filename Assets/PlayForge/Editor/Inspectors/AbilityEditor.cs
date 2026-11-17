@@ -34,6 +34,10 @@ namespace FarEmerald.PlayForge.Editor
         // Under the cooldown, while no stage applies the usage effects
         private HelpBox chargesNote;
 
+        // Under each list of checks, the checks its components stand behind, as a Cast Range's Check Range
+        private VisualElement casterComponentChecks;
+        private VisualElement targetComponentChecks;
+
         private SectionResult levelingSection;
         private SectionResult tagsSection;
         private SectionResult activationSection;
@@ -537,9 +541,56 @@ namespace FarEmerald.PlayForge.Editor
             var sourceRules = CreatePropertyField(serializedObject.FindProperty(nameof(Ability.SourceActivationRules)), "SourceActivationRules", "Caster Checks");
             sourceRules.tooltip = "Checks the caster must pass to activate the ability";
             content.Add(sourceRules);
+            casterComponentChecks = new VisualElement { name = "CasterComponentChecks" };
+            content.Add(casterComponentChecks);
             var targetRules = CreatePropertyField(serializedObject.FindProperty(nameof(Ability.TargetActivationRules)), "TargetActivationRules", "Target Checks");
             targetRules.tooltip = "Checks the target must pass";
             content.Add(targetRules);
+            targetComponentChecks = new VisualElement { name = "TargetComponentChecks" };
+            content.Add(targetComponentChecks);
+            ShowComponentChecks();
+        }
+
+        // The checks the components stand behind, each a locked row under the list it's among, as Check Range under the
+        // Target Checks while the ability holds a Cast Range: no list holds them, and they come and go with their
+        // components. Built again only as what they say changes
+        private void ShowComponentChecks()
+        {
+            if (IsMultiple) return;
+            ShowComponentChecks(casterComponentChecks, ability.CasterChecks);
+            ShowComponentChecks(targetComponentChecks, ability.TargetChecks);
+        }
+
+        private static void ShowComponentChecks(VisualElement rows, IEnumerable<IAbilityValidationRule> checks)
+        {
+            if (rows == null) return;
+            var shown = checks.OfType<IComponentValidationRule>().ToList();
+            var said = string.Join("\n", shown.Select(check => $"{((IAbilityValidationRule)check).GetName()}|{check.Describe()}"));
+            if (rows.userData is string was && was == said) return;
+            rows.userData = said;
+            rows.Clear();
+            foreach (var check in shown)
+            {
+                var owner = AbstractForgeComponent.NameOf(check.Component);
+                var row = new VisualElement
+                {
+                    name = "ComponentCheck",
+                    tooltip = $"The {owner} component's check, which the component enforces. It comes and goes with the " +
+                              $"component: remove the {owner} to remove it."
+                };
+                row.AddToClassList("pf-component-check");
+                var name = new Label(((IAbilityValidationRule)check).GetName()) { name = "ComponentCheckName" };
+                name.AddToClassList("pf-component-check__name");
+                row.Add(name);
+                var line = new Label(check.Describe() ?? "") { name = "ComponentCheckLine" };
+                line.AddToClassList("pf-component-check__line");
+                row.Add(line);
+                var from = new Label($"{owner}'s") { name = "ComponentCheckOwner" };
+                from.AddToClassList("pf-component-check__owner");
+                row.Add(from);
+                row.SetEnabled(false);
+                rows.Add(row);
+            }
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
@@ -652,6 +703,7 @@ namespace FarEmerald.PlayForge.Editor
                 nameField.SetValueWithoutNotify(ability.Definition.Name ?? "");
             ShowImplicitTag(ability.Behaviour.UseImplicitTargeting);
             ShowCharges();
+            ShowComponentChecks();
             UpdateAssetTagDisplay();
             UpdateSummaries();
         }
@@ -705,10 +757,11 @@ namespace FarEmerald.PlayForge.Editor
             return string.Join(" · ", parts);
         }
 
-        // How many checks, and how many tag requirements, as in "4 checks · 2 tag requirements"
+        // How many checks, those its components stand behind among them, and how many tag requirements, as in "4 checks ·
+        // 2 tag requirements"
         private string RequirementsSummary()
         {
-            var checks = (ability.SourceActivationRules?.Count(rule => rule != null) ?? 0) + (ability.TargetActivationRules?.Count(rule => rule != null) ?? 0);
+            var checks = ability.CasterChecks.Count() + ability.TargetChecks.Count();
             var tags = ability.Tags.TagRequirements?.TotalRequirementCount ?? 0;
             var parts = new List<string> { CountOf(checks, "check", "checks") };
             if (tags > 0) parts.Add(CountOf(tags, "tag requirement", "tag requirements"));

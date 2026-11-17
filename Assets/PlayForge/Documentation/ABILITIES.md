@@ -251,21 +251,56 @@ Requirements are what an activation must pass. If one fails, the ability doesn't
   [EFFECTS.md](EFFECTS.md)). Each entry is a tag query: a **Tag**, a **Match** mode such as Include Children, and a
   comparison with a number. Greater Than 0 means "the tag is present".
 - **Caster Checks** check the caster. They run when the ability is asked to activate, before targeting, and again after
-  targeting. The defaults are Cooldown, Cost and Is Alive. You pick each check's type from a list.
+  targeting. The defaults are Cooldown, Cost and Is Alive. You pick each check's type from a list, which offers the
+  caster's types and those that check either side.
 - **Target Checks** check the target, after targeting. The default is Is Alive. If targeting found no target, they are
-  skipped.
+  skipped. Their list offers the target's types and those that check either side.
 
-The check types:
+A check a component stands behind shows under its list, locked, as Check Range does under the Target Checks while the
+ability holds a Cast Range. No list holds it: it comes and goes with its component, which enforces it, and the
+section's line counts it among the checks.
 
-- **Cooldown**: passes when the ability has no cooldown, or the caster doesn't carry the cooldown effect's asset tag.
-- **Cost**: passes when the ability has no cost, or the cost would leave each attribute it spends at 0 or more. The
-  caster must have each of them.
-- **Is Alive**: passes when the checked entity isn't dead.
-- **Attribute**: compares the checked entity's Current value of **Attribute** with **Value**, using **Comparison**.
-- **Check Range**: passes when the target is within range of the caster. The range is the number of times the caster
-  carries the check's **Tag**. If the caster doesn't carry it, the range is the Float stored under that key in this
-  ability's Local Data. Use Check Range as a Target Check: as a Caster Check it runs before there is a target, and
-  fails.
+The check types, by the list that offers them:
+
+- Caster Checks:
+  - **Cooldown**: passes when the ability isn't cooling down, or, with its charges counted (see Charges), has one in
+    hand.
+  - **Cost**: passes when the ability has no cost, or the cost would leave each attribute it spends at 0 or more, and
+    its Attribute Costs can be paid. The caster must have each attribute.
+  - **Ability Level**: compares the ability's level with **Level**, using **Comparison**, as a form it unlocks at a
+    rank. It starts at 2 or more.
+- Either list, checking the caster among the Caster Checks and the target among the Target Checks:
+  - **Is Alive**: passes when the checked entity isn't dead.
+  - **Attribute**: compares the checked entity's Current value of **Attribute** with **Value**, using **Comparison**;
+    with **Share Of Base**, its share of its base, from 0 to 1, as "below half its health".
+  - **Tag Weight**: compares the checked entity's weight of **Tag** with **Weight**, using **Comparison**, as combo
+    points or stacks. It starts at 1 or more; an entity without the tag holds it at 0.
+  - **Has Effect**: passes when the checked entity has **Effect** on, or any effect tagged **Tagged** or under it, by
+    its asset tag, a context tag or a tag it grants; with **Without**, when it has none of it. Naming neither, it
+    passes.
+  - **Holds Item**: passes when the checked entity holds **Item**, or, with **Equipped**, wears it. Naming none, it
+    passes.
+- Target Checks:
+  - **Affiliation**: passes when the target stands to its caster as **Target** says. An **Enemy** shares none of the
+    caster's sides and an **Ally** one, the caster itself among them; **Other Ally** leaves the caster out, **Self**
+    is the caster alone, and **Not Self** anyone else. A caster with no sides takes anyone as either.
+  - **Line of Sight**: passes when nothing on the **Blocking** layers blocks a line from the caster to its target, run
+    **Height** above each, so the ground under them doesn't. 3D physics colliders block it; triggers and the two ends'
+    own colliders don't.
+  - **Facing**: passes when the target lies within **Angle** in front of its caster, or, with **Behind Target**, the
+    caster stands within the angle behind its target, as a backstab wants. Each faces as its targeting packet does,
+    along the ground: 90 takes 45° to either side, and 360 anywhere.
+  - **Check Range**: the Cast Range component's, which no list offers. It shows while the ability holds a Cast Range,
+    saying its range, and passes, as the component enforces the range (see Cast Range).
+
+A failed check refuses the activation as Cooldown, Cost or Dead for those three, and as Rule, naming the check, for any
+other (see Activation). Each says why in `Validate`'s `error`, as "Its caster's Mana, 20, can't pay 30".
+
+A check of your own implements `IAbilityValidationRule`: `Validate` says whether the activation passes, and why not,
+and `GetName` names it. `[ForgeMenu]` names and describes it in the list, and `[ValidationSide]` says which list offers
+it, Caster or Target; without it, both do. A component stands behind a check by overriding its `TargetCheck` or
+`CasterCheck` with an `AbstractComponentValidationRule<T>` of its own kind: the check shows under the list while the
+ability holds the component, and the component enforces it, in `CanStart`.
 
 The section's Clear button empties the tag requirements and leaves the checks, since an ability without them would
 skip its cost and cooldown.
@@ -301,7 +336,8 @@ as **Range**, so nothing of it is paid and an AI can walk closer and ask again; 
 whichever task picked it, ends the activation before its stages. The auto-targeting tasks measured from the caster, and
 Select GAS Target In Range, search within it where their **Use Cast Range** is on, as it is by default, their own range
 set aside. The Creator Lab's units attack from their attack's Cast Range, and its bots cast an ability once their foe is
-within its Cast Range, where it has one ([CREATOR_LAB.md](CREATOR_LAB.md)). Code reads it through `ForgeCastRange`. An
+within its Cast Range, where it has one ([CREATOR_LAB.md](CREATOR_LAB.md)). Code reads it through `ForgeCastRange`.
+While the ability holds it, its Target Checks show its **Check Range**, locked, saying the range (see Requirements). An
 ability holds one at most.
 
 ### Charges
@@ -371,8 +407,9 @@ Local Data is a list of named values stored on the asset. Each row has a **Key**
 that type: String, Int, Float, Bool, Tag, Attribute, Effect, Ability, Entity, Object, ScriptableObject or MonoBehaviour.
 Object fields take project assets, not scene objects.
 
-Code reads a value with `ability.TryGetLocalData(key, out var data)`. The first row with that key wins. The Check Range
-check reads its range from here (see Requirements).
+Code reads a value with `ability.TryGetLocalData(key, out var data)`. The first row with that key wins. A tag check of
+your own, extending `AbstractTagValidationRule`, reads its tag's value with `GetValue`: the tag's weight on the entity
+it checks or, where that entity holds none of it, the ability's Local Data under the tag.
 
 ## Used By
 

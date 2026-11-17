@@ -163,6 +163,19 @@ namespace FarEmerald.PlayForge
 
         /// <summary>As an activation ends, by how it did.</summary>
         public virtual void End(AbilityComponentContext ctx, EAbilityEnd how) { }
+
+        /// <summary>
+        /// The check the component stands behind among its ability's Target Checks, shown there while the ability holds
+        /// it, as Cast Range's Check Range; null, as it is here, for none. The component enforces what it says, as the
+        /// check, an <see cref="AbstractComponentValidationRule{TComponent}"/>, passes.
+        /// </summary>
+        public virtual IAbilityValidationRule TargetCheck => null;
+
+        /// <summary>
+        /// The check the component stands behind among its ability's Caster Checks, as <see cref="TargetCheck"/> is
+        /// among the Target Checks; null, as it is here, for none.
+        /// </summary>
+        public virtual IAbilityValidationRule CasterCheck => null;
     }
 
     /// <summary>What an ability's component hears a moment of its ability with.</summary>

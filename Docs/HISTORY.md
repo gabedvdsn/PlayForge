@@ -10,6 +10,16 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## Toward 1.0.0, since 0.1.0
 
 ### Added
+- **Validation rules** (EP-35): **Tag Weight**, a tag's weight on the entity checked against a number, as combo points;
+  **Has Effect**, an effect on it by its asset or by a tag, or none, Without; **Holds Item**, held or Equipped; and
+  among the Caster Checks **Ability Level**, the ability's level against a number. Among the Target Checks
+  **Affiliation**, the target an enemy of its caster, an ally, another ally, the caster or anyone else; **Line of
+  Sight**, nothing on the layers given between them; and **Facing**, the target in front of its caster, or the caster
+  behind its target. `EffectSystemComponent.HasEffect` and `HasEffectTagged` ask without allocating.
+- **A component's check** (EP-34): a component stands behind a check among its ability's Target or Caster Checks,
+  `TargetCheck` or `CasterCheck`, an `AbstractComponentValidationRule<TComponent>`, shown locked under its list while
+  the ability holds the component, which enforces it; an ability's `CasterChecks` and `TargetChecks` list them after
+  the rules it holds. A rule kind says which list it belongs among, `[ValidationSide]`, and each list offers its own.
 - **A clock picked in an inspector** (EP-33): `AbstractClockChoice`, Caster's, Game's, Unscaled and Scaled, or one of
   your own; an ability's Run Sequence task's **Clock** gives the sequence it runs one, leaving the ability's other tasks
   the caster's. A run takes a clock of its own, `TaskSequenceRuntime.Clock`, set before its packet's, and a chain's
@@ -553,6 +563,13 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   page, through one table of links in the editor.
 
 ### Changed
+- **Check Range** is the Cast Range component's (EP-34): the Target Checks show it while the ability holds a Cast
+  Range, saying the range the component enforces, and no list offers it or holds it. It read a range of its own from a
+  tag's weight on the caster or the ability's Local Data. The Demo's Shield Bash holds a Cast Range in its place.
+- A refused validation rule says why in its error (EP-35), and each is named as its list shows it, Cost where it was
+  "Cost Validation", as a refusal's `Rule` names it; Cost and Cooldown are `[Serializable]`, as every rule is.
+- `AbstractTagValidationRule.GetValue(data, subject)` reads the tag's weight on the entity checked (EP-35), where
+  `GetValue(data)` read the caster's whichever entity it checked.
 - `ForgeTime.ClockOf` and `ClockFor` give `GameClock.Instance` for the game's (EP-33), where they gave the clock in
   force as they were asked, which a caller that kept it went on reading after a tick or a world's step had ended.
 - The Task Sequence Examples' synced components and Example Runner pick a **Clock** (EP-33); the synced pulse's Ignore
@@ -988,6 +1005,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   Asking whether its sequence was paused took 24 bytes a frame.
 
 ### Fixed
+- The Is Alive rule refuses a missing entity (EP-35), where it threw; Cost and Cooldown refuse when handed no packet.
 - The Forge's summary drops a problem once it's fixed (ED-88), by its asset's edit or another's; it kept it until the
   asset was shown again.
 - A synced task in an async sequence holds while the sequence is paused (EP-31); a `SyncDelay` counted on.

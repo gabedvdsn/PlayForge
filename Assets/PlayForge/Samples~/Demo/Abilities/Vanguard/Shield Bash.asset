@@ -184,7 +184,6 @@ MonoBehaviour:
   - rid: 2403794261189066820
   TargetActivationRules:
   - rid: 2403794261189066821
-  - rid: 2403794261189067241
   StartingLevel: 1
   MaxLevel: 4
   IgnoreWhenLevelZero: 1
@@ -199,7 +198,8 @@ MonoBehaviour:
     AnalysisWorkers: []
   OnHit: []
   Modifiers: []
-  Components: []
+  Components:
+  - rid: 2403794261189067242
   LinkMode: 0
   _linkedSource: {fileID: 0}
   references:
@@ -278,9 +278,12 @@ MonoBehaviour:
           Name: 
           DisplayName: 
         UseResolveOrder: 1
-    - rid: 2403794261189067241
-      type: {class: CheckRangeValidation, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+    - rid: 2403794261189067242
+      type: {class: CastRangeAbilityComponent, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:
-        Tag:
-          Name: Demo.Reach
-          DisplayName: Demo.Reach
+        Range:
+          Magnitude: 3.5
+          RealMagnitude: 2
+          Scaler:
+            rid: -2
+        Flat: 1

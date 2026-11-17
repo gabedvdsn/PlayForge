@@ -1,86 +1,120 @@
 ﻿using System;
-using System.Buffers;
 using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
+    [Serializable]
+    [ValidationSide(EValidationSide.Caster)]
     [ForgeMenu(Description = "Activates only where the caster can pay the cost.")]
     public class CostValidation : IAbilityValidationRule
     {
         public bool Validate(AbilityDataPacket data, Func<ITarget> getSource, out string error)
         {
-            error = "";
-            if (data.EffectOrigin is not AbilitySpec ability) return false;
+            error = null;
+            if (data?.EffectOrigin is not AbilitySpec ability)
+            {
+                error = ValidationText.NoActivation;
+                return false;
+            }
 
             // A toggle turning off pays nothing, so it asks nothing
             if (ability.IsToggledOn) return true;
 
             // Its attribute costs, each paid beside its Cost effect
-            if (!ability.CanPayAttributeCosts(data)) return false;
+            if (!ability.CanPayAttributeCosts(data))
+            {
+                error = "Its caster can't pay its attribute costs";
+                return false;
+            }
             if (ability.Base.Cost is null) return true;
 
             // Generating the spec rebuilds the cost's impacts, and each attribute it spends is checked: a cost can spend
             // more than one, and only the first was. The caster must have each attribute
             var spec = ability.Source.GenerateEffectSpec(ability, ability.Base.Cost);
             var impacts = ability.Base.Cost.ImpactSpecification.Entries;
-            if (impacts.Count == 0) return false;
+            if (impacts.Count == 0)
+            {
+                error = $"Its cost, {ValidationText.NameOf(ability.Base.Cost)}, spends nothing";
+                return false;
+            }
             foreach (var impact in impacts)
             {
                 if (impact == null) continue;
-                if (!ability.Source.TryGetAttributeValue(impact.AttributeTarget, out var attrVal)) return false;
+                if (!ability.Source.TryGetAttributeValue(impact.AttributeTarget, out var attrVal))
+                {
+                    error = $"Its caster has no {ValidationText.NameOf(impact.AttributeTarget)} to pay with";
+                    return false;
+                }
 
                 // A cost's magnitude is the signed change it makes, so what matters is what that leaves. Comparing
                 // the value with the magnitude itself passed every cost, as a cost is negative
                 float change = impact.Magnitude?.Evaluate(spec) ?? 0f;
-                if (attrVal.CurrentValue + change < 0f) return false;
+                if (attrVal.CurrentValue + change < 0f)
+                {
+                    error = $"Its caster's {ValidationText.NameOf(impact.AttributeTarget)}, {attrVal.CurrentValue:0.##}, can't pay {-change:0.##}";
+                    return false;
+                }
             }
             return true;
         }
-        public string GetName()
-        {
-            return "Cost Validation";
-        }
+
+        public string GetName() => "Cost";
     }
 
-    [ForgeMenu(Description = "Activates only where the ability isn't cooling down.")]
+    [Serializable]
+    [ValidationSide(EValidationSide.Caster)]
+    [ForgeMenu(Description = "Activates only where the ability isn't cooling down, or with its charges counted, has one in hand.")]
     public class CooldownValidation : IAbilityValidationRule
     {
         public bool Validate(AbilityDataPacket data, Func<ITarget> getSource, out string error)
         {
-            error = "";
-            if (data.EffectOrigin is not AbilitySpec ability) return false;
+            error = null;
+            if (data?.EffectOrigin is not AbilitySpec ability)
+            {
+                error = ValidationText.NoActivation;
+                return false;
+            }
 
             // A toggle can always turn off; its cooldown starts as it does
             if (ability.IsToggledOn) return true;
 
             // With its charges counted, it's refused only with none in hand, whatever else carries its cooldown's tag
-            if (ability.Charges.Counted) return ability.Charges.InHand > 0;
-            return !ability.OnCooldown;
+            if (ability.Charges.Counted)
+            {
+                if (ability.Charges.InHand > 0) return true;
+                error = "It has no charges in hand";
+                return false;
+            }
+            if (!ability.OnCooldown) return true;
+            error = "It's cooling down";
+            return false;
         }
-        public string GetName()
-        {
-            return "Cooldown Validation";
-        }
+
+        public string GetName() => "Cooldown";
     }
 
     [Serializable]
-    [ForgeMenu(Description = "Activates only while the caster lives.")]
+    [ForgeMenu(Description = "Activates only while the checked entity lives: the caster among the Caster Checks, the target among the Target Checks.")]
     public class IsAliveValidation : IAbilityValidationRule
     {
-
         public bool Validate(AbilityDataPacket data, Func<ITarget> getSource, out string error)
         {
-            error = "";
-            return !getSource?.Invoke().IsDead ?? false;
+            // A missing entity is refused: reading it threw
+            var subject = getSource?.Invoke();
+            if (subject == null)
+            {
+                error = ValidationText.NoOne;
+                return false;
+            }
+            error = subject.IsDead ? $"{ValidationText.NameOf(subject)} is dead" : null;
+            return error == null;
         }
-        public string GetName()
-        {
-            return "Is Alive Validation";
-        }
+
+        public string GetName() => "Is Alive";
     }
 
     [Serializable]
-    [ForgeMenu(Description = "Activates only where an attribute compares with a value.")]
+    [ForgeMenu(Description = "Activates only where an attribute of the checked entity, or its share of its base, compares with a value.")]
     public class AttributeValidation : AbstractAttributeValidationRule
     {
         public EComparisonOperator Comparison;
@@ -94,93 +128,237 @@ namespace FarEmerald.PlayForge
         /// </summary>
         [Tooltip("Compare the attribute's share of its base, from 0 to 1, in place of its value")]
         public bool ShareOfBase;
-        
+
         public override bool Validate(AbilityDataPacket data, Func<ITarget> getSource, out string error)
         {
-            error = "Failed Attribute Validation";
-            var source = getSource?.Invoke();
-            if (source is null) return false;
-            
-            if (!source.TryGetAttributeValue(Attribute, out var attrVal))
+            var subject = getSource?.Invoke();
+            if (subject is null)
+            {
+                error = ValidationText.NoOne;
                 return false;
+            }
+
+            if (!subject.TryGetAttributeValue(Attribute, out var attrVal))
+            {
+                error = $"{ValidationText.NameOf(subject)} has no {ValidationText.NameOf(Attribute)}";
+                return false;
+            }
 
             // Its share of its base, where the rule asks for one
             float value = !ShareOfBase ? attrVal.CurrentValue
                 : attrVal.BaseValue > 0f ? attrVal.CurrentValue / attrVal.BaseValue : 0f;
             float compared = Value?.Evaluate(NumberContext.Of(data)) ?? 0f;
-            return Comparison switch
+            if (NumberComparison.Holds(value, Comparison, compared))
             {
-                EComparisonOperator.GreaterThan => value > compared,
-                EComparisonOperator.LessThan => value < compared,
-                EComparisonOperator.GreaterOrEqual => value >= compared,
-                EComparisonOperator.LessOrEqual => value <= compared,
-                EComparisonOperator.Equal => Mathf.Approximately(value, compared),
-                EComparisonOperator.NotEqual => !Mathf.Approximately(value, compared),
-                _ => throw new ArgumentOutOfRangeException()
-            };
+                error = null;
+                return true;
+            }
+            error = $"{ValidationText.NameOf(subject)}'s {ValidationText.NameOf(Attribute)}{(ShareOfBase ? " share" : "")}, {value:0.##}, " +
+                    $"isn't {NumberComparison.Symbol(Comparison)} {compared:0.##}";
+            return false;
         }
-        public override string GetName()
-        {
-            return "Source Attribute Validation";
-        }
+
+        public override string GetName() => "Attribute";
     }
 
+    /// <summary>
+    /// A rule that reads a tag, as Tag Weight does: its weight on the entity it checks, the caster among the Caster Checks
+    /// and the target among the Target Checks, or, where that entity holds none of it, the ability's Local Data under it.
+    /// </summary>
+    [Serializable]
     public abstract class AbstractTagValidationRule : IAbilityValidationRule
     {
         [ForgeTagContext(ForgeContext.Granted, ForgeContext.AssetTag, ForgeContext.LocalDataKey)]
         public Tag Tag;
 
-        public virtual DataWrapper GetValue(AbilityDataPacket data)
+        /// <summary>The tag's weight on an entity, 0 where it holds none of it.</summary>
+        protected int WeightOn(ITarget subject) => subject == null ? 0 : Math.Max(0, subject.GetTagWeight(Tag));
+
+        /// <summary>
+        /// The tag's value for a check: its weight on the entity checked, or, where that entity holds none of it, the
+        /// ability's Local Data under it; null with neither.
+        /// </summary>
+        public virtual DataWrapper GetValue(AbilityDataPacket data, ITarget subject)
         {
-            // By default, query value from TagCache
-            var source = data.EffectOrigin.GetSource();
-            if (source.GetTagCache().TryGetWeight(Tag, out var value))
-            {
-                var wrapper = new DataWrapper
-                {
-                    floatValue = value,
-                    intValue = value
-                };
-                return wrapper;
-            }
-            
-            // Otherwise, search for tag in LocalData on Ability
-            if (data.EffectOrigin is not AbilitySpec ability) return default;
-
-            return !ability.Base.TryGetLocalData(Tag, out var dataWrapper) ? default : dataWrapper;
-
+            int weight = subject?.GetTagWeight(Tag) ?? -1;
+            if (weight >= 0) return new DataWrapper { floatValue = weight, intValue = weight };
+            return data?.EffectOrigin is AbilitySpec ability && ability.Base.TryGetLocalData(Tag, out var local) ? local : null;
         }
-        
+
         public abstract bool Validate(AbilityDataPacket data, Func<ITarget> getSource, out string error);
         public abstract string GetName();
     }
-    
-    [ForgeMenu(Description = "Activates only where the target is within range.")]
-    public class CheckRangeValidation : AbstractTagValidationRule
+
+    [Serializable]
+    [ForgeMenu(Name = "Tag Weight", Description = "Activates only where the checked entity holds a tag at a weight that compares with a number, as combo points or stacks.")]
+    public class TagWeightValidation : AbstractTagValidationRule
     {
+        [Tooltip("How the tag's weight compares with the number")]
+        public EComparisonOperator Comparison = EComparisonOperator.GreaterOrEqual;
+
+        [Tooltip("The weight it compares with, read at the ability's level; an entity without the tag holds it at 0")]
+        public ScalableInt Weight = 1;
+
         public override bool Validate(AbilityDataPacket data, Func<ITarget> getSource, out string error)
         {
-            error = "";
-            if (data.EffectOrigin is not AbilitySpec ability) return false;
-
-            var value = GetValue(data);
-            if (value is null) return false;
-
-            if (!data.TryGetTarget(EDataTarget.Primary, out var targetObj)) return false;
-
-            // From the targeting packets, which both hubs have. From their GameObjects, a runtime GAS at either end,
-            // which has none, failed every check
-            var target = targetObj?.GetTargetingPacket();
-            if (target is null) return false;
-
-            var source = data.EffectOrigin.GetSource()?.GetTargetingPacket();
-            if (source is null) return false;
-
-            return Vector3.Distance(source.position, target.position) <= value.floatValue.Evaluate(NumberContext.Of(data));
+            var subject = getSource?.Invoke();
+            if (subject == null)
+            {
+                error = ValidationText.NoOne;
+                return false;
+            }
+            int weight = WeightOn(subject);
+            float compared = Weight?.Evaluate(NumberContext.Of(data)) ?? 0;
+            if (NumberComparison.Holds(weight, Comparison, compared))
+            {
+                error = null;
+                return true;
+            }
+            error = $"{ValidationText.NameOf(subject)} holds {Tag} at {weight}, not {NumberComparison.Symbol(Comparison)} {compared:0.##}";
+            return false;
         }
-        public override string GetName()
+
+        public override string GetName() => "Tag Weight";
+    }
+
+    [Serializable]
+    [ForgeMenu(Name = "Has Effect", Description = "Activates only where the checked entity has an effect on, by asset or by tag; or, with Without, where it hasn't.")]
+    public class HasEffectValidation : IAbilityValidationRule
+    {
+        [Tooltip("The effect it looks for, or none to look by Tagged alone")]
+        public GameplayEffect Effect;
+
+        [Tooltip("Or any effect tagged with this or one under it, by its asset tag, a context tag or a tag it grants, as a cleanse names them")]
+        [ForgeTagContext(ForgeContext.AssetTag, ForgeContext.ContextTag, ForgeContext.Granted)]
+        public Tag Tagged;
+
+        [Tooltip("Passes where the entity has none of it, in place of where it has")]
+        public bool Without;
+
+        public bool Validate(AbilityDataPacket data, Func<ITarget> getSource, out string error)
         {
-            return "Range Validation";
+            error = null;
+            // Naming no effect, it asks nothing
+            if (Effect == null && !Tagged.IsValid) return true;
+
+            var subject = getSource?.Invoke();
+            if (subject == null)
+            {
+                error = ValidationText.NoOne;
+                return false;
+            }
+            var effects = (subject as IGameplayAbilitySystem)?.GetEffectSystem();
+            bool has = effects != null && ((Effect != null && effects.HasEffect(Effect)) || (Tagged.IsValid && effects.HasEffectTagged(Tagged)));
+            if (has != Without) return true;
+
+            var what = Effect != null ? ValidationText.NameOf(Effect) : $"an effect tagged {Tagged}";
+            error = $"{ValidationText.NameOf(subject)} {(Without ? "has" : "hasn't")} {what} on";
+            return false;
         }
+
+        public string GetName() => "Has Effect";
+    }
+
+    [Serializable]
+    [ForgeMenu(Name = "Holds Item", Description = "Activates only where the checked entity holds an item; or, with Equipped, wears it.")]
+    public class HoldsItemValidation : IAbilityValidationRule
+    {
+        [Tooltip("The item it must hold")]
+        public Item Item;
+
+        [Tooltip("It must wear the item, not only hold it")]
+        public bool Equipped;
+
+        public bool Validate(AbilityDataPacket data, Func<ITarget> getSource, out string error)
+        {
+            error = null;
+            // Naming no item, it asks nothing
+            if (Item == null) return true;
+
+            var subject = getSource?.Invoke();
+            if (subject == null)
+            {
+                error = ValidationText.NoOne;
+                return false;
+            }
+            var items = (subject as IGameplayAbilitySystem)?.GetItemSystem();
+            if (items != null && (Equipped ? items.IsItemEquipped(Item) : items.HasItem(Item))) return true;
+            error = $"{ValidationText.NameOf(subject)} doesn't {(Equipped ? "wear" : "hold")} {ValidationText.NameOf(Item)}";
+            return false;
+        }
+
+        public string GetName() => "Holds Item";
+    }
+
+    [Serializable]
+    [ValidationSide(EValidationSide.Caster)]
+    [ForgeMenu(Name = "Ability Level", Description = "Activates only where the ability's level compares with a number, as a form it unlocks at a rank.")]
+    public class AbilityLevelValidation : IAbilityValidationRule
+    {
+        [Tooltip("How the ability's level compares with the number")]
+        public EComparisonOperator Comparison = EComparisonOperator.GreaterOrEqual;
+
+        [Tooltip("The level it compares with")]
+        [Min(0)] public int Level = 2;
+
+        public bool Validate(AbilityDataPacket data, Func<ITarget> getSource, out string error)
+        {
+            if (data?.EffectOrigin is not AbilitySpec ability)
+            {
+                error = ValidationText.NoActivation;
+                return false;
+            }
+            int level = ability.GetLevel().CurrentValue;
+            if (NumberComparison.Holds(level, Comparison, Level))
+            {
+                error = null;
+                return true;
+            }
+            error = $"Its level, {level}, isn't {NumberComparison.Symbol(Comparison)} {Level}";
+            return false;
+        }
+
+        public string GetName() => "Ability Level";
+    }
+
+    /// <summary>
+    /// Check Range: the Cast Range component's check, its target within the component's range of its caster, among the
+    /// ability's Target Checks while the ability holds the component. The component enforces it, refusing a target or a
+    /// point handed beyond it and ending targeting that picks one, so this passes: it's the range's place among the
+    /// checks, and comes and goes with the component. It read its range from a tag's weight or the ability's Local Data
+    /// before the component held it.
+    /// </summary>
+    [ValidationSide(EValidationSide.Target)]
+    [ForgeMenu(Name = "Check Range", Description = "The Cast Range component's check: its target within the component's range of its caster. It comes and goes with the component.")]
+    public sealed class CheckRangeValidation : AbstractComponentValidationRule<CastRangeAbilityComponent>
+    {
+        public CheckRangeValidation(CastRangeAbilityComponent component) : base(component) { }
+
+        /// <summary>What it checks, with its component's range: "Its target within 6 of its caster, along the ground".</summary>
+        public override string Describe()
+        {
+            if (Component?.Range == null) return null;
+            if (Component.Range.IsConstant && Component.Range.Constant <= 0f) return "Its target anywhere: its Cast Range of 0 reaches anywhere";
+            return $"Its target within {NumberText.Of(Component.Range)} of its caster{(Component.Flat ? ", along the ground" : "")}";
+        }
+    }
+
+    /// <summary>How a rule names what it checks as it says why it refused.</summary>
+    internal static class ValidationText
+    {
+        /// <summary>Why a rule handed no entity refuses.</summary>
+        public const string NoOne = "There's no one to check";
+
+        /// <summary>Why a rule that asks of an ability's activation refuses outside one.</summary>
+        public const string NoActivation = "It isn't asked of an ability's activation";
+
+        /// <summary>A thing's name as a refusal says it: its PlayForge name, its object's, or "nothing".</summary>
+        public static string NameOf(object thing) => thing switch
+        {
+            null => "nothing",
+            IHasReadableDefinition named when !string.IsNullOrEmpty(named.GetName()) => named.GetName(),
+            UnityEngine.Object unity when unity => unity.name,
+            _ => thing.ToString()
+        };
     }
 }

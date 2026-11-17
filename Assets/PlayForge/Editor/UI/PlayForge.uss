@@ -2996,3 +2996,34 @@
     flex-grow: 1;
     padding: 12px 16px;
 }
+
+/* A check an ability's component stands behind, under the list of checks it's among: a row of its name, what it checks
+   and whose it is, locked, as no list holds it and it goes with its component. It lines up with the list's rows */
+.pf-root .pf-component-check {
+    flex-direction: row;
+    align-items: center;
+    min-height: 20px;
+    margin-left: 18px;
+}
+
+.pf-root .pf-component-check__name {
+    margin: 0 6px 0 0;
+    padding: 0;
+    color: var(--pf-text);
+}
+
+.pf-root .pf-component-check__line {
+    flex-shrink: 1;
+    margin: 0 6px 0 0;
+    padding: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--pf-secondary-text);
+}
+
+.pf-root .pf-component-check__owner {
+    margin: 0 0 0 auto;
+    padding: 0;
+    color: var(--pf-secondary-text);
+    -unity-font-style: italic;
+}
