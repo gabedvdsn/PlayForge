@@ -596,6 +596,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   page, through one table of links in the editor.
 
 ### Changed
+- The core names no component (EP-41): the GAS's core, an ability's spec, the ability and effect systems, purging, items,
+  the ability proxy, the targeting tasks, the Problems view's rules and the ability inspector name none of them, nor
+  what's declared beside one, so a project's own component reaches as far as the built-ins, which are written on the
+  public API alone. Proving Grounds' `RuntimeSourceTests` keeps it so.
 - The Problems view's Transfers and toggles rule is two (EP-40): Transfers that never move, and Toggles that never turn
   off. An ability's inspector says every component rule's problem under its Components list, where it said the
   Charges' alone.

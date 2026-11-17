@@ -3225,6 +3225,50 @@ its own numbers with itself as their owner. A kind inside a plain scaler reads t
   and
   `ScalableFloat.Initialize`. **Gone:** `EScalerCondition`, and the Conditional's and the Clamped's scaler slots.
 
+## The component API (EP-37 to EP-41)
+
+The core named the components it served: Cast Range in an ability's spec, its proxy and the targeting tasks; Toggle and
+Charges in the spec's commit, the Cost and Cooldown rules and purging; the auras in `Ability`, `Item`, the runtime
+identity, the effect system and `GASCore`; a Respawn's wait in `GASCore`; and the components' rules in the Problems view
+and the ability inspector. A project's own component couldn't reach as far. Now the built-ins are written on a public
+API alone and the core names none of them (Decision 90 put their shortcuts beside them). The entries name the methods to
+search for.
+
+### Found by what they do; a reach; refusals (EP-37)
+
+- **Read:**
+  - `Assets/PlayForge/Runtime/PlayForge/Core/ForgeComponents.cs` `AbstractForgeComponent.Find<T>`: the first component of
+    a list that is a `T`; each asset's own `Find<T>()`, and a spec's, asks its list.
+  - `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilityReach.cs` `IAbilityReach` and `ForgeReach`, which the
+    targeting tasks and the Lab's bots read.
+  - `AbilitySpec.SourceRefusal`: each check's and component's `RefusedAs`, where it switched on their classes.
+  - `AbilityProxy.TargetRefused`: a component's `CanTakeTarget`, where it asked the Cast Range.
+
+### Usage, cooldown models and purge claims (EP-38)
+
+- **Read:**
+  - `AbilitySpec.ApplyUsageEffects`: a component's `ApplyUsage`, else the cooldown model and the costs.
+  - `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/CooldownModel.cs` `ICooldownModel` and `SingleCooldown`;
+    Charges' model and Toggle, in `AbilityComponents.cs`, on the hooks alone.
+  - `ForgePurge.CategoriesOf`: a component's `CategoryOf`, and an applier's `spec.Claimed`.
+
+### Entity services (EP-39)
+
+- **Read:**
+  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EntityServices.cs` `AbstractEntityService` and `EntityServices`, which
+    `GASCore.Tick` steps, `GASCore.Revive` tells first, and `GASCore.WhenTerminate` ends.
+  - `AuraSet`, a service, and each Aura component's hooks, in `Auras.cs`; `RespawnTimer`, in `EntityComponents.cs`.
+  - `EffectSystemComponent.LendAbilities` and `TakeBackAbilities`: an effect's components hear `Lend` and `TakeBack`.
+
+### The editor (EP-40), and the guard (EP-41)
+
+- **Read:**
+  - `Assets/PlayForge/Editor/Problems/ForgeComponentRule.cs` `ForgeComponentRule<T>`; the built-ins' rules, in
+    `ComponentRules.cs`.
+  - `AbilityEditor.ShowComponentNotes`, and `ActivationSummary`'s `DescribeUsage`.
+  - Proving Grounds' `RuntimeSourceTests.EP_41_The_core_names_no_component`, which reads the core for every component, every
+    entity service, and what's declared beside a component.
+
 ## Tests
 
 - **The golden runner** is in `Assets/PlayForge/Tests`:
@@ -3263,6 +3307,10 @@ Newest first. Each row is a good place to start reading.
 
 | What | IDs | Where | Commit |
 |---|---|---|---|
+| A component's rules are its own, found as every rule is | EP-40 | `Assets/PlayForge/Editor/Problems/ForgeComponentRule.cs:18` | `412dc8b` |
+| An entity's services hold its auras and a Respawn's wait | EP-39 | `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EntityServices.cs:12` | `d06994b` |
+| A Toggle is written on the components' hooks alone | EP-38 | `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Ability/Core/AbilityComponents.cs:128` | `b41faf6` |
+| An ability's reach is asked, never its Cast Range | EP-37 | `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilityReach.cs:25` | `338e014` |
 | An ability made in code has a stage list | GAS-63 | `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Ability/AbilityProxy/Core/AbilityBehaviour.cs:29` | `e91fe34` |
 | A template's push searches the project once | ED-44 | `Assets/PlayForge/Editor/Tools/ForgeTemplatePropagation/ForgeTemplatePropagator.cs:216` | `024cf09` |
 | Ending a process costs the same however many there are | PC-34 | `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessWorld.cs:237` | `4a226e6` |

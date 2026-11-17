@@ -347,7 +347,9 @@ is an `ICooldownModel`, which Charges implements: how many it holds, how many ar
 the Cooldown check refuses it with none; an ability with none has `SingleCooldown`, one use, back as its Cooldown ends.
 The Cooldown check asks it, the ability spends through it, and a HUD reads it as `spec.CooldownModel`. A component's
 state that needs its holder, as a Charges component's charges need their ability, is kept with
-`spec.ComponentStates.TryGet` and `Keep`.
+`spec.ComponentStates.TryGet` and `Keep`. The built-in components are written on this API alone, and PlayForge's core
+names none of them, so a component of your own reaches as far as they do; each one's shortcuts sit beside it, as
+`spec.IsToggledOn()` beside Toggle.
 
 ### Cast Range
 
