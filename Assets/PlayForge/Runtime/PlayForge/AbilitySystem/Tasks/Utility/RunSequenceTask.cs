@@ -11,6 +11,14 @@ namespace FarEmerald.PlayForge
         public TaskSequenceReference Sequence;
 
         /// <summary>
+        /// The clock the sequence it runs goes by: the caster's, the game's, unscaled, scaled, or one of your own. It's the
+        /// run's alone, before the ability's packet's and the sequence's own, so the ability's other tasks keep their time.
+        /// None leaves the sequence the clock it would have had: its own, or the caster's.
+        /// </summary>
+        [Tooltip("The clock the sequence runs by: none for its own or the caster's, or the caster's, the game's, unscaled or scaled")]
+        [SerializeReference] public AbstractClockChoice Clock;
+
+        /// <summary>
         /// A sequence made in code, as an ability a game builds as it runs makes one with <see cref="TaskSequenceBuilder"/>.
         /// Set, each activation runs a fresh sequence from it, in place of the one <see cref="Sequence"/>'s method makes.
         /// Run Sequence ran only a sequence a static method made, by name.
@@ -34,6 +42,10 @@ namespace FarEmerald.PlayForge
             // A fresh one from the definition made in code, or the one the method makes
             var seq = Definition != null ? new TaskSequence(Definition) : Sequence.GetActiveSequence();
             if (seq is null) return;
+
+            // The clock the pick gives, the sequence's run's alone: the ability's packet, which its other tasks share,
+            // keeps its own
+            var clock = Clock?.ClockFor(data);
 
             if (seq is TaskSequence taskSeq)
             {
@@ -61,7 +73,8 @@ namespace FarEmerald.PlayForge
                 // started the sequence via .Forget() outside ProcessControl, producing an orphaned
                 // runtime that kept running after the outer ability tore down.
                 // In the caster's world, as its ability's own sequence is
-                var registration = ProcessControl.Register(taskSeq).With(data).In(ProcessWorld.Of(data.EffectOrigin?.GetSource())).Run();
+                var registration = ProcessControl.Register(new TaskSequenceProcess(taskSeq) { Clock = clock }).With(data)
+                    .In(ProcessWorld.Of(data.EffectOrigin?.GetSource())).Run();
                 var relay = registration.Relay;
                 if (!registration)
                 {
@@ -104,7 +117,8 @@ namespace FarEmerald.PlayForge
             // conditions and its sequences' each frame, where awaiting it in place asked none of them
             if (seq is TaskSequenceChain chain)
             {
-                var chainRegistration = ProcessControl.Register(chain).With(data).In(ProcessWorld.Of(data.EffectOrigin?.GetSource())).Run();
+                var chainRegistration = ProcessControl.Register(new TaskSequenceProcess(chain) { Clock = clock }).With(data)
+                    .In(ProcessWorld.Of(data.EffectOrigin?.GetSource())).Run();
                 if (!chainRegistration)
                 {
                     ForgeLog.Warning(ForgeLog.ESystem.Abilities, $"[RunSequenceTask] ProcessControl refused the inner chain ({chainRegistration.Refusal}).");
@@ -123,8 +137,9 @@ namespace FarEmerald.PlayForge
                 return;
             }
 
-            // Any other kind of sequence: awaited in place
+            // Any other kind of sequence: awaited in place, on a packet of its own that carries the pick
             var fullSeqData = new SequenceDataPacket(data);
+            if (clock != null) fullSeqData.Clock = clock;
             await seq.Run(fullSeqData, token);
         }
     }

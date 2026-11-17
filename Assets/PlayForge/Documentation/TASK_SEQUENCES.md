@@ -113,10 +113,12 @@ stage end.
 A run's time is its **clock**'s: its waits and delays, its timeouts and longest runs, its `ElapsedTime`, the library's
 tweens and its synced tasks all go by it. A run takes the first clock it finds:
 
-1. its packet's, `data.Clock`, which whatever starts the run sets;
-2. its sequence's own, `WithClock(clock)` on the builder;
-3. its packet's owner's: an ability's caster's own clock, its time scale times the game's;
-4. the game's, `ForgeTime.Clock`.
+1. its own, `runtime.Clock`, which whatever runs it sets: a chain's `Clock`, a `TaskSequenceProcess`'s, or an ability's
+   Run Sequence task's pick, so a packet others share keeps its own;
+2. its packet's, `data.Clock`, which whatever starts the run sets;
+3. its sequence's own, `WithClock(clock)` on the builder;
+4. its packet's owner's: an ability's caster's own clock, its time scale times the game's;
+5. the game's, `GameClock.Instance`, which reads the clock in force, `ForgeTime.Clock`, as it's asked.
 
 ```csharp
 // A pause menu's runs while the game's time stands
@@ -141,6 +143,13 @@ data.Clock = gas.GetClock();
 `runtime.Clock` is a run's clock, and `TaskSequenceRuntime.ClockOfRun(token)` the clock of the run a task's token
 belongs to. A synced runner takes its sequence's clock (`runner.Clock`), a packet's before it (`runner.ClockFor(data)`),
 and `runner.Step(data)` steps by it.
+
+An inspector picks a clock with an `AbstractClockChoice` field, `[SerializeReference]`: None, which leaves a run the
+clock it would have had, the **Caster's**, the **Game's**, **Unscaled**, or **Scaled**, a pace of its own over the
+clock it picks, the caster's unless it picks another. A `[Serializable]` class of your own made from it is offered
+beside them, its `ClockFor(data)` giving the clock for a run on a packet. An ability's Run Sequence task has one, which
+gives the sequence it runs a clock of its own and leaves the ability's other tasks the caster's; so do the Task Sequence
+Examples' components.
 
 Under ProcessControl's fixed tick, a sequence waits for the next tick, and the ticks run on the game's time, so they stand
 with it. A clock that runs while the game's time stands says so, `FollowsTicks` false as the unscaled clock's is, and its

@@ -17,6 +17,9 @@ namespace FarEmerald.PlayForge.Samples.TaskSequences
     /// </summary>
     public abstract class SyncedSequenceComponent : LazyMonoProcess
     {
+        [Tooltip("The clock its sequence runs by: none for the sequence's own or the game's; Unscaled runs it while the game is paused")]
+        [SerializeReference] public AbstractClockChoice Clock;
+
         /// <summary>The runner stepping the component's sequence, or null with none.</summary>
         protected SyncedTaskSequence Runner { get; private set; }
 
@@ -37,8 +40,11 @@ namespace FarEmerald.PlayForge.Samples.TaskSequences
 
             // A scene's processes are registered with a plain packet, which a sequence's takes the data of
             Packet = regData as SequenceDataPacket ?? new SequenceDataPacket(regData);
+            // The clock picked, on the packet, which comes before the sequence's own; none leaves the packet's
+            if (Clock?.ClockFor(Packet) is { } picked) Packet.Clock = picked;
             Runner = BuildRunner();
-            if (Runner != null) ForgeLog.Verbose($"{name}: a synced sequence of {Runner.StageCount} stages.", this);
+            if (Runner != null)
+                ForgeLog.Verbose($"{name}: a synced sequence of {Runner.StageCount} stages, on {Runner.ClockFor(Packet).GetType().Name}.", this);
         }
 
         /// <summary>The component's sequence, built as its process starts. With none, it steps nothing.</summary>
@@ -360,9 +366,8 @@ namespace FarEmerald.PlayForge.Samples.TaskSequences
     }
 
     /// <summary>
-    /// Pulses its object's scale for good, a punch and a pause. With Ignore Time Scale its sequence runs on the unscaled
-    /// clock, WithClock's, so it goes on while the game's time is slowed or stopped, as a menu's highlight should; its
-    /// runner steps by the clock it's given.
+    /// Pulses its object's scale for good, a punch and a pause. With its Clock picked as Unscaled it goes on while the game's
+    /// time is slowed or stopped, as a menu's highlight should, its runner stepping by the clock its packet carries.
     /// </summary>
     [AddComponentMenu("PlayForge/Samples/Task Sequences/Synced Pulse")]
     public class SyncedPulse : SyncedSequenceComponent
@@ -376,15 +381,10 @@ namespace FarEmerald.PlayForge.Samples.TaskSequences
         [Tooltip("Seconds between pulses")]
         [Min(0f)] public float PauseBetween = 0.4f;
 
-        [Tooltip("Runs on the unscaled clock, so it pulses while the game's time is stopped. Read as its process starts")]
-        public bool IgnoreTimeScale;
-
         protected override SyncedTaskSequence BuildRunner()
         {
-            var runner = TaskSequenceBuilder.Create("Synced Pulse")
+            return TaskSequenceBuilder.Create("Synced Pulse")
                 .WithRepeat(true)
-                // Null for the game's: the packet's owner's clock, as nothing names another
-                .WithClock(IgnoreTimeScale ? UnscaledClock.Instance : null)
                 .Stage(s => s
                     .WithName("Punch")
                     .Task(SyncSeq.PunchScale(transform, Intensity, Duration)))
@@ -392,9 +392,6 @@ namespace FarEmerald.PlayForge.Samples.TaskSequences
                     .WithName("Pause")
                     .SyncDelay(PauseBetween))
                 .BuildSyncRunner();
-
-            ForgeLog.Verbose($"{name} pulses on {(runner.Clock != null ? "the unscaled clock" : "the game's time")}.", this);
-            return runner;
         }
     }
 

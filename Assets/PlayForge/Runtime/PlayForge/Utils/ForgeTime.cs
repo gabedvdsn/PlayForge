@@ -50,6 +50,24 @@ namespace FarEmerald.PlayForge
     }
 
     /// <summary>
+    /// The game's time, as the clock in force reads it: ForgeTime's own, or a world's or a tick's while one steps. It reads
+    /// that clock each time it's asked, so it can be kept and handed on: a sequence on it runs by the game's time whatever
+    /// its packet's owner's is, as an ability's caster's.
+    /// </summary>
+    public sealed class GameClock : IForgeClock
+    {
+        public static readonly GameClock Instance = new();
+
+        public float DeltaTime => ForgeTime.Clock.DeltaTime;
+        public float UnscaledDeltaTime => ForgeTime.Clock.UnscaledDeltaTime;
+        public float FixedDeltaTime => ForgeTime.Clock.FixedDeltaTime;
+        public float Time => ForgeTime.Clock.Time;
+        public float UnscaledTime => ForgeTime.Clock.UnscaledTime;
+        public int FrameCount => ForgeTime.Clock.FrameCount;
+        public bool FollowsTicks => ForgeTime.Clock.FollowsTicks;
+    }
+
+    /// <summary>
     /// The game's time without its time scale, as the clock in force reads it: a sequence on it runs while the game is
     /// slowed or stopped, as a pause menu's or a hit-stop's own effects do. Its sequences wait for Unity's frames where
     /// the game's ticks would stand with the game's time.
@@ -160,9 +178,13 @@ namespace FarEmerald.PlayForge
         /// <summary>The clock read now.</summary>
         public static IForgeClock Clock => clock;
 
-        /// <summary>Puts a clock in, or Unity's back with null. Returns the one it replaced, to put back.</summary>
+        /// <summary>
+        /// Puts a clock in, or Unity's back with null. Returns the one it replaced, to put back. <see cref="GameClock"/> reads
+        /// the clock in force, so it can't be the one.
+        /// </summary>
         public static IForgeClock Use(IForgeClock next)
         {
+            if (next is GameClock) throw new ArgumentException("The game clock reads the clock in force, so it can't be put in as it.", nameof(next));
             var previous = clock;
             clock = next ?? UnityClock.Instance;
             return previous;
@@ -172,10 +194,10 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// The clock an owner's time runs by: an entity's own, its time scale times the game's, or the game's for anything
-        /// else. Read it as it's needed: the game's is whichever clock is in force then.
+        /// else, <see cref="GameClock"/>, which reads the clock in force as it's asked.
         /// </summary>
         public static IForgeClock ClockOf(object owner) =>
-            owner is IGameplayAbilitySystem gas && gas.GetClock() is { } entity ? entity : clock;
+            owner is IGameplayAbilitySystem gas && gas.GetClock() is { } entity ? entity : GameClock.Instance;
 
         /// <summary>
         /// The clock the work done with a packet runs by: the one it names (<see cref="ProcessDataPacket.Clock"/>), or its

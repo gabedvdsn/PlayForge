@@ -214,7 +214,16 @@ namespace FarEmerald.PlayForge
         
         /// <summary>The data packet being used (set during Run).</summary>
         public SequenceDataPacket Data { get; private set; }
-        
+
+        /// <summary>
+        /// The clock its run goes by: each of its sequences' runs takes it, before the packet's and the sequence's own, and
+        /// so do the chain's own waits. Null, as it is unless set, leaves each sequence the clock it would have had.
+        /// </summary>
+        public IForgeClock Clock { get; set; }
+
+        // The clock the chain's own waits go by, between its sequences: its own, or its packet's
+        private IForgeClock OwnWaitsClock => Clock ?? ForgeTime.ClockFor(Data);
+
         /// <summary>Current sequence index.</summary>
         public int CurrentIndex => _currentIndex;
         
@@ -403,8 +412,8 @@ namespace FarEmerald.PlayForge
                     }
 
                     // Every sequence can fail at once, and a round that took no frame would go round for ever
-                    // inside one. A step of its packet's clock, which a menu's unscaled one takes on Unity's frames
-                    if (ForgeTime.FrameCount == startFrame) await ForgeTick.Next(ForgeTime.ClockFor(Data), chainToken);
+                    // inside one. A step of its clock, which a menu's unscaled one takes on Unity's frames
+                    if (ForgeTime.FrameCount == startFrame) await ForgeTick.Next(OwnWaitsClock, chainToken);
                 }
             }
             catch (OperationCanceledException)
@@ -446,7 +455,7 @@ namespace FarEmerald.PlayForge
                 _currentIndex = i;
                 _currentSequence = _sequences[i];
                 
-                if (_paused) await ForgeTick.WaitWhile(() => _paused, ForgeTime.ClockFor(Data), chainToken);
+                if (_paused) await ForgeTick.WaitWhile(() => _paused, OwnWaitsClock, chainToken);
 
                 // Check if chain was interrupted before starting sequence
                 if (chainToken.IsCancellationRequested || _interrupted)
@@ -463,8 +472,11 @@ namespace FarEmerald.PlayForge
                     ForgeLog.Info(ForgeLog.ESystem.Sequences, $"[TaskSequenceChain] Starting sequence {i}: {_currentSequence.Definition.Metadata?.Name ?? "unnamed"}");
                 }
                 
-                // Run the sequence with the CHAIN's token
-                bool success = await _currentSequence.TryRun(Data, chainToken);
+                // Run the sequence with the CHAIN's token, and its clock, where it has one
+                var runtime = _currentSequence.CreateRuntime();
+                runtime.Clock = Clock;
+                await _currentSequence.Run(runtime, Data, chainToken);
+                bool success = runtime.CompletedSuccessfully;
                 
                 // Check if chain was interrupted during sequence
                 if (_interrupted)

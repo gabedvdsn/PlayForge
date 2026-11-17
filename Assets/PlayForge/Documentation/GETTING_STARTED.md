@@ -121,7 +121,8 @@ and no other. A scale of 0 holds the entity's time still; it isn't a pause.
 
 A sequence can run by a clock of its own: `WithClock(UnscaledClock.Instance)` runs a pause menu's while the game's time
 stands, a `ScaledClock` runs one at a pace of its own, and a packet's `Clock`, an entity's among them, comes before
-either. [TASK_SEQUENCES.md](TASK_SEQUENCES.md) has the order a run takes them in.
+either. An ability's Run Sequence task picks one in its inspector, its **Clock**. [TASK_SEQUENCES.md](TASK_SEQUENCES.md)
+has the order a run takes them in.
 
 For a run that comes out the same at any frame rate, set ProcessControl's Fixed Tick Rate, as 60. The game then steps
 in ticks, each a fixed step of its time, as many a frame as the frame's time holds: every process steps once a tick,

@@ -61,5 +61,5 @@ and with a game's own input put in with `ForgeInput.Use`. They log through `Forg
 which show once its level is lowered in Preferences > PlayForge > Logging. They roll through `ForgeRandom`, so a seeded source gives
 the same rolls each run. Inside a task they keep time through `SequenceTaskLibrary`, whose waits hold while their
 sequence is paused and which go by the run's clock; outside one, through `ForgeTime`. The Timers: Clocks example runs
-a sequence on the unscaled clock and two on a `ScaledClock` the S key slows, and the synced pulse's Ignore Time Scale
-puts its sequence on the unscaled clock.
+a sequence on the unscaled clock and two on a `ScaledClock` the S key slows. The synced components and the Example
+Runner pick a clock in their Clock field, as Unscaled for a menu's, which their run's packet carries.

@@ -201,13 +201,22 @@ namespace FarEmerald.PlayForge
             }
         }
 
+        // The clock this run was given as it's run, which comes before the rest
+        private IForgeClock _clock;
+
         /// <summary>
-        /// The clock this run goes by, read as it's asked: its packet's (<see cref="ProcessDataPacket.Clock"/>), then its
-        /// sequence's (<see cref="TaskSequenceBuilder.WithClock"/>), then its packet's owner's, an ability's caster's, then
-        /// the game's. Its waits, delays, timeouts and <see cref="ElapsedTime"/>, its tasks' tweens and its synced tasks
-        /// go by it.
+        /// The clock this run goes by, read as it's asked: its own, as whatever runs it sets it, then its packet's
+        /// (<see cref="ProcessDataPacket.Clock"/>), then its sequence's (<see cref="TaskSequenceBuilder.WithClock"/>), then
+        /// its packet's owner's, an ability's caster's, then the game's. Its waits, delays, timeouts and
+        /// <see cref="ElapsedTime"/>, its tasks' tweens and its synced tasks go by it. Set it to give this run a clock of
+        /// its own, as an ability's Run Sequence task does with its pick, so a packet others share keeps its own; null
+        /// takes the rest in turn.
         /// </summary>
-        public IForgeClock Clock => Data?.Clock ?? Definition.Metadata?.Clock ?? ForgeTime.ClockFor(Data);
+        public IForgeClock Clock
+        {
+            get => _clock ?? Data?.Clock ?? Definition.Metadata?.Clock ?? ForgeTime.ClockFor(Data);
+            set => _clock = value;
+        }
 
         /// <summary>
         /// The clock of the run a token belongs to, as <see cref="Clock"/> reads it; for a token of no run, the clock the

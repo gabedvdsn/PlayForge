@@ -39,6 +39,13 @@ namespace FarEmerald.PlayForge
         /// <summary>True if this process runs synchronously (per-frame stepping only).</summary>
         public bool IsSynchronous => _requestedLifecycle == EProcessLifecycle.Synchronous;
 
+        /// <summary>
+        /// The clock its run goes by, before its packet's and its sequence's own, as an ability's Run Sequence task's pick
+        /// gives it: its sequence's run, a chain's, or a synced runner's steps. Null, as it is unless set, leaves the run the
+        /// clock it would have had. Set it before the process runs.
+        /// </summary>
+        public IForgeClock Clock { get; set; }
+
         // ═══════════════════════════════════════════════════════════════════════════
         // CONSTRUCTION
         // ═══════════════════════════════════════════════════════════════════════════
@@ -152,8 +159,9 @@ namespace FarEmerald.PlayForge
         {
             if (IsSynchronous && _syncRunner != null)
             {
-                // A step of the runner's clock: its packet's, its sequence's, its packet's owner's or the game's
-                float deltaTime = _syncRunner.ClockFor(SeqData).DeltaTime;
+                // A step of the process's clock, or else the runner's: its packet's, its sequence's, its packet's owner's
+                // or the game's
+                float deltaTime = (Clock ?? _syncRunner.ClockFor(SeqData)).DeltaTime;
                 var onStep = _sequence?.Definition.Metadata?.OnStepCallbacks;
                 if (onStep != null && onStep.TryGetValue(timing, out var callback)) callback?.Invoke(SeqData, deltaTime);
 
@@ -203,11 +211,14 @@ namespace FarEmerald.PlayForge
             {
                 if (IsChain)
                 {
+                    // A chain's own clock, where it has one, is left it when the process has none
+                    if (Clock != null) _chain.Clock = Clock;
                     await _chain.Run(SeqData, token);
                 }
                 else
                 {
                     _runtime = _sequence.CreateRuntime();
+                    _runtime.Clock = Clock;
                     await _sequence.Run(_runtime, SeqData, token);
                 }
             }

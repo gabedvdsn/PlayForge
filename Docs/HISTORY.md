@@ -10,6 +10,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## Toward 1.0.0, since 0.1.0
 
 ### Added
+- **A clock picked in an inspector** (EP-33): `AbstractClockChoice`, Caster's, Game's, Unscaled and Scaled, or one of
+  your own; an ability's Run Sequence task's **Clock** gives the sequence it runs one, leaving the ability's other tasks
+  the caster's. A run takes a clock of its own, `TaskSequenceRuntime.Clock`, set before its packet's, and a chain's
+  `Clock` and a `TaskSequenceProcess`'s give their runs one. `GameClock` reads the clock in force as it's asked.
 - **A sequence's clock** (EP-32): a run goes by its packet's `Clock`, then its sequence's (`WithClock`), then its
   packet's owner's, an ability's caster's, then the game's, and so do its waits, delays, timeouts, elapsed time, tweens
   and synced tasks. `UnscaledClock` runs a sequence while the game's time stands, `ScaledClock` at a pace of its own,
@@ -549,6 +553,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   page, through one table of links in the editor.
 
 ### Changed
+- `ForgeTime.ClockOf` and `ClockFor` give `GameClock.Instance` for the game's (EP-33), where they gave the clock in
+  force as they were asked, which a caller that kept it went on reading after a tick or a world's step had ended.
+- The Task Sequence Examples' synced components and Example Runner pick a **Clock** (EP-33); the synced pulse's Ignore
+  Time Scale is its Clock's Unscaled.
 - Under the fixed tick, a sequence on a clock that runs while the game's time stands waits for Unity's frames (EP-32),
   `IForgeClock.FollowsTicks` false, as the unscaled clock's is; the ticks stand with the game's time.
 - An ability's **Sequence** task runs a chain as a process, as it runs a sequence (EP-31), so the chain's conditions and

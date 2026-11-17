@@ -8,7 +8,8 @@ namespace FarEmerald.PlayForge.Samples.TaskSequences
     /// <summary>
     /// Runs a task sequence example from a scene. Pick a sequence, any static method marked [TaskSequenceMethod], enter
     /// Play mode, and press the run key; the pause key holds it and lets it go, and the stop key ends it. Each run takes a
-    /// fresh sequence from its method and a fresh packet, SceneRoot's. A sequence runs through ProcessControl, as an
+    /// fresh sequence from its method and a fresh packet, SceneRoot's, which carries the Clock picked, where one is. A
+    /// sequence runs through ProcessControl, as an
     /// ability's does, so its conditions are asked each frame and its process pauses it. A chain runs here, awaited, and
     /// this asks its conditions each frame, as ProcessControl would. The scene needs PlayForge up, a ProcessControl and a
     /// GameRoot, as a Bootstrapper brings them.
@@ -27,6 +28,9 @@ namespace FarEmerald.PlayForge.Samples.TaskSequences
 
         [Tooltip("The key that stops it")]
         public KeyCode StopKey = KeyCode.Backspace;
+
+        [Tooltip("The clock its run goes by, on its packet, before the example's own: none for the example's own or the game's")]
+        [SerializeReference] public AbstractClockChoice Clock;
 
         // A sequence's run, through its process
         private ProcessRelay _relay;
@@ -86,6 +90,8 @@ namespace FarEmerald.PlayForge.Samples.TaskSequences
             // The method builds a new sequence each time it's called, so each run starts as the method made it
             IActiveSequence active = Sequence.GetActiveSequence();
             var data = SequenceDataPacket.SceneRoot();
+            // The clock picked rides on the run's packet, before the example's own clock; none leaves it that one
+            data.Clock = Clock?.ClockFor(data);
             _paused = false;
 
             if (Sequence.IsChain() && active is TaskSequenceChain chain) RunChain(chain, data).Forget();

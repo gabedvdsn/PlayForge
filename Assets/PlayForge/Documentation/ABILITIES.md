@@ -211,7 +211,9 @@ This section is what the ability does once it has started.
     scale by level, read as it runs, at its ability's level. Run Sequence runs the sequence a static method
     makes, picked in **Sequence** by name, from a searchable dropdown of the project's `[TaskSequenceMethod]` methods,
     each class's under its name where more than one class holds them, or, for an ability built in code, a fresh run of the sequence its `Definition` describes, which
-    `TaskSequenceBuilder` makes. A stage that holds a critical task is critical.
+    `TaskSequenceBuilder` makes. Its **Clock** picks the clock that sequence runs by: none for the sequence's own or the
+    caster's, or the Caster's, the Game's, Unscaled, which runs while the game is paused, or Scaled, a pace of its own;
+    the ability's other tasks keep the caster's. A stage that holds a critical task is critical.
     PlayForge's own tasks, by category: **Effects**, Apply Effects, Apply/Remove Effects, **Area Effect** (its
     effects on each within its radius of its caster, its target or its point, of the sides it takes, by position on
     either hub or with physics) and **Apply To Caster**; **Asset Loaders**, the Set tasks; **Process**, Create Mono

@@ -1001,12 +1001,13 @@ namespace FarEmerald.PlayForge.Samples.TaskSequences
 
         /// <summary>
         /// A run's time is its clock's: its waits, delays, timers, elapsed time, tweens and synced tasks all go by it. A
-        /// packet's Clock comes first, then the sequence's own, WithClock's, then the packet's owner's, an ability's
+        /// run's own clock comes first, which a chain's Clock, a process's or an ability's Run Sequence task's pick gives
+        /// it, then its packet's Clock, then the sequence's own, WithClock's, then the packet's owner's, an ability's
         /// caster's, and then the game's. The unscaled clock runs a menu's sequence while the game's time stands, and a
         /// ScaledClock runs one at a pace of its own: sequences that share one slow down, speed up and stop together. Under
         /// ProcessControl's fixed tick, a sequence on the unscaled clock waits for Unity's frames, as the ticks stand with
-        /// the game's time. Here two pulses share a clock, S halves and restores its pace, and a third pulse's packet names
-        /// a clock twice as fast, which comes before the one its sequence names.
+        /// the game's time. Here two pulses share a clock, S halves and restores its pace, a third pulse's packet names a
+        /// clock twice as fast, which comes before the one its sequence names, and a fourth's run is given one at half.
         /// </summary>
         [TaskSequenceMethod("Timers: Clocks")]
         public static TaskSequence Clocks()
@@ -1039,7 +1040,7 @@ namespace FarEmerald.PlayForge.Samples.TaskSequences
                 .Stage(s => s
                     .WithName("Pulses")
                     // The pulses end the stage; the key's wait, which never ends, is cut off with them
-                    .WhenN(3)
+                    .WhenN(4)
                     .Task((d, t) => RunPulse("Left", t))
                     .Task((d, t) => RunPulse("Right", t))
                     .Task((d, t) =>
@@ -1048,6 +1049,15 @@ namespace FarEmerald.PlayForge.Samples.TaskSequences
                         var fast = SequenceDataPacket.Default();
                         fast.Clock = new ScaledClock(2f);
                         return Pulse("Fast").Run(fast, t);
+                    })
+                    .Task((d, t) =>
+                    {
+                        // A run given a clock of its own, which comes before its packet's and its sequence's, as a chain,
+                        // a process or an ability's Run Sequence task gives one
+                        var slow = Pulse("Half");
+                        var runtime = slow.CreateRuntime();
+                        runtime.Clock = new ScaledClock(0.5f);
+                        return slow.Run(runtime, SequenceDataPacket.Default(), t);
                     })
                     .Task(async (d, t) =>
                     {
