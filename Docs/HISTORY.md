@@ -10,6 +10,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## Toward 1.0.0, since 0.1.0
 
 ### Added
+- **Pooled cues** (EP-51): a Prefab cue with **Pooled** takes its objects from `ForgeCuePool` and gives them back,
+  its pool making **Preallocate** of them ahead; an `IPooledCue` on the prefab resets it as it's taken and given
+  back.
 - **An entity's and an item's cues** (EP-50): an entity's **Cues** component plays as it spawns, dies and revives,
   and While Tagged for as long as it holds a tag; an item's plays on its holder as it's equipped, while it's
   equipped, and as it's used.
@@ -616,6 +619,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   page, through one table of links in the editor.
 
 ### Changed
+- A Prefab cue raised at a point places its prefab there, facing its normal (EP-51); on an entity with no place of its
+  own it went at the prefab's own position.
 - `ActionQueue.Clear()` tells each action it drops through `OnActionInvalidated` (EP-44), and an entity's queue closes
   as it ends: what waited is dropped and heard, and an action queued to it after is dropped at once, where they waited
   for good.

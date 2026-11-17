@@ -280,7 +280,10 @@ list:
   **Duration**, as Prefab's Lifetime and Sound's Volume, are number fields read for its effect as it lands.
 - **Sound**: plays its clip at the target as the effect lands, and on each tick with **On Each Tick**.
 - **Prefab**: places its prefab at the target as the effect lands, for **Lifetime** seconds, or, with **While Active**,
-  for as long as the effect lasts, following the target.
+  for as long as the effect lasts, following the target. A cue raised at a point, as a Play Cue task's, places it
+  there. With **Pooled** it takes its objects from a pool and gives them back, `ForgeCuePool`, the pool making
+  **Preallocate** of them ahead as it first plays, and an `IPooledCue` on the prefab resets it as it's taken and
+  given back.
 
 A cue plays its bursts as the effect lands, as its ticks execute and as it comes off, and a lasting cue, such as a
 While Active prefab, while the effect is on. A re-application that an effect on already takes in plays its burst
