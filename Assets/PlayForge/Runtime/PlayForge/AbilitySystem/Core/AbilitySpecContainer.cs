@@ -157,7 +157,7 @@ namespace FarEmerald.PlayForge
                 // Its pick refused, told as a refusal of the kind its component says, in the component's words, as its
                 // request said none: nothing of it was paid
                 if (pickRefused != EActivationRefusal.None)
-                    handle.Data.System?.Callbacks.AbilityRefused(new ActivationRefusal(Spec.Base, handle.Data.Request.Index, pickRefused, pickRule, pickDetail));
+                    handle.Data.System?.Refuse(new ActivationRefusal(Spec.Base, handle.Data.Request.Index, pickRefused, pickRule, pickDetail), handle.Data);
 
                 if (handle.Data.TryGetFirstTarget(out var target)
                     && Spec.TargetRefusal(target, handle.Data, out string rule, out string detail) is var why && why != EActivationRefusal.None)
@@ -165,7 +165,7 @@ namespace FarEmerald.PlayForge
                     // Told as a refusal where its targeting had ended well, as its request said none: nothing of it was
                     // paid, and the check that refused it says why
                     if (!targetingCancelled)
-                        handle.Data.System?.Callbacks.AbilityRefused(new ActivationRefusal(Spec.Base, handle.Data.Request.Index, why, rule, detail));
+                        handle.Data.System?.Refuse(new ActivationRefusal(Spec.Base, handle.Data.Request.Index, why, rule, detail), handle.Data);
                     targetingCancelled = true;
                     if (how == EAbilityEnd.Done) how = EAbilityEnd.Cancelled;
                 }

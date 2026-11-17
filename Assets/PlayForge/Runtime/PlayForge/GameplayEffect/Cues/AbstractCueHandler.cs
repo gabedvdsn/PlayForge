@@ -49,6 +49,9 @@ namespace FarEmerald.PlayForge
 
         /// <summary>An item was used.</summary>
         Used,
+
+        /// <summary>An ability's stage came to its Play Cue task.</summary>
+        Stage,
     }
 
     /// <summary>How a cue plays: a burst, or a lasting cue's beginning or its end.</summary>

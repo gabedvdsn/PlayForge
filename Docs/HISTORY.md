@@ -10,6 +10,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## Toward 1.0.0, since 0.1.0
 
 ### Added
+- **An ability's cues** (EP-49): an ability's **Cues** component plays on its caster as an activation starts,
+  commits, lasts, ends and is refused, and a **Play Cue** task plays its cues at its stage's moment, on the caster,
+  the target or the point. Ability components hear a refusal through a `Refused` hook.
 - **Cue tags and a cue library** (EP-47): a **Cue Tag** cue plays what its tag routes to. The project's **Cue
   Library**, named in its settings, plays a tag's route or its nearest parent's, a route that doesn't override
   playing its parent's too. An entity's **Cue Receiver** plays a tag its own way first, and its **Variant** plays

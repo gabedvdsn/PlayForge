@@ -35,6 +35,10 @@ namespace FarEmerald.PlayForge
         }
 
         // An activation that paid what it costs is, as it ends, a use of the item that lends the ability
+        // Its components hear an activation of it refused
+        internal void HearRefused(ProcessDataPacket data, ActivationRefusal refusal) =>
+            Hear(component => component.Refused(new AbilityComponentContext(this, data), refusal));
+
         internal void HearEnd(ProcessDataPacket data, EAbilityEnd how)
         {
             Hear(component => component.End(new AbilityComponentContext(this, data), how));

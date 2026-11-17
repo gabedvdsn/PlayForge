@@ -278,6 +278,12 @@ namespace FarEmerald.PlayForge
         public virtual void End(AbilityComponentContext ctx, EAbilityEnd how) { }
 
         /// <summary>
+        /// As an activation is refused, nothing of it paid: by its rules, a component, its target or its pick, as its
+        /// callbacks' OnAbilityRefused tells it.
+        /// </summary>
+        public virtual void Refused(AbilityComponentContext ctx, ActivationRefusal refusal) { }
+
+        /// <summary>
         /// What it adds to its ability's use, in a few words, which the ability's Activation line says after its cost and
         /// its cooldown, as Charges' "3 charges"; null, as here, for nothing.
         /// </summary>

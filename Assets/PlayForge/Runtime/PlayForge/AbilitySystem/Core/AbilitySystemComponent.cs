@@ -709,8 +709,19 @@ namespace FarEmerald.PlayForge
         public bool TryActivateAbility(AbilityActivationRequest req, out ActivationRefusal refusal)
         {
             if (TryActivate(req, fromBuffer: false, out refusal)) return true;
-            Callbacks.AbilityRefused(refusal);
+            Refuse(refusal, req.Data);
             return false;
+        }
+
+        /// <summary>
+        /// Tells a refusal: to the callbacks' <see cref="AbilitySystemCallbacks.OnAbilityRefused"/>, then to the refused
+        /// ability's components, where its slot holds it, with the activation's data where there is some.
+        /// </summary>
+        internal void Refuse(ActivationRefusal refusal, ProcessDataPacket data = null)
+        {
+            Callbacks.AbilityRefused(refusal);
+            if (AbilityCache != null && AbilityCache.TryGetValue(refusal.Index, out var container) && container?.Spec != null)
+                container.Spec.HearRefused(data, refusal);
         }
 
         /// <summary>
@@ -724,7 +735,7 @@ namespace FarEmerald.PlayForge
                 return TryActivateAbility(CreateActivationRequest(index, data, policy), out refusal);
 
             refusal = new ActivationRefusal(ability, -1, EActivationRefusal.NotKnown);
-            Callbacks.AbilityRefused(refusal);
+            Refuse(refusal, data);
             return false;
         }
 
@@ -756,7 +767,7 @@ namespace FarEmerald.PlayForge
                     found = true;
                 }
             }
-            Callbacks.AbilityRefused(refusal);
+            Refuse(refusal, data);
             return false;
         }
 

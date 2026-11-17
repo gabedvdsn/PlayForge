@@ -231,6 +231,7 @@ This section is what the ability does once it has started.
     loose tags while its stage runs, and **Cancel Abilities**, the caster's running ones by tag, but in a critical
     stage; **Movement**, **Dash** and **Blink**, which tell a mover of the game's own, an `IForgeMover` on the caster's
     object, as the Creator Lab's units are; **Items**, **Consume Item**, which its item system's Item Consumed hears;
+    **Cues**, **Play Cue**, its cues at the stage's moment, on the caster, on the target or at the point;
     **Utility**, Unity Event. Dash, Blink, Area Effect, Apply To Caster and Consume Item were the Demo's own.
     The activation keeps its claim until its last critical stage ends. With no critical stage, it lets the claim go
     as the stages start. Apply Effects' **Record Landed As** tags the activation's data as an effect lands on a
@@ -409,6 +410,15 @@ of its caster reads the caster's facing before it turns. An ability holds one at
 An **Aura** component holds an effect on those near its holder, while the entity knows the ability, as a banner that inspires the allies
 round its bearer: each a radius, whom it takes, its holder too or not, and how often it checks
 ([EFFECTS.md](EFFECTS.md#auras)).
+
+### Cues
+
+A **Cues** component plays what the ability shows and sounds at its moments, on its caster: **On Activate** as an
+activation starts, **On Commit** as it pays its cost and starts its cooldown, **While Active** from its start to its
+end, **On End** as it ends however it ended, and **On Refused** as one is refused, nothing of it paid. Each list holds
+cues as an effect's does ([EFFECTS.md](EFFECTS.md#cues)), a Cue Tag among them; a Prefab cue in While Active lasts
+whatever its own While Active says. A stage's exact moment, as a sword's arc, plays through a **Play Cue** task. An
+ability holds one at most.
 
 ## Workers
 
