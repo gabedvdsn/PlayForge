@@ -817,6 +817,16 @@ from. It lives outside `Assets/` so it never ships in the package.
   packet loads all four offered**: the context's asset and spec, with the source, the target, the place and the
   owner's clock; the asset's Local Data; an ability's own packet, its targets, targeting data and set-by-caller
   numbers; and a Data list on the cue, loaded last.
+- Decision 92, 2026-11-17: networking, the user's answers to the networking research (`networking-research.md`, its
+  section 9). **Server authority first**, PlayForge's common case, with Arcade Fighter's duel on it; rollback later
+  (NET Phase D), if playtests show the duel needs it. The user had asked whether the common case shouldn't come
+  first, and left the call to the report. **Arcade Fighter's first networked mode is a 1v1 duel** (NET-29). **Its
+  transport is Unity Transport with Relay**, so NGO, with Relay through Multiplayer Services sessions. **The two
+  breaking changes land before 1.0.0 freezes**: NET-1, the effect-removed callback hands over the spec that left;
+  NET-2, a cue raise carries its source, a sink can stop it, and an effect's raise carries the hit's point, normal
+  and magnitude. **The NET rows go in the plan** ("Yes, add them"). **The time-scale overwrite** (`GASCore`'s
+  FollowTimeScale resets a clock code set), a bug offline too, is fixed with NET-37, in 1.x ("With NET-37, in
+  1.x"). The report's nine open questions wait for Phase B, each with its recommended answer.
 
 **Open. Ask the user; do not assume:**
 1. ~~**Uncommitted changes**~~: decided, see above.
@@ -1570,6 +1580,54 @@ EP-13 to EP-16 came as the pass went on; EP-17 to EP-25 are the user's notes of 
 | EP-52 | Phase 6 of the user's cue platform (EP-46), the last: its tooling. Done: the Problems view notes a Cue Tag cue that plays nowhere (`CueTagRule`, a Note, as an entity's Cue Receiver may play the tag its own way): one that names no tag, one whose project names no Cue Library, and one whose tag the library routes nowhere, neither its own route nor a parent's; `ForgeCueRoutes.RouteFor(library, tag, variant)`, the route a library plays for a tag. A rule says which assets it reads to check others (`ForgeValidationRule.Reads`), so an edit to a cue library, or to the library a project names, checks every asset again and a fixed note goes; it stayed until something else had every asset checked. The Cue Library's inspector, opening with the shared header as every PlayForge asset's does (FN-12), which the smoke suite opens: its **Routes**, then **Raised**, each cue tag the project's assets raise through it, in tag order, with what plays it, its own route, a parent's or none, and a row for each asset that raises it, which opens the asset in The Forge, the section's header counting the tags and those that play nowhere. `Documentation/CUES.md` brings cues together, its Routes and Raised the inspector's help | Cues | verified |
 | EP-53 | The user's word of 2026-11-17, after the cue platform (EP-46 to EP-52): an effect's cues as a component, more configuration for each cue, a Process cue and sequences in cues, in phases, as the user chose (Decision 91). Phase 1: an effect's Cues component. Done: `CuesEffectComponent`, its lists On Apply, On Reapply, On Tick, On Remove, While Active, On Refused and On Stack Change, as an ability's, an entity's and an item's Cues component has. An effect component hears three more moments: `Reapply` as an application it takes in lands, `Refused` with why, and `StacksChanged` with the counts before and after, as an application adds a stack, an extension does, or a stack runs out. It hears a tick only as one executes, so a tick its ongoing condition stops isn't heard. Its While Active cue begins as the effect lends and ends as it takes back, on the spec it lent with, so a replacement ends what began; the effect's own cues began under the first spec and ended under the replacement's, which left a While Active prefab out. Two cue moments, `Reapplied` and `Stacked`. Not done: the effect's own Cues, with that leak, go in a later phase, the sample effects re-authored | Cues | verified |
 
+### Networking (NET)
+
+The networking research's rows, from the session `networking-research` (2026-11-17), its report `networking-research.md` in the shared notes folder
+and on the page https://claude.ai/artifact/X9wfthYbRsE6rx93kwmjUG; the user's answers are Decision 92. Phase A is a net-ready
+core, which pays off offline too; B, server authority; C, the NGO adapter, a lab, tests and Arcade Fighter's duel; D,
+rollback, later. **Lands** says whether a row has to land before 1.0.0 freezes, a breaking change, or can come in 1.x.
+Only NET-1 and NET-2 land before the freeze.
+
+| ID | Phase | Row | Lands | Shows itself in | Status |
+|---|---|---|---|---|---|
+| NET-1 | A | **Effect-removed callback names the instance.** `OnEffectRemoved` hands over the spec that left, as `OnEffectApplied` does | Before 1.0.0 | `GameplayAbilitySystemCallbacks.cs:119-125` | open |
+| NET-2 | A | **The cue raise and its sink.** The raise carries its source; a per-world sink with virtual no-op methods is asked once per raise, before any handler; its default plays everything. An effect's raise also carries the hit's point, normal and magnitude, where its applier gave them | Before 1.0.0 | `GameplayEffect/Cues/ForgeCues.cs`, the raise sites, `EffectSystemComponent.cs:1194`, `AbstractCueHandler.cs:147-153` | open |
+| NET-3 | A | **Net manifest.** Compact, stable indices for every catalog asset (sorted by ID) and every library tag (sorted by path), and a hash of the whole for the handshake. Built in the editor beside the catalog | 1.x | `Save/ForgeAssetCatalog.cs`, `Tag/Tag.cs` (`TagIds`) | open |
+| NET-4 | A | **Entity net IDs.** `IForgeNetIds`, int IDs on both hubs, which `IForgeEntityIds` can wrap | 1.x | `Save/ForgeSave.cs:14` | open |
+| NET-5 | A | **A world context.** The live entity list, clock, tick, random draws, cue mute and sink, input and project, per world, entered as a world steps; the scene's world keeps today's statics | 1.x | `GAS/Core/ForgeEntities.cs`, `ProcessWorld.cs:481-506` | open |
+| NET-6 | A | **Tick time.** `IForgeClock` gains a tick and a double time as default members; `EntityClock` keeps a double and is captured; a session catches up rather than dropping time | 1.x | `Utils/ForgeTime.cs`, `GAS/Core/EntityClock.cs`, `ProcessWorld.cs:405-432` | open |
+| NET-7 | A | **Keyed random draws.** A draw is a hash of the seed, the entity, the key or tick, and the draw's number, at every draw site; opt-in; no hidden state | 1.x | `Utils/ForgeRandom.cs` and the draw sites in 5.5 | open |
+| NET-8 | A | **Hash-order audit.** Each `Dictionary` or `HashSet` keyed by `Tag` whose walk order can change an outcome is sorted or keyed by net ID; a source-scan test keeps it so | 1.x | `Tag/Tag.cs:344-363` | open |
+| NET-9 | A | **Net roles.** Standalone, Authority, Owner and Proxy on the core, gating effect ticks, workers, death, chance rolls and AI; virtual no-op hooks for a project's own parts; Standalone unchanged | 1.x | `GAS/Core/GASCore.cs` | open |
+| NET-10 | A | **A determinism check.** Two worlds run the same inputs and compare a checksum of every entity each tick, as a golden scenario | 1.x | Proving Grounds `Tests/Stretch` | open |
+| NET-11 | B | **The transport seam.** `IForgeTransport`: reliable and unreliable sends to one peer or all, and receives. A loopback with latency, jitter and loss, for tests | 1.x | new `FarEmerald.PlayForge.Net` | open |
+| NET-12 | B | **Wire format.** A binary writer and reader: varints, quantized floats and vectors, IDs, and the payload kinds target data uses | 1.x | `ProcessDataPacket.cs:25` | open |
+| NET-13 | B | **Attributes.** Replicated To and a precision per attribute; changes tracked per tick; a client shows the server's values | 1.x | `AttributeSystem/` | open |
+| NET-14 | B | **Effects.** An ID'd list of records, with deltas each tick; the mirror adds and removes them through quiet paths, so tags and lasting cues follow; the shelf versions its containers | 1.x | `EffectSystemComponent.cs:1212-1317` | open |
+| NET-15 | B | **Tags, abilities and items.** Loose tags and sides; the compiled set for Minimal; abilities known and running; items | 1.x | `GASCore.cs:625-707` | open |
+| NET-16 | B | **Replication modes.** Full, Mixed and Minimal on the identity, set in the inspector; a relevancy hook for interest management | 1.x | `EntityIdentity` | open |
+| NET-17 | B | **Joining late.** One full binary state per relevant entity | 1.x | — | open |
+| NET-18 | B | **Activation messages.** The owner sends the request with its key, tick and target data; the server activates through the Auto Target From Data path, and confirms or refuses with its `ActivationRefusal` | 1.x | `AbilitySystemComponent.cs:120-138, 709-725` | open |
+| NET-19 | B | **Target data.** The packet kinds targeting makes, serialized; the server checks them with the checks it has (Cast Range, Target Check), within a tolerance | 1.x | `AbilitySpecContainer.cs:124-171` | open |
+| NET-20 | B | **Prediction keys.** Opened by an activation and by each predicted stage; effects, pending changes, tag changes and cues made under one carry it | 1.x | `AbilitySpecContainer.cs:113-238` | open |
+| NET-21 | B | **Predicted cost and cooldown.** Cost and Cooldown effects predicted under the key, attribute costs as pending changes, all replaced as the server's records arrive with the key | 1.x | `AbilitySpec.cs:75-153, 200-212` | open |
+| NET-22 | B | **Undo on refusal.** Remove what the key made, interrupt the run, end its lasting cues, tell `OnAbilityRefused` | 1.x | — | open |
+| NET-23 | B | **Net Execution per task.** The inspector field, with defaults by kind; validator notes, such as a Server Only task in a predicted stage, or an input task in an AI's ability; the `WhenSkipped` hook | 1.x | `AbstractAbilityRelatedTask.cs:62` | open |
+| NET-24 | B | **Cues across the wire.** The authority's sink forwards the raises a client can't work out, batched and unreliable; clients work out the rest from their mirror; an owner skips forwarded raises whose key it played | 1.x | the sink (NET-2) | open |
+| NET-25 | B | **Rewind for fair checks.** Each entity keeps its last ticks of position, facing and tags; a check made for a client's input runs against the tick that client saw, within a set limit; the rewound state is handed to a game's own checks | 1.x | `GASCore.cs`, `ForgeEntities.cs` | open |
+| NET-26 | C | **The NGO adapter**, over Unity Transport, with Relay through Multiplayer Services sessions: connections, spawning, ownership, roles, IDs and the tick offset | 1.x | new adapter assembly or sample | open |
+| NET-27 | C | **A Net Lab** in Proving Grounds: two players and AI, through Multiplayer Play Mode, with a latency simulator; the Debugger's Net view | 1.x | Proving Grounds, `Editor/Debugger` | open |
+| NET-28 | C | **Networked golden scenarios** over the loopback (6.9) | 1.x | `Tests/` | open |
+| NET-29 | C | **Arcade Fighter's duel** on server authority, once it runs on current PlayForge: roles, Net Execution on its move tasks, `HitResolver` on the host with rewind, owner-authoritative movement | after the port | Arcade Fighter | open |
+| NET-30 | D | **Tick-native abilities.** A step form for ability tasks; compile to the synced runner where every task has one; capture and restore per synced task; validation for abilities marked Rollback | 1.x | `AbstractAbilityRelatedTask.cs:62`, `AbilitySequenceCompiler.cs`, `SyncSequenceCore.cs` | open |
+| NET-31 | D | **A fast snapshot.** Binary capture and restore, with no strings and no allocation, into a ring of buffers, with a checksum per tick; covers running abilities, the entity clock, the buffer, the turn and Local Data | 1.x | `Save/` | open |
+| NET-32 | D | **Processes as data.** Projectiles and bodies that affect the simulation, capturable | 1.x | `CompositeBehaviour/` | open |
+| NET-33 | D | **The rollback session**, on the transport seam: inputs per tick, remote inputs guessed, restore and resimulate, input delay, an 8-tick limit, time sync, the sync test, replays from inputs | 1.x | new `FarEmerald.PlayForge.Rollback` | open |
+| NET-34 | D | **Cues under rollback.** Bursts on a tick's first simulation only; a lasting cue a correction took away ends at once | 1.x | the sink (NET-2) | open |
+| NET-35 | D | **The rollback budget.** A benchmark that resimulates 8 ticks of a duel and of a co-op room within the frame | 1.x | Proving Grounds | open |
+| NET-36 | D | **Arcade Fighter's duel on rollback**, if playtests call for it | after NET-29 | Arcade Fighter | open |
+| NET-37 | A | **A hit-stop that ends and replicates.** An effect option to count its duration on the game's clock, or on real time, so an effect that drives the Time Scale attribute to 0 still ends. And an entity-clock hold, `Hold(seconds, scale)`, that composes with the attribute rather than being overwritten by it. From the port's assessment (`arcade-fighter-port.md`, section 1, items 3 and 4), tracked here as one row. The overwrite is a bug offline too, since a clock dip set in code is undone each step; the user chose to keep its fix in this row, in 1.x | 1.x | `GameplayEffectDuration.cs:182-189`, `GASCore.cs:259-263`, `EntityClock.cs` | open |
+
 ## Test project: PlayForge Proving Grounds
 
 A separate Unity project that consumes PlayForge as a local UPM package (Decision 2). The project and its shared
@@ -1605,6 +1663,9 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-17, **The networking rows.** NET-1 to NET-37 from the networking research, and Decision 92, the user's
+  answers; NET-1 and NET-2 land before 1.0.0 freezes, NET-2 with the cue work.
 
 - 2026-11-17, **EP-53: an effect's Cues component.** Phase 1 of the cue configuration pass (Decision 91).
   - Red, on HEAD with EP-53's component as a stub that hears nothing: the twelve PlayMode cases, six for each hub, failed with nothing heard: the stub's lists played at no moment.
