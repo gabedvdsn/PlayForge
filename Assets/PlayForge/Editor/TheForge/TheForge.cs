@@ -60,6 +60,8 @@ namespace FarEmerald.PlayForge.Editor
         private List<ForgeTagRegistry.TagUsageRecord> shownTags = new();
         private UnityEditor.Editor detailEditor;
         private Object shownInDetail;
+        // The shown asset's summary, which lists its problems
+        private VisualElement detailSummary;
 
         // Back and forward over the assets the detail pane has shown, as a browser's, which a domain reload keeps
         [SerializeField] private List<Object> backHistory = new();
@@ -209,6 +211,9 @@ namespace FarEmerald.PlayForge.Editor
         {
             assetList?.RefreshItems();
             ShowCounts();
+            // The shown asset's problems as the validator now has them, which another asset's edit can fix or bring as well
+            // as its own
+            if (detailSummary != null) FillSummary(detailSummary, shownInDetail);
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
@@ -744,6 +749,7 @@ namespace FarEmerald.PlayForge.Editor
             var summary = new VisualElement { name = "Summary" };
             summary.AddToClassList("pf-forge__summary");
             detail.Add(summary);
+            detailSummary = summary;
             detailEditor = UnityEditor.Editor.CreateEditor(selected);
             var inspector = new InspectorElement(detailEditor) { name = "Inspector" };
             detail.Add(inspector);
@@ -875,6 +881,7 @@ namespace FarEmerald.PlayForge.Editor
         {
             if (detailEditor != null) DestroyImmediate(detailEditor);
             detailEditor = null;
+            detailSummary = null;
         }
 
         // How wide the list is, which a user's drag of the split sets, kept for each user as the columns' widths are. It

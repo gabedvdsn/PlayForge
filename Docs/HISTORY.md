@@ -988,6 +988,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   Asking whether its sequence was paused took 24 bytes a frame.
 
 ### Fixed
+- The Forge's summary drops a problem once it's fixed (ED-88), by its asset's edit or another's; it kept it until the
+  asset was shown again.
 - A synced task in an async sequence holds while the sequence is paused (EP-31); a `SyncDelay` counted on.
 - A sequence dropdown's method that returns a `TaskSequenceDefinition` runs (EP-31); the Sequence task did nothing.
 - `data.SetStageTimeout` with no injection skips the stage when its time is up, as `WithTimeout` does (EP-31).
