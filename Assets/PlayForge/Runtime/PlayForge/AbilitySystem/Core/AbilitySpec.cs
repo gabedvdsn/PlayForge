@@ -198,15 +198,17 @@ namespace FarEmerald.PlayForge
             return spec;
         }
             
-        public bool ValidateSourceActivationRequirements(AbilityDataPacket data) => SourceRefusal(data, out _) == EActivationRefusal.None;
+        public bool ValidateSourceActivationRequirements(AbilityDataPacket data) => SourceRefusal(data, out _, out _) == EActivationRefusal.None;
 
         /// <summary>
         /// What of the caster refuses the activation, or None: its tags against the ability's source requirements, then
-        /// each caster check, which a cooldown, a cost or a death names, and any other by its name.
+        /// each caster check, which a cooldown, a cost or a death names, and any other by its name, then its components,
+        /// each by its reason; and why, in the words of the check or the component that refused it.
         /// </summary>
-        internal EActivationRefusal SourceRefusal(AbilityDataPacket data, out string rule)
+        internal EActivationRefusal SourceRefusal(AbilityDataPacket data, out string rule, out string detail)
         {
             rule = null;
+            detail = null;
             var owner = data.EffectOrigin.GetSource();
 
             // The ability's own source tag requirements ("can't use while stunned") are part of
@@ -225,7 +227,8 @@ namespace FarEmerald.PlayForge
             // An empty rule slot, which a list's "+" can leave, asks nothing; it threw
             foreach (var check in Base.SourceActivationRules)
             {
-                if (check == null || check.Validate(data, () => owner, out _)) continue;
+                if (check == null || check.Validate(data, () => owner, out var error)) continue;
+                detail = error;
                 switch (check)
                 {
                     case CooldownValidation: return EActivationRefusal.Cooldown;
@@ -243,18 +246,41 @@ namespace FarEmerald.PlayForge
                 foreach (var component in Base.Components)
                 {
                     if (component?.CanStart(new AbilityComponentContext(this, data)) is not { } reason) continue;
-                    rule = reason;
+                    rule = detail = reason;
                     return component is CastRangeAbilityComponent ? EActivationRefusal.Range : EActivationRefusal.Rule;
                 }
             }
             return EActivationRefusal.None;
         }
 
-        public bool ValidateAllActivationRequirements(ITarget target, AbilityDataPacket data)
+        public bool ValidateAllActivationRequirements(ITarget target, AbilityDataPacket data) =>
+            TargetRefusal(target, data, out _, out _) == EActivationRefusal.None;
+
+        /// <summary>
+        /// What refuses the activation once its targeting has found its target, or None: its caster, again, as
+        /// <see cref="SourceRefusal"/> says it, then each of its Target Checks on the target, then the target's tags against
+        /// its target requirements, each <see cref="EActivationRefusal.Target"/>, naming the check where one refused it; and
+        /// why, in the check's words.
+        /// </summary>
+        internal EActivationRefusal TargetRefusal(ITarget target, AbilityDataPacket data, out string rule, out string detail)
         {
-            return ValidateSourceActivationRequirements(data)
-                   && Base.TargetActivationRules.All(rule => rule == null || rule.Validate(data, () => target, out _))
-                   && Base.Tags.ValidateTargetRequirements(target) ;
+            var source = SourceRefusal(data, out rule, out detail);
+            if (source != EActivationRefusal.None) return source;
+
+            // An empty rule slot asks nothing
+            if (Base.TargetActivationRules != null)
+            {
+                foreach (var check in Base.TargetActivationRules)
+                {
+                    if (check == null || check.Validate(data, () => target, out var error)) continue;
+                    rule = check.GetName();
+                    detail = error;
+                    return EActivationRefusal.Target;
+                }
+            }
+            if (Base.Tags.ValidateTargetRequirements(target)) return EActivationRefusal.None;
+            detail = "Its target fails its target tag requirements";
+            return EActivationRefusal.Target;
         }
 
         public override ISource GetSource() => Source;

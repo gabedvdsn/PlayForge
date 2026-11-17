@@ -245,9 +245,11 @@ namespace FarEmerald.PlayForge.Editor
         {
             if (!Recording || refusal.Ability == null) return;
             float now = Now;
-            var reason = refusal.Reason == EActivationRefusal.Rule && !string.IsNullOrEmpty(refusal.Rule)
+            // The check that refused it, by name, and why in its words
+            var reason = (refusal.Reason == EActivationRefusal.Rule || refusal.Reason == EActivationRefusal.Target) && !string.IsNullOrEmpty(refusal.Rule)
                 ? refusal.Rule
                 : UnityEditor.ObjectNames.NicifyVariableName(refusal.Reason.ToString());
+            if (!string.IsNullOrEmpty(refusal.Detail) && refusal.Detail != refusal.Rule) reason = $"{reason}: {refusal.Detail}";
             Add(TrackOf(gas, refusal.Ability, TimelineKind.Ability), new TimelineSpan { Start = now, End = now, Refused = true, Note = reason });
         }
 

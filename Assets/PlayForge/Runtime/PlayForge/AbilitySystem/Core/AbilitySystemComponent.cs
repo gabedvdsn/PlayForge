@@ -412,12 +412,13 @@ namespace FarEmerald.PlayForge
 
         // Everything but a running stage's block, which a Queue request waits out in the buffer
         private bool CanActivateUnblocked(AbilitySpecContainer container, AbilityDataPacket data) =>
-            UnblockedRefusal(container, data, out _) == EActivationRefusal.None;
+            UnblockedRefusal(container, data, out _, out _) == EActivationRefusal.None;
 
-        // What refuses it, but a running stage's block, as a refusal says it
-        private EActivationRefusal UnblockedRefusal(AbilitySpecContainer container, AbilityDataPacket data, out string rule)
+        // What refuses it, but a running stage's block, as a refusal says it, and why in the refusing check's words
+        private EActivationRefusal UnblockedRefusal(AbilitySpecContainer container, AbilityDataPacket data, out string rule, out string detail)
         {
             rule = null;
+            detail = null;
             if (!Enabled) return EActivationRefusal.Disabled;
             if (Locked) return EActivationRefusal.Locked;
 
@@ -425,7 +426,7 @@ namespace FarEmerald.PlayForge
             // the scene's, wherever the caster was
             if (ProcessWorld.Of(data?.EffectOrigin?.GetSource()) is { AcceptsNewProcesses: false }) return EActivationRefusal.NoNewProcesses;
 
-            var source = container.Spec.SourceRefusal(data, out rule);
+            var source = container.Spec.SourceRefusal(data, out rule, out detail);
             if (source != EActivationRefusal.None) return source;
             if (container.Spec.Base.IgnoreWhenLevelZero && container.Spec.GetLevel().CurrentValue <= 0) return EActivationRefusal.LevelZero;
 
@@ -792,8 +793,8 @@ namespace FarEmerald.PlayForge
             var ability = container.Spec.Base;
             var data = AbilityDataPacket.GenerateFrom(container.Spec,
                 req, ability.Behaviour.UseImplicitTargeting, ability.Behaviour.ImplicitTag);
-            var why = UnblockedRefusal(container, data, out string rule);
-            if (why != EActivationRefusal.None) return Refuse(out refusal, ability, req.Index, why, rule);
+            var why = UnblockedRefusal(container, data, out string rule, out string detail);
+            if (why != EActivationRefusal.None) return Refuse(out refusal, ability, req.Index, why, rule, detail);
 
             // Not refused, the request activated, waits in the buffer, or starts next frame
             refusal = new ActivationRefusal(ability, req.Index, EActivationRefusal.None);
@@ -836,9 +837,10 @@ namespace FarEmerald.PlayForge
             return ForgeChance.Roll(chance.Evaluate(context), in context, ability.Definition.ActivationRoll, ability);
         }
 
-        private static bool Refuse(out ActivationRefusal refusal, Ability ability, int index, EActivationRefusal why, string rule = null)
+        private static bool Refuse(out ActivationRefusal refusal, Ability ability, int index, EActivationRefusal why, string rule = null,
+            string detail = null)
         {
-            refusal = new ActivationRefusal(ability, index, why, rule);
+            refusal = new ActivationRefusal(ability, index, why, rule, detail);
             return false;
         }
 

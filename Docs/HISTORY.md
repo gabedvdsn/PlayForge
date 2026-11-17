@@ -10,6 +10,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## Toward 1.0.0, since 0.1.0
 
 ### Added
+- **A refusal's reason** (EP-42): `ActivationRefusal.Detail`, the refusing check's own words, as "Its caster's Mana,
+  10, can't pay 50", which the refusal's text says too, and `EActivationRefusal.Target`: a Target Check that refuses
+  after targeting is told through `OnAbilityRefused`, naming the check, where the activation ended untold. The
+  Debugger's timeline shows the words.
 - **Turning to face** (EP-36): an entity's **Turns To Face** turns it to face its abilities' target or point before
   their first stage, which starts once it faces within the Start Angle, the turn going on to the Facing Angle after,
   past the ability's end; an ability's own **Turn To Face** turns its own way, or not at all. If Too Long waits, starts

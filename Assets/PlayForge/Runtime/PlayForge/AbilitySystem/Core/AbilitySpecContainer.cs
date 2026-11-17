@@ -140,8 +140,13 @@ namespace FarEmerald.PlayForge
                 // Targeting leaves a packet, and what reads a target asks for the entity it points at
                 handle.Data.ResolveTarget(Spec.Base.Behaviour.ImplicitTag);
 
-                if (handle.Data.TryGetFirstTarget(out var target) && !Spec.ValidateAllActivationRequirements(target, handle.Data))
+                if (handle.Data.TryGetFirstTarget(out var target)
+                    && Spec.TargetRefusal(target, handle.Data, out string rule, out string detail) is var why && why != EActivationRefusal.None)
                 {
+                    // Told as a refusal where its targeting had ended well, as its request said none: nothing of it was
+                    // paid, and the check that refused it says why
+                    if (!targetingCancelled)
+                        handle.Data.System?.Callbacks.AbilityRefused(new ActivationRefusal(Spec.Base, handle.Data.Request.Index, why, rule, detail));
                     targetingCancelled = true;
                     if (how == EAbilityEnd.Done) how = EAbilityEnd.Cancelled;
                 }

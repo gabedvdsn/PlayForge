@@ -61,9 +61,18 @@ namespace FarEmerald.PlayForge
         /// The target or the point it was handed lies beyond its Cast Range, so an AI can walk closer and ask again.
         /// </summary>
         Range,
+
+        /// <summary>
+        /// After its targeting, its target failed one of its Target Checks, which <see cref="ActivationRefusal.Rule"/>
+        /// names, or its target tag requirements, where it names none. The activation had started, and ends there with
+        /// nothing of it paid; the ability system tells it as it tells any refusal.
+        /// </summary>
+        Target,
     }
 
-    /// <summary>A refused activation: the ability, its slot, why, and for a caster check, which.</summary>
+    /// <summary>
+    /// A refused activation: the ability, its slot, why, for a check, which, and in the check's own words, why.
+    /// </summary>
     public readonly struct ActivationRefusal
     {
         /// <summary>The ability, or null where the entity knows none it was asked for.</summary>
@@ -75,17 +84,25 @@ namespace FarEmerald.PlayForge
         public readonly EActivationRefusal Reason;
 
         /// <summary>
-        /// The name of the caster check that refused it, for <see cref="EActivationRefusal.Rule"/>; or the tag of the
-        /// crowd control rule, as Stunned, for <see cref="EActivationRefusal.CrowdControl"/>.
+        /// The name of the check that refused it, for <see cref="EActivationRefusal.Rule"/> or
+        /// <see cref="EActivationRefusal.Target"/>; the reason a component that refused it gave; or the tag of the crowd
+        /// control rule, as Stunned, for <see cref="EActivationRefusal.CrowdControl"/>.
         /// </summary>
         public readonly string Rule;
 
-        public ActivationRefusal(Ability ability, int index, EActivationRefusal reason, string rule = null)
+        /// <summary>
+        /// Why, in the words of the check that refused it, as "Its caster's Mana, 10, can't pay 50": a validation rule's
+        /// error, or a component's reason; null where no check refused it, as for a block or the system off.
+        /// </summary>
+        public readonly string Detail;
+
+        public ActivationRefusal(Ability ability, int index, EActivationRefusal reason, string rule = null, string detail = null)
         {
             Ability = ability;
             Index = index;
             Reason = reason;
             Rule = rule;
+            Detail = detail;
         }
 
         /// <summary>Whether it was refused.</summary>
@@ -94,7 +111,8 @@ namespace FarEmerald.PlayForge
         public override string ToString()
         {
             string what = Ability != null ? Ability.GetName() : "An ability";
-            return Rule != null ? $"{what}: {Reason} ({Rule})" : $"{what}: {Reason}";
+            string said = Rule != null ? $"{what}: {Reason} ({Rule})" : $"{what}: {Reason}";
+            return string.IsNullOrEmpty(Detail) || Detail == Rule ? said : $"{said}: {Detail}";
         }
     }
 }

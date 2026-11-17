@@ -84,9 +84,12 @@ Code asks for an ability by its slot, with a request from `CreateActivationReque
 (`TryActivateAbility(ability)`), or by a tag (`TryActivateAbility(tag)`). A tag activates the first ability, by slot,
 whose asset tag or one of whose context tags is that tag or under it. Each form can say why it was refused, through an
 `out ActivationRefusal`: its `Reason`, such as Cooldown, Cost, Requirements, Blocked or Busy, and for another caster
-check, that check's name in `Rule`; for Crowd Control, `Rule` is the rule's tag, as Stunned. The ability system's `OnAbilityRefused` callback tells each refusal as it happens.
+check, that check's name in `Rule`; for Crowd Control, `Rule` is the rule's tag, as Stunned. Where a check or a
+component refused it, its `Detail` says why in the check's own words, as "Its caster's Mana, 10, can't pay 50". The
+ability system's `OnAbilityRefused` callback tells each refusal as it happens.
 A request that waits in the input buffer isn't refused, and isn't told again as the buffer retries it. A check on the
-target comes after targeting, and ends the activation instead.
+target comes after targeting and ends the activation instead, nothing of it paid: the request said nothing was refused,
+as the activation had started, so the callback tells it, as **Target**, `Rule` naming the check and `Detail` saying why.
 
 The request's data can carry magnitudes for the effects the ability applies: `data.SetByCaller(tag, magnitude)`, which a
 Set By Caller scaler on each effect reads (see [EFFECTS.md](EFFECTS.md)). So a caller that knows the damage as it casts
@@ -295,8 +298,9 @@ The check types, by the list that offers them:
   - **Check Range**: the Cast Range component's, which no list offers. It shows while the ability holds a Cast Range,
     saying its range, and passes, as the component enforces the range (see Cast Range).
 
-A failed check refuses the activation as Cooldown, Cost or Dead for those three, and as Rule, naming the check, for any
-other (see Activation). Each says why in `Validate`'s `error`, as "Its caster's Mana, 20, can't pay 30".
+A failed Caster Check refuses the activation as Cooldown, Cost or Dead for those three, and as Rule, naming the check,
+for any other; a failed Target Check ends it after targeting, told as Target, naming the check (see Activation). Each
+says why in `Validate`'s `error`, which the refusal carries as its `Detail`, as "Its caster's Mana, 20, can't pay 30".
 
 A check of your own implements `IAbilityValidationRule`: `Validate` says whether the activation passes, and why not,
 and `GetName` names it. `[ForgeMenu]` names and describes it in the list, and `[ValidationSide]` says which list offers
