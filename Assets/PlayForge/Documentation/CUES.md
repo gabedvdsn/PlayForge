@@ -30,13 +30,35 @@ magnitude; and, for a lasting cue, the key its beginning and its end share.
 Each cue in a list is a handler, its kind picked from the list:
 
 - **Camera Shake** shakes the camera through the shaker the game gives `ForgeCues.Shaker`, an `ICameraShaker`.
-- **Sound** plays its clip at its target or its point.
-- **Prefab** places its prefab at its target or its point, for its **Lifetime**, or, with **While Active**, until its
+- **Sound** plays its clip where its Placement says ([Placement](#placement)).
+- **Prefab** places its prefab where its Placement says, for its **Lifetime**, or, with **While Active**, until its
   cue ends ([Pooling](#pooling)).
 - **Cue Tag** plays what its tag routes to ([Routes](#routes)).
 
 Write a handler of your own by deriving from `AbstractCueHandler`: override the moments it plays at, or `Burst` to play
 every burst one way, reading the moment from `cue.Moment`, and `Begin` and `End` for a lasting one.
+
+## Placement
+
+A cue that places something, a Prefab or a Sound, says where with its **Placement**:
+
+- **At**: on whom.
+  - **Self**: the one the cue is on: an effect's target, an ability's caster, the entity, or an item's holder. Where
+    its raiser gave a point, as a hit's, it's there.
+  - **Source**: who's behind it, as an effect's source or a death's killer.
+  - **Target**: an ability's first target, or the place it targeted. For another's cue, the one it's on.
+  - **Each Target**: one at each of an ability's targets.
+  - **Point**: the cue's point, or the place an ability targeted.
+- **Socket**: a child of theirs it's placed at, by name, found at any depth, as a hand or a weapon's tip.
+- **Offset** moves it, and **Scatter** moves it by a random amount up to that much either way on each axis, both in
+  the space of what it's placed at.
+- **Attach**: whether it follows them: a lasting cue's only, by default; always; or never. An attached sound plays
+  from a source of its own under them.
+- **Facing**: as what it's placed at faces, or along the cue's normal at a point; along the cue's normal; away from
+  or toward its source; or the world's way.
+
+Scatter draws from `ForgeCues.Random`, the cues' own random numbers, so a cue never moves the game's rolls: a server
+that plays no cues and a client that plays them must draw alike.
 
 ## Routes
 

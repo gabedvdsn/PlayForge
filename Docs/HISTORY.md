@@ -10,6 +10,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## Toward 1.0.0, since 0.1.0
 
 ### Added
+- **Cue placement** (EP-54): a Prefab or a Sound cue's **Placement**: on the one the cue is on, its source, an
+  ability's target or each of its targets, or at the cue's point; at a socket, moved by an offset and scattered
+  at random; following them or not; and facing their way, the cue's normal, or from or toward its source.
+  `ForgeCues.Random` is the cues' own random numbers.
 - **An effect's Cues component** (EP-53): On Apply, On Reapply, On Tick, On Remove, While Active, On Refused and On
   Stack Change, each a list of cues, as an ability's, an entity's and an item's Cues component has.
 - An effect component hears **Reapply**, **Refused** and **StacksChanged**, and the cue moments `Reapplied` and

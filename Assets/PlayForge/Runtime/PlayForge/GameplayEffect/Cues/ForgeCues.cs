@@ -22,6 +22,13 @@ namespace FarEmerald.PlayForge
         public static ICameraShaker Shaker { get; set; }
 
         /// <summary>
+        /// The random numbers cues draw, as a placement's scatter: their own, from a seed, so a cue never moves the
+        /// game's rolls, which a server that plays no cues and a client that plays them must draw alike. Put another in
+        /// for your own.
+        /// </summary>
+        public static IForgeRandom Random { get; set; } = new SeededRandom(1);
+
+        /// <summary>
         /// Whether cues play. Off, nothing bursts or begins, as on a server or while a simulation runs ahead; a lasting
         /// cue that began still ends.
         /// </summary>
