@@ -33,7 +33,10 @@ namespace FarEmerald.PlayForge
         /// <summary>The tags granted to the entity directly, by name.</summary>
         public List<string> LooseTags = new();
 
-        /// <summary>How fast the entity's time runs against the game's.</summary>
+        /// <summary>
+        /// The scale code set on the entity's clock; its Time Scale attribute's, which composes with it, is read again
+        /// from the attribute.
+        /// </summary>
         public float TimeScale = 1f;
     }
 

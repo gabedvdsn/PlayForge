@@ -255,11 +255,12 @@ namespace FarEmerald.PlayForge
         /// it queued in turn, then the frame's summary. True once the entity has died, for its hub to end it.
         /// </summary>
         // The entity's time runs at its time-scale attribute's current value, read as each step begins, where its identity
-        // names one, so an effect on that attribute slows or hastes it. Only its game's code could set it
+        // names one, so an effect on that attribute slows or hastes it; times the scale code sets on its clock, which
+        // this doesn't touch, so a hit-stop holds under a slow. It set the clock's scale, undoing code's each step
         private void FollowTimeScale()
         {
             var attribute = Identity?.TimeScaleAttribute;
-            if (attribute != null && AttributeSystem.TryGetValue(attribute, out var value)) Clock.TimeScale = value.CurrentValue;
+            if (attribute != null && AttributeSystem.TryGetValue(attribute, out var value)) Clock.AttributeScale = value.CurrentValue;
         }
 
         public bool EndOfFrame()

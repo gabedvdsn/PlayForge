@@ -52,7 +52,7 @@ catalog can't find.
 - Its effects, each with what applied it, its stacks, its time left and the time to its next tick, and the magnitudes
   its caller set. Stacks with durations of their own keep their own times. The times are kept in full, as the effect's
   timers keep them, so a restored effect keeps time with one that never was, to the last digit.
-- Its loose tags and its time scale.
+- Its loose tags, and the time scale its code set; its Time Scale attribute's is read again from the attribute.
 
 An ability that an effect or a worn item lends isn't saved on its own. It comes back with the effect or the item.
 

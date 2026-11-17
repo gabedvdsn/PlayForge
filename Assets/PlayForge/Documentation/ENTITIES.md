@@ -87,8 +87,9 @@ unchanged.
 
 **Time Scale** names the attribute the entity's time runs at, 1 as the game's. Its effects, cooldowns, sequences and
 waits run by that time, so an effect that lowers the attribute slows the entity, one that raises it hastes it, and
-as each comes off the entity's time is the game's again. Give the attribute a Current of 1 in the set. With no Time
-Scale, the entity's time scale is its game's code's to set, through `GetClock().TimeScale`.
+as each comes off the entity's time is the game's again. Give the attribute a Current of 1 in the set. Code sets a
+scale of its own, `GetClock().TimeScale`, as a hit-stop's 0, and the clock reads the two multiplied, so a hit-stop
+holds under a slow; `OwnScale` is code's part and `AttributeScale` the attribute's.
 
 ## Abilities
 

@@ -85,7 +85,7 @@ namespace FarEmerald.PlayForge
         private static ForgeSnapshot Take(GASCore core, IAssetNames assets, IForgeEntityIds ids)
         {
             var gas = core.Owner;
-            var snapshot = new ForgeSnapshot { TimeScale = core.Clock.TimeScale };
+            var snapshot = new ForgeSnapshot { TimeScale = core.Clock.OwnScale };
             var names = new Names(assets);
 
             CaptureCommits(core, snapshot, names);
@@ -376,7 +376,7 @@ namespace FarEmerald.PlayForge
                 if (!string.IsNullOrEmpty(name)) loose.Add(Tag.Generate(name));
             }
             core.RestoreLooseTags(loose);
-            core.Clock.TimeScale = snapshot.TimeScale;
+            core.Clock.OwnScale = snapshot.TimeScale;
 
             core.CompileGrantedTags();
             core.Callbacks?.Restored();

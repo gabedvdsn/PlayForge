@@ -1103,6 +1103,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   Asking whether its sequence was paused took 24 bytes a frame.
 
 ### Fixed
+- An entity's Time Scale attribute overwrote a clock scale set in code each step, so a hit-stop set in code was
+  undone a step later: the clock reads code's scale times the attribute's, and a save keeps code's (EP-56).
 - An action whose `IsValid` threw took its entity's end of frame with it (EP-43), leaving the actions after it, its
   tag and analysis workers and its death for a later frame. It fails, and the rest run on.
 - An action that threw as it ran was heard by no one, and an effect journal showed it queued for good (EP-43).
