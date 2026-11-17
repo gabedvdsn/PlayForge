@@ -143,6 +143,24 @@ namespace FarEmerald.PlayForge
         /// stays or ends.
         /// </summary>
         public virtual void Death(EffectComponentContext ctx) { }
+
+        /// <summary>
+        /// As an application of the effect lands on one it's on already, which takes it in: a stack added, a refresh, an
+        /// extension or a replacement. The context's spec is the application that came.
+        /// </summary>
+        public virtual void Reapply(EffectComponentContext ctx) { }
+
+        /// <summary>
+        /// As an application of the effect is refused by the one it was aimed at, with why: as by an immunity or a missed
+        /// chance. It never landed, so nothing else of it is heard.
+        /// </summary>
+        public virtual void Refused(EffectComponentContext ctx, EEffectRefusal refusal) { }
+
+        /// <summary>
+        /// As the effect's stacks change while it lasts: as an application adds one, or a stack runs out and others are
+        /// left. Its landing, its removal and a load that puts its stacks back aren't heard here.
+        /// </summary>
+        public virtual void StacksChanged(EffectComponentContext ctx, int before, int after) { }
     }
 
     /// <summary>What an effect's component hears a moment of its effect with.</summary>

@@ -246,13 +246,17 @@ namespace FarEmerald.PlayForge
             if (Base.Components != null)
                 foreach (var component in Base.Components) component?.Land(new EffectComponentContext(ctx));
         }
-        public void RunWorkerTick(EffectWorkerContext ctx)
+        public void RunWorkerTick(EffectWorkerContext ctx) => RunWorkerTick(ctx, true);
+
+        /// <summary>Its workers hear the frame's tick, and its components one that executes.</summary>
+        internal void RunWorkerTick(EffectWorkerContext ctx, bool executes)
         {
             // A periodic effect's workers are called every frame, with the ticks that frame executes, most frames none
             foreach (var worker in Base.Workers) Run(worker, worker.OnEffectTick(ctx), in ctx, EEffectWorkerHook.Tick);
             // Its components hear a tick as one executes, at the moment its workers do: each call was a tick to
-            // them, so a Spread each tick spread every frame
-            if (Base.Components != null && ctx.ExecuteTicks > 0)
+            // them, so a Spread each tick spread every frame. A tick that doesn't execute, as the effect's ongoing
+            // requirements fail, they don't hear: its impacts don't land, and its tick cues played anyway
+            if (Base.Components != null && ctx.ExecuteTicks > 0 && executes)
                 foreach (var component in Base.Components) component?.Tick(new EffectComponentContext(ctx));
         }
         public void RunWorkerRemoval(EffectWorkerContext ctx)
@@ -299,6 +303,27 @@ namespace FarEmerald.PlayForge
         {
             if (Base.Components == null) return;
             foreach (var component in Base.Components) component?.TakeBack(new EffectComponentContext(ctx));
+        }
+
+        /// <summary>Its components hear this application taken in by the effect on already.</summary>
+        internal void HearReapply(EffectWorkerContext ctx)
+        {
+            if (Base.Components == null) return;
+            foreach (var component in Base.Components) component?.Reapply(new EffectComponentContext(ctx));
+        }
+
+        /// <summary>Its components hear this application refused, with why.</summary>
+        internal void HearRefused(EffectWorkerContext ctx, EEffectRefusal refusal)
+        {
+            if (Base?.Components == null) return;
+            foreach (var component in Base.Components) component?.Refused(new EffectComponentContext(ctx), refusal);
+        }
+
+        /// <summary>Its components hear its stacks change while it lasts.</summary>
+        internal void HearStacksChanged(EffectWorkerContext ctx, int before, int after)
+        {
+            if (Base.Components == null) return;
+            foreach (var component in Base.Components) component?.StacksChanged(new EffectComponentContext(ctx), before, after);
         }
 
         public void RunWorkerImpact(EffectWorkerContext ctx)

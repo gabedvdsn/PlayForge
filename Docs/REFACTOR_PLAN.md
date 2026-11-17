@@ -804,6 +804,19 @@ from. It lives outside `Assets/` so it never ships in the package.
   "Delete them too". Code reads a component through `Find<T>()` or the component itself, and an entity's service through
   `GetService<T>()`, as `gas.GetService<AuraSet>()` for `GetAuras()`. No file that declares a component declares an
   extension method, which Proving Grounds' `RuntimeSourceTests` keeps so.
+- Decision 91, 2026-11-17: the cue configuration pass (EP-53 on), the user's choices. The user's word, after the cue
+  platform (EP-46 to EP-52): an effect's cues as a component; more configuration for each cue, as one that plays at
+  an ability's target; a cue that runs a process, its object from the cue pool through a MonoProcess instantiator;
+  sequences in cues, with data packets loaded for the cue's context; and, asked after, a Floating Text cue. **An
+  effect's cues are a component**, Cues, as an ability's, an entity's and an item's are, its lists On Apply, On
+  Reapply, On Tick, On Remove, While Active, On Refused and On Stack Change; the user chose all three moments
+  offered past the four the effect's own cues had. The effect's own Cues go, re-authored, not migrated (Decision
+  83). **A Process cue reaches the cue pool through its own Pooled toggle**: ProcessControl takes an instantiator for
+  one registration, and the Cue Pool instantiator gives and takes back through `ForgeCuePool`; the other answer
+  offered: the prefab's own Instantiator field, with no change to ProcessControl. **A Process or Sequence cue's data
+  packet loads all four offered**: the context's asset and spec, with the source, the target, the place and the
+  owner's clock; the asset's Local Data; an ability's own packet, its targets, targeting data and set-by-caller
+  numbers; and a Data list on the cue, loaded last.
 
 **Open. Ask the user; do not assume:**
 1. ~~**Uncommitted changes**~~: decided, see above.
@@ -1555,6 +1568,7 @@ EP-13 to EP-16 came as the pass went on; EP-17 to EP-25 are the user's notes of 
 | EP-50 | Phase 4 of the user's cue platform (EP-46): an entity's and an item's cues. Done: an entity's **Cues** component plays on it as it spawns (On Spawn), dies (On Death, its killer behind it) and revives (On Revive), and, While Tagged, lasting cues for as long as it holds a tag, as stars while Stunned: a `TaggedCueWatch` service checks its tags each step, beginning a tag's cues as it takes the tag on and ending them as it lets it go or ends, each with a key of its own. An item's **Cues** component plays on its holder as it's equipped (On Equip), lasts while it's equipped (While Equipped), and plays as it's used (On Use), as the ability it lends is; a load that puts an equipped item back begins its lasting cues with no burst. A tag's cues draw as an aligned foldout. Not done: pooling, The Forge's view, later phases | Cues | verified |
 | EP-51 | Phase 5 of the user's cue platform (EP-46): pooled cues. Done: a Prefab cue that pools (**Pooled**) takes its objects from `ForgeCuePool` and gives them back as its cue ends, a burst's after its Lifetime, in place of making and destroying one each time, as Unreal recycles its cue actors: a pool per prefab, its idle objects under a root that outlives a scene, **Preallocate** objects made ahead as the cue first plays, and an `IPooledCue` on the prefab told as it's taken and given back, its reset. A cue raised at a point, as a Play Cue task's at its point or a game's own at a ray's hit, places its prefab there, facing its normal; an entity with no place put it at the prefab's own. Not done: The Forge's view, the last phase | Cues | verified |
 | EP-52 | Phase 6 of the user's cue platform (EP-46), the last: its tooling. Done: the Problems view notes a Cue Tag cue that plays nowhere (`CueTagRule`, a Note, as an entity's Cue Receiver may play the tag its own way): one that names no tag, one whose project names no Cue Library, and one whose tag the library routes nowhere, neither its own route nor a parent's; `ForgeCueRoutes.RouteFor(library, tag, variant)`, the route a library plays for a tag. A rule says which assets it reads to check others (`ForgeValidationRule.Reads`), so an edit to a cue library, or to the library a project names, checks every asset again and a fixed note goes; it stayed until something else had every asset checked. The Cue Library's inspector, opening with the shared header as every PlayForge asset's does (FN-12), which the smoke suite opens: its **Routes**, then **Raised**, each cue tag the project's assets raise through it, in tag order, with what plays it, its own route, a parent's or none, and a row for each asset that raises it, which opens the asset in The Forge, the section's header counting the tags and those that play nowhere. `Documentation/CUES.md` brings cues together, its Routes and Raised the inspector's help | Cues | verified |
+| EP-53 | The user's word of 2026-11-17, after the cue platform (EP-46 to EP-52): an effect's cues as a component, more configuration for each cue, a Process cue and sequences in cues, in phases, as the user chose (Decision 91). Phase 1: an effect's Cues component. Done: `CuesEffectComponent`, its lists On Apply, On Reapply, On Tick, On Remove, While Active, On Refused and On Stack Change, as an ability's, an entity's and an item's Cues component has. An effect component hears three more moments: `Reapply` as an application it takes in lands, `Refused` with why, and `StacksChanged` with the counts before and after, as an application adds a stack, an extension does, or a stack runs out. It hears a tick only as one executes, so a tick its ongoing condition stops isn't heard. Its While Active cue begins as the effect lends and ends as it takes back, on the spec it lent with, so a replacement ends what began; the effect's own cues began under the first spec and ended under the replacement's, which left a While Active prefab out. Two cue moments, `Reapplied` and `Stacked`. Not done: the effect's own Cues, with that leak, go in a later phase, the sample effects re-authored | Cues | verified |
 
 ## Test project: PlayForge Proving Grounds
 
@@ -1591,6 +1605,10 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-17, **EP-53: an effect's Cues component.** Phase 1 of the cue configuration pass (Decision 91).
+  - Red, on HEAD with EP-53's component as a stub that hears nothing: the twelve PlayMode cases, six for each hub, failed with nothing heard: the stub's lists played at no moment.
+  - Gates, in `pg_cues`, on HEAD and EP-53: EditMode 1081/1081, PlayMode 2197 passed, 8 skipped, of 2205, golden 25/25.
 
 - 2026-11-17, **EP-52: cue tooling.** Phase 6 of the user's cue platform, the last.
   - Red, on HEAD with EP-52's rule and inspector as stubs: the three EditMode cases failed: no note for a Cue Tag that plays nowhere (empty), so none to drop once a route is added, and no Raised section in the Cue Library's inspector (null).

@@ -7,8 +7,10 @@ as a hit's spark, or a **lasting** cue's beginning and its end, as a shield's hu
 
 ## Where cues are raised
 
-- **Effects**: an effect's Cues section plays its bursts as it lands, as its ticks execute and as it comes off, and its
-  lasting cues while it's on ([EFFECTS.md](EFFECTS.md#cues)).
+- **Effects**: an effect's **Cues** component plays its cues as it lands, as an application it takes in lands, as each
+  tick executes, as it comes off, while it lasts, as an application is refused and as its stacks change. The effect's
+  own Cues section plays its bursts as it lands, as its ticks execute and as it comes off, and its lasting cues while
+  it's on ([EFFECTS.md](EFFECTS.md#cues)).
 - **Abilities**: a **Cues** component plays an ability's as it activates, as it commits, while it's active, as it ends
   and as one is refused; a **Play Cue** task plays them at a stage's exact moment, on the caster, on the target or at
   the point ([ABILITIES.md](ABILITIES.md#cues)).

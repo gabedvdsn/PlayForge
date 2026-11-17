@@ -129,10 +129,11 @@ namespace FarEmerald.PlayForge
             return true;
         }
 
-        // An effect this one didn't take, told with why
+        // An effect this one didn't take, told with why: to the callbacks, and to its components, as for a cue of it
         private bool Refused(GameplayEffectSpec spec, EEffectRefusal refusal)
         {
             Self.GetCallbacks()?.EffectRefused(spec, refusal);
+            spec?.HearRefused(new EffectWorkerContext(Self, spec, Self.GetFrameSummary(), Self.GetActionQueue()), refusal);
             return false;
         }
 
@@ -504,8 +505,9 @@ namespace FarEmerald.PlayForge
             bool ongoing = ForgeHelper.ValidateEffectOngoingRequirements(spec);
             if (TryHandleExistingDurationalGameplayEffect(spec, ongoing))
             {
-                // Taken in by the effect on already, whose lasting cues go on
+                // Taken in by the effect on already, whose lasting cues go on; its components hear the application
                 Cue(spec, ECueEvent.Burst, ECueMoment.Applied);
+                spec.HearReapply(new EffectWorkerContext(Self, spec, Self.GetFrameSummary(), Self.GetActionQueue()));
                 return;
             }
 
@@ -762,6 +764,16 @@ namespace FarEmerald.PlayForge
         private static int StackCount(AbstractEffectContainer container)
             => (container as AbstractStackingEffectContainer)?.Stacks ?? 0;
 
+        // Its components hear the effect's stacks change while it lasts, as for a cue of its count; a count that held is
+        // nothing to hear
+        private void HearStacks(AbstractEffectContainer container, int before)
+        {
+            int after = StackCount(container);
+            if (after == before) return;
+            container.Spec.HearStacksChanged(new EffectWorkerContext(Self, container.Spec, Self.GetFrameSummary(), Self.GetActionQueue()),
+                before, after);
+        }
+
         private void ApplyTickOnApplication(AbstractEffectContainer container)
         {
             // An OnApply entry is one commit, made as the effect is applied. A durational effect whose only tick is
@@ -876,12 +888,14 @@ namespace FarEmerald.PlayForge
 
                     int stacks = spec.Base.DurationSpecification.GetStackAmount(container, out overflowBound);
                     if (overflowBound != null) overflowing = container;
+                    int stacksBefore = container.Stacks;
                     container.Stack(stacks);
 
                     // Stacks feed magnitude through the container-aware impacter path —
                     // refresh the registration so the attribute recomputes with the new
                     // stack count. (Periodic entries pick it up on their next tick.)
                     RegisterContinuousEntries(container.Spec);
+                    HearStacks(container, stacksBefore);
 
                     break;
                 }
@@ -917,6 +931,7 @@ namespace FarEmerald.PlayForge
 
                             // Independent durations extend by adding a stack, which refreshes as any other does
                             if (StackCount(c) != stacksBefore) RegisterContinuousEntries(c.Spec);
+                            HearStacks(c, stacksBefore);
                             if (c.Spec.Base.DurationSpecification.TickOnApplication) ApplyTickOnApplication(c);
                         }
                         break;
@@ -1112,7 +1127,8 @@ namespace FarEmerald.PlayForge
                         Self, container.Spec,
                         Self.GetFrameSummary(), Self.GetActionQueue(),
                         executeTicks);
-                    container.Spec.RunWorkerTick(effectContext);
+                    // Its components hear a tick only as it executes, as its impacts land
+                    container.Spec.RunWorkerTick(effectContext, container.Ongoing);
 
                     if (executeTicks > 0 && container.Ongoing)
                     {
@@ -1135,6 +1151,7 @@ namespace FarEmerald.PlayForge
                     // something else recomputed the attribute, and that change took the credit
                     // And a barrier that fades with its effect reads its share of the time left
                     if (StackCount(container) != stacksBefore || container.Spec.Fades) RegisterContinuousEntries(container.Spec);
+                    HearStacks(container, stacksBefore);
                     continue;
                 }
 

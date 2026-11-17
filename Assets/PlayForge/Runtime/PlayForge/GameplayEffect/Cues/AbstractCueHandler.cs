@@ -29,7 +29,7 @@ namespace FarEmerald.PlayForge
         /// <summary>An ability ended.</summary>
         Ended,
 
-        /// <summary>An ability was refused.</summary>
+        /// <summary>An ability, or an effect's application, was refused.</summary>
         Refused,
 
         /// <summary>An entity came into the game.</summary>
@@ -52,6 +52,12 @@ namespace FarEmerald.PlayForge
 
         /// <summary>An ability's stage came to its Play Cue task.</summary>
         Stage,
+
+        /// <summary>An application of an effect landed on one it's on already, which took it in.</summary>
+        Reapplied,
+
+        /// <summary>An effect's stacks changed while it lasted, its magnitude the stacks it has.</summary>
+        Stacked,
     }
 
     /// <summary>How a cue plays: a burst, or a lasting cue's beginning or its end.</summary>

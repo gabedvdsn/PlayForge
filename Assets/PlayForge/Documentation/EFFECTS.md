@@ -272,6 +272,14 @@ needs, as "the target". A kind or a condition of your own adds its parts by over
 
 ## Cues
 
+A **Cues** component, from the Components list's **+**, plays cues at each of the effect's moments, a list for each:
+**On Apply** as it lands; **On Reapply** as an application it takes in lands, as a stack or a refresh; **On Tick** as
+each tick executes; **On Remove** as a lasting effect comes off; **While Active** while it lasts, from as it lands, or
+a load puts it back, to as it comes off, ending as it began where another application replaced it; **On Refused**
+as an application is refused, as by an immunity, on the one it was aimed at; and **On Stack Change** as its stacks
+change while it lasts, its magnitude the stacks it has. An effect holds one at most. Each list holds cues as the
+effect's own list below does.
+
 What the effect shows and sounds, apart from what it changes, listed as its workers are. Pick each cue's kind from the
 list:
 
@@ -365,6 +373,10 @@ off. A lasting effect's components hear it **Lend** what it gives while it lasts
 before its Land, as it takes another's place under its tag, and as a load or a move puts it back, where it doesn't land
 again; and **TakeBack**, as it stops: as it comes off, before its End, as another takes its place, and as a load clears
 it or a move takes it away. An Aura lends its aura so. A kind that makes no sense twice is offered only while the effect holds none of it.
+
+It hears **Reapply** as an application it takes in lands, as a stack or a refresh; **Refused** as an application of it
+is refused, with why, on the one it was aimed at; and **StacksChanged** as its stacks change while it lasts, with the
+counts before and after. It hears a tick only as one executes: one its ongoing condition stops isn't heard.
 
 A component of your own derives from `AbstractEffectComponent` and overrides the hooks it needs, each a no-op
 otherwise. It's the effect's, shared by everything that holds it, so what it keeps for one application of it it keeps through its

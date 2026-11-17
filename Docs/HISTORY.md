@@ -10,6 +10,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## Toward 1.0.0, since 0.1.0
 
 ### Added
+- **An effect's Cues component** (EP-53): On Apply, On Reapply, On Tick, On Remove, While Active, On Refused and On
+  Stack Change, each a list of cues, as an ability's, an entity's and an item's Cues component has.
+- An effect component hears **Reapply**, **Refused** and **StacksChanged**, and the cue moments `Reapplied` and
+  `Stacked` say so (EP-53).
 - **Cue tooling** (EP-52): the Problems view notes a Cue Tag cue that plays nowhere, and the Cue Library's inspector
   lists under Raised each cue tag the project raises through it, what plays it and the assets that raise it.
   `Documentation/CUES.md` brings cues together.
@@ -624,6 +628,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   page, through one table of links in the editor.
 
 ### Changed
+- An effect's components hear a tick only as it executes; one its ongoing condition stops isn't heard (EP-53).
 - A Prefab cue raised at a point places its prefab there, facing its normal (EP-51); on an entity with no place of its
   own it went at the prefab's own position.
 - `ActionQueue.Clear()` tells each action it drops through `OnActionInvalidated` (EP-44), and an entity's queue closes
