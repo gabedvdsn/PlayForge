@@ -366,8 +366,12 @@ namespace FarEmerald.PlayForge
         {
         }
 
+        /// <summary>The Entity asset it was made from; null for one made in code.</summary>
+        public EntityIdentity Asset { get; }
+
         public RuntimeEntityIdentity(EntityIdentity data)
         {
+            Asset = data;
             Name = data.Name;
             Description = data.Description;
             Textures = data.Textures;

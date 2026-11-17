@@ -10,6 +10,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## Toward 1.0.0, since 0.1.0
 
 ### Added
+- **The cue raise and its sink** (NET-2): each raise names what its cues belong to (`CueSource`), and its world's
+  sink is asked once before any of them plays (`ForgeCueSink.WillPlay`, `ForgeCues.UseSink`); the default plays
+  everything. An applier gives an application where it hit, `spec.WithHit(point, normal, magnitude)`, which its
+  cues play at.
 - **A Floating Text cue** (EP-55): a text that floats where its Placement says, as a hit's damage, the gold a kill
   gave or a status's name; its number written as asked; its look, its motion and its fade; merged, staggered and
   capped on one entity; pooled. An effect's Cues component gains **On Hit**, told the value an impact changed.
@@ -635,6 +639,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   page, through one table of links in the editor.
 
 ### Changed
+- `ForgeCues.Burst`, `Begin` and `End` take what the raise belongs to, a game's own code where they're given
+  nothing; a Cue Tag cue plays its routes within its list's raise (NET-2).
 - An effect's components hear a tick only as it executes; one its ongoing condition stops isn't heard (EP-53).
 - A Prefab cue raised at a point places its prefab there, facing its normal (EP-51); on an entity with no place of its
   own it went at the prefab's own position.

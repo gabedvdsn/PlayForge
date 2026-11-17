@@ -54,28 +54,98 @@ namespace FarEmerald.PlayForge
         /// <summary>Whether an entity's cues are muted.</summary>
         public static bool IsMuted(IGameplayAbilitySystem entity) => entity != null && muted.TryGetValue(entity, out _);
 
+        // The sink each world asks, held weakly, so a world that's gone isn't kept
+        private static readonly ConditionalWeakTable<ProcessWorld, ForgeCueSink> sinks = new();
+
+        private static readonly ForgeCueSink Everything = new();
+
+        /// <summary>
+        /// The sink a world with none of its own asks, once for each raise, before any of its cues plays: by default one
+        /// that plays everything.
+        /// </summary>
+        public static ForgeCueSink Sink { get; set; } = Everything;
+
+        /// <summary>Gives a world a sink of its own, as a server's or a client's, or takes it back with null.</summary>
+        public static void UseSink(ProcessWorld world, ForgeCueSink sink)
+        {
+            if (world == null) return;
+            sinks.Remove(world);
+            if (sink != null) sinks.Add(world, sink);
+        }
+
+        /// <summary>The sink asked for a cue on an entity: its world's own, or else <see cref="Sink"/>.</summary>
+        public static ForgeCueSink SinkFor(IGameplayAbilitySystem entity)
+        {
+            var world = entity != null ? ProcessWorld.Of(entity) : null;
+            if (world != null && sinks.TryGetValue(world, out var own)) return own;
+            return Sink ?? Everything;
+        }
+
+        /// <summary>
+        /// Whether a raise plays: its world's sink asked, once, whatever mutes it; a sink that throws is reported, and
+        /// lets it play.
+        /// </summary>
+        internal static bool WillPlay(ECueEvent cueEvent, in CueContext cue, CueSource from)
+        {
+            try
+            {
+                return SinkFor(cue.Target).WillPlay(cueEvent, new CueRaise(cue, from));
+            }
+            catch (Exception exception)
+            {
+                ForgeLog.Exception(ForgeLog.ESystem.Effects, exception);
+                return true;
+            }
+        }
+
+        /// <summary>Plays handlers within a raise already asked, as a Cue Tag's route does.</summary>
+        internal static void Dispatch(ECueEvent cueEvent, IReadOnlyList<AbstractCueHandler> handlers, in CueContext cue) =>
+            Play(cueEvent, handlers, cue);
+
         public delegate void CuePlayedDelegate(ECueEvent cueEvent, AbstractCueHandler handler, in CueContext cue);
 
         /// <summary>Heard as each cue plays, after its handler: for a debugger, a recorder or a test.</summary>
         public static event CuePlayedDelegate Played;
 
-        /// <summary>Plays a burst.</summary>
-        public static void Burst(AbstractCueHandler handler, in CueContext cue) => Play(ECueEvent.Burst, handler, cue);
+        /// <summary>Plays a burst, raised by what <paramref name="from"/> says, a game's own code where it says nothing.</summary>
+        public static void Burst(AbstractCueHandler handler, in CueContext cue, CueSource from = default)
+        {
+            if (handler != null && WillPlay(ECueEvent.Burst, cue, from)) Play(ECueEvent.Burst, handler, cue);
+        }
 
         /// <summary>Begins a lasting cue.</summary>
-        public static void Begin(AbstractCueHandler handler, in CueContext cue) => Play(ECueEvent.Begin, handler, cue);
+        public static void Begin(AbstractCueHandler handler, in CueContext cue, CueSource from = default)
+        {
+            if (handler != null && WillPlay(ECueEvent.Begin, cue, from)) Play(ECueEvent.Begin, handler, cue);
+        }
 
         /// <summary>Ends a lasting cue.</summary>
-        public static void End(AbstractCueHandler handler, in CueContext cue) => Play(ECueEvent.End, handler, cue);
+        public static void End(AbstractCueHandler handler, in CueContext cue, CueSource from = default)
+        {
+            if (handler != null && WillPlay(ECueEvent.End, cue, from)) Play(ECueEvent.End, handler, cue);
+        }
 
-        /// <summary>Plays each handler's burst, in order.</summary>
-        public static void Burst(IReadOnlyList<AbstractCueHandler> handlers, in CueContext cue) => Play(ECueEvent.Burst, handlers, cue);
+        /// <summary>
+        /// Plays each handler's burst, in order: one raise, its world's sink asked once before any plays, raised by what
+        /// <paramref name="from"/> says, a game's own code where it says nothing.
+        /// </summary>
+        public static void Burst(IReadOnlyList<AbstractCueHandler> handlers, in CueContext cue, CueSource from = default) =>
+            Raise(ECueEvent.Burst, handlers, cue, from);
 
-        /// <summary>Begins each handler's lasting cue, in order.</summary>
-        public static void Begin(IReadOnlyList<AbstractCueHandler> handlers, in CueContext cue) => Play(ECueEvent.Begin, handlers, cue);
+        /// <summary>Begins each handler's lasting cue, in order, one raise.</summary>
+        public static void Begin(IReadOnlyList<AbstractCueHandler> handlers, in CueContext cue, CueSource from = default) =>
+            Raise(ECueEvent.Begin, handlers, cue, from);
 
-        /// <summary>Ends each handler's lasting cue, in order.</summary>
-        public static void End(IReadOnlyList<AbstractCueHandler> handlers, in CueContext cue) => Play(ECueEvent.End, handlers, cue);
+        /// <summary>Ends each handler's lasting cue, in order, one raise.</summary>
+        public static void End(IReadOnlyList<AbstractCueHandler> handlers, in CueContext cue, CueSource from = default) =>
+            Raise(ECueEvent.End, handlers, cue, from);
+
+        // A list with nothing in it isn't a raise: no sink is asked of it
+        private static void Raise(ECueEvent cueEvent, IReadOnlyList<AbstractCueHandler> handlers, in CueContext cue, CueSource from)
+        {
+            if (handlers == null || handlers.Count == 0) return;
+            if (WillPlay(cueEvent, cue, from)) Play(cueEvent, handlers, cue);
+        }
 
         private static void Play(ECueEvent cueEvent, IReadOnlyList<AbstractCueHandler> handlers, in CueContext cue)
         {

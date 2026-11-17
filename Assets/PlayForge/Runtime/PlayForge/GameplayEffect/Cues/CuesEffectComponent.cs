@@ -73,16 +73,16 @@ namespace FarEmerald.PlayForge
 
         // A lasting cue begins as the effect starts to last and ends as it stops, on the spec it lent with, so a
         // replacement or a move ends what began
-        public override void Lend(EffectComponentContext ctx) => ForgeCues.Begin(WhileActive, CueOf(ctx, ECueMoment.Applied, lasting: true));
+        public override void Lend(EffectComponentContext ctx) => ForgeCues.Begin(WhileActive, CueOf(ctx, ECueMoment.Applied, lasting: true), CueSource.Of(ctx.Spec?.Base));
 
-        public override void TakeBack(EffectComponentContext ctx) => ForgeCues.End(WhileActive, CueOf(ctx, ECueMoment.Removed, lasting: true));
+        public override void TakeBack(EffectComponentContext ctx) => ForgeCues.End(WhileActive, CueOf(ctx, ECueMoment.Removed, lasting: true), CueSource.Of(ctx.Spec?.Base));
 
-        public override void Land(EffectComponentContext ctx) => ForgeCues.Burst(OnApply, CueOf(ctx, ECueMoment.Applied));
+        public override void Land(EffectComponentContext ctx) => ForgeCues.Burst(OnApply, CueOf(ctx, ECueMoment.Applied), CueSource.Of(ctx.Spec?.Base));
 
-        public override void Reapply(EffectComponentContext ctx) => ForgeCues.Burst(OnReapply, CueOf(ctx, ECueMoment.Reapplied));
+        public override void Reapply(EffectComponentContext ctx) => ForgeCues.Burst(OnReapply, CueOf(ctx, ECueMoment.Reapplied), CueSource.Of(ctx.Spec?.Base));
 
         public override void Tick(EffectComponentContext ctx) =>
-            ForgeCues.Burst(OnTick, CueOf(ctx, ECueMoment.Ticked, ticks: ctx.ExecuteTicks));
+            ForgeCues.Burst(OnTick, CueOf(ctx, ECueMoment.Ticked, ticks: ctx.ExecuteTicks), CueSource.Of(ctx.Spec?.Base));
 
         // On the one the impact lands on, from its dealer, its magnitude the value it changed: the current value's, or
         // the base value's for an impact that changed that alone
@@ -93,29 +93,30 @@ namespace FarEmerald.PlayForge
             float changed = impact.RealImpact.CurrentValue != 0f ? impact.RealImpact.CurrentValue : impact.RealImpact.BaseValue;
             var spec = ctx.Spec;
             ForgeCues.Burst(OnHit, new CueContext(on, ECueMoment.Hit, source: ctx.System, origin: spec?.Origin, spec: spec,
-                magnitude: changed, key: spec));
+                magnitude: changed, point: spec?.HitPoint, normal: spec?.HitNormal, key: spec), CueSource.Of(spec?.Base));
         }
 
         // An instant effect is over as it lands; only a lasting one comes off
         public override void End(EffectComponentContext ctx)
         {
             if (ctx.Spec == null || ctx.Spec.GetDurationPolicy() == EEffectDurationPolicy.Instant) return;
-            ForgeCues.Burst(OnRemove, CueOf(ctx, ECueMoment.Removed));
+            ForgeCues.Burst(OnRemove, CueOf(ctx, ECueMoment.Removed), CueSource.Of(ctx.Spec?.Base));
         }
 
         public override void Refused(EffectComponentContext ctx, EEffectRefusal refusal) =>
-            ForgeCues.Burst(OnRefused, CueOf(ctx, ECueMoment.Refused));
+            ForgeCues.Burst(OnRefused, CueOf(ctx, ECueMoment.Refused), CueSource.Of(ctx.Spec?.Base));
 
         public override void StacksChanged(EffectComponentContext ctx, int before, int after) =>
-            ForgeCues.Burst(OnStackChange, CueOf(ctx, ECueMoment.Stacked, magnitude: after));
+            ForgeCues.Burst(OnStackChange, CueOf(ctx, ECueMoment.Stacked, magnitude: after), CueSource.Of(ctx.Spec?.Base));
 
         // On the one it's on, from its source; its application the key a lasting cue's beginning and end share
         private static CueContext CueOf(in EffectComponentContext ctx, ECueMoment moment, bool lasting = false, int ticks = 0,
-            float magnitude = 0f)
+            float? magnitude = null)
         {
             var spec = ctx.Spec;
             return new CueContext(ctx.System, moment, source: spec?.Origin?.GetSource(), origin: spec?.Origin, spec: spec,
-                ticks: ticks, magnitude: magnitude, key: spec, lasting: lasting);
+                ticks: ticks, magnitude: magnitude ?? spec?.HitMagnitude ?? 0f, point: spec?.HitPoint, normal: spec?.HitNormal,
+                key: spec, lasting: lasting);
         }
     }
 }

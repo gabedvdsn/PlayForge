@@ -124,6 +124,21 @@ A Prefab cue with **Pooled** takes its objects from `ForgeCuePool` and gives the
 its Lifetime, in place of making and destroying one each time; the pool makes **Preallocate** of them ahead as the cue
 first plays. An `IPooledCue` on the prefab is told as it's taken and as it's given back, to reset it.
 
+## Raises and sinks
+
+Each raise of a list of cues names what the list belongs to, its `CueSource`: an effect, an ability, an entity or an
+item, by its asset; a cue tag raised from code, as `ForgeCueRoutes.Burst(cue)`; or a game's own code, where it names
+nothing. Code can name one: `ForgeCues.Burst(cues, cue, CueSource.Of(effect))`.
+
+Before any cue of a raise plays, its world's sink is asked, once: `ForgeCueSink.WillPlay(event, raise)`, the raise
+holding the cue and its source. The default plays everything. A world of its own takes a sink of its own with
+`ForgeCues.UseSink(world, sink)`, and `ForgeCues.Sink` is the one every other world asks. It's asked whatever mutes a
+cue, so a server that plays none can still send them on, as a network layer's sink does. A cue tag raised from code
+asks once; its routes, and a Cue Tag within them, play inside that raise, unasked.
+
+An effect's applier can say where it hit, before applying it: `spec.WithHit(point, normal, magnitude)`. Its cues then
+play at the point, facing the normal, with the magnitude, as a sword's spark where the blade struck.
+
 ## Silencing and listening
 
 - `ForgeCues.Enabled = false` silences every cue, as on a server or while a simulation runs ahead.

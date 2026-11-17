@@ -16,10 +16,10 @@ namespace FarEmerald.PlayForge
         [ForgeTagContext(ForgeContext.Cue)]
         public Tag Tag;
 
-        public override void Burst(CueContext cue) => ForgeCueRoutes.Burst(cue.WithTag(Tag));
+        public override void Burst(CueContext cue) => ForgeCueRoutes.Within(ECueEvent.Burst, cue.WithTag(Tag));
 
-        public override void Begin(CueContext cue) => ForgeCueRoutes.Begin(cue.WithTag(Tag));
+        public override void Begin(CueContext cue) => ForgeCueRoutes.Within(ECueEvent.Begin, cue.WithTag(Tag));
 
-        public override void End(CueContext cue) => ForgeCueRoutes.End(cue.WithTag(Tag));
+        public override void End(CueContext cue) => ForgeCueRoutes.Within(ECueEvent.End, cue.WithTag(Tag));
     }
 }

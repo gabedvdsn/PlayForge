@@ -54,17 +54,20 @@ namespace FarEmerald.PlayForge
 
         public override void Register(EntityComponentContext ctx)
         {
-            ForgeCues.Burst(OnSpawn, CueOf(ctx, ECueMoment.Spawned));
+            ForgeCues.Burst(OnSpawn, CueOf(ctx, ECueMoment.Spawned), From(ctx));
             if (WhileTagged != null && WhileTagged.Count > 0) ctx.System?.GetService<TaggedCueWatch>()?.Watch(WhileTagged);
         }
 
-        public override void Death(EntityComponentContext ctx) => ForgeCues.Burst(OnDeath, CueOf(ctx, ECueMoment.Died, ctx.Killer));
+        public override void Death(EntityComponentContext ctx) => ForgeCues.Burst(OnDeath, CueOf(ctx, ECueMoment.Died, ctx.Killer), From(ctx));
 
-        public override void Revive(EntityComponentContext ctx) => ForgeCues.Burst(OnRevive, CueOf(ctx, ECueMoment.Revived));
+        public override void Revive(EntityComponentContext ctx) => ForgeCues.Burst(OnRevive, CueOf(ctx, ECueMoment.Revived), From(ctx));
 
         // On the entity, which is behind it, but for its death, whose killer is
         private static CueContext CueOf(in EntityComponentContext ctx, ECueMoment moment, ISource source = null) =>
             new(ctx.System, moment, source: source ?? ctx.System, origin: ctx.System as IEffectOrigin, key: ctx.System);
+
+        // The entity whose cues they are, by the asset it was made from
+        private static CueSource From(in EntityComponentContext ctx) => CueSource.Of(ctx.Identity?.Asset);
     }
 
     /// <summary>The lasting cues an entity plays while it holds a tag.</summary>
@@ -116,7 +119,7 @@ namespace FarEmerald.PlayForge
             {
                 if (!each.Playing) continue;
                 each.Playing = false;
-                ForgeCues.End(each.Entry.Cues, CueOf(each));
+                ForgeCues.End(each.Entry.Cues, CueOf(each), From());
             }
             watched.Clear();
         }
@@ -130,8 +133,8 @@ namespace FarEmerald.PlayForge
                 bool holds = tags.GetWeight(each.Entry.Tag) > 0;
                 if (holds == each.Playing) continue;
                 each.Playing = holds;
-                if (holds) ForgeCues.Begin(each.Entry.Cues, CueOf(each));
-                else ForgeCues.End(each.Entry.Cues, CueOf(each));
+                if (holds) ForgeCues.Begin(each.Entry.Cues, CueOf(each), From());
+                else ForgeCues.End(each.Entry.Cues, CueOf(each), From());
             }
         }
 
@@ -141,6 +144,9 @@ namespace FarEmerald.PlayForge
                 if (ReferenceEquals(each.Entry, entry)) return true;
             return false;
         }
+
+        // The entity whose cues they are, by the asset it was made from
+        private CueSource From() => CueSource.Of(GASCore.Of(System)?.Identity?.Asset);
 
         private CueContext CueOf(Watched each) =>
             new(System, ECueMoment.Tagged, tag: each.Entry.Tag, source: System, origin: System as IEffectOrigin, key: each.Key, lasting: true);

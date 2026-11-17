@@ -57,20 +57,20 @@ namespace FarEmerald.PlayForge
 
         public override void Start(AbilityComponentContext ctx)
         {
-            ForgeCues.Burst(OnActivate, CueOf(ctx, ECueMoment.Activated));
-            ForgeCues.Begin(WhileActive, CueOf(ctx, ECueMoment.Activated, lasting: true));
+            ForgeCues.Burst(OnActivate, CueOf(ctx, ECueMoment.Activated), From(ctx));
+            ForgeCues.Begin(WhileActive, CueOf(ctx, ECueMoment.Activated, lasting: true), From(ctx));
         }
 
-        public override void Commit(AbilityComponentContext ctx) => ForgeCues.Burst(OnCommit, CueOf(ctx, ECueMoment.Committed));
+        public override void Commit(AbilityComponentContext ctx) => ForgeCues.Burst(OnCommit, CueOf(ctx, ECueMoment.Committed), From(ctx));
 
         public override void End(AbilityComponentContext ctx, EAbilityEnd how)
         {
-            ForgeCues.End(WhileActive, CueOf(ctx, ECueMoment.Ended, lasting: true));
-            ForgeCues.Burst(OnEnd, CueOf(ctx, ECueMoment.Ended));
+            ForgeCues.End(WhileActive, CueOf(ctx, ECueMoment.Ended, lasting: true), From(ctx));
+            ForgeCues.Burst(OnEnd, CueOf(ctx, ECueMoment.Ended), From(ctx));
         }
 
         public override void Refused(AbilityComponentContext ctx, ActivationRefusal refusal) =>
-            ForgeCues.Burst(OnRefused, CueOf(ctx, ECueMoment.Refused));
+            ForgeCues.Burst(OnRefused, CueOf(ctx, ECueMoment.Refused), From(ctx));
 
         // On its caster, from its ability; the activation's data the key a lasting cue's beginning and end share
         private static CueContext CueOf(in AbilityComponentContext ctx, ECueMoment moment, bool lasting = false)
@@ -79,5 +79,8 @@ namespace FarEmerald.PlayForge
             return new CueContext(caster as IGameplayAbilitySystem, moment, source: caster, origin: ctx.Spec, data: ctx.Data,
                 key: ctx.Data ?? (object)ctx.Spec, lasting: lasting);
         }
+
+        // The ability whose cues they are
+        private static CueSource From(in AbilityComponentContext ctx) => CueSource.Of(ctx.Spec?.Base);
     }
 }

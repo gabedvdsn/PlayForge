@@ -239,6 +239,27 @@ namespace FarEmerald.PlayForge
         {
             return new ImpactDerivationContext(Origin.GetContextTags(), Base.Tags.ContextTags);
         }
+        /// <summary>Where the application hit, where its applier said, as a projectile's: its cues play there.</summary>
+        public Vector3? HitPoint { get; private set; }
+
+        /// <summary>Which way the hit faces, as off the surface it struck, where its applier said.</summary>
+        public Vector3? HitNormal { get; private set; }
+
+        /// <summary>How hard it hit, where its applier said, for its cues to scale with; 0 where it said nothing.</summary>
+        public float HitMagnitude { get; private set; }
+
+        /// <summary>
+        /// Gives the application where it hit, before it's applied: its cues play at the point, facing the normal, and
+        /// scale with the magnitude, as a sword's spark where the blade struck.
+        /// </summary>
+        public GameplayEffectSpec WithHit(Vector3 point, Vector3? normal = null, float magnitude = 0f)
+        {
+            HitPoint = point;
+            HitNormal = normal;
+            HitMagnitude = magnitude;
+            return this;
+        }
+
         public void RunWorkerApplication(EffectWorkerContext ctx)
         {
             foreach (AbstractEffectWorker worker in Base.Workers) Run(worker, worker.OnEffectApplication(ctx), in ctx, EEffectWorkerHook.Application);

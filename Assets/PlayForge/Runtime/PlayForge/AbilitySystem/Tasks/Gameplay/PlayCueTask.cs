@@ -46,7 +46,7 @@ namespace FarEmerald.PlayForge
             }
             float magnitude = Magnitude != null ? Read(Magnitude, data) : 0f;
             ForgeCues.Burst(Cues, new CueContext(on, ECueMoment.Stage, source: caster, origin: data.EffectOrigin, data: data,
-                magnitude: magnitude, point: point, key: data));
+                magnitude: magnitude, point: point, key: data), CueSource.Of((data.EffectOrigin as AbilitySpec)?.Base));
             return UniTask.CompletedTask;
         }
     }

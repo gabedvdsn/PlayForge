@@ -279,7 +279,8 @@ changed, as for a damage number; **On Remove** as a lasting effect comes off; **
 a load puts it back, to as it comes off, ending as it began where another application replaced it; **On Refused**
 as an application is refused, as by an immunity, on the one it was aimed at; and **On Stack Change** as its stacks
 change while it lasts, its magnitude the stacks it has. An effect holds one at most. Each list holds cues as the
-effect's own list below does.
+effect's own list below does. An applier can say where an application hit, `spec.WithHit(point, normal,
+magnitude)`, and its cues play there ([CUES.md](CUES.md#raises-and-sinks)).
 
 What the effect shows and sounds, apart from what it changes, listed as its workers are. Pick each cue's kind from the
 list:

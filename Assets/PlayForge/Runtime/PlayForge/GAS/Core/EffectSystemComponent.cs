@@ -1208,12 +1208,14 @@ namespace FarEmerald.PlayForge
         {
             var cues = spec?.Base?.Cues;
             if (cues == null || cues.Count == 0) return;
-            var context = new CueContext(Self, moment, source: spec.Origin?.GetSource(), origin: spec.Origin, spec: spec, ticks: ticks, key: spec);
+            var context = new CueContext(Self, moment, source: spec.Origin?.GetSource(), origin: spec.Origin, spec: spec, ticks: ticks,
+                magnitude: spec.HitMagnitude, point: spec.HitPoint, normal: spec.HitNormal, key: spec);
+            var from = CueSource.Of(spec.Base);
             switch (cueEvent)
             {
-                case ECueEvent.Burst: ForgeCues.Burst(cues, context); break;
-                case ECueEvent.Begin: ForgeCues.Begin(cues, context); break;
-                case ECueEvent.End: ForgeCues.End(cues, context); break;
+                case ECueEvent.Burst: ForgeCues.Burst(cues, context, from); break;
+                case ECueEvent.Begin: ForgeCues.Begin(cues, context, from); break;
+                case ECueEvent.End: ForgeCues.End(cues, context, from); break;
             }
         }
 

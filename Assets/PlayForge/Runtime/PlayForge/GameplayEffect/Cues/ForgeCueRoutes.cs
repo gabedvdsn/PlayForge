@@ -41,13 +41,22 @@ namespace FarEmerald.PlayForge
         }
 
         /// <summary>Plays the bursts of the cue's tag.</summary>
-        public static void Burst(in CueContext cue) => Route(ECueEvent.Burst, cue);
+        public static void Burst(in CueContext cue) => Raise(ECueEvent.Burst, cue);
 
         /// <summary>Begins the lasting cues of the cue's tag.</summary>
-        public static void Begin(in CueContext cue) => Route(ECueEvent.Begin, cue);
+        public static void Begin(in CueContext cue) => Raise(ECueEvent.Begin, cue);
 
         /// <summary>Ends the lasting cues of the cue's tag.</summary>
-        public static void End(in CueContext cue) => Route(ECueEvent.End, cue);
+        public static void End(in CueContext cue) => Raise(ECueEvent.End, cue);
+
+        // A tag raised from code: its world's sink asked once, as for any raise, then its routes played
+        private static void Raise(ECueEvent cueEvent, in CueContext cue)
+        {
+            if (ForgeCues.WillPlay(cueEvent, cue, CueSource.Of(cue.Tag))) Route(cueEvent, cue);
+        }
+
+        /// <summary>Plays the cue's tag within a raise already asked, as a Cue Tag cue does in its list's.</summary>
+        internal static void Within(ECueEvent cueEvent, in CueContext cue) => Route(cueEvent, cue);
 
         private static void Route(ECueEvent cueEvent, in CueContext cue)
         {
@@ -92,9 +101,9 @@ namespace FarEmerald.PlayForge
         {
             switch (cueEvent)
             {
-                case ECueEvent.Burst: ForgeCues.Burst(route.Handlers, cue); break;
-                case ECueEvent.Begin: ForgeCues.Begin(route.Handlers, cue); break;
-                case ECueEvent.End: ForgeCues.End(route.Handlers, cue); break;
+                case ECueEvent.Burst: ForgeCues.Dispatch(ECueEvent.Burst, route.Handlers, cue); break;
+                case ECueEvent.Begin: ForgeCues.Dispatch(ECueEvent.Begin, route.Handlers, cue); break;
+                case ECueEvent.End: ForgeCues.Dispatch(ECueEvent.End, route.Handlers, cue); break;
             }
         }
 
