@@ -10,6 +10,11 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## Toward 1.0.0, since 0.1.0
 
 ### Added
+- **A sequence's clock** (EP-32): a run goes by its packet's `Clock`, then its sequence's (`WithClock`), then its
+  packet's owner's, an ability's caster's, then the game's, and so do its waits, delays, timeouts, elapsed time, tweens
+  and synced tasks. `UnscaledClock` runs a sequence while the game's time stands, `ScaledClock` at a pace of its own,
+  and an `EntityClock` is a clock too. `TaskSequenceRuntime.Clock` and `ClockOfRun(token)` read a run's; a synced runner
+  takes its sequence's (`Clock`, `ClockFor`, `Step(data)`); `ForgeTick.Next(clock)` waits for the next step of a clock.
 - **Task Sequence Examples** (EP-29), in place of Code Examples: the task sequences a feature at a time, gameplay
   mechanics, every task of both libraries with a showcase, synced components on a shared base, and a runner that plays
   any example from a scene, all through ForgeLog, ForgeInput, ForgeRandom and ForgeTime.
@@ -544,6 +549,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   page, through one table of links in the editor.
 
 ### Changed
+- Under the fixed tick, a sequence on a clock that runs while the game's time stands waits for Unity's frames (EP-32),
+  `IForgeClock.FollowsTicks` false, as the unscaled clock's is; the ticks stand with the game's time.
 - An ability's **Sequence** task runs a chain as a process, as it runs a sequence (EP-31), so the chain's conditions and
   its sequences' are asked each frame.
 - All the runtime says goes through `ForgeLog` (EP-27), so its level and `ForgeLog.Logged` reach it: ProcessControl's

@@ -403,8 +403,8 @@ namespace FarEmerald.PlayForge
                     }
 
                     // Every sequence can fail at once, and a round that took no frame would go round for ever
-                    // inside one
-                    if (ForgeTime.FrameCount == startFrame) await ForgeTick.Next(chainToken);
+                    // inside one. A step of its packet's clock, which a menu's unscaled one takes on Unity's frames
+                    if (ForgeTime.FrameCount == startFrame) await ForgeTick.Next(ForgeTime.ClockFor(Data), chainToken);
                 }
             }
             catch (OperationCanceledException)
@@ -446,7 +446,7 @@ namespace FarEmerald.PlayForge
                 _currentIndex = i;
                 _currentSequence = _sequences[i];
                 
-                if (_paused) await ForgeTick.WaitWhile(() => _paused, chainToken);
+                if (_paused) await ForgeTick.WaitWhile(() => _paused, ForgeTime.ClockFor(Data), chainToken);
 
                 // Check if chain was interrupted before starting sequence
                 if (chainToken.IsCancellationRequested || _interrupted)

@@ -850,13 +850,13 @@ namespace FarEmerald.PlayForge
         }
 
         /// <summary>
-        /// This frame's delta time, which is 0 while the task's sequence is paused. A task that uses this rather
-        /// than Time.deltaTime holds with its sequence.
+        /// This frame's step of the task's run's clock (<see cref="TaskSequenceRuntime.Clock"/>), which is 0 while the
+        /// task's sequence is paused. A task that uses this rather than the game's time holds with its sequence and keeps
+        /// its clock: a slowed caster's waits last longer, and a menu's go on while the game's time stands.
         /// </summary>
         public static float DeltaTime(CancellationToken token)
         {
-            // The run's owner's time, so a slowed caster's waits last longer
-            return IsPaused(token) ? 0f : ForgeTime.DeltaTimeFor(TaskSequenceRuntime.DataOfRun(token));
+            return TaskSequenceRuntime.DeltaTimeOfRun(token);
         }
 
         /// <summary>

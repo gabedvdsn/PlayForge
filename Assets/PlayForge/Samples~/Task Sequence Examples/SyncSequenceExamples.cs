@@ -47,9 +47,15 @@ namespace FarEmerald.PlayForge.Samples.TaskSequences
         /// <summary>Called as the sequence finishes, or is stopped from inside: one that repeats never finishes. Does nothing here.</summary>
         protected virtual void WhenFinished() { }
 
-        /// <summary>The time a step moves the sequence on by: the game's, scaled, or its fixed step in FixedUpdate.</summary>
-        protected virtual float StepTime(EProcessStepTiming timing) =>
-            timing == EProcessStepTiming.FixedUpdate ? ForgeTime.FixedDeltaTime : ForgeTime.DeltaTimeFor(Packet);
+        /// <summary>
+        /// The time a step moves the sequence on by: a step of its runner's clock, the packet's, its sequence's
+        /// (WithClock) or the game's, or that clock's fixed step in FixedUpdate.
+        /// </summary>
+        protected virtual float StepTime(EProcessStepTiming timing)
+        {
+            var clock = Runner.ClockFor(Packet);
+            return timing == EProcessStepTiming.FixedUpdate ? clock.FixedDeltaTime : clock.DeltaTime;
+        }
 
         public override void WhenUpdate() => StepAt(EProcessStepTiming.Update);
 
@@ -354,8 +360,9 @@ namespace FarEmerald.PlayForge.Samples.TaskSequences
     }
 
     /// <summary>
-    /// Pulses its object's scale for good, a punch and a pause. With Ignore Time Scale it steps by unscaled time, so it
-    /// goes on while the game's time is slowed or stopped, as a menu's highlight should.
+    /// Pulses its object's scale for good, a punch and a pause. With Ignore Time Scale its sequence runs on the unscaled
+    /// clock, WithClock's, so it goes on while the game's time is slowed or stopped, as a menu's highlight should; its
+    /// runner steps by the clock it's given.
     /// </summary>
     [AddComponentMenu("PlayForge/Samples/Task Sequences/Synced Pulse")]
     public class SyncedPulse : SyncedSequenceComponent
@@ -369,13 +376,15 @@ namespace FarEmerald.PlayForge.Samples.TaskSequences
         [Tooltip("Seconds between pulses")]
         [Min(0f)] public float PauseBetween = 0.4f;
 
-        [Tooltip("Steps by unscaled time, so it pulses while the game's time is stopped")]
+        [Tooltip("Runs on the unscaled clock, so it pulses while the game's time is stopped. Read as its process starts")]
         public bool IgnoreTimeScale;
 
         protected override SyncedTaskSequence BuildRunner()
         {
-            return TaskSequenceBuilder.Create("Synced Pulse")
+            var runner = TaskSequenceBuilder.Create("Synced Pulse")
                 .WithRepeat(true)
+                // Null for the game's: the packet's owner's clock, as nothing names another
+                .WithClock(IgnoreTimeScale ? UnscaledClock.Instance : null)
                 .Stage(s => s
                     .WithName("Punch")
                     .Task(SyncSeq.PunchScale(transform, Intensity, Duration)))
@@ -383,10 +392,10 @@ namespace FarEmerald.PlayForge.Samples.TaskSequences
                     .WithName("Pause")
                     .SyncDelay(PauseBetween))
                 .BuildSyncRunner();
-        }
 
-        protected override float StepTime(EProcessStepTiming timing) =>
-            IgnoreTimeScale ? ForgeTime.UnscaledDeltaTime : base.StepTime(timing);
+            ForgeLog.Verbose($"{name} pulses on {(runner.Clock != null ? "the unscaled clock" : "the game's time")}.", this);
+            return runner;
+        }
     }
 
     /// <summary>
@@ -511,8 +520,8 @@ namespace FarEmerald.PlayForge.Samples.TaskSequences
 
         public override void WhenUpdate()
         {
-            // Done once its rounds are up, or its target is gone
-            if (!_target || _done >= _rounds || _runner.Step(_data, ForgeTime.DeltaTime)) Relay.Terminate();
+            // Done once its rounds are up, or its target is gone. A step of its clock, the packet's or the game's
+            if (!_target || _done >= _rounds || _runner.Step(_data)) Relay.Terminate();
         }
 
         public override void WhenTerminate()

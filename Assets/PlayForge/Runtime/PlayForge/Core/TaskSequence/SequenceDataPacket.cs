@@ -245,8 +245,9 @@ namespace FarEmerald.PlayForge
                 _payload[kvp.Key] = new List<object>();
                 foreach (object data in kvp.Value) _payload[kvp.Key].Add(data);
             }
-            
+
             InUse = other.InUse;
+            Clock = other.Clock;
         }
         
         /// <summary>

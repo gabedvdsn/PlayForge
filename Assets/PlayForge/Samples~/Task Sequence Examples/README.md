@@ -13,7 +13,7 @@ framework; these examples show it working.
 
 | File | What it shows |
 | --- | --- |
-| `TaskSequenceExamples.cs` | The framework a feature at a time: building, every kind of task, delays and waits, stage policies, sub-stages, branches, repeats, conditions and injections and the permissions over them, critical sections, timeouts and max durations, exceptions, lifecycle hooks, metadata, the data packet, every way to run a sequence, chains, pausing, and the runtime's own members. It ends with a task, a stage policy and an injection of your own. |
+| `TaskSequenceExamples.cs` | The framework a feature at a time: building, every kind of task, delays and waits, stage policies, sub-stages, branches, repeats, conditions and injections and the permissions over them, critical sections, timeouts and max durations, clocks of a sequence's own, exceptions, lifecycle hooks, metadata, the data packet, every way to run a sequence, chains, pausing, and the runtime's own members. It ends with a task, a stage policy and an injection of your own. |
 | `TaskSequenceExamples_Mechanics.cs` | Gameplay mechanics built from those features: a channeled beam, charges, a recall, a combo chain, a respawn timer with a buy-back, a boss that enrages, a spell shield, a toggled drain, ground targeting, a charged shot, a recast, a meteor shower, and a turn-based duel. |
 | `TaskSequenceLibraryExamples.cs` | Every helper of `SequenceTaskLibrary` and `SyncSequenceTaskLibrary`, each async helper beside its synced twin, and the Library Showcase component that runs them on a scene's objects. |
 | `SyncSequenceExamples.cs` | Synced sequences as scene components, each a `LazyMonoProcess` with the Synchronous lifecycle: a ticker, a patrol, a chase, a bob, an orbit, a burn, a pulse and a signal, and a `LazyRuntimeProcess` that code starts. |
@@ -60,4 +60,6 @@ The examples read keys and the pointer through `ForgeInput`, so they work with t
 and with a game's own input put in with `ForgeInput.Use`. They log through `ForgeLog`; a few chatty lines are Verbose,
 which show once its level is lowered in Preferences > PlayForge > Logging. They roll through `ForgeRandom`, so a seeded source gives
 the same rolls each run. Inside a task they keep time through `SequenceTaskLibrary`, whose waits hold while their
-sequence is paused; outside one, through `ForgeTime`.
+sequence is paused and which go by the run's clock; outside one, through `ForgeTime`. The Timers: Clocks example runs
+a sequence on the unscaled clock and two on a `ScaledClock` the S key slows, and the synced pulse's Ignore Time Scale
+puts its sequence on the unscaled clock.

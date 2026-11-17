@@ -152,14 +152,16 @@ namespace FarEmerald.PlayForge
         {
             if (IsSynchronous && _syncRunner != null)
             {
+                // A step of the runner's clock: its packet's, its sequence's, its packet's owner's or the game's
+                float deltaTime = _syncRunner.ClockFor(SeqData).DeltaTime;
                 var onStep = _sequence?.Definition.Metadata?.OnStepCallbacks;
-                if (onStep != null && onStep.TryGetValue(timing, out var callback)) callback?.Invoke(SeqData, ForgeTime.DeltaTimeFor(SeqData));
+                if (onStep != null && onStep.TryGetValue(timing, out var callback)) callback?.Invoke(SeqData, deltaTime);
 
                 // A composite timing steps this more than once a frame, and a sequence that moved on at each would
                 // run that many times too fast
                 if (timing != AdvancingTiming(StepTiming)) return;
 
-                if (_syncRunner.Step(SeqData, ForgeTime.DeltaTimeFor(SeqData)))
+                if (_syncRunner.Step(SeqData, deltaTime))
                 {
                     Relay.TerminateImmediate();
                 }

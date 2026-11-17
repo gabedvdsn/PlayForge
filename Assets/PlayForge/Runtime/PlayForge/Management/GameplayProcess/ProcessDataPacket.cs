@@ -25,6 +25,13 @@ namespace FarEmerald.PlayForge
         protected Dictionary<Tag, List<object>> _payload = new();
         public IReadOnlyDictionary<Tag, List<object>> Payload => _payload;
         public bool InUse = true;
+
+        /// <summary>
+        /// The clock the work done with this packet runs by: a sequence's waits, timers, tweens and synced tasks, and an
+        /// ability's waits. Null, as it is unless set, for the packet's owner's: an ability's caster's, or the game's. A
+        /// sequence's own clock (<see cref="TaskSequenceBuilder.WithClock"/>) gives way to this one.
+        /// </summary>
+        public IForgeClock Clock { get; set; }
         
         protected readonly Dictionary<int, ProcessRelay> HandlerRelays = new();
         
@@ -98,6 +105,7 @@ namespace FarEmerald.PlayForge
             }
             
             InUse = other.InUse;
+            Clock = other.Clock;
             TakeSetByCaller(other.SetByCallerMagnitudes);
         }
 

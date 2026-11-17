@@ -501,7 +501,7 @@ namespace FarEmerald.PlayForge
                 syncStages.Add(BuildSyncStage(stage, name + ", " + stageName, wholeSequenceIsCritical));
             }
 
-            var runner = new SyncedTaskSequence(syncStages, name, Metadata?.Repeat ?? false);
+            var runner = new SyncedTaskSequence(syncStages, name, Metadata?.Repeat ?? false) { Clock = Metadata?.Clock };
 
             var onComplete = Metadata?.OnComplete;
             if (onComplete != null) runner.OnComplete = (data, completed) => onComplete(new SequenceEventContext(data, null), completed);
@@ -671,7 +671,13 @@ namespace FarEmerald.PlayForge
         /// Per-step callbacks keyed by timing. Invoked each frame during sync execution.
         /// </summary>
         public Dictionary<EProcessStepTiming, Action<SequenceDataPacket, float>> OnStepCallbacks { get; set; }
-        
+
+        /// <summary>
+        /// The clock the sequence runs by where its packet names none (<see cref="ProcessDataPacket.Clock"/>). Null for the
+        /// packet's owner's, an ability's caster's, or the game's.
+        /// </summary>
+        public IForgeClock Clock { get; set; }
+
         // ═══════════════════════════════════════════════════════════════════════════
         // EVENT CALLBACKS (all sync - called immediately when event occurs)
         // ═══════════════════════════════════════════════════════════════════════════

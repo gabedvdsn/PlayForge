@@ -150,7 +150,7 @@ namespace FarEmerald.PlayForge
                 while (elapsed < duration)
                 {
                     token.ThrowIfCancellationRequested();
-                    elapsed += ForgeTime.DeltaTimeFor(data);
+                    elapsed += TaskSequenceRuntime.ClockOfRun(token, data).DeltaTime;
                     if (!caster) return;
                     caster.transform.position = Vector3.Lerp(from, to, Mathf.Clamp01(elapsed / duration));
                     await ForgeTick.NextFrame(token);

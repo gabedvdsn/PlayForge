@@ -37,8 +37,8 @@ namespace FarEmerald.PlayForge
         public override bool IsCriticalSection => false;
 
         /// <summary>
-        /// Waits a step at a time until <paramref name="done"/> says so or the timeout runs out, in its caster's time, and
-        /// records where it came; whether it came.
+        /// Waits a step at a time until <paramref name="done"/> says so or the timeout runs out, in its run's time, its
+        /// caster's unless the run names a clock of its own, and records where it came; whether it came.
         /// </summary>
         protected async UniTask<bool> WaitFor(Func<bool> done, AbilityDataPacket data, CancellationToken token)
         {
@@ -48,7 +48,7 @@ namespace FarEmerald.PlayForge
             {
                 if (timeout > 0f && waited >= timeout) return false;
                 await ForgeTick.NextFrame(token);
-                waited += ForgeTime.DeltaTimeFor(data);
+                waited += TaskSequenceRuntime.ClockOfRun(token, data).DeltaTime;
             }
             if (RecordAs.IsValid) data.SetPrimary(RecordAs, true);
             return true;

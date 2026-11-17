@@ -135,6 +135,19 @@ namespace FarEmerald.PlayForge
         }
 
         /// <summary>
+        /// Sets the clock the sequence runs by: its waits, delays, timeouts and elapsed time, its tasks' tweens and its
+        /// synced tasks. <see cref="UnscaledClock"/> runs a menu's sequence while the game is paused, and a
+        /// <see cref="ScaledClock"/> plays it slowed or sped up. A packet that names a clock of its own runs by that one
+        /// instead; with neither, a sequence runs by its packet's owner's, an ability's caster's, or the game's.
+        /// </summary>
+        public TaskSequenceBuilder WithClock(IForgeClock clock)
+        {
+            _metadata ??= new SequenceMetadata();
+            _metadata.Clock = clock;
+            return this;
+        }
+
+        /// <summary>
         /// Sets the process lifecycle for this sequence.
         /// Use Synchronous for per-frame stepping without async overhead.
         /// Default is SelfTerminating (async).

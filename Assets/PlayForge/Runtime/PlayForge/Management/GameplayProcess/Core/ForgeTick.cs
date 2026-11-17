@@ -10,7 +10,9 @@ namespace FarEmerald.PlayForge
     /// step of its time, a number of them a frame: every process steps once a tick, its end of frame with it, and a
     /// sequence waits for the next tick where it waited for the next frame. So a run comes out the same at any frame rate.
     /// Off, as it is by default, a wait is Unity's next frame, as it was. A world of its own has a tick of its own, in force
-    /// while it steps or moves a process, so its sequences wait on its steps.
+    /// while it steps or moves a process, so its sequences wait on its steps. The ticks run on the game's time and stand
+    /// with it, so a sequence on a clock that runs while it stands, as <see cref="UnscaledClock"/> does, waits for Unity's
+    /// frames.
     /// </summary>
     public static class ForgeTick
     {
@@ -73,6 +75,34 @@ namespace FarEmerald.PlayForge
         public static UniTask WaitUntil(Func<bool> condition, PlayerLoopTiming timing, CancellationToken token = default) =>
             current.WaitUntil(condition, timing, token);
 
+        /// <summary>
+        /// Waits for the next step of a clock's time: the next tick, as <see cref="Next(CancellationToken)"/> does, or
+        /// Unity's next frame for a clock that runs while the game's time stands (<see cref="IForgeClock.FollowsTicks"/>),
+        /// where the scene's ticks, which run on the game's time, would hold it.
+        /// </summary>
+        public static UniTask Next(IForgeClock clock, CancellationToken token = default) =>
+            ByFrames(clock) ? UniTask.Yield(PlayerLoopTiming.Update, token) : current.Next(token);
+
+        // Waits while the condition holds, as WaitWhile does, asking once a step of the clock's time
+        internal static UniTask WaitWhile(Func<bool> condition, IForgeClock clock, CancellationToken token = default) =>
+            ByFrames(clock)
+                ? UniTask.WaitWhile(condition, PlayerLoopTiming.Update, token)
+                : current.WaitWhile(condition, PlayerLoopTiming.Update, token);
+
+        // Waits until the condition holds, as WaitUntil does, asking once a step of the clock's time
+        internal static UniTask WaitUntil(Func<bool> condition, IForgeClock clock, CancellationToken token = default) =>
+            ByFrames(clock)
+                ? UniTask.WaitUntil(condition, PlayerLoopTiming.Update, token)
+                : current.WaitUntil(condition, PlayerLoopTiming.Update, token);
+
+        // A clock that runs while the game's time stands has its waits go by Unity's frames where the scene ticks, as the
+        // scene's ticks stand with the game's time. A world of its own's tick is all the time there is in it
+        private static bool ByFrames(IForgeClock clock) => clock is { FollowsTicks: false } && current == scene && scene.Ticking;
+
+        // Whether a wait under a token is one of a sequence's run whose clock runs while the game's time stands, which goes
+        // by Unity's frames where the scene ticks. The task sequence runtime answers it for its runs' tokens
+        internal static Func<CancellationToken, bool> WaitsByFrames;
+
         // One tick of the tick in force
         internal static void Advance() => current.Advance();
 
@@ -105,14 +135,13 @@ namespace FarEmerald.PlayForge
         /// <summary>The ticks since it began ticking.</summary>
         public int Ticks { get; private set; }
 
-        /// <summary>Waits for the next tick, or, with ticks off, Unity's next frame.</summary>
+        /// <summary>
+        /// Waits for the next tick, or, with ticks off, Unity's next frame. A wait of a sequence's run on a clock that runs
+        /// while the game's time stands is Unity's next frame on the scene's tick too.
+        /// </summary>
         public UniTask Next(CancellationToken token = default)
         {
-            if (!Ticking) return UniTask.Yield(PlayerLoopTiming.Update, token);
-            if (token.IsCancellationRequested) return UniTask.FromCanceled(token);
-            var source = AutoResetUniTaskCompletionSource.Create();
-            waiting.Add((source, token));
-            return source.Task;
+            return TicksFor(token) ? Tick(token) : UniTask.Yield(PlayerLoopTiming.Update, token);
         }
 
         /// <summary>
@@ -121,16 +150,13 @@ namespace FarEmerald.PlayForge
         /// </summary>
         public UniTask Next(PlayerLoopTiming timing, CancellationToken token = default)
         {
-            if (!Ticking || timing is PlayerLoopTiming.FixedUpdate or PlayerLoopTiming.LastFixedUpdate or PlayerLoopTiming.EarlyUpdate
-                    or PlayerLoopTiming.LastEarlyUpdate or PlayerLoopTiming.Initialization or PlayerLoopTiming.LastInitialization)
-                return UniTask.Yield(timing, token);
-            return Next(token);
+            return TicksAt(timing, token) ? Tick(token) : UniTask.Yield(timing, token);
         }
 
         /// <summary>Waits for the next tick, or, with ticks off, Unity's next frame as UniTask.NextFrame does.</summary>
         public UniTask NextFrame(CancellationToken token = default)
         {
-            return Ticking ? Next(token) : UniTask.NextFrame(token);
+            return TicksFor(token) ? Tick(token) : UniTask.NextFrame(token);
         }
 
         /// <summary>
@@ -138,16 +164,33 @@ namespace FarEmerald.PlayForge
         /// timing while it doesn't, and at the physics step's timings, which are Unity's.
         /// </summary>
         public UniTask WaitWhile(Func<bool> condition, PlayerLoopTiming timing = PlayerLoopTiming.Update, CancellationToken token = default) =>
-            TicksAt(timing) ? Asked(condition, whileSo: true, token) : UniTask.WaitWhile(condition, timing, token);
+            TicksAt(timing, token) ? Asked(condition, whileSo: true, token) : UniTask.WaitWhile(condition, timing, token);
 
         /// <summary>Waits until the condition holds, as <see cref="WaitWhile"/> waits while it does.</summary>
         public UniTask WaitUntil(Func<bool> condition, PlayerLoopTiming timing = PlayerLoopTiming.Update, CancellationToken token = default) =>
-            TicksAt(timing) ? Asked(condition, whileSo: false, token) : UniTask.WaitUntil(condition, timing, token);
+            TicksAt(timing, token) ? Asked(condition, whileSo: false, token) : UniTask.WaitUntil(condition, timing, token);
 
-        // Whether a wait at the timing waits on this tick: the Update family does while it ticks
-        private bool TicksAt(PlayerLoopTiming timing) =>
-            Ticking && timing is not (PlayerLoopTiming.FixedUpdate or PlayerLoopTiming.LastFixedUpdate or PlayerLoopTiming.EarlyUpdate
-                or PlayerLoopTiming.LastEarlyUpdate or PlayerLoopTiming.Initialization or PlayerLoopTiming.LastInitialization);
+        // The wait for the next tick
+        private UniTask Tick(CancellationToken token)
+        {
+            if (token.IsCancellationRequested) return UniTask.FromCanceled(token);
+            var source = AutoResetUniTaskCompletionSource.Create();
+            waiting.Add((source, token));
+            return source.Task;
+        }
+
+        // Whether a wait under the token at the timing waits on this tick: the Update family does while it ticks
+        private bool TicksAt(PlayerLoopTiming timing, CancellationToken token) =>
+            timing is not (PlayerLoopTiming.FixedUpdate or PlayerLoopTiming.LastFixedUpdate or PlayerLoopTiming.EarlyUpdate
+                or PlayerLoopTiming.LastEarlyUpdate or PlayerLoopTiming.Initialization or PlayerLoopTiming.LastInitialization)
+            && TicksFor(token);
+
+        // Whether a wait under the token waits on this tick: while it ticks, but for a wait on the scene's of a sequence's
+        // run whose clock runs while the game's time stands, which the scene's ticks stand with, and which goes by Unity's
+        // frames. A token no source can cancel belongs to no run
+        private bool TicksFor(CancellationToken token) =>
+            Ticking && !(token.CanBeCanceled && ReferenceEquals(this, ForgeTick.Scene)
+                         && ForgeTick.WaitsByFrames is { } byFrames && byFrames(token));
 
         // Asks once a tick, on this tick, until the condition is otherwise
         private async UniTask Asked(Func<bool> condition, bool whileSo, CancellationToken token)

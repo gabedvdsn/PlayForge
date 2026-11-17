@@ -49,12 +49,12 @@ namespace FarEmerald.PlayForge
         public void Prepare(SequenceDataPacket data) => _prepare?.Invoke(data);
 
         /// <summary>
-        /// Bridge: loops Step with per-frame yields for async execution. It isn't stepped while its sequence is paused, so
-        /// a synced task holds with its run, as the library's own waits do.
+        /// Bridge: loops Step with per-frame yields for async execution, each a step of its run's clock. It isn't stepped
+        /// while its sequence is paused, so a synced task holds with its run, as the library's own waits do.
         /// </summary>
         public async UniTask Execute(SequenceDataPacket data, System.Threading.CancellationToken token)
         {
-            while (TaskSequenceRuntime.IsPausedRun(token) || !Step(data, ForgeTime.DeltaTimeFor(data)))
+            while (TaskSequenceRuntime.IsPausedRun(token) || !Step(data, TaskSequenceRuntime.ClockOfRun(token, data).DeltaTime))
             {
                 await ForgeTick.Next(token);
             }
@@ -78,8 +78,8 @@ namespace FarEmerald.PlayForge
     ///       .Stage(s => s.Task(...))
     ///       .BuildSyncRunner();
     ///
-    ///   // In WhenUpdate:
-    ///   if (runner.Step(data, Time.deltaTime))
+    ///   // In WhenUpdate, a step of its clock, or of a time given:
+    ///   if (runner.Step(data))
     ///       relay.Terminate();
     /// </summary>
     public class SyncedTaskSequence
@@ -136,6 +136,18 @@ namespace FarEmerald.PlayForge
         /// </summary>
         public Action<SequenceDataPacket, bool> OnComplete { get; set; }
 
+        /// <summary>
+        /// The clock a step of its own goes by where its packet names none: the sequence's, as
+        /// <see cref="TaskSequenceBuilder.WithClock"/> set it, or null for the packet's owner's or the game's.
+        /// </summary>
+        public IForgeClock Clock { get; set; }
+
+        /// <summary>
+        /// The clock a step with this packet goes by: the packet's (<see cref="ProcessDataPacket.Clock"/>), the
+        /// sequence's (<see cref="Clock"/>), then the packet's owner's, an ability's caster's, or the game's.
+        /// </summary>
+        public IForgeClock ClockFor(SequenceDataPacket data) => data?.Clock ?? Clock ?? ForgeTime.ClockFor(data);
+
         public SyncedTaskSequence(List<SyncSequenceStage> stages, string name = null, bool repeat = false,
             Action<SyncedTaskSequence> onComplete = null)
         {
@@ -158,7 +170,13 @@ namespace FarEmerald.PlayForge
         }
 
         /// <summary>
-        /// Advances the runner by one frame. Returns true when all stages are complete.
+        /// Advances the runner by a step of its clock, as <see cref="ClockFor"/> finds it. Returns true when all stages
+        /// are complete. Call this from WhenUpdate on a process.
+        /// </summary>
+        public bool Step(SequenceDataPacket data) => Step(data, ClockFor(data).DeltaTime);
+
+        /// <summary>
+        /// Advances the runner by one frame of the time given. Returns true when all stages are complete.
         /// Call this from WhenUpdate on a process.
         /// </summary>
         public bool Step(SequenceDataPacket data, float deltaTime)

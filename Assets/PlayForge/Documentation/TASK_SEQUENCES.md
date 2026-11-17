@@ -57,8 +57,8 @@ and values there, and a task can leave values for the stages after it (`SetPrima
   `WaitForAnyKey`, which returns the key pressed, and `WaitForPointer`.
 
 Each of the library's waits holds while its sequence is paused, and a press while it's paused isn't heard. A task that
-keeps time itself should read `SequenceTaskLibrary.DeltaTime(token)`, which is 0 while the sequence is paused and runs at
-the caster's own time scale.
+keeps time itself should read `SequenceTaskLibrary.DeltaTime(token)`, a step of its run's clock (below), which is 0 while
+the sequence is paused.
 
 ## Repeating
 
@@ -108,6 +108,45 @@ stage end.
 - `OnComplete` hears the run end and whether it finished; `OnTerminate` hears it end however it does. A stage has its
   own `OnInit`, `OnRepeat` and `OnTerminate`.
 
+## Clocks
+
+A run's time is its **clock**'s: its waits and delays, its timeouts and longest runs, its `ElapsedTime`, the library's
+tweens and its synced tasks all go by it. A run takes the first clock it finds:
+
+1. its packet's, `data.Clock`, which whatever starts the run sets;
+2. its sequence's own, `WithClock(clock)` on the builder;
+3. its packet's owner's: an ability's caster's own clock, its time scale times the game's;
+4. the game's, `ForgeTime.Clock`.
+
+```csharp
+// A pause menu's runs while the game's time stands
+var menu = TaskSequenceBuilder.Create("Menu").WithClock(UnscaledClock.Instance) /* … */;
+
+// A finisher's slow motion: every sequence on the clock slows, speeds up or stops with it
+var slowMotion = new ScaledClock(0.25f);
+var finisher = TaskSequenceBuilder.Create("Finisher").WithClock(slowMotion) /* … */;
+
+// One run on an entity's time, from its packet
+var data = SequenceDataPacket.Default();
+data.Clock = gas.GetClock();
+```
+
+- `UnscaledClock.Instance` reads the game's time without its time scale.
+- A `ScaledClock` runs at a `Scale` of its own over its `Source`, the clock in force unless it's given one, and counts
+  its own `Time` through each change of scale.
+- An entity's `EntityClock` is a clock as any other is.
+- A clock of your own implements `IForgeClock`, and is read as it is. The clocks above read the clock in force, so a world
+  of its own's steps and the fixed tick still drive them; one that reads Unity's time itself doesn't follow them.
+
+`runtime.Clock` is a run's clock, and `TaskSequenceRuntime.ClockOfRun(token)` the clock of the run a task's token
+belongs to. A synced runner takes its sequence's clock (`runner.Clock`), a packet's before it (`runner.ClockFor(data)`),
+and `runner.Step(data)` steps by it.
+
+Under ProcessControl's fixed tick, a sequence waits for the next tick, and the ticks run on the game's time, so they stand
+with it. A clock that runs while the game's time stands says so, `FollowsTicks` false as the unscaled clock's is, and its
+sequences wait for Unity's frames instead. Code outside a sequence awaits `ForgeTick.Next(clock)` for the next step of a
+clock's time. A synced sequence run as a process steps with ProcessControl, by its ticks, whatever its clock.
+
 ## Running one
 
 - `RegisterAndRun(data)`, or `ProcessControl.Register(sequence).With(data).Run()`, runs it as a process: it shows in the
@@ -145,8 +184,8 @@ runner = TaskSequenceBuilder.Create("Regenerate")
     .Stage(stage => stage.Do(_ => Heal(5)))
     .BuildSyncRunner();
 
-// In the process's WhenUpdate
-runner.Step(data, ForgeTime.DeltaTime);
+// In the process's WhenUpdate: a step of its clock, or Step(data, deltaTime) for a time of your own
+runner.Step(data);
 ```
 
 A synced task works in an async sequence too, stepped once a frame and held while the sequence is paused. Its first

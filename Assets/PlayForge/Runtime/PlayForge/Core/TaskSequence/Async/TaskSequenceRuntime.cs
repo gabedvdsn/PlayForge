@@ -73,6 +73,40 @@ namespace FarEmerald.PlayForge
             lock (RunsByToken) RunsByToken.Clear();
         }
 
+        // The ticks ask a run whether its waits go by Unity's frames, so a wait of one of its tokens, its tasks' own among
+        // them, goes by its clock
+        static TaskSequenceRuntime() => ForgeTick.WaitsByFrames = WaitsByFrames;
+
+        // A run whose clock runs while the game's time stands has its waits go by Unity's frames where the scene ticks, as
+        // the scene's ticks stand with the game's time
+        private static bool WaitsByFrames(CancellationToken token)
+        {
+            TaskSequenceRuntime run;
+            lock (RunsByToken)
+            {
+                if (!RunsByToken.TryGetValue(token, out run)) return false;
+            }
+
+            return !run.Clock.FollowsTicks;
+        }
+
+        // A token of this run's, the run's own or a stage's, known as this run's while it lasts
+        private void Own(CancellationToken token)
+        {
+            lock (RunsByToken)
+            {
+                RunsByToken[token] = this;
+            }
+        }
+
+        private static void Disown(CancellationToken token)
+        {
+            lock (RunsByToken)
+            {
+                RunsByToken.Remove(token);
+            }
+        }
+
         // Cancellation management
         private CancellationTokenSource _sequenceCts;
         private readonly Dictionary<int, CancellationTokenSource> _stageSources = new();
@@ -158,8 +192,7 @@ namespace FarEmerald.PlayForge
             IsPaused = false;
         }
 
-        /// <summary>True if the token is one a stage gave its tasks, and that stage's run is paused.</summary>
-        /// <summary>The packet of the run a token belongs to, or null, whose owner's clock its waits run by.</summary>
+        /// <summary>The packet of the run a token belongs to, or null.</summary>
         public static SequenceDataPacket DataOfRun(CancellationToken token)
         {
             lock (RunsByToken)
@@ -168,6 +201,43 @@ namespace FarEmerald.PlayForge
             }
         }
 
+        /// <summary>
+        /// The clock this run goes by, read as it's asked: its packet's (<see cref="ProcessDataPacket.Clock"/>), then its
+        /// sequence's (<see cref="TaskSequenceBuilder.WithClock"/>), then its packet's owner's, an ability's caster's, then
+        /// the game's. Its waits, delays, timeouts and <see cref="ElapsedTime"/>, its tasks' tweens and its synced tasks
+        /// go by it.
+        /// </summary>
+        public IForgeClock Clock => Data?.Clock ?? Definition.Metadata?.Clock ?? ForgeTime.ClockFor(Data);
+
+        /// <summary>
+        /// The clock of the run a token belongs to, as <see cref="Clock"/> reads it; for a token of no run, the clock the
+        /// packet's work runs by (<see cref="ForgeTime.ClockFor"/>), or the game's.
+        /// </summary>
+        public static IForgeClock ClockOfRun(CancellationToken token, ProcessDataPacket data = null)
+        {
+            TaskSequenceRuntime run;
+            lock (RunsByToken)
+            {
+                RunsByToken.TryGetValue(token, out run);
+            }
+
+            return run != null ? run.Clock : ForgeTime.ClockFor(data);
+        }
+
+        // The step of a run's time this frame, 0 while it's paused; for a token of no run, the game's
+        internal static float DeltaTimeOfRun(CancellationToken token)
+        {
+            TaskSequenceRuntime run;
+            lock (RunsByToken)
+            {
+                RunsByToken.TryGetValue(token, out run);
+            }
+
+            if (run == null) return ForgeTime.Clock.DeltaTime;
+            return run.IsPaused ? 0f : run.Clock.DeltaTime;
+        }
+
+        /// <summary>True if the token is one a stage gave its tasks, and that stage's run is paused.</summary>
         public static bool IsPausedRun(CancellationToken token)
         {
             lock (RunsByToken)
@@ -176,21 +246,21 @@ namespace FarEmerald.PlayForge
             }
         }
 
-        /// <summary>Waits for the given time of this run, which a paused frame isn't.</summary>
+        /// <summary>Waits for the given time of this run's clock, which a paused frame isn't.</summary>
         public async UniTask Delay(float seconds, CancellationToken token)
         {
             float elapsed = 0f;
             do
             {
-                await ForgeTick.Next(token);
-                if (!IsPaused) elapsed += ForgeTime.DeltaTimeFor(Data);
+                await ForgeTick.Next(Clock, token);
+                if (!IsPaused) elapsed += Clock.DeltaTime;
             } while (elapsed < seconds);
         }
 
         // Not awaited unless it has to be, so that a run that isn't paused doesn't lose a frame here
         private UniTask HoldWhilePaused(CancellationToken token)
         {
-            return IsPaused ? ForgeTick.WaitWhile(() => IsPaused, token) : UniTask.CompletedTask;
+            return IsPaused ? ForgeTick.WaitWhile(() => IsPaused, Clock, token) : UniTask.CompletedTask;
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
@@ -251,6 +321,7 @@ namespace FarEmerald.PlayForge
                 
                 _sequenceCts = CancellationTokenSource.CreateLinkedTokenSource(externalToken);
                 var token = _sequenceCts.Token;
+                Own(token);
                 int runStartFrame = ForgeTime.FrameCount;
 
                 // The run keeps its own time. The sequence's timers kept it, so a sequence without one read 0
@@ -281,7 +352,7 @@ namespace FarEmerald.PlayForge
                     // run, so a sequence ended a frame after its last stage did
                     if (_maintainedStages.Count > 0)
                     {
-                        await ForgeTick.WaitUntil(() => _maintainedStages.Count == 0, token);
+                        await ForgeTick.WaitUntil(() => _maintainedStages.Count == 0, Clock, token);
                     }
 
                     // A run that repeats takes a frame if it took none, or an instant sequence repeats for ever
@@ -289,7 +360,7 @@ namespace FarEmerald.PlayForge
                     // run, an interrupt in that frame still ends it, as it did
                     if ((Definition.Metadata?.Repeat ?? false) && ForgeTime.FrameCount == runStartFrame)
                     {
-                        await ForgeTick.Next(token);
+                        await ForgeTick.Next(Clock, token);
                     }
 
                     CompletedSuccessfully = true;
@@ -338,6 +409,7 @@ namespace FarEmerald.PlayForge
                 finally
                 {
                     CleanupAllActiveTasks();
+                    Disown(token);
                     Cleanup();
                     IsRunning = false;
                     ForgeCounters.SequencesRunning.Value--;
@@ -397,7 +469,7 @@ namespace FarEmerald.PlayForge
             if (_maintainedStages.Count == 0) return;
 
             _sequenceCts?.Cancel();
-            await ForgeTick.WaitUntil(() => _maintainedStages.Count == 0);
+            await ForgeTick.WaitUntil(() => _maintainedStages.Count == 0, Clock);
         }
 
         private async UniTask ExecuteStagesSequentially(CancellationToken token)
@@ -528,6 +600,7 @@ namespace FarEmerald.PlayForge
             var stageCts = CancellationTokenSource.CreateLinkedTokenSource(parentToken);
             _stageSources[stageId] = stageCts;
             var stageToken = stageCts.Token;
+            Own(stageToken);
 
             // Push stage onto active stack for condition checking + critical tracking
             PushActiveStage(stage, stageId);
@@ -624,6 +697,7 @@ namespace FarEmerald.PlayForge
 
                 // Pop stage from active stack (also decrements critical locks if applicable)
                 PopActiveStage(stage, stageId);
+                Disown(stageToken);
 
                 // Cancelled as well as disposed: a disposed source never cancels, so the stage's timers outlived it
                 // and fired into whatever ran next. The run's cleanup may have done both already
@@ -708,7 +782,7 @@ namespace FarEmerald.PlayForge
             // What the last iteration added to the path comes off, so each one finds it as the first did
             if (_iterationPathDepths.TryGetValue(stage, out int pathDepth)) Data.TrimPath(pathDepth);
 
-            if (ForgeTime.FrameCount == startFrame) await ForgeTick.Next(token);
+            if (ForgeTime.FrameCount == startFrame) await ForgeTick.Next(Clock, token);
 
             CleanStage(stage);
             PrepareStage(stage);
@@ -761,11 +835,7 @@ namespace FarEmerald.PlayForge
                 policySource = ownSource;
             }
             var policyToken = policySource.Token;
-
-            lock (RunsByToken)
-            {
-                RunsByToken[policyToken] = this;
-            }
+            Own(policyToken);
 
             try
             {
@@ -793,10 +863,8 @@ namespace FarEmerald.PlayForge
             }
             finally
             {
-                lock (RunsByToken)
-                {
-                    RunsByToken.Remove(policyToken);
-                }
+                // The stage's own token, which a policy that only waits is handed, is the stage's till it ends
+                if (ownSource != null) Disown(policyToken);
 
                 ownSource?.Dispose();
             }
@@ -1019,15 +1087,15 @@ namespace FarEmerald.PlayForge
         // TIMERS
         // ═══════════════════════════════════════════════════════════════════════════
         
-        // Counts the run's time, which a paused frame isn't
+        // Counts the run's time, its clock's, which a paused frame isn't
         private async UniTaskVoid RunClock(CancellationToken token)
         {
             try
             {
                 while (true)
                 {
-                    await ForgeTick.Next(token);
-                    if (!IsPaused) ElapsedTime += ForgeTime.DeltaTimeFor(Data);
+                    await ForgeTick.Next(Clock, token);
+                    if (!IsPaused) ElapsedTime += Clock.DeltaTime;
                 }
             }
             catch (OperationCanceledException) { }
@@ -1040,10 +1108,10 @@ namespace FarEmerald.PlayForge
                 float elapsed = 0f;
                 while (true)
                 {
-                    await ForgeTick.Next(token);
+                    await ForgeTick.Next(Clock, token);
                     if (IsPaused) continue;
 
-                    elapsed += ForgeTime.DeltaTimeFor(Data);
+                    elapsed += Clock.DeltaTime;
                     if (elapsed >= Definition.MaxDurationSeconds.Value)
                     {
                         // Invoke callback before injection
@@ -1073,10 +1141,10 @@ namespace FarEmerald.PlayForge
                 float elapsed = 0f;
                 while (true)
                 {
-                    await ForgeTick.Next(token);
+                    await ForgeTick.Next(Clock, token);
                     if (IsPaused) continue;
 
-                    elapsed += ForgeTime.DeltaTimeFor(Data);
+                    elapsed += Clock.DeltaTime;
                     if (elapsed >= timeout.Seconds)
                     {
                         // Invoke callback before injection

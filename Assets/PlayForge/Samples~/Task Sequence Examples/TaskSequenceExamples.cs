@@ -960,8 +960,8 @@ namespace FarEmerald.PlayForge.Samples.TaskSequences
                     .Task(async (d, t) =>
                     {
                         float seconds = ForgeRandom.Range(1f, 3f);
-                        // Give it the injection: a timer set this way applies none of its own
-                        d.SetStageTimeout(seconds, SkipStageInjection.Instance);
+                        // A timer set this way skips its stage when it's up, as WithTimeout's does, unless given another
+                        d.SetStageTimeout(seconds);
                         ForgeLog.Info($"[Timers] This stage lasts {seconds:F1}s.");
                         await UniTask.Never(t);
                     }))
@@ -993,6 +993,72 @@ namespace FarEmerald.PlayForge.Samples.TaskSequences
                 .Stage(s => s.WithName("First").Task((d, t) => UniTask.Never(t)))
                 .Stage(s => s.WithName("Second").Task((d, t) => UniTask.Never(t)))
                 .Stage(s => s.WithName("Third").Task((d, t) => UniTask.Never(t)))
+                .BuildSequence();
+        }
+
+        // The clock the pulses below share, which the S key slows and speeds up: every sequence on it goes with it
+        private static readonly ScaledClock PulseTime = new(1f);
+
+        /// <summary>
+        /// A run's time is its clock's: its waits, delays, timers, elapsed time, tweens and synced tasks all go by it. A
+        /// packet's Clock comes first, then the sequence's own, WithClock's, then the packet's owner's, an ability's
+        /// caster's, and then the game's. The unscaled clock runs a menu's sequence while the game's time stands, and a
+        /// ScaledClock runs one at a pace of its own: sequences that share one slow down, speed up and stop together. Under
+        /// ProcessControl's fixed tick, a sequence on the unscaled clock waits for Unity's frames, as the ticks stand with
+        /// the game's time. Here two pulses share a clock, S halves and restores its pace, and a third pulse's packet names
+        /// a clock twice as fast, which comes before the one its sequence names.
+        /// </summary>
+        [TaskSequenceMethod("Timers: Clocks")]
+        public static TaskSequence Clocks()
+        {
+            // A pulse a second of its clock, four times
+            TaskSequence Pulse(string name) => TaskSequenceBuilder.Create(name)
+                .WithClock(PulseTime)
+                .Stage(s => s
+                    .WithRepeat(4)
+                    .Task(async (d, t) =>
+                    {
+                        await SequenceTaskLibrary.Delay(1f, t);
+                        ForgeLog.Info($"[Clocks] {name}: a second of its clock, {d.ElapsedTime:F1}s of it in; " +
+                                      $"its clock steps {TaskSequenceRuntime.ClockOfRun(t).DeltaTime:F3}s a frame.");
+                    }))
+                .BuildSequence();
+
+            // Each pulse runs on a packet of its own, so each run's elapsed time is its own
+            UniTask RunPulse(string name, CancellationToken t) => Pulse(name).Run(SequenceDataPacket.Default(), t);
+
+            return TaskSequenceBuilder.Create("Clocks")
+                // A menu's: its run's own waits go on while the game is paused
+                .WithClock(UnscaledClock.Instance)
+                .Do(d =>
+                {
+                    PulseTime.Scale = 1f;
+                    ForgeLog.Info($"[Clocks] This run is on the {(d.Runtime.Clock is UnscaledClock ? "unscaled" : "game's")} clock. " +
+                                  "Press S to slow the pulses to half and back.");
+                })
+                .Stage(s => s
+                    .WithName("Pulses")
+                    // The pulses end the stage; the key's wait, which never ends, is cut off with them
+                    .WhenN(3)
+                    .Task((d, t) => RunPulse("Left", t))
+                    .Task((d, t) => RunPulse("Right", t))
+                    .Task((d, t) =>
+                    {
+                        // A packet of its own, whose clock comes before the one the sequence names
+                        var fast = SequenceDataPacket.Default();
+                        fast.Clock = new ScaledClock(2f);
+                        return Pulse("Fast").Run(fast, t);
+                    })
+                    .Task(async (d, t) =>
+                    {
+                        while (true)
+                        {
+                            await SequenceTaskLibrary.WaitForKey(KeyCode.S, t);
+                            PulseTime.Scale = PulseTime.Scale < 1f ? 1f : 0.5f;
+                            ForgeLog.Info($"[Clocks] The pulses' clock runs at {PulseTime.Scale}, {PulseTime.Time:F1}s on it so far.");
+                        }
+                    }))
+                .Do(d => ForgeLog.Info($"[Clocks] Done, {d.ElapsedTime:F1}s of unscaled time in."))
                 .BuildSequence();
         }
 
@@ -1774,14 +1840,15 @@ namespace FarEmerald.PlayForge.Samples.TaskSequences
             return true;
         }
 
-        // Counted in unscaled time, so a hold lasts its length while the game's time is slowed
+        // Counted on the unscaled clock, so a hold lasts its length while the game's time is slowed, and a step of it is
+        // Unity's next frame where the fixed tick would stand with the game's time
         private async UniTaskVoid ReleaseLater(TaskSequenceRuntime runtime)
         {
             float held = 0f;
             while (held < Seconds && runtime.IsRunning)
             {
-                await ForgeTick.Next();
-                held += ForgeTime.UnscaledDeltaTime;
+                await ForgeTick.Next(UnscaledClock.Instance);
+                held += UnscaledClock.Instance.DeltaTime;
             }
             runtime.Resume();
         }
