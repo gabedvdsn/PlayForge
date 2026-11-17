@@ -129,8 +129,9 @@ The only other colors:
 - **Lists** are Unity's reorderable lists: a header with the count, drag handles, and the + and − footer.
 - **A section's rows start in one column** (EP-4): a list's or a foldout's arrow where Unity draws a list's, 5 px to the
   left of the fields' labels. A foldout of PlayForge's own keeps that column, `pf-foldout--aligned`, as an effect's
-  Purges, an attribute read's Groups and Turn To Face's Turn do (ED-89), where Unity hangs an inspector foldout's
-  arrow 12 px into the margin; a kind field alone keeps no place for an arrow while its kind has
+  Purges does, and every class PlayForge serializes without a drawer of its own, which `AlignedFoldoutDrawer`
+  draws (ED-89, ED-90; a test fails on a class left out), where Unity hangs an inspector foldout's arrow 12 px
+  into the margin; a kind field alone keeps no place for an arrow while its kind has
   nothing to fold.
 - **Dropdowns** are PlayForge's own (EP-1), as Unity's searchable dropdown looks: a header with the open menu's name
   and Back, the search field, the choices in their submenus, the field's value with a check, the highlighted choice in

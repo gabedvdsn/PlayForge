@@ -1056,6 +1056,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   Asking whether its sequence was paused took 24 bytes a frame.
 
 ### Fixed
+- Every class PlayForge serializes without a drawer of its own, as an asset's Definition and Tags and a list's
+  entries, keeps the column of the rows around it (ED-90), and draws in an IMGUI inspector too; a test fails on
+  a class left to Unity's default foldout.
 - An attribute read's Groups, as an × Attribute scaler's, and Turn To Face's Turn keep the column of the rows around
   them (ED-89), where each arrow hung 12 px into the margin; a read's list of groups shows only for Only These and
   All But These.

@@ -5,20 +5,50 @@ using System.Linq;
 using System.Reflection;
 using UnityEditor;
 using UnityEditor.UIElements;
+using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
-    /// A class with no drawer of its own drawn as a foldout of its fields, its arrow in line with the rows around it, as
-    /// a list's is: an attribute read's retention groups, as an × Attribute scaler's Groups, and a turn to face's
-    /// settings. Unity hangs an inspector foldout's arrow 12 px into the margin, to the left of a list's arrow and, in a
-    /// scaler's block, out to the block's edge; this one keeps the lists' column, as <c>pf-foldout--aligned</c> sets in
-    /// PlayForge.uss. A field marked <see cref="ForgeShowWhenAttribute"/> shows only while the field it names says so, as
-    /// a read's Groups shows only for the reads that name groups.
+    /// Each class PlayForge serializes in a field with no drawer of its own, drawn as a foldout of its fields, its arrow
+    /// in line with the rows around it, as a list's is: an attribute read's retention groups, as an × Attribute scaler's
+    /// Groups, a turn to face's settings, an asset's definition and tags, a list's entries. Unity hangs an inspector
+    /// foldout's arrow 12 px into the margin, to the left of a list's arrow and, in a scaler's block, out to the block's
+    /// edge; this one keeps the lists' column, as <c>pf-foldout--aligned</c> sets in PlayForge.uss. A class opts in with a
+    /// <see cref="CustomPropertyDrawer"/> of its type here. A field marked <see cref="ForgeShowWhenAttribute"/> shows only
+    /// while the field it names says so, as a read's Groups shows only for the reads that name groups. An inspector drawn
+    /// with IMGUI gets the same foldout.
     /// </summary>
+    [CustomPropertyDrawer(typeof(AbilityDefinition))]
+    [CustomPropertyDrawer(typeof(AbilityTags))]
+    [CustomPropertyDrawer(typeof(AbilityTrigger))]
+    [CustomPropertyDrawer(typeof(AttributeMagnitudeSpec))]
+    [CustomPropertyDrawer(typeof(CombatLogSettings))]
+    [CustomPropertyDrawer(typeof(EffectConditions))]
+    [CustomPropertyDrawer(typeof(EffectModifierEntry))]
+    [CustomPropertyDrawer(typeof(EffectModifierRule))]
+    [CustomPropertyDrawer(typeof(EntityDeath))]
+    [CustomPropertyDrawer(typeof(ForgeAssetCatalog.Entry))]
+    [CustomPropertyDrawer(typeof(ForgeAuthoringSettings))]
+    [CustomPropertyDrawer(typeof(ForgeProjectSettings))]
+    [CustomPropertyDrawer(typeof(ForgeTagLibrary.Entry))]
+    [CustomPropertyDrawer(typeof(GameplayEffectDefinition))]
+    [CustomPropertyDrawer(typeof(GameplayEffectTags))]
+    [CustomPropertyDrawer(typeof(ItemDefinition))]
+    [CustomPropertyDrawer(typeof(ItemTags))]
+    [CustomPropertyDrawer(typeof(NewAssetSettings))]
+    [CustomPropertyDrawer(typeof(OnHitEntry))]
+    [CustomPropertyDrawer(typeof(ProcessAttribute))]
+    [CustomPropertyDrawer(typeof(PurgeLevels))]
+    [CustomPropertyDrawer(typeof(PurgeTier))]
+    [CustomPropertyDrawer(typeof(ResolveOrderEntry))]
     [CustomPropertyDrawer(typeof(RetentionGroups))]
+    [CustomPropertyDrawer(typeof(TagAttributePair))]
+    [CustomPropertyDrawer(typeof(TargetAttributeCondition))]
+    [CustomPropertyDrawer(typeof(TemplateListSnapshot))]
     [CustomPropertyDrawer(typeof(TurnToFaceSettings))]
+    [CustomPropertyDrawer(typeof(TypeDefaults))]
     public class AlignedFoldoutDrawer : PropertyDrawer
     {
         public override VisualElement CreatePropertyGUI(SerializedProperty property)
@@ -37,22 +67,67 @@ namespace FarEmerald.PlayForge.Editor
 
             // Each of its fields, Unity's, as a class's foldout holds them
             var type = DrawnType(fieldInfo);
-            var child = property.Copy();
-            var end = property.GetEndProperty();
-            if (child.NextVisible(true))
+            foreach (var child in Fields(property))
             {
-                do
-                {
-                    if (SerializedProperty.EqualContents(child, end)) break;
-                    var field = new PropertyField(child.Copy()) { name = child.name };
-                    foldout.Add(field);
-                    var when = type?.GetField(child.name, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
-                        ?.GetCustomAttributes<ForgeShowWhenAttribute>().ToArray();
-                    if (when is { Length: > 0 }) ForgeShowWhen.Track(field, serialized, now => Shows(now, path, when));
-                } while (child.NextVisible(false));
+                var field = new PropertyField(child) { name = child.name };
+                foldout.Add(field);
+                var when = WhenOf(type, child.name);
+                if (when.Length > 0) ForgeShowWhen.Track(field, serialized, now => Shows(now, path, when));
             }
             return foldout;
         }
+
+        // An inspector drawn with IMGUI, as a project's own editor may be, draws the same foldout of its fields, where a
+        // drawer for UI Toolkit alone draws nothing there
+        public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
+        {
+            float height = EditorGUIUtility.singleLineHeight;
+            if (!property.isExpanded) return height;
+            foreach (var child in ShownFields(property)) height += EditorGUIUtility.standardVerticalSpacing + EditorGUI.GetPropertyHeight(child, true);
+            return height;
+        }
+
+        public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
+        {
+            var line = new Rect(position.x, position.y, position.width, EditorGUIUtility.singleLineHeight);
+            property.isExpanded = EditorGUI.Foldout(line, property.isExpanded, label, true);
+            if (!property.isExpanded) return;
+            using var indent = new EditorGUI.IndentLevelScope();
+            float y = line.yMax;
+            foreach (var child in ShownFields(property))
+            {
+                y += EditorGUIUtility.standardVerticalSpacing;
+                float height = EditorGUI.GetPropertyHeight(child, true);
+                EditorGUI.PropertyField(new Rect(position.x, y, position.width, height), child, true);
+                y += height;
+            }
+        }
+
+        // Its visible fields, each a copy, in order
+        private static IEnumerable<SerializedProperty> Fields(SerializedProperty property)
+        {
+            var child = property.Copy();
+            var end = property.GetEndProperty();
+            if (!child.NextVisible(true)) yield break;
+            do
+            {
+                if (SerializedProperty.EqualContents(child, end)) yield break;
+                yield return child.Copy();
+            } while (child.NextVisible(false));
+        }
+
+        // Its visible fields that show now, for IMGUI, which draws them again each time
+        private IEnumerable<SerializedProperty> ShownFields(SerializedProperty property)
+        {
+            var type = DrawnType(fieldInfo);
+            return Fields(property).Where(child => WhenOf(type, child.name) is not { Length: > 0 } when
+                                                   || Shows(property.serializedObject, property.propertyPath, when) != false);
+        }
+
+        // The conditions a field of the class shows under
+        private static ForgeShowWhenAttribute[] WhenOf(Type type, string field) =>
+            type?.GetField(field, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+                ?.GetCustomAttributes<ForgeShowWhenAttribute>().ToArray() ?? Array.Empty<ForgeShowWhenAttribute>();
 
         // The class the drawn field holds, or its elements' where it's a list or an array
         private static Type DrawnType(FieldInfo info)
