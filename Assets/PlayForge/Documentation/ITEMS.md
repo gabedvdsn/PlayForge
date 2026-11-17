@@ -134,6 +134,13 @@ a bonus holds while they're as many as it needs, once for the holder however man
 the pieces, and moves to another as that one leaves while enough stay. A load puts the bonus back with the other
 effects, and weighs each set once.
 
+### Cues
+
+A **Cues** component plays what the item shows and sounds on its holder: **On Equip** as it's equipped, **While
+Equipped** for as long as it is, and **On Use** as it's used, as the ability it lends is. A load that puts an
+equipped item back begins its While Equipped cues and plays no burst. Each list holds cues as an effect's does
+([EFFECTS.md](EFFECTS.md#cues)). An item holds one at most.
+
 ## Workers
 
 Workers are reusable behaviours, picked from a list, that react to what happens to an entity. This group is subscribed

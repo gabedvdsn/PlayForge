@@ -46,6 +46,7 @@ namespace FarEmerald.PlayForge.Editor
     [CustomPropertyDrawer(typeof(ResolveOrderEntry))]
     [CustomPropertyDrawer(typeof(RetentionGroups))]
     [CustomPropertyDrawer(typeof(TagAttributePair))]
+    [CustomPropertyDrawer(typeof(TaggedCues))]
     [CustomPropertyDrawer(typeof(TargetAttributeCondition))]
     [CustomPropertyDrawer(typeof(TemplateListSnapshot))]
     [CustomPropertyDrawer(typeof(TurnToFaceSettings))]

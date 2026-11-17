@@ -180,6 +180,16 @@ before its time, as a buyback, ends the wait. The wait is the entity's `RespawnT
 `gas.FindService<RespawnTimer>()`'s `Waiting` and `TimeLeft`. An entity that ends as it dies has nothing to revive, which the Problems
 view says. A save keeps neither the entity's death nor its wait. An entity holds one at most.
 
+### Cues
+
+A **Cues** component plays what the entity shows and sounds at its moments, on it: **On Spawn** as it comes into the
+game, **On Death** as it dies, its killer behind the cue, and **On Revive** as it comes back. **While Tagged** lists
+lasting cues, each under a tag, that play for as long as the entity holds the tag, as stars over its head while
+it's Stunned: each step, a tag it has taken on begins its cues and one it has let go of ends them, and they end with
+the entity. Each list holds cues as an effect's does ([EFFECTS.md](EFFECTS.md#cues)), a Cue Tag among them. A
+**Cue Receiver** component plays cue tags its own way for the entity, before the project's cue library. An entity
+holds one of each at most.
+
 ## Workers
 
 Workers are reusable behaviours, picked from a list, that react to what happens to an entity. This group is subscribed

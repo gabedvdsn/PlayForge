@@ -10,6 +10,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## Toward 1.0.0, since 0.1.0
 
 ### Added
+- **An entity's and an item's cues** (EP-50): an entity's **Cues** component plays as it spawns, dies and revives,
+  and While Tagged for as long as it holds a tag; an item's plays on its holder as it's equipped, while it's
+  equipped, and as it's used.
 - **An ability's cues** (EP-49): an ability's **Cues** component plays on its caster as an activation starts,
   commits, lasts, ends and is refused, and a **Play Cue** task plays its cues at its stage's moment, on the caster,
   the target or the point. Ability components hear a refusal through a `Refused` hook.
