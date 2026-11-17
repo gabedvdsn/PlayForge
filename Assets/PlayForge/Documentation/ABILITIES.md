@@ -69,8 +69,10 @@ This section is how the ability starts. One activation goes through these steps:
    Leveling).
 2. The Targeting task runs, if there is one.
 3. If targeting found a target, every check and requirement is checked again, the target's included.
-4. The Asset Loaders run (see Stages).
-5. The Stages run, one after another.
+4. It winds up: what its components and its entity's wait for before it starts, as a turn to face its target (see
+   Turn To Face). An interrupt here cancels it, and its cost and cooldown, paid after, aren't.
+5. The Asset Loaders run (see Stages).
+6. The Stages run, one after another.
 
 These steps start inside the call that asks for the ability, `AbilitySystemComponent.TryActivateAbility`, and run until
 a task waits. So an ability whose tasks all finish at once has ended, and its callbacks have fired, by the time the call
@@ -320,7 +322,7 @@ ability's **Ignores Crowd Control** (see Activation) opts it out of the rules it
 
 ## Components
 
-An ability's components are features it carries, each a class with hooks into its life, added with the list's **+**. A component hears the ability **Granted** to an entity and **Removed** from it; is asked whether an activation may start, **CanStart**, where a reason it gives refuses the activation, named by it; and hears an activation **Start**, **Commit** its cost and cooldown, and **End**, by how it ended: done, cancelled or failed. A kind that makes no sense twice is offered only while the ability holds none of it.
+An ability's components are features it carries, each a class with hooks into its life, added with the list's **+**. A component hears the ability **Granted** to an entity and **Removed** from it; is asked whether an activation may start, **CanStart**, where a reason it gives refuses the activation, named by it; is waited on as an activation winds up, **WindUp**, after its target checks and before its cost, as a turn to face its target is; and hears an activation **Start**, **Commit** its cost and cooldown, and **End**, by how it ended: done, cancelled or failed. A kind that makes no sense twice is offered only while the ability holds none of it.
 
 A component of your own derives from `AbstractAbilityComponent` and overrides the hooks it needs, each a no-op
 otherwise. It's the ability's, shared by everything that holds it, so what it keeps for one entity's ability it keeps through its
@@ -363,6 +365,14 @@ the effect off, paying nothing and asking no cost, and starts its Cooldown, or s
 its cooldown stops it turning off. It counts only the effect it put on; one another put there leaves it off. Code asks
 through its spec's `IsToggledOn`. The Problems view warns where it toggles an Instant effect, which is never on. As its holder forgets the ability, the effect comes off; it stayed on. An ability
 holds one at most.
+
+### Turn To Face
+
+A **Turn To Face** component says how this ability turns its caster to face its target or its point before its first
+stage, in place of its entity's Turns To Face ([ENTITIES.md](ENTITIES.md#turns-to-face)): its own **Turn Speed**,
+**Start Angle**, **Facing Angle**, **If Too Long** and **Max Wait**. With **Turns** off it doesn't turn at all, as a
+cast behind its caster doesn't. The Target Checks come before the turn, so a Facing check that wants its target in front
+of its caster reads the caster's facing before it turns. An ability holds one at most.
 
 ### Auras
 

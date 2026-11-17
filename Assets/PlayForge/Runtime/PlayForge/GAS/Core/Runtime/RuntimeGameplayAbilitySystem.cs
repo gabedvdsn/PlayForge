@@ -279,6 +279,12 @@ namespace FarEmerald.PlayForge
         public bool RemoveLooseTag(Tag tag) => core.RemoveLooseTag(tag);
         public System.Collections.Generic.IReadOnlyList<Tag> GetLooseTags() => core.LooseTags;
         public EntityClock GetClock() => core.Clock;
+        public void Face(ITarget target, float degreesPerSecond, float within = 2f)
+            => core.Turn.Face(target, degreesPerSecond, within);
+        public void Face(Vector3 point, float degreesPerSecond, float within = 2f)
+            => core.Turn.Face(point, degreesPerSecond, within);
+        public void StopTurning() => core.Turn.Stop();
+        public float AngleToFace => core.Turn.AngleLeft;
 
         // ═══════════════════════════════════════════════════════════════════════════
         // IGAMEPLAYABILITYSYSTEM

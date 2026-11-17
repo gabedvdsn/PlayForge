@@ -493,6 +493,9 @@ namespace FarEmerald.PlayForge.Lab
         {
             destination = null;
             target = null;
+
+            // And any turn its abilities ordered, so a cast still turning to face its target gives way
+            if (Gas != null) Gas.StopTurning();
         }
 
         /// <summary>The unit it's set on, if any.</summary>
@@ -567,6 +570,9 @@ namespace FarEmerald.PlayForge.Lab
             var to = Flat(point - transform.position);
             float distance = to.magnitude;
             if (distance < 0.05f) return true;
+
+            // A walk takes over any turn its abilities ordered, as a game's move would: it faces where it walks
+            if (Gas != null) Gas.StopTurning();
             float step = speed * deltaTime;
             Face(to, deltaTime);
             transform.position += to / distance * Mathf.Min(step, distance);

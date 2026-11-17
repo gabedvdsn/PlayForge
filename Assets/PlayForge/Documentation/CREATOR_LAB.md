@@ -13,8 +13,8 @@ The lab plays every PlayForge asset in the project's own folders.
   The right panel's sliders set its distance and tilt, and **Reset view** puts it back.
 - **Units** are a body and a `GameplayAbilitySystem`: a capsule with a nose to show where it faces, a ring at its feet
   in its side's color, and a bar over it with its name and health. A unit walks in a straight line where it's sent and
-  attacks what it's set on. PlayForge has no movement of its own, so the lab's is its own: a project's game moves its
-  units its own way.
+  attacks what it's set on, and a walk or a stop ends a turn to face its abilities ordered, as a game's move would.
+  PlayForge has no movement of its own, so the lab's is its own: a project's game moves its units its own way.
 - **The lab's caster** is a unit of the lab's own, on no side, with no body. It's the source of what you drop while no
   unit is selected.
 

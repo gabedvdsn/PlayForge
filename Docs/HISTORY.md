@@ -10,6 +10,12 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## Toward 1.0.0, since 0.1.0
 
 ### Added
+- **Turning to face** (EP-36): an entity's **Turns To Face** turns it to face its abilities' target or point before
+  their first stage, which starts once it faces within the Start Angle, the turn going on to the Facing Angle after,
+  past the ability's end; an ability's own **Turn To Face** turns its own way, or not at all. If Too Long waits, starts
+  the stage anyway or cancels the activation. A component's `WindUp`, an ability's or an entity's, is what an activation
+  waits on after its target checks and before its cost. `gas.Face`, `StopTurning` and `AngleToFace` turn an entity from
+  code, and an `IForgeTurner` on its object takes each step in PlayForge's place.
 - **Validation rules** (EP-35): **Tag Weight**, a tag's weight on the entity checked against a number, as combo points;
   **Has Effect**, an effect on it by its asset or by a tag, or none, Without; **Holds Item**, held or Equipped; and
   among the Caster Checks **Ability Level**, the ability's level against a number. Among the Target Checks

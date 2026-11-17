@@ -158,8 +158,13 @@ namespace FarEmerald.PlayForge
             {
                 handle.IsExecuting = true;
 
-                // Its cost and cooldown, as it starts, after its targeting, where no stage marked Apply Usage Effects takes
-                // them: an author who sets a cost expects it paid, and they applied only from such a stage
+                // Its wind-up first, after its target checks and before its cost: its entity's components' and its own,
+                // as a turn to face its target. An interrupt cancels it, its cost unpaid
+                await WindUp(handle.Data, handle.Cts.Token);
+
+                // Its cost and cooldown, as it starts, after its targeting and its wind-up, where no stage marked
+                // Apply Usage Effects takes them: an author who sets a cost expects it paid, and they applied only from
+                // such a stage
                 if (!Spec.Base.StageTakesUsage && !handle.Data.UsageEffectsApplied)
                 {
                     handle.Data.UsageEffectsApplied = true;
@@ -206,6 +211,36 @@ namespace FarEmerald.PlayForge
                 CleanHandle(handle, how);
                 Spec.Source.CompileGrantedTags();
             }
+        }
+
+        // The wind-ups of its entity's components and its own, waited on together where any waits; with none waiting,
+        // as with no component that winds up, it makes nothing. One that ended already, by a throw or a cancel, says so
+        // here
+        private UniTask WindUp(AbilityDataPacket data, CancellationToken token)
+        {
+            List<UniTask> pending = null;
+            var ctx = new AbilityComponentContext(Spec, data);
+            GASCore.Of(Spec.Source as IGameplayAbilitySystem)?.WindUp(ctx, token, ref pending);
+            var components = Spec.Base.Components;
+            if (components != null)
+            {
+                foreach (var component in components)
+                {
+                    if (component != null) Pend(component.WindUp(ctx, token), ref pending);
+                }
+            }
+            return pending == null ? UniTask.CompletedTask : pending.Count == 1 ? pending[0] : UniTask.WhenAll(pending);
+        }
+
+        // A wind-up that ended at once is seen through now, its throw with it; one that waits joins the others
+        internal static void Pend(UniTask windUp, ref List<UniTask> pending)
+        {
+            if (windUp.Status.IsCompleted())
+            {
+                windUp.GetAwaiter().GetResult();
+                return;
+            }
+            (pending ??= new List<UniTask>()).Add(windUp);
         }
 
         public void Inject(ISequenceInjection injection)

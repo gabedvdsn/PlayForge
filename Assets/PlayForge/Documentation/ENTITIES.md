@@ -121,8 +121,9 @@ Each Max field is a number, or, by its kind, a scaler that changes the limit wit
 ## Components
 
 An entity's components are features it carries, each a class with hooks into its life, added with the list's **+**. A component hears the entity **Register**, its systems set up; **Death**, whether it stays or ends, its context's
-`Killer` the one whose loss killed it, as its Died event names; **Revive**, for one that stays; and **End**. A kind that
-makes no sense twice is offered only while the entity holds none of it.
+`Killer` the one whose loss killed it, as its Died event names; **Revive**, for one that stays; and **End**. It's
+waited on as one of its abilities' activations winds up, **WindUp**, before the ability's cost and first stage, as a
+turn to face its target is. A kind that makes no sense twice is offered only while the entity holds none of it.
 
 A component of your own derives from `AbstractEntityComponent` and overrides the hooks it needs, each a no-op
 otherwise. It's the entity's, shared by everything that holds it, so what it keeps for one entity it keeps through its
@@ -140,6 +141,26 @@ A **Bounty** component gives the entity's killer an **Effect** as it dies, from 
 level, as gold or experience. With a **Share Radius**, read at its level, the killer's allies within it of the
 entity take the effect too, as an assist, measured along the ground unless **Flat** is off. A death no one dealt gives
 none. An entity holds as many as it gives.
+
+### Turns To Face
+
+A **Turns To Face** component turns the entity to face the target, or the point, of each of its abilities before the
+ability's first stage: at its **Turn Speed**, in degrees a second of its own time, a number that can read a turn rate
+attribute, 0 facing at once. The stage starts once it faces within the **Start Angle**, and the turn goes on to the
+**Facing Angle** after, even after the ability has ended, until another turn, its death or its game's word ends it.
+Where reaching the Start Angle takes longer than **Max Wait**, **If Too Long** says what happens: **No Limit**, the
+default, waits as long as it takes; **Start Anyway** starts the stage, the turn going on; **Cancel** cancels the
+activation. Its cost and cooldown are paid after the turn, so an interrupted turn pays nothing, and a turn taken over
+before the stage starts, by another order or its game's word, cancels the activation. An ability with nothing to face,
+or with the entity for its target, turns nothing; one a trigger sets off turns as any does, as a counterattack turns to
+its attacker; and one with a Turn To Face of its own turns its own way, or not at all
+([ABILITIES.md](ABILITIES.md#turn-to-face)). An entity holds one at most.
+
+Code turns an entity through its hub: `gas.Face(target, degreesPerSecond, within)`, which follows the target as it
+moves, or `gas.Face(point, ...)`; `gas.StopTurning()`, as a move of the game's takes over; and `gas.AngleToFace`, how
+far it has yet to turn. A turn sets the entity's facing, flat: its object's rotation, or a runtime entity's. A game that
+turns its characters itself, by animation or a controller, puts an `IForgeTurner` on the entity's object, which takes
+each step of a turn in PlayForge's place. The Creator Lab's units stop a turn as they walk or stop.
 
 ### Respawn
 

@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 
 namespace FarEmerald.PlayForge
 {
@@ -141,7 +143,7 @@ namespace FarEmerald.PlayForge
 
     /// <summary>
     /// A component of an ability: it hears the ability granted and removed, may refuse an activation, and hears an
-    /// activation start, commit its cost and cooldown, and end, by how it did.
+    /// activation start, wind up, which the activation waits on, commit its cost and cooldown, and end, by how it did.
     /// </summary>
     [Serializable]
     public abstract class AbstractAbilityComponent : AbstractForgeComponent
@@ -154,6 +156,14 @@ namespace FarEmerald.PlayForge
 
         /// <summary>Why an activation may not start, or null where it may; the reason names the refusal.</summary>
         public virtual string CanStart(AbilityComponentContext ctx) => null;
+
+        /// <summary>
+        /// What an activation waits on as it winds up, after its targeting and its target checks and before its cost
+        /// and its first stage, as a turn to face its target; its entity's components' with it. An interrupt cancels
+        /// the token, and the activation, its cost unpaid, as an <see cref="OperationCanceledException"/> thrown here
+        /// does. Nothing to wait on, here.
+        /// </summary>
+        public virtual UniTask WindUp(AbilityComponentContext ctx, CancellationToken token) => UniTask.CompletedTask;
 
         /// <summary>As an activation starts, its claim taken.</summary>
         public virtual void Start(AbilityComponentContext ctx) { }
@@ -204,7 +214,10 @@ namespace FarEmerald.PlayForge
     // Entities
     // ═══════════════════════════════════════════════════════════════════════════
 
-    /// <summary>A component of an entity: it hears its entity register, die, revive and end.</summary>
+    /// <summary>
+    /// A component of an entity: it hears its entity register, die, revive and end, and an activation of one of its
+    /// abilities wind up, which the activation waits on.
+    /// </summary>
     [Serializable]
     public abstract class AbstractEntityComponent : AbstractForgeComponent
     {
@@ -219,6 +232,14 @@ namespace FarEmerald.PlayForge
 
         /// <summary>As the entity ends.</summary>
         public virtual void End(EntityComponentContext ctx) { }
+
+        /// <summary>
+        /// What an activation of one of its abilities waits on as it winds up, before the ability's cost and its first
+        /// stage, with the ability's own components' wind-ups: a turn to face its target, as Turns To Face gives.
+        /// Nothing to wait on, here.
+        /// </summary>
+        public virtual UniTask WindUp(EntityComponentContext ctx, AbilityComponentContext ability,
+            CancellationToken token) => UniTask.CompletedTask;
     }
 
     /// <summary>What an entity's component hears a moment of its entity with.</summary>

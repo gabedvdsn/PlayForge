@@ -66,8 +66,23 @@ namespace FarEmerald.PlayForge
                 if (component != null) moment(component, ctx);
         }
 
+        // Its identity's components' wind-ups for an activation of one of its abilities, before the ability's cost and
+        // its first stage; one that waits joins the activation's list, made as the first does
+        internal void WindUp(AbilityComponentContext ability, System.Threading.CancellationToken token,
+            ref List<Cysharp.Threading.Tasks.UniTask> pending)
+        {
+            var components = Identity?.Components;
+            if (components == null) return;
+            var ctx = new EntityComponentContext(owner, componentStates);
+            foreach (var component in components)
+                if (component != null) AbilitySpecContainer.Pend(component.WindUp(ctx, ability, token), ref pending);
+        }
+
         /// <summary>The entity's own time, its time scale times the game's.</summary>
         public EntityClock Clock { get; } = new();
+
+        /// <summary>Its turn: an order to face a target or a point, as its abilities' turns to face give it.</summary>
+        internal EntityTurn Turn { get; }
 
         public ActionQueue ActionQueue { get; private set; }
         public FrameSummary FrameSummary { get; private set; }
@@ -81,6 +96,7 @@ namespace FarEmerald.PlayForge
         {
             this.owner = owner;
             Callbacks = callbacks;
+            Turn = new EntityTurn(owner);
 
             AttributeSystem = new AttributeSystemComponent(owner);
             AbilitySystem = new AbilitySystemComponent(owner);
@@ -208,6 +224,9 @@ namespace FarEmerald.PlayForge
 
                 // And a revive its Respawn waits on counts down by it
                 StepRevive(Clock.DeltaTime);
+
+                // And its turn steps by it, as its abilities or its game ordered
+                Turn.Step(Clock.DeltaTime);
 
                 // And its barriers decay by it
                 AttributeSystem.StepBarriers(Clock.DeltaTime);
@@ -369,6 +388,9 @@ namespace FarEmerald.PlayForge
             // Its components hear it die, and who killed it, then its effects'
             HearComponents((component, ctx) => component.Death(ctx), killer);
             EffectSystem.HearDeath();
+
+            // A dead entity turns no more
+            Turn.Stop();
 
             // One that stays dies at its frame's end and stays; any other ends there, as it always did
             if (EntityDeath.Stays(Identity?.Death)) pendingDeath = true;

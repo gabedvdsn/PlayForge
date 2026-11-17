@@ -84,6 +84,31 @@ namespace FarEmerald.PlayForge
         public EntityClock GetClock();
 
         /// <summary>
+        /// Turns the entity to face a target, which it follows as it moves, flat, at
+        /// <paramref name="degreesPerSecond"/> of its own time, 0 at once, until it faces it within
+        /// <paramref name="within"/> degrees. Another order replaces the turn; its death and <see cref="StopTurning"/>
+        /// end it. A turner of the game's own on its object, an <see cref="IForgeTurner"/>, takes each step where it
+        /// has one; otherwise its facing is set. The entity itself, or a target with no place, turns nothing.
+        /// </summary>
+        public void Face(ITarget target, float degreesPerSecond, float within = 2f);
+
+        /// <summary>
+        /// Turns the entity to face a point, as <see cref="Face(ITarget, float, float)"/> turns it to a target.
+        /// </summary>
+        public void Face(UnityEngine.Vector3 point, float degreesPerSecond, float within = 2f);
+
+        /// <summary>
+        /// Ends the entity's turn, where it's turning, as a move of the game's takes over; an ability still waiting on
+        /// the turn to start gives way, cancelled.
+        /// </summary>
+        public void StopTurning();
+
+        /// <summary>
+        /// How far, in degrees, flat, the entity has yet to turn to face what its turn faces; 0 when it isn't turning.
+        /// </summary>
+        public float AngleToFace { get; }
+
+        /// <summary>
         /// Record an impact this GAS DEALT (this GAS is ISource).
         /// </summary>
         public void RecordFrameImpactDealt(ImpactData impact);
