@@ -81,10 +81,15 @@ namespace FarEmerald.PlayForge
 #endif
         }
 
+        /// <summary>
+        /// The camera given, or else <c>Camera.main</c>: what a click aims through and a floating text faces.
+        /// </summary>
+        public static Camera CameraOr(Camera given) => given != null ? given : Camera.main;
+
         /// <summary>The ray from a camera through a point on the screen: the camera given, or else <c>Camera.main</c>.</summary>
         public static bool TryAimThrough(Camera camera, Vector2 screenPoint, out Ray ray)
         {
-            var aim = camera != null ? camera : Camera.main;
+            var aim = CameraOr(camera);
             if (aim == null)
             {
                 ForgeLog.Warning(ForgeLog.ESystem.Input, "Click targeting found no camera to aim through. Tag one MainCamera, or give the input a camera.");

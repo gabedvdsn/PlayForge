@@ -58,6 +58,9 @@ namespace FarEmerald.PlayForge
 
         /// <summary>An effect's stacks changed while it lasted, its magnitude the stacks it has.</summary>
         Stacked,
+
+        /// <summary>An impact an effect deals landed, its magnitude the value it changed.</summary>
+        Hit,
     }
 
     /// <summary>How a cue plays: a burst, or a lasting cue's beginning or its end.</summary>

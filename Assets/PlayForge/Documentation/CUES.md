@@ -8,7 +8,8 @@ as a hit's spark, or a **lasting** cue's beginning and its end, as a shield's hu
 ## Where cues are raised
 
 - **Effects**: an effect's **Cues** component plays its cues as it lands, as an application it takes in lands, as each
-  tick executes, as it comes off, while it lasts, as an application is refused and as its stacks change. The effect's
+  tick executes, as an impact it deals lands, as it comes off, while it lasts, as an application is refused and as
+  its stacks change. The effect's
   own Cues section plays its bursts as it lands, as its ticks execute and as it comes off, and its lasting cues while
   it's on ([EFFECTS.md](EFFECTS.md#cues)).
 - **Abilities**: a **Cues** component plays an ability's as it activates, as it commits, while it's active, as it ends
@@ -33,6 +34,8 @@ Each cue in a list is a handler, its kind picked from the list:
 - **Sound** plays its clip where its Placement says ([Placement](#placement)).
 - **Prefab** places its prefab where its Placement says, for its **Lifetime**, or, with **While Active**, until its
   cue ends ([Pooling](#pooling)).
+- **Floating Text** floats a text where its Placement says, as a hit's damage, the gold a kill gave or a status's
+  name ([Floating text](#floating-text)).
 - **Cue Tag** plays what its tag routes to ([Routes](#routes)).
 
 Write a handler of your own by deriving from `AbstractCueHandler`: override the moments it plays at, or `Burst` to play
@@ -59,6 +62,31 @@ A cue that places something, a Prefab or a Sound, says where with its **Placemen
 
 Scatter draws from `ForgeCues.Random`, the cues' own random numbers, so a cue never moves the game's rolls: a server
 that plays no cues and a client that plays them must draw alike.
+
+## Floating text
+
+A **Floating Text** cue floats a text where its Placement says, 2 units above the one the cue is on by default: a
+hit's damage, the gold a kill gave, a status's name as it lands.
+
+- **Text**: what it says. `{value}` is its number, `{name}` the name of what raised it, as an effect's, and `{tag}` its
+  cue tag: `+{value} gold`, or `{name}` for a status.
+- **Value**: its number, **From** the cue's magnitude, as a hit's value from an effect's **On Hit**, or its
+  **Number**, read as it plays, as a Tracked Impact's for the gold an instant effect gave. It's written with up to
+  **Decimals** decimals; without its sign where **Absolute** says, as damage shown as 35; with a **Plus Sign** above
+  0; shortened past a thousand where **Abbreviate** says, as 1.2k; and not at all for 0 where **Hide Zero** says.
+- **Look**: its **Color**, or its **Negative Color** below 0 where **By Sign** says; its **Size**, **Font**,
+  **Bold** and **Outline**; turned to the camera where **Face Camera** says, `ForgeCues.Camera` or else the main
+  camera; and its **Sorting Order**. A **Prefab** holding a TextMeshPro text shows it in place of the cue's own,
+  its font, size and outline its own.
+- **Motion**: its **Lifetime**; its **Velocity**, and a **Random Velocity** either way on each axis; **Gravity**, for
+  an arc, and **Drag**; its opacity over its life, **Fade**, and its scale, **Scale**, as a pop; on the game's clock
+  where **Game Time** says, else in real time.
+- **Stacking**, on one entity: a number **Merge Within** some seconds of the last adds to it, which shows the sum
+  and floats again, as a burn's ticks; each text floats a **Stagger** above the one below it, in the lowest place
+  free; and at most **Max Shown** float at once, the oldest going first.
+
+Its texts come from `ForgeCuePool` and go back to it. For damage numbers, put one in an effect's **On Hit**: it plays
+as each impact the effect deals lands, on the one it lands on, told the value it changed.
 
 ## Routes
 

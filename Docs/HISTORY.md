@@ -10,6 +10,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## Toward 1.0.0, since 0.1.0
 
 ### Added
+- **A Floating Text cue** (EP-55): a text that floats where its Placement says, as a hit's damage, the gold a kill
+  gave or a status's name; its number written as asked; its look, its motion and its fade; merged, staggered and
+  capped on one entity; pooled. An effect's Cues component gains **On Hit**, told the value an impact changed.
 - **Cue placement** (EP-54): a Prefab or a Sound cue's **Placement**: on the one the cue is on, its source, an
   ability's target or each of its targets, or at the cue's point; at a socket, moved by an offset and scattered
   at random; following them or not; and facing their way, the cue's normal, or from or toward its source.

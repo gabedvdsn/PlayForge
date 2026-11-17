@@ -28,6 +28,9 @@ namespace FarEmerald.PlayForge
         /// </summary>
         public static IForgeRandom Random { get; set; } = new SeededRandom(1);
 
+        /// <summary>The camera a floating text faces, or null for the main camera.</summary>
+        public static UnityEngine.Camera Camera { get; set; }
+
         /// <summary>
         /// Whether cues play. Off, nothing bursts or begins, as on a server or while a simulation runs ahead; a lasting
         /// cue that began still ends.

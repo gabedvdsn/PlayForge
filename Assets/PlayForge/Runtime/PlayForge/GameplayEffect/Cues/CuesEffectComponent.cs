@@ -6,8 +6,8 @@ namespace FarEmerald.PlayForge
 {
     /// <summary>
     /// Cues: what an effect shows and sounds at its moments, on the one it's on: as it lands, as an application it takes
-    /// in lands, as each of its ticks executes, as it comes off, while it lasts, as an application of it is refused, and as
-    /// its stacks change. An effect holds one at most.
+    /// in lands, as each of its ticks executes, as an impact it deals lands, as it comes off, while it lasts, as an
+    /// application of it is refused, and as its stacks change. An effect holds one at most.
     /// </summary>
     [Serializable]
     [ForgeMenu(Description = "Shows and sounds the effect's moments: as it lands, ticks, stacks or comes off, while it lasts, and as it's refused.")]
@@ -24,6 +24,11 @@ namespace FarEmerald.PlayForge
         [Tooltip("Plays as each tick executes, told how many")]
         [SerializeReference]
         public List<AbstractCueHandler> OnTick = new();
+
+        [Tooltip("Plays as an impact the effect deals lands, on the one it lands on, its magnitude the value it changed, " +
+                 "as a hit's damage or the gold it gave")]
+        [SerializeReference]
+        public List<AbstractCueHandler> OnHit = new();
 
         [Tooltip("Plays as a lasting effect comes off")]
         [SerializeReference]
@@ -49,6 +54,7 @@ namespace FarEmerald.PlayForge
             Count(OnApply, "on apply");
             Count(OnReapply, "on reapply");
             Count(OnTick, "on tick");
+            Count(OnHit, "on hit");
             Count(OnRemove, "on remove");
             Count(WhileActive, "while active");
             Count(OnRefused, "on refused");
@@ -77,6 +83,18 @@ namespace FarEmerald.PlayForge
 
         public override void Tick(EffectComponentContext ctx) =>
             ForgeCues.Burst(OnTick, CueOf(ctx, ECueMoment.Ticked, ticks: ctx.ExecuteTicks));
+
+        // On the one the impact lands on, from its dealer, its magnitude the value it changed: the current value's, or
+        // the base value's for an impact that changed that alone
+        public override void Hit(EffectComponentContext ctx)
+        {
+            if (ctx.ImpactData is not { } impact) return;
+            var on = impact.Target as IGameplayAbilitySystem ?? ctx.System;
+            float changed = impact.RealImpact.CurrentValue != 0f ? impact.RealImpact.CurrentValue : impact.RealImpact.BaseValue;
+            var spec = ctx.Spec;
+            ForgeCues.Burst(OnHit, new CueContext(on, ECueMoment.Hit, source: ctx.System, origin: spec?.Origin, spec: spec,
+                magnitude: changed, key: spec));
+        }
 
         // An instant effect is over as it lands; only a lasting one comes off
         public override void End(EffectComponentContext ctx)

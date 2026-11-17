@@ -274,7 +274,8 @@ needs, as "the target". A kind or a condition of your own adds its parts by over
 
 A **Cues** component, from the Components list's **+**, plays cues at each of the effect's moments, a list for each:
 **On Apply** as it lands; **On Reapply** as an application it takes in lands, as a stack or a refresh; **On Tick** as
-each tick executes; **On Remove** as a lasting effect comes off; **While Active** while it lasts, from as it lands, or
+each tick executes; **On Hit** as an impact it deals lands, on the one it lands on, its magnitude the value it
+changed, as for a damage number; **On Remove** as a lasting effect comes off; **While Active** while it lasts, from as it lands, or
 a load puts it back, to as it comes off, ending as it began where another application replaced it; **On Refused**
 as an application is refused, as by an immunity, on the one it was aimed at; and **On Stack Change** as its stacks
 change while it lasts, its magnitude the stacks it has. An effect holds one at most. Each list holds cues as the
@@ -293,6 +294,8 @@ list:
   there. With **Pooled** it takes its objects from a pool and gives them back, `ForgeCuePool`, the pool making
   **Preallocate** of them ahead as it first plays, and an `IPooledCue` on the prefab resets it as it's taken and
   given back.
+- **Floating Text**: floats a text where its **Placement** says, as a hit's damage or a status's name
+  ([CUES.md](CUES.md#floating-text)).
 
 A cue plays its bursts as the effect lands, as its ticks execute and as it comes off, and a lasting cue, such as a
 While Active prefab, while the effect is on. A re-application that an effect on already takes in plays its burst
