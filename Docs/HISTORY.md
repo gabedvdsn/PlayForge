@@ -1056,6 +1056,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   Asking whether its sequence was paused took 24 bytes a frame.
 
 ### Fixed
+- A component's refusal of the target its targeting picked, as a Cast Range's of one beyond it, is told through
+  `OnAbilityRefused` (EP-48), as the kind its `RefusedAs` says, Range for a Cast Range, its reason in `Rule` and
+  `Detail`; the activation ended there untold.
 - Every class PlayForge serializes without a drawer of its own, as an asset's Definition and Tags and a list's
   entries, keeps the column of the rows around it (ED-90), and draws in an IMGUI inspector too; a test fails on
   a class left to Unity's default foldout.

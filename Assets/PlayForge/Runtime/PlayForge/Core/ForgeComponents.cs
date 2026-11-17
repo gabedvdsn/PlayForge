@@ -225,15 +225,16 @@ namespace FarEmerald.PlayForge
         public virtual string CanStart(AbilityComponentContext ctx) => null;
 
         /// <summary>
-        /// The kind of refusal its <see cref="CanStart"/> is told as, its reason naming it: Rule, as here; a Cast Range's
-        /// is Range, so an AI can walk closer and ask again.
+        /// The kind of refusal its <see cref="CanStart"/> and <see cref="CanTakeTarget"/> are told as, its reason naming
+        /// it: Rule, as here; a Cast Range's is Range, so an AI can walk closer and ask again.
         /// </summary>
         public virtual EActivationRefusal RefusedAs => EActivationRefusal.Rule;
 
         /// <summary>
         /// Why the target or the point the activation's targeting picked is refused, which ends the activation there, as
         /// its targeting ends, before its wind-up, its cost and its stages; or null, as here, where it's taken. The pick
-        /// is in its data under Target: a Cast Range refuses one beyond its range, whichever task picked it.
+        /// is in its data under Target: a Cast Range refuses one beyond its range, whichever task picked it. The refusal is
+        /// told through the callbacks' OnAbilityRefused as the kind <see cref="RefusedAs"/> says, the reason naming it.
         /// </summary>
         public virtual string CanTakeTarget(AbilityComponentContext ctx) => null;
 

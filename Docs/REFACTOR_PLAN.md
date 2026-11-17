@@ -1547,6 +1547,7 @@ EP-13 to EP-16 came as the pass went on; EP-17 to EP-25 are the user's notes of 
 | EP-42 | The user's word of 2026-11-17, after EP-35: activation refusals carry each rule's reason. EP-35's rules say why they refuse, but a refusal named the rule alone, its reason dropped, and a Target Check that refused after targeting ended the activation as Cancelled, told as nothing, so neither a game's UI nor an AI could hear why. Done: `ActivationRefusal.Detail`, the refusing check's own words, a validation rule's error or a component's reason, as "Its caster's Mana, 10, can't pay 50", which the refusal's text says too; `Rule` is as it was, a check's name, a component's reason or a crowd control rule's tag. A Target Check, or the target's tag requirements, refusing after targeting is told through `OnAbilityRefused` as the new `EActivationRefusal.Target`, `Rule` naming the check, before any wind-up and with nothing of the activation paid: `AbilitySpec.TargetRefusal` says it, and `ValidateAllActivationRequirements` asks it. The Debugger's timeline shows a refusal's words. Not done: targeting that picks a target beyond the Cast Range ends the activation untold, as it did | Abilities | verified |
 | EP-45 | Decision 90's amendment, the user's answer of 2026-11-17: the components' shortcuts, extension methods beside them since EP-38 and EP-39 (`ability.Charges()`, `Recharge()` and `Toggles()`, `spec.Charges()` and `IsToggledOn()`, `gas.GetAuras()`), go before 1.0.0, so a built-in component is read as a project's own is. Done: `ForgeCharges` and `ForgeToggles` are gone, and `ForgeAuras.GetAuras`; `AbilityCharges` reads its ability's Charges component through `Find<T>()`, with the defaults the shortcuts gave, one charge and Each Charge; `ForgeAuras.Provide` asks the entity's `GetService<AuraSet>()`. Proving Grounds' `RuntimeSourceTests` finds no extension method in a file that declares a component or an entity service | Components | verified |
 | EP-46 | The user's word of 2026-11-17: cues for abilities and entities, on a platform of their own, after Unreal's GameplayCues, in phases, as the user chose: inline handlers beside tag routing through a Cue Library, an ability Cues component with a Play Cue task, and a receiver component with a variant tag. Phase 1, done: `ForgeCues` plays every cue, whatever raised it, through `Burst`, `Begin` and `End`, a handler that throws reported while the rest play on. `CueContext` says what raised a cue (`ECueMoment`), its tag, who's behind it, its origin and data, a magnitude, a point and a normal, a key pairing a lasting cue's beginning with its end, and whether it was raised to last. `AbstractCueHandler.Burst` plays an effect's moments' own hooks and `OnApplied` for any other, so a handler written for effects plays wherever it's listed. `ForgeCues.Enabled` and `Mute` silence every cue or an entity's, a lasting cue that began still ending, and `Played` hears each. An effect's cues play through it, as they did. Not done: tag routing, the components, the task, pooling, The Forge's view, later phases | Cues | verified |
+| EP-48 | What EP-42 left, the user's yes of 2026-11-17: targeting that picked a target beyond the Cast Range ended the activation untold, as did any component's refusal of a pick, `CanTakeTarget`: the proxy threw a cancel, which the activation couldn't tell from any other. Done: `AbilitySpec.PickRefusal` asks the components as targeting ends, before the target is resolved, as a picked point has no entity, and `AbilitySpecContainer.AwaitAbility` tells its refusal through `OnAbilityRefused` where EP-42 tells a Target Check's, as the kind the component's `RefusedAs` says, Range for a Cast Range, its reason in `Rule` and `Detail`, nothing of it paid; the proxy no longer asks | Components | verified |
 
 ## Test project: PlayForge Proving Grounds
 
@@ -1583,6 +1584,19 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-17, **EP-48: a refused pick is told as its component says.** What EP-42 left, at the user's yes: targeting that
+  picked a target beyond the Cast Range ended the activation untold, as did any component's refusal of a pick, since the
+  proxy threw a cancel the activation couldn't tell from any other. `AbilitySpec.PickRefusal` asks the components as
+  targeting ends, before the target is resolved, and `AbilitySpecContainer.AwaitAbility` tells the refusal where EP-42
+  tells a Target Check's, as the kind the component's `RefusedAs` says. Cue phase 3's `Refused` hook for ability
+  components goes in after this, at the places refusals are told.
+  - Red, on HEAD (9bee3b9) and the test alone: `ComponentApiTests`' EP-48 case failed on both hubs, no refusal told,
+    though its stage never ran and nothing was paid; the other 20 component API cases passed.
+  - Gates, on 9bee3b9 and EP-48, both samples imported, other sessions' uncommitted work set aside: EditMode 1072 of
+    1072; PlayMode 2144 of 2152, 8 skipped; golden 25 of 25. EP-46 and ED-90 landed during the run (PF 2edada3,
+    398b4b7); on them and EP-48, the component API, refusal, charges, cue, source and foldout tests passed again,
+    EditMode 19 of 19 and PlayMode 47 of 47, and golden 25 of 25.
 
 - 2026-11-17, **ED-90: no class left to Unity's default foldout.** The user's word of 2026-11-17, after ED-89. The
   scan walks every field PlayForge's runtime serializes, from each asset and behaviour, down through the classes those

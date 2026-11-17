@@ -301,6 +301,26 @@ namespace FarEmerald.PlayForge
             return EActivationRefusal.Target;
         }
 
+        /// <summary>
+        /// What of its components refuses the target or the point its targeting picked, or None: each as the kind it says,
+        /// named by its reason, as a Cast Range refuses one beyond it as Range; and why, in the component's words. Asked as
+        /// its targeting ends, before the target is resolved, as a picked point has no entity.
+        /// </summary>
+        internal EActivationRefusal PickRefusal(AbilityDataPacket data, out string rule, out string detail)
+        {
+            rule = null;
+            detail = null;
+            if (Base?.Components is not { } components) return EActivationRefusal.None;
+            var ctx = new AbilityComponentContext(this, data);
+            foreach (var component in components)
+            {
+                if (component?.CanTakeTarget(ctx) is not { } reason) continue;
+                rule = detail = reason;
+                return KindOf(component.RefusedAs);
+            }
+            return EActivationRefusal.None;
+        }
+
         public override ISource GetSource() => Source;
         public override IHasReadableDefinition GetReadableDefinition()
         {

@@ -90,6 +90,8 @@ ability system's `OnAbilityRefused` callback tells each refusal as it happens.
 A request that waits in the input buffer isn't refused, and isn't told again as the buffer retries it. A check on the
 target comes after targeting and ends the activation instead, nothing of it paid: the request said nothing was refused,
 as the activation had started, so the callback tells it, as **Target**, `Rule` naming the check and `Detail` saying why.
+A component that refuses the target its targeting picked, as a Cast Range refuses one beyond it, is told the same way, as
+the kind its `RefusedAs` says, **Range** for a Cast Range, its reason in `Rule` and `Detail`.
 
 The request's data can carry magnitudes for the effects the ability applies: `data.SetByCaller(tag, magnitude)`, which a
 Set By Caller scaler on each effect reads (see [EFFECTS.md](EFFECTS.md)). So a caller that knows the damage as it casts
@@ -328,7 +330,7 @@ ability's **Ignores Crowd Control** (see Activation) opts it out of the rules it
 
 ## Components
 
-An ability's components are features it carries, each a class with hooks into its life, added with the list's **+**. A component hears the ability **Granted** to an entity and **Removed** from it; is asked whether an activation may start, **CanStart**, where a reason it gives refuses the activation, named by it, as the kind its **RefusedAs** says, Rule unless it says otherwise; is asked whether the target its targeting picked may be taken, **CanTakeTarget**, where a reason it gives ends the activation there, before anything of it is paid; is waited on as an activation winds up, **WindUp**, after its target checks and before its cost, as a turn to face its target is; and hears an activation **Start**, **Commit** its cost and cooldown, and **End**, by how it ended: done, cancelled or failed. As the activation's usage applies, a component may apply it in the ability's place, **ApplyUsage**, as a Toggle does, composing its own from the spec's `PayCosts` and `SpendCooldown`; may waive the Cost and Cooldown checks while it says so, **Waives**; and claims the categories of the effects its ability puts on for a purge, **CategoryOf**, as a Toggle claims its effect a toggle's. A kind that makes no sense twice is offered only while the ability holds none of it.
+An ability's components are features it carries, each a class with hooks into its life, added with the list's **+**. A component hears the ability **Granted** to an entity and **Removed** from it; is asked whether an activation may start, **CanStart**, where a reason it gives refuses the activation, named by it, as the kind its **RefusedAs** says, Rule unless it says otherwise; is asked whether the target its targeting picked may be taken, **CanTakeTarget**, where a reason it gives ends the activation there, before anything of it is paid, told as the kind its **RefusedAs** says; is waited on as an activation winds up, **WindUp**, after its target checks and before its cost, as a turn to face its target is; and hears an activation **Start**, **Commit** its cost and cooldown, and **End**, by how it ended: done, cancelled or failed. As the activation's usage applies, a component may apply it in the ability's place, **ApplyUsage**, as a Toggle does, composing its own from the spec's `PayCosts` and `SpendCooldown`; may waive the Cost and Cooldown checks while it says so, **Waives**; and claims the categories of the effects its ability puts on for a purge, **CategoryOf**, as a Toggle claims its effect a toggle's. A kind that makes no sense twice is offered only while the ability holds none of it.
 
 A component of your own derives from `AbstractAbilityComponent` and overrides the hooks it needs, each a no-op
 otherwise. It's the ability's, shared by everything that holds it, so what it keeps for one entity's ability it keeps through its
@@ -357,7 +359,7 @@ A **Cast Range** component is the one range the ability has: how far from its ca
 may be, its **Range** a number that can scale by level, measured along the ground unless **Flat** is off; 0 reaches
 anywhere. An activation handed a target or a point beyond it, under TargetReal or Position, as an AI's is, is refused
 as **Range**, so nothing of it is paid and an AI can walk closer and ask again; targeting that picks a target beyond it,
-whichever task picked it, ends the activation before its stages. The auto-targeting tasks measured from the caster, and
+whichever task picked it, ends the activation before its stages, told as **Range** too. The auto-targeting tasks measured from the caster, and
 Select GAS Target In Range, search within it where their **Use Cast Range** is on, as it is by default, their own range
 set aside. The Creator Lab's units attack from their attack's Cast Range, and its bots cast an ability once their foe is
 within its Cast Range, where it has one ([CREATOR_LAB.md](CREATOR_LAB.md)). It's the ability's reach, an

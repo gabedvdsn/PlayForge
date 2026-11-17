@@ -3242,7 +3242,8 @@ entries name the methods to search for.
   - `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilityReach.cs` `IAbilityReach` and `ForgeReach`, which the
     targeting tasks and the Lab's bots read.
   - `AbilitySpec.SourceRefusal`: each check's and component's `RefusedAs`, where it switched on their classes.
-  - `AbilityProxy.TargetRefused`: a component's `CanTakeTarget`, where it asked the Cast Range.
+  - `AbilitySpec.PickRefusal`, asked by `AbilitySpecContainer.AwaitAbility` as targeting ends: a component's
+    `CanTakeTarget`, where the proxy asked the Cast Range, told as its `RefusedAs` (EP-48).
 
 ### Usage, cooldown models and purge claims (EP-38)
 

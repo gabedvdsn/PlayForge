@@ -132,10 +132,10 @@ namespace FarEmerald.PlayForge
     /// <summary>
     /// Cast Range: how far from its caster an ability's target may be, the one range it has, read at its level: the
     /// ability's reach, an <see cref="IAbilityReach"/>. An activation handed a target or a point beyond it is refused as
-    /// Range, and targeting that picks one beyond it ends the activation there; a targeting task with a range of its own
-    /// searches within it, from the caster; and the lab's bots cast it only once their foe is within it, each asking the
-    /// ability's reach through <see cref="ForgeReach"/>. 0 reaches anywhere. An ability holds one at most. Its ability's
-    /// Target Checks show its Check Range while it holds the component, which this enforces.
+    /// Range, and targeting that picks one beyond it ends the activation there, told as Range too; a targeting task with
+    /// a range of its own searches within it, from the caster; and the lab's bots cast it only once their foe is within
+    /// it, each asking the ability's reach through <see cref="ForgeReach"/>. 0 reaches anywhere. An ability holds one at
+    /// most. Its ability's Target Checks show its Check Range while it holds the component, which this enforces.
     /// </summary>
     [Serializable]
     [ForgeMenu(Description = "How far from the caster the ability's target may be.")]
@@ -177,7 +177,7 @@ namespace FarEmerald.PlayForge
         public override string CanStart(AbilityComponentContext ctx) =>
             ctx.Data is AbilityDataPacket data && ForgeReach.HandedBeyond(this, data) ? OutOfRange : null;
 
-        // Its targeting picked a target beyond it, whichever task picked it: the activation ends there
+        // Its targeting picked a target beyond it, whichever task picked it: the activation ends there, refused as Range
         public override string CanTakeTarget(AbilityComponentContext ctx) =>
             ctx.Data is AbilityDataPacket data && ForgeReach.PickedBeyond(this, data) ? OutOfRange : null;
     }

@@ -115,10 +115,24 @@ namespace FarEmerald.PlayForge
             bool targetingCancelled = false;
             // How it ends, which its components hear
             var how = EAbilityEnd.Done;
+            // What of its components refused the pick its targeting made, and why, told below
+            var pickRefused = EActivationRefusal.None;
+            string pickRule = null, pickDetail = null;
             try
             {
                 handle.IsTargeting = true;
                 await handle.Proxy.ActivateTargetingTask(handle.TargetingCts.Token, handle.Data);
+
+                // A target or a point its targeting picked that one of its components refuses, whichever task picked it,
+                // ends it here, as a Cast Range refuses one beyond it: asked before the target is resolved, as a picked
+                // point has no entity
+                pickRefused = Spec.PickRefusal(handle.Data, out pickRule, out pickDetail);
+                if (pickRefused != EActivationRefusal.None)
+                {
+                    handle.Data.TargetingFailed = true;
+                    targetingCancelled = true;
+                    how = EAbilityEnd.Cancelled;
+                }
             }
             catch (OperationCanceledException)
             {
@@ -139,6 +153,11 @@ namespace FarEmerald.PlayForge
 
                 // Targeting leaves a packet, and what reads a target asks for the entity it points at
                 handle.Data.ResolveTarget(Spec.Base.Behaviour.ImplicitTag);
+
+                // Its pick refused, told as a refusal of the kind its component says, in the component's words, as its
+                // request said none: nothing of it was paid
+                if (pickRefused != EActivationRefusal.None)
+                    handle.Data.System?.Callbacks.AbilityRefused(new ActivationRefusal(Spec.Base, handle.Data.Request.Index, pickRefused, pickRule, pickDetail));
 
                 if (handle.Data.TryGetFirstTarget(out var target)
                     && Spec.TargetRefusal(target, handle.Data, out string rule, out string detail) is var why && why != EActivationRefusal.None)
