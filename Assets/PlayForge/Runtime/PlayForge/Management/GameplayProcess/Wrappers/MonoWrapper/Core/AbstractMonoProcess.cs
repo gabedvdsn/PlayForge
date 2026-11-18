@@ -33,6 +33,9 @@ namespace FarEmerald.PlayForge
 
         private bool _initialized;
         public bool IsInitialized => _initialized;
+
+        // As its process ends: its object runs no more, and a pooled one can run again
+        internal void MarkEnded() => _initialized = false;
         protected ProcessRelay Relay;
 
         private readonly Dictionary<int, ProcessRelay> HandlerRelays = new();

@@ -20,9 +20,14 @@ namespace FarEmerald.PlayForge
         // The instantiator that made the object, which takes it back as the process ends. The object's own was asked,
         // which a clone never has, as it isn't serialized, so a pool's object was destroyed instead
         private AbstractMonoProcessInstantiator madeBy;
+
+        // The instantiator its registration gave, which makes its object ahead of its handler's and its own
+        private readonly AbstractMonoProcessInstantiator given;
         
-        public MonoWrapperProcess(AbstractMonoProcess storedMono, ProcessDataPacket data, IGameplayProcessHandler handler) : base(data, handler)
+        public MonoWrapperProcess(AbstractMonoProcess storedMono, ProcessDataPacket data, IGameplayProcessHandler handler,
+            AbstractMonoProcessInstantiator instantiator = null) : base(data, handler)
         {
+            given = instantiator;
             StoredMono = storedMono;
             ParticipateInSiblingCascade = storedMono.ParticipateInSiblingCascade;
             getStatus = () => StoredMono.ProcessLifecycle == EProcessLifecycle.Synchronous ? EProcessStatus.Synchronous : EProcessStatus.Asynchronous;
@@ -34,6 +39,16 @@ namespace FarEmerald.PlayForge
         public override void ConfigureWrapper()
         {
             if (!StoredMono) return;
+
+            if (given is not null)
+            {
+                activeMono = given.Create(StoredMono, Data, StoredMono.gameObject.scene.IsValid());
+                if (activeMono)
+                {
+                    madeBy = given;
+                    return;
+                }
+            }
 
             var inst = Handler?.GetInstantiator(StoredMono);
             if (StoredMono.UseHandlerInstantiator && inst is not null)
@@ -104,6 +119,9 @@ namespace FarEmerald.PlayForge
             }
             finally
             {
+                // Its object runs no more, so a pool's can run again, as a runtime process's does
+                if (activeMono) activeMono.MarkEnded();
+
                 // The instantiator that made it takes it back, or the object's own when it was made some other way
                 var cleaner = madeBy ?? activeMono.Instantiator;
                 if (cleaner is not null) cleaner.CleanProcess(activeMono);

@@ -658,13 +658,14 @@ namespace FarEmerald.PlayForge
         }
         
         // A MonoBehaviour process's registration, as the builder makes it, and why it's refused when it is
-        internal ProcessRegistrationResult RegisterMono(AbstractMonoProcess process, IGameplayProcessHandler handler, ProcessDataPacket data)
+        internal ProcessRegistrationResult RegisterMono(AbstractMonoProcess process, IGameplayProcessHandler handler, ProcessDataPacket data,
+            AbstractMonoProcessInstantiator instantiator = null)
         {
             if (process == null) return new ProcessRegistrationResult(null, EProcessRegistrationRefusal.NoProcess);
             if (process.IsInitialized) return new ProcessRegistrationResult(null, EProcessRegistrationRefusal.AlreadyRegistered);
             if (!CanAcceptNewProcesses()) return new ProcessRegistrationResult(null, EProcessRegistrationRefusal.ProcessControlClosed);
 
-            var wrapper = new MonoWrapperProcess(process, data, handler);
+            var wrapper = new MonoWrapperProcess(process, data, handler, instantiator);
             var pcb = ProcessControlBlock.Generate(NextCacheIndex, wrapper, this);
             pcb.isMono = true;
 

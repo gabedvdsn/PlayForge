@@ -10,6 +10,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## Toward 1.0.0, since 0.1.0
 
 ### Added
+- **A Process cue** (EP-63): runs a MonoBehaviour process where its Placement says, on a packet loaded for the cue,
+  a burst's for its own course and a lasting one's until its cue ends; pooled, its objects come from the cue pool
+  through `CuePoolInstantiator`. A registration takes an instantiator of its own, `.InstantiatedBy(...)`.
 - **Cue data packets** (EP-62): `CuePackets.For(cue, data)`, the data a cue's process or sequence runs with. An
   ability's cue starts from its activation's packet; then come the cue (`Tags.CUE`), its asset (`Tags.ASSET`) and
   spec (`Tags.SPEC`), its source, its target, where it plays and its owner's clock; then the asset's Local Data,

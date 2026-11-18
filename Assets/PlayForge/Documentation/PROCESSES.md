@@ -42,6 +42,11 @@ await relay.WhenTerminated();
 The **relay** is the handle on a registered process: its state, how long it has lived, and what's done to it. A mono
 process's relay reaches its children too: processes on child GameObjects pause and end with it unless told not to.
 
+A mono process's object comes from an instantiator, an `AbstractMonoProcessInstantiator`, as a pool hands out an idle
+object and takes it back as the process ends. A registration can give one of its own, `.InstantiatedBy(pool)`, which
+goes ahead of its handler's and the object's own; with none, the object is cloned, and destroyed as its process ends.
+An object whose process has ended is no longer `IsInitialized`, so a pool's object can run again.
+
 ## Pausing
 
 A pause holds a process in place, at once. A process that can hold its run says so by returning true from

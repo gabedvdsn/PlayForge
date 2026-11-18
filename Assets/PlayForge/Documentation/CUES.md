@@ -35,6 +35,9 @@ list of lasting cues, as a While Active, from its beginning to its end:
   ends ([Pooling](#pooling)).
 - **Floating Text** floats a text where its Placement says, as a hit's damage, the gold a kill gave or a status's
   name ([Floating text](#floating-text)).
+- **Process** runs a MonoBehaviour process where its Placement says, on a packet loaded for the cue, with its **Data**
+  list last ([Data packets](#data-packets)): a burst's runs its own course, and a lasting one's runs until its cue
+  ends ([Pooling](#pooling)).
 - **Cue Tag** plays what its tag routes to ([Routes](#routes)).
 
 Write a handler of your own by deriving from `AbstractCueHandler`: override the moments it plays at, or `Burst` to play
@@ -122,6 +125,9 @@ the library a project names, checks every asset again.
 A Prefab cue with **Pooled** takes its objects from `ForgeCuePool` and gives them back as its cue ends, a burst's after
 its Lifetime, in place of making and destroying one each time; the pool makes **Preallocate** of them ahead as the cue
 first plays. An `IPooledCue` on the prefab is told as it's taken and as it's given back, to reset it.
+
+A Process cue with **Pooled** does the same through `CuePoolInstantiator`, the instantiator its process's registration
+gives: each object comes from the pool, placed where the cue's packet says, and goes back as its process ends.
 
 ## Data packets
 

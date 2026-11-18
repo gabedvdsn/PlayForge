@@ -53,7 +53,8 @@ namespace FarEmerald.PlayForge
 
     /// <summary>
     /// A process's registration with ProcessControl, built a step at a time: what handles the process, the packet it
-    /// carries, and the ProcessControl that takes it. <see cref="ProcessControl.Register(AbstractRuntimeProcess)"/> and its
+    /// carries, the ProcessControl that takes it, and, for a MonoBehaviour process, what makes its object.
+    /// <see cref="ProcessControl.Register(AbstractRuntimeProcess)"/> and its
     /// siblings start one, and <see cref="Run()"/> registers the process and starts it, as registering always has:
     /// <code>
     /// var result = ProcessControl.Register(projectile).HandledBy(gas).With(data).Run();
@@ -74,17 +75,19 @@ namespace FarEmerald.PlayForge
         private readonly bool handlerGiven;
         private readonly ProcessDataPacket data;
         private readonly ProcessWorld world;
+        private readonly AbstractMonoProcessInstantiator instantiator;
 
-        internal ProcessRegistration(object process) : this(process, null, false, null, null) { }
+        internal ProcessRegistration(object process) : this(process, null, false, null, null, null) { }
 
         private ProcessRegistration(object process, IGameplayProcessHandler handler, bool handlerGiven, ProcessDataPacket data,
-            ProcessWorld world)
+            ProcessWorld world, AbstractMonoProcessInstantiator instantiator)
         {
             this.process = process;
             this.handler = handler;
             this.handlerGiven = handlerGiven;
             this.data = data;
             this.world = world;
+            this.instantiator = instantiator;
         }
 
         /// <summary>
@@ -92,20 +95,28 @@ namespace FarEmerald.PlayForge
         /// it goes. Null, it has no handler at all.
         /// </summary>
         public ProcessRegistration HandledBy(IGameplayProcessHandler processHandler) =>
-            new(process, processHandler, true, data, world);
+            new(process, processHandler, true, data, world, instantiator);
 
         /// <summary>
         /// The packet the process carries. A sequence's is a <see cref="SequenceDataPacket"/>. Left out, a MonoBehaviour
         /// process takes the scene root's, which parents it under GameRoot, a runtime process the default, and a
         /// sequence the scene root's sequence packet. In a world of its own, each takes the default, parented nowhere.
         /// </summary>
-        public ProcessRegistration With(ProcessDataPacket packet) => new(process, handler, handlerGiven, packet, world);
+        public ProcessRegistration With(ProcessDataPacket packet) => new(process, handler, handlerGiven, packet, world, instantiator);
 
         /// <summary>The ProcessControl that takes the process. Left out, <see cref="ProcessControl.Instance"/> does.</summary>
         public ProcessRegistration In(ProcessControl processControl) => In(processControl != null ? processControl.World : null);
 
         /// <summary>The world that takes the process, a world of its own among them. Left out, the scene's does.</summary>
-        public ProcessRegistration In(ProcessWorld processWorld) => new(process, handler, handlerGiven, data, processWorld);
+        public ProcessRegistration In(ProcessWorld processWorld) => new(process, handler, handlerGiven, data, processWorld, instantiator);
+
+        /// <summary>
+        /// What makes a MonoBehaviour process's object for this registration and takes it back as the process ends, ahead
+        /// of its handler's and the object's own, as a pooled cue's pool. Left out, theirs does, or the process is cloned
+        /// and destroyed.
+        /// </summary>
+        public ProcessRegistration InstantiatedBy(AbstractMonoProcessInstantiator madeBy) =>
+            new(process, handler, handlerGiven, data, world, madeBy);
 
         /// <summary>Registers the process and starts it, or says why it can't.</summary>
         public ProcessRegistrationResult Run()
@@ -122,7 +133,8 @@ namespace FarEmerald.PlayForge
             switch (process)
             {
                 case AbstractMonoProcess mono:
-                    return taker.RegisterMono(mono, by, data ?? (ownWorld ? ProcessDataPacket.Default() : ProcessDataPacket.SceneRoot()));
+                    return taker.RegisterMono(mono, by, data ?? (ownWorld ? ProcessDataPacket.Default() : ProcessDataPacket.SceneRoot()),
+                        instantiator);
                 case AbstractRuntimeProcess runtime:
                     return taker.RegisterRuntime(runtime, by, data ?? ProcessDataPacket.Default());
                 case TaskSequence sequence:
