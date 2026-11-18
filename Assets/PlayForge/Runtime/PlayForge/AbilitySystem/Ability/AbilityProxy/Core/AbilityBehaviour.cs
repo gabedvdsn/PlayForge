@@ -17,7 +17,7 @@ namespace FarEmerald.PlayForge
         public AbstractTargetingAbilityTask Targeting;
         
         [Tooltip("Implicitly provides the casting system as a target.")]
-        public bool UseImplicitTargeting = true; 
+        public bool UseImplicitTargeting = false; 
         [ForgeTagContext(ForgeContext.DataKey)]
         public Tag ImplicitTag = Tags.TARGET;
 

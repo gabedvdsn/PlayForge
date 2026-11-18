@@ -225,6 +225,8 @@ namespace FarEmerald.PlayForge.Editor
             ability.Definition ??= new AbilityDefinition();
             ability.Definition.ActivateImmediately = true;
             Applying(ability);
+            // A passive gives its holder its effects: its holder is its target as it activates
+            ability.Behaviour.UseImplicitTargeting = true;
         }
 
         private static void ActiveAbility(ScriptableObject asset, ForgePresetMaking making)

@@ -191,8 +191,9 @@ passes it in, and one effect serves every strength.
   - A targeting task's numbers, as its **Range**, its **Max Targets**, a pointer task's **Max Distance** and an
     attribute condition's value, are numbers that can scale by level or read an attribute, read as its activation
     starts, at its ability's level. A pointer's **Mouse Button** picks one of three, so it stays a choice.
-- **Use Implicit Targeting** (default on): before targeting, record the caster as the activation's target, under
+- **Use Implicit Targeting** (default off): before targeting, record the caster as the activation's target, under
   **Implicit Tag** (default `Target`), which shows while this is on. A targeting task that sets a target replaces it.
+  The Passive preset turns it on, as a passive gives its holder its effects.
 
 ## Stages
 

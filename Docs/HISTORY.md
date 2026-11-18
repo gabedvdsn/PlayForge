@@ -654,6 +654,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   page, through one table of links in the editor.
 
 ### Changed
+- **An ability targets nothing implicitly by default** (EP-66): Use Implicit Targeting is off for a new ability, so
+  it targets what its targeting picks; the Passive preset turns it on. A Select Position task's Max Distance is
+  infinite by default. Saved abilities keep what they were saved with.
 - `TryActivateAbility` returns an `ActivationResult` (EP-60), where it returned true whether its ability started,
   waits in the input buffer or starts next frame. It reads as true where it wasn't refused, so code that tested the
   bool reads as before; NUnit's `Is.True` and `Is.False` want a bool, so assert it with `Assert.IsTrue` or its

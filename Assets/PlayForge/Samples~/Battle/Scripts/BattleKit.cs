@@ -171,7 +171,8 @@ namespace FarEmerald.PlayForge.Samples.Battle
                     TargetRequirements = new AvoidRequireTagGroup { AvoidTags = new List<TagQuery>(), RequireTags = new List<TagQuery>() },
                 },
             };
-            ability.Behaviour = new AbilityBehaviour { Stages = new List<AbilityTaskBehaviourStage>(stages) };
+            // Each targets its caster until its targeting picks another, as the battle's abilities are written
+            ability.Behaviour = new AbilityBehaviour { Stages = new List<AbilityTaskBehaviourStage>(stages), UseImplicitTargeting = true };
             ability.WorkerGroup = new StandardWorkerGroup();
             return ability;
         }
