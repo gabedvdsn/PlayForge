@@ -7,7 +7,7 @@ namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
     /// A kind field that folds, as an attribute set element does: a row with the arrow and the kind field, then the
-    /// kind's fields; folded, one line of their values in secondary text, as "Strength 2 · Duration 0.5 · On Each Tick".
+    /// kind's fields; folded, one line of their values in secondary text, as "Strength 2 · Duration 0.5".
     /// Whether it's folded is kept with the object the field holds, so it follows the object through its list. It
     /// drew colored badges for a folded field's values, and its arrow and its look from styles set in C#.
     /// </summary>

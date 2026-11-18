@@ -135,15 +135,14 @@ MonoBehaviour:
         rid: -2
       Rounding: 0
   Workers: []
-  Components: []
+  Components:
+  - rid: 2403794511355445254
   WorkerGroup:
     Name: Workers
     AttributeWorkers: []
     ImpactWorkers: []
     TagWorkers: []
     AnalysisWorkers: []
-  Cues:
-  - rid: 2403794261189066882
   SourceRequirements:
     Name: 
     ApplicationRequirements:
@@ -256,4 +255,15 @@ MonoBehaviour:
       data:
         Text: Marked
         Color: {r: 1, g: 0.5, b: 0.45, a: 1}
-        OnEachTick: 0
+    - rid: 2403794511355445254
+      type: {class: CuesEffectComponent, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        OnApply:
+        - rid: 2403794261189066882
+        OnReapply: []
+        OnTick: []
+        OnHit: []
+        OnRemove: []
+        WhileActive: []
+        OnRefused: []
+        OnStackChange: []

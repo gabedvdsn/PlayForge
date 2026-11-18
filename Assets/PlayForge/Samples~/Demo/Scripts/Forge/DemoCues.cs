@@ -16,15 +16,9 @@ namespace FarEmerald.PlayForge.Samples.Demo
         [Tooltip("The word's color")]
         public Color Color = Color.white;
 
-        [Tooltip("Floats each tick of a lasting effect too")]
-        public bool OnEachTick;
-
         public override void OnApplied(CueContext cue) => Float(cue);
 
-        public override void OnTicked(CueContext cue)
-        {
-            if (OnEachTick) Float(cue);
-        }
+        public override void OnTicked(CueContext cue) => Float(cue);
 
         private void Float(CueContext cue)
         {

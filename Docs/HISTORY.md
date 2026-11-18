@@ -1422,6 +1422,11 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   or turning `Enabled` off. Once the first had ended, it threw, and the rest ran on.
 
 ### Removed
+- **An effect's own Cues** (EP-61): `GameplayEffect.Cues` and the Effect inspector's Cues section; an effect's
+  cues are its Cues component's. The handlers' moment flags go with them, `PrefabCue.WhileActive` and
+  `SoundCue`'s and `CameraShakeCue`'s `OnEachTick`: a handler plays at each moment whose list holds it, a
+  lasting prefab in While Active and a sound on each tick in On Tick. The samples' effects were re-authored
+  so (Decision 83).
 - The components' shortcuts (EP-45, Decision 90): `Ability`'s `Charges`, `Recharge` and `Toggles`, `AbilitySpec`'s
   `Charges` and `IsToggledOn`, and the hubs' `GetAuras()`. Code reads a component through `Find<T>()` or the component
   itself: `spec.Find<ChargesAbilityComponent>()` holds an ability's charges and their recharge, and its

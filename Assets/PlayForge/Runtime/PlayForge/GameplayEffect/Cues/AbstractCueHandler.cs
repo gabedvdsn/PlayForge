@@ -11,7 +11,7 @@ namespace FarEmerald.PlayForge
         /// <summary>The game's own code raised it.</summary>
         Raised,
 
-        /// <summary>An effect landed, a new application or one an effect on already took in.</summary>
+        /// <summary>An effect landed.</summary>
         Applied,
 
         /// <summary>An effect's ticks executed.</summary>
@@ -72,9 +72,9 @@ namespace FarEmerald.PlayForge
     }
 
     /// <summary>
-    /// A gameplay cue: what something shows and sounds, apart from what it does. An effect lists its cues as it lists
-    /// its workers, and so do an ability's, an entity's and an item's Cues components, each for its own moments, and
-    /// <see cref="ForgeCues"/> plays them all. A burst plays as a moment comes; a lasting cue begins as its moment
+    /// A gameplay cue: what something shows and sounds, apart from what it does. An effect's, an ability's, an entity's
+    /// and an item's Cues components list their cues, each a list for each of its moments, and <see cref="ForgeCues"/>
+    /// plays them all. A burst plays as a moment comes; a lasting cue begins as its moment
     /// comes and ends as it's over, as an effect that lands and later comes off, and a restore ends it and begins it
     /// again, playing no burst. Each hook is a no-op until a handler overrides it. An effect changed attributes and
     /// tags and nothing else, so what it showed was each game's own code.
@@ -108,13 +108,13 @@ namespace FarEmerald.PlayForge
         public virtual void OnRemoved(CueContext cue) { }
 
         /// <summary>
-        /// The cue's moment has come and lasts: the effect is on, from its landing or its coming back with a restore,
-        /// or what a Cues component lists as lasting has begun. A lasting cue begins.
+        /// The cue's moment has come and lasts: what a Cues component lists as lasting has begun, as an effect's While
+        /// Active as it lands or a restore brings it back. A lasting cue begins.
         /// </summary>
         public virtual void Begin(CueContext cue) { }
 
         /// <summary>
-        /// The cue's moment is over: the effect is off, as it goes or as a restore lets go of it. A lasting cue ends.
+        /// The cue's moment is over, as an effect goes or a restore lets go of it. A lasting cue ends.
         /// </summary>
         public virtual void End(CueContext cue) { }
     }
@@ -165,9 +165,8 @@ namespace FarEmerald.PlayForge
         public readonly object Key;
 
         /// <summary>
-        /// Whether it was raised to last: by a Cues component's list of lasting cues, as an ability's While Active, so
-        /// a handler that could burst or last lasts. An effect's cues say for themselves, as a Prefab cue's While
-        /// Active.
+        /// Whether it was raised to last: by a Cues component's list of lasting cues, as an effect's or an ability's
+        /// While Active.
         /// </summary>
         public readonly bool Lasting;
 

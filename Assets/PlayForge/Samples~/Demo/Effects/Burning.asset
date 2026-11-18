@@ -141,15 +141,14 @@ MonoBehaviour:
         rid: -2
       Rounding: 0
   Workers: []
-  Components: []
+  Components:
+  - rid: 2403794511355445282
   WorkerGroup:
     Name: Workers
     AttributeWorkers: []
     ImpactWorkers: []
     TagWorkers: []
     AnalysisWorkers: []
-  Cues:
-  - rid: 2403794261189066795
   SourceRequirements:
     Name: 
     ApplicationRequirements:
@@ -316,7 +315,6 @@ MonoBehaviour:
       data:
         Text: Burning
         Color: {r: 1, g: 0.6, b: 0.25, a: 1}
-        OnEachTick: 0
     - rid: 2403794261189066796
       type: {class: SimpleScaler, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:
@@ -537,3 +535,15 @@ MonoBehaviour:
           RealMagnitude: 2
           Scaler:
             rid: -2
+    - rid: 2403794511355445282
+      type: {class: CuesEffectComponent, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        OnApply:
+        - rid: 2403794261189066795
+        OnReapply: []
+        OnTick: []
+        OnHit: []
+        OnRemove: []
+        WhileActive: []
+        OnRefused: []
+        OnStackChange: []

@@ -48,8 +48,6 @@ MonoBehaviour:
     ElementIdentifiers: []
   - PropertyPath: Workers
     ElementIdentifiers: []
-  - PropertyPath: Cues
-    ElementIdentifiers: []
   - PropertyPath: SourceRequirements.ApplicationRequirements.AvoidTags
     ElementIdentifiers: []
   - PropertyPath: SourceRequirements.ApplicationRequirements.RequireTags
@@ -191,7 +189,6 @@ MonoBehaviour:
     ImpactWorkers: []
     TagWorkers: []
     AnalysisWorkers: []
-  Cues: []
   SourceRequirements:
     Name: 
     ApplicationRequirements:

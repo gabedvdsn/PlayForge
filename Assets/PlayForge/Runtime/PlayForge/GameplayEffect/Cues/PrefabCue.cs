@@ -6,9 +6,9 @@ using Object = UnityEngine.Object;
 namespace FarEmerald.PlayForge
 {
     /// <summary>
-    /// Places a prefab where its placement says: a burst as its moment comes, gone after its Lifetime, or, While Active,
-    /// for as long as its cue lasts. In a Cues component's list of lasting cues, as an ability's While Active, it lasts
-    /// whatever its While Active says. Its placement puts it on the one the cue is on, its source, an ability's target or
+    /// Places a prefab where its placement says: a burst as its moment comes, gone after its Lifetime, or, in a Cues
+    /// component's list of lasting cues, as an effect's While Active, for as long as its cue lasts. Its placement puts it
+    /// on the one the cue is on, its source, an ability's target or
     /// each of its targets, or at the cue's point, as a hit's: at a socket, moved and scattered, following them while it
     /// lasts or as it says. Pooled, it takes its objects from <see cref="ForgeCuePool"/> and gives them back, as Unreal
     /// recycles its cue actors.
@@ -21,9 +21,6 @@ namespace FarEmerald.PlayForge
 
         [Tooltip("Where it's placed, on whom, and which way it faces")]
         public CuePlacement Placement = new();
-
-        [Tooltip("For as long as the cue lasts, as an effect while it's on, in place of a burst as it lands")]
-        public bool WhileActive;
 
         [Tooltip("How long a burst's prefab stays, in seconds; 0 keeps it")]
         [NumberMin(0f)] public ScalableFloat Lifetime = 2f;
@@ -43,7 +40,7 @@ namespace FarEmerald.PlayForge
 
         public override void OnApplied(CueContext cue)
         {
-            if (WhileActive || Prefab == null) return;
+            if (Prefab == null) return;
             float lifetime = Lifetime?.Evaluate(NumberContext.Of(in cue)) ?? 0f;
             foreach (var place in PlacementOf().Resolve(cue, lasting: false))
             {
@@ -54,7 +51,7 @@ namespace FarEmerald.PlayForge
 
         public override void Begin(CueContext cue)
         {
-            if (!(WhileActive || cue.Lasting) || Prefab == null || KeyOf(cue) is not { } key) return;
+            if (Prefab == null || KeyOf(cue) is not { } key) return;
             var made = new List<GameObject>();
             foreach (var place in PlacementOf().Resolve(cue, lasting: true)) made.Add(Make(place));
             (placed ??= new Dictionary<object, List<GameObject>>())[key] = made;

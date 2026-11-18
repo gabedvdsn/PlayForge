@@ -43,7 +43,6 @@ namespace FarEmerald.PlayForge.Editor
         private SectionResult requirementsSection;
         private SectionResult componentsSection;
         private SectionResult workersSection;
-        private SectionResult cuesSection;
         private SectionResult localDataSection;
         private SectionResult usedBySection;
         private ForgeUsedBy usedBy;
@@ -107,7 +106,6 @@ namespace FarEmerald.PlayForge.Editor
             // BuildLevelsSection(parent);
             BuildRequirementsSection(parent);
             BuildComponentsSection(parent);
-            BuildCuesSection(parent);
             BuildWorkersSection(parent);
             BuildLocalDataSection(parent);
             BuildUsedBySection(parent);
@@ -531,31 +529,6 @@ namespace FarEmerald.PlayForge.Editor
         // Workers, Local Data and Used By Sections
         // ═══════════════════════════════════════════════════════════════════════════
 
-        // What the effect shows and sounds, an effect's own section after Impact
-        private void BuildCuesSection(VisualElement parent)
-        {
-            cuesSection = CreateSection(new SectionConfig
-            {
-                Name = "Cues",
-                Title = "Cues",
-                HelpTopic = "effects/cues",
-
-                SerializedObject = serializedObject,
-                PropertyPaths = new[] { nameof(GameplayEffect.Cues) },
-                OnImportComplete = OnSectionReplaced,
-                OnClearComplete = OnSectionReplaced,
-            });
-            parent.Add(cuesSection.Section);
-
-            // Each effect keeps its own cue handlers, objects a multiple selection can't edit safely, as its workers
-            if (IsMultiple)
-            {
-                cuesSection.Content.Add(CreateNote("Select one effect to edit its cues."));
-                return;
-            }
-            cuesSection.Content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(GameplayEffect.Cues)), "Cues", ""));
-        }
-
         // Its components: features it carries, each a class with hooks into its life, added from the list's +
         private void BuildComponentsSection(VisualElement parent)
         {
@@ -704,7 +677,7 @@ namespace FarEmerald.PlayForge.Editor
             // A multiple selection's effects differ, so one line would describe only the first
             if (IsMultiple)
             {
-                var sections = new[] { levelingSection, tagsSection, durationSection, impactSection, levelsSection, cuesSection, requirementsSection, componentsSection, workersSection, localDataSection, usedBySection };
+                var sections = new[] { levelingSection, tagsSection, durationSection, impactSection, levelsSection, requirementsSection, componentsSection, workersSection, localDataSection, usedBySection };
                 foreach (var section in sections.Where(section => section != null)) section.Summary.text = "";
                 return;
             }
@@ -717,7 +690,6 @@ namespace FarEmerald.PlayForge.Editor
             if (requirementsSection != null) requirementsSection.Summary.text = RequirementsSummary();
             if (componentsSection != null) componentsSection.Summary.text = ForgeSummaries.ComponentsLine(effect.Components);
             if (workersSection != null) workersSection.Summary.text = WorkersLine(effect.OnHit, effect.Modifiers, null, (effect.Workers?.Count(worker => worker != null) ?? 0) + WorkerCount(effect.WorkerGroup));
-            if (cuesSection != null) cuesSection.Summary.text = CountOf(effect.Cues?.Count(cue => cue != null) ?? 0, "cue", "cues");
             if (localDataSection != null) localDataSection.Summary.text = CountOf(effect.LocalData?.Count ?? 0, "entry", "entries");
             if (usedBySection != null) usedBySection.Summary.text = usedBy == null ? "" : CountOf(usedBy.Count, "asset", "assets");
         }

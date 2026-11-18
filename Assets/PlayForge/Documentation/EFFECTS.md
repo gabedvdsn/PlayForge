@@ -272,35 +272,33 @@ needs, as "the target". A kind or a condition of your own adds its parts by over
 
 ## Cues
 
-A **Cues** component, from the Components list's **+**, plays cues at each of the effect's moments, a list for each:
-**On Apply** as it lands; **On Reapply** as an application it takes in lands, as a stack or a refresh; **On Tick** as
-each tick executes; **On Hit** as an impact it deals lands, on the one it lands on, its magnitude the value it
-changed, as for a damage number; **On Remove** as a lasting effect comes off; **While Active** while it lasts, from as it lands, or
-a load puts it back, to as it comes off, ending as it began where another application replaced it; **On Refused**
-as an application is refused, as by an immunity, on the one it was aimed at; and **On Stack Change** as its stacks
-change while it lasts, its magnitude the stacks it has. An effect holds one at most. Each list holds cues as the
-effect's own list below does. An applier can say where an application hit, `spec.WithHit(point, normal,
-magnitude)`, and its cues play there ([CUES.md](CUES.md#raises-and-sinks)).
+What the effect shows and sounds, apart from what it changes, plays from its **Cues** component, from the Components
+list's **+**, a list for each of its moments: **On Apply** as it lands; **On Reapply** as an application it takes in
+lands, as a stack or a refresh; **On Tick** as each tick executes; **On Hit** as an impact it deals lands, on the one
+it lands on, its magnitude the value it changed, as for a damage number; **On Remove** as a lasting effect comes off;
+**While Active** while it lasts, from as it lands, or a load puts it back, to as it comes off, ending as it began
+where another application replaced it; **On Refused** as an application is refused, as by an immunity, on the one it
+was aimed at; and **On Stack Change** as its stacks change while it lasts, its magnitude the stacks it has. An effect
+holds one at most. A cue plays at each moment whose list holds it: a sound on each tick is a Sound in On Tick, and one
+as the effect lands as well is in On Apply too. An applier can say where an application hit, `spec.WithHit(point,
+normal, magnitude)`, and its cues play there ([CUES.md](CUES.md#raises-and-sinks)).
 
-What the effect shows and sounds, apart from what it changes, listed as its workers are. Pick each cue's kind from the
-list:
+Each list's cues are listed as its workers are, each cue's kind picked from the list:
 
-- **Camera Shake**: shakes the camera as the effect lands, and on each tick with **On Each Tick**, through the shaker
-  the game gives `ForgeCues.Shaker`, an `ICameraShaker`. With none given, it shakes nothing. Its **Strength** and
-  **Duration**, as Prefab's Lifetime and Sound's Volume, are number fields read for its effect as it lands.
-- **Sound**: plays its clip where its **Placement** says, at the target by default, as the effect lands, and on
-  each tick with **On Each Tick** ([CUES.md](CUES.md#placement)).
-- **Prefab**: places its prefab where its **Placement** says, at the target by default, as the effect lands, for **Lifetime** seconds, or, with **While Active**,
-  for as long as the effect lasts, following the target. A cue raised at a point, as a Play Cue task's, places it
-  there. With **Pooled** it takes its objects from a pool and gives them back, `ForgeCuePool`, the pool making
-  **Preallocate** of them ahead as it first plays, and an `IPooledCue` on the prefab resets it as it's taken and
-  given back.
+- **Camera Shake**: shakes the camera through the shaker the game gives `ForgeCues.Shaker`, an `ICameraShaker`. With
+  none given, it shakes nothing. Its **Strength** and **Duration**, as Prefab's Lifetime and Sound's Volume, are
+  number fields read for its effect as it plays.
+- **Sound**: plays its clip where its **Placement** says, at the target by default ([CUES.md](CUES.md#placement)).
+- **Prefab**: places its prefab where its **Placement** says, at the target by default, for **Lifetime** seconds, or,
+  in While Active, for as long as the effect lasts, following the target. A cue raised at a point, as a Play Cue
+  task's, places it there. With **Pooled** it takes its objects from a pool and gives them back, `ForgeCuePool`, the
+  pool making **Preallocate** of them ahead as it first plays, and an `IPooledCue` on the prefab resets it as it's
+  taken and given back.
 - **Floating Text**: floats a text where its **Placement** says, as a hit's damage or a status's name
   ([CUES.md](CUES.md#floating-text)).
+- **Cue Tag**: plays what its tag routes to ([CUES.md](CUES.md#routes)).
 
-A cue plays its bursts as the effect lands, as its ticks execute and as it comes off, and a lasting cue, such as a
-While Active prefab, while the effect is on. A re-application that an effect on already takes in plays its burst
-again. A save's load ends each lasting cue and begins it again as the effect leaves and comes back, and plays no burst.
+A save's load ends each While Active cue and begins it again as the effect leaves and comes back, and plays no burst.
 Write a cue of your own by deriving from `AbstractCueHandler` and overriding the moments it plays at, or `Burst`
 to play every burst one way, reading the moment that raised it from `cue.Moment`.
 

@@ -132,15 +132,14 @@ MonoBehaviour:
         rid: -2
       Rounding: 0
   Workers: []
-  Components: []
+  Components:
+  - rid: 2403794511355445259
   WorkerGroup:
     Name: Workers
     AttributeWorkers: []
     ImpactWorkers: []
     TagWorkers: []
     AnalysisWorkers: []
-  Cues:
-  - rid: 2403794261189067126
   SourceRequirements:
     Name: 
     ApplicationRequirements:
@@ -242,9 +241,29 @@ MonoBehaviour:
       type: {class: PrefabCue, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:
         Prefab: {fileID: 7153230074201641399, guid: 5d33c8e9650346f44858daf16b4de39d, type: 3}
-        WhileActive: 0
+        Placement:
+          At: 0
+          Socket: 
+          Offset: {x: 0, y: 0, z: 0}
+          Scatter: {x: 0, y: 0, z: 0}
+          Attach: 0
+          Facing: 0
         Lifetime:
           Magnitude: 0.6
           RealMagnitude: 2
           Scaler:
             rid: -2
+        Pooled: 0
+        Preallocate: 0
+    - rid: 2403794511355445259
+      type: {class: CuesEffectComponent, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        OnApply:
+        - rid: 2403794261189067126
+        OnReapply: []
+        OnTick: []
+        OnHit: []
+        OnRemove: []
+        WhileActive: []
+        OnRefused: []
+        OnStackChange: []

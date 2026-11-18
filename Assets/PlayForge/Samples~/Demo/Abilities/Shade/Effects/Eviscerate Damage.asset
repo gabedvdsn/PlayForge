@@ -51,9 +51,6 @@ MonoBehaviour:
     ElementIdentifiers: []
   - PropertyPath: Workers
     ElementIdentifiers: []
-  - PropertyPath: Cues
-    ElementIdentifiers:
-    - managed:FarEmerald.PlayForge.PrefabCue:{"Prefab":{"instanceID":7954},"WhileActive":false,"Lifetime":0.4000000059604645}
   - PropertyPath: SourceRequirements.ApplicationRequirements.AvoidTags
     ElementIdentifiers: []
   - PropertyPath: SourceRequirements.ApplicationRequirements.RequireTags
@@ -78,6 +75,9 @@ MonoBehaviour:
     ElementIdentifiers: []
   - PropertyPath: TargetRequirements.RemovalRequirements.RequireTags
     ElementIdentifiers: []
+  - PropertyPath: Components
+    ElementIdentifiers:
+    - managed:FarEmerald.PlayForge.CuesEffectComponent:{"OnApply":[{"rid":1000}],"OnReapply":[],"OnTick":[],"OnHit":[],"OnRemove":[],"WhileActive":[],"OnRefused":[],"OnStackChange":[],"references":{"version":2,"RefIds":[{"rid":-2,"type":{"class":"","ns":"","asm":""},"data":{}},{"rid":1000,"type":{"class":"PrefabCue","ns":"FarEmerald.PlayForge","asm":"FarEmerald.PlayForge"},"data":{"Prefab":{"instanceID":8888},"Placement":{"At":0,"Socket":"","Offset":{"x":0.0,"y":0.0,"z":0.0},"Scatter":{"x":0.0,"y":0.0,"z":0.0},"Attach":0,"Facing":0},"WhileActive":false,"Lifetime":{"Magnitude":0.4000000059604645,"RealMagnitude":2,"Scaler":{"rid":-2}},"Pooled":false,"Preallocate":0}}]}}
   Definition:
     Name: Eviscerate Damage
     Description: "Eviscerate's blow: pure, its base plus 0.4 \xD7 the target's missing
@@ -194,15 +194,14 @@ MonoBehaviour:
       Rounding: 0
   Workers:
   - rid: 2403794261189067022
-  Components: []
+  Components:
+  - rid: 2403794511355445276
   WorkerGroup:
     Name: Workers
     AttributeWorkers: []
     ImpactWorkers: []
     TagWorkers: []
     AnalysisWorkers: []
-  Cues:
-  - rid: 2403794261189066765
   SourceRequirements:
     Name: 
     ApplicationRequirements:
@@ -258,12 +257,20 @@ MonoBehaviour:
       type: {class: PrefabCue, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:
         Prefab: {fileID: 4121550626229954195, guid: 2608c06f98a671944bc295d0cea3432e, type: 3}
-        WhileActive: 0
+        Placement:
+          At: 0
+          Socket: 
+          Offset: {x: 0, y: 0, z: 0}
+          Scatter: {x: 0, y: 0, z: 0}
+          Attach: 0
+          Facing: 0
         Lifetime:
           Magnitude: 0.4
           RealMagnitude: 2
           Scaler:
             rid: -2
+        Pooled: 0
+        Preallocate: 0
     - rid: 2403794261189067010
       type: {class: ScalerGroup, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:
@@ -795,3 +802,15 @@ MonoBehaviour:
           RealMagnitude: 2
           Scaler:
             rid: -2
+    - rid: 2403794511355445276
+      type: {class: CuesEffectComponent, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        OnApply:
+        - rid: 2403794261189066765
+        OnReapply: []
+        OnTick: []
+        OnHit: []
+        OnRemove: []
+        WhileActive: []
+        OnRefused: []
+        OnStackChange: []

@@ -424,7 +424,7 @@ A **Cues** component plays what the ability shows and sounds at its moments, on 
 activation starts, **On Commit** as it pays its cost and starts its cooldown, **While Active** from its start to its
 end, **On End** as it ends however it ended, and **On Refused** as one is refused, nothing of it paid. Each list holds
 cues as an effect's does ([EFFECTS.md](EFFECTS.md#cues)), a Cue Tag among them; a Prefab cue in While Active lasts
-whatever its own While Active says. A stage's exact moment, as a sword's arc, plays through a **Play Cue** task. An
+until the activation ends. A stage's exact moment, as a sword's arc, plays through a **Play Cue** task. An
 ability holds one at most.
 
 ## Workers

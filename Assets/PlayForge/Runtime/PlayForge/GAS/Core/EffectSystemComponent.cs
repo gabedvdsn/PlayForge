@@ -496,8 +496,6 @@ namespace FarEmerald.PlayForge
             tagCache.RemoveTags(spec.Base.Tags.GrantedTags);
             if (spec.Changes != null) tagCache.RemoveTags(spec.Changes.GrantedTags);
 
-            // An instant effect lands and is over, so its cue is a burst
-            Cue(spec, ECueEvent.Burst, ECueMoment.Applied);
         }
 
         private void ApplyDurationalGameplayEffect(GameplayEffectSpec spec)
@@ -505,8 +503,7 @@ namespace FarEmerald.PlayForge
             bool ongoing = ForgeHelper.ValidateEffectOngoingRequirements(spec);
             if (TryHandleExistingDurationalGameplayEffect(spec, ongoing))
             {
-                // Taken in by the effect on already, whose lasting cues go on; its components hear the application
-                Cue(spec, ECueEvent.Burst, ECueMoment.Applied);
+                // Taken in by the effect on already; its components hear the application, as its cues do
                 spec.HearReapply(new EffectWorkerContext(Self, spec, Self.GetFrameSummary(), Self.GetActionQueue()));
                 return;
             }
@@ -522,9 +519,6 @@ namespace FarEmerald.PlayForge
 
             container.Spec.RunWorkerApplication(new EffectWorkerContext(Self, container.Spec, Self.GetFrameSummary(), Self.GetActionQueue()));
 
-            // Its burst, and its lasting cues begin
-            Cue(container.Spec, ECueEvent.Burst, ECueMoment.Applied);
-            Cue(container.Spec, ECueEvent.Begin, ECueMoment.Applied);
 
             if (!ongoing) return;
             // An OnApply entry is one commit, made as the effect lands. Tick On Application commits them with its tick, and
@@ -1133,7 +1127,6 @@ namespace FarEmerald.PlayForge
                     if (executeTicks > 0 && container.Ongoing)
                     {
                         Self.GetCallbacks()?.EffectTick(container.Spec, executeTicks);
-                        Cue(container.Spec, ECueEvent.Burst, ECueMoment.Ticked, executeTicks);
 
                         for (int _ = 0; _ < executeTicks; _++) ApplyDurationGameplayEffectAsInstant(container);
                     }
@@ -1189,34 +1182,9 @@ namespace FarEmerald.PlayForge
                 Self.GetCallbacks()?.EffectRemoved(container.Spec);
                 ForgeCounters.EffectsRemoved.Value++;
 
-                // Its burst, and its lasting cues end
-                Cue(container.Spec, ECueEvent.Burst, ECueMoment.Removed);
-                Cue(container.Spec, ECueEvent.End, ECueMoment.Removed);
             }
 
             HandleGameplayEffects();
-        }
-
-        // ═══════════════════════════════════════════════════════════════════════════
-        // CUES
-        // ═══════════════════════════════════════════════════════════════════════════
-
-        // Plays the effect's cues through ForgeCues, as every cue plays: a burst, or a lasting cue's beginning or end, told
-        // what raised it and who's behind it, its spec the key that pairs a lasting cue's beginning with its end. A cue that
-        // throws is reported, and the effect goes on: what it shows mustn't stop what it does
-        private void Cue(GameplayEffectSpec spec, ECueEvent cueEvent, ECueMoment moment, int ticks = 0)
-        {
-            var cues = spec?.Base?.Cues;
-            if (cues == null || cues.Count == 0) return;
-            var context = new CueContext(Self, moment, source: spec.Origin?.GetSource(), origin: spec.Origin, spec: spec, ticks: ticks,
-                magnitude: spec.HitMagnitude, point: spec.HitPoint, normal: spec.HitNormal, key: spec);
-            var from = CueSource.Of(spec.Base);
-            switch (cueEvent)
-            {
-                case ECueEvent.Burst: ForgeCues.Burst(cues, context, from); break;
-                case ECueEvent.Begin: ForgeCues.Begin(cues, context, from); break;
-                case ECueEvent.End: ForgeCues.End(cues, context, from); break;
-            }
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
@@ -1239,8 +1207,6 @@ namespace FarEmerald.PlayForge
                 // What its lasting transfers hold, on this entity and the other side, which the load lends again
                 ForgeTransfers.GiveBack(container.Spec, quietly: true);
 
-                // Its lasting cues end, as its effect leaves; no burst plays
-                Cue(container.Spec, ECueEvent.End, ECueMoment.Removed);
             }
 
             EffectShelf.Clear();
@@ -1329,9 +1295,6 @@ namespace FarEmerald.PlayForge
             foreach (var attribute in spec.GetImpactedAttributes(EImpactDelivery.Continuous))
                 AttributeSystem.RegisterQuietly(attribute, spec, spec.GetImpactersFor(attribute, EImpactDelivery.Continuous));
 
-            // Its lasting cues begin again, with no burst
-            Cue(spec, ECueEvent.Begin, ECueMoment.Applied);
-
             requirementsDirty = true;
         }
 
@@ -1374,7 +1337,6 @@ namespace FarEmerald.PlayForge
                 foreach (var attribute in container.Spec.GetImpactedAttributes(EImpactDelivery.Continuous))
                     AttributeSystem.UnregisterQuietly(attribute, container.Spec);
                 ForgeTransfers.GiveBack(container.Spec, quietly: true);
-                Cue(container.Spec, ECueEvent.End, ECueMoment.Removed);
                 TakeBackAbilities(container);
 
                 // Onto the other, as a restore puts one back, by what applied it, its lasting transfers taking from it

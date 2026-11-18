@@ -135,16 +135,14 @@ MonoBehaviour:
         rid: -2
       Rounding: 0
   Workers: []
-  Components: []
+  Components:
+  - rid: 2403794511355445265
   WorkerGroup:
     Name: Workers
     AttributeWorkers: []
     ImpactWorkers: []
     TagWorkers: []
     AnalysisWorkers: []
-  Cues:
-  - rid: 2403794261189067033
-  - rid: 2403794261189067034
   SourceRequirements:
     Name: 
     ApplicationRequirements:
@@ -262,15 +260,35 @@ MonoBehaviour:
       type: {class: PrefabCue, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:
         Prefab: {fileID: 4872485733627083681, guid: b6eb105cdbc8fea4abd059f69ca27b8b, type: 3}
-        WhileActive: 1
+        Placement:
+          At: 0
+          Socket: 
+          Offset: {x: 0, y: 0, z: 0}
+          Scatter: {x: 0, y: 0, z: 0}
+          Attach: 0
+          Facing: 0
         Lifetime:
           Magnitude: 0
           RealMagnitude: 2
           Scaler:
             rid: -2
+        Pooled: 0
+        Preallocate: 0
     - rid: 2403794261189067034
       type: {class: FloatingTextCue, ns: FarEmerald.PlayForge.Samples.Demo, asm: FarEmerald.PlayForge.Samples.Demo}
       data:
         Text: Veiled
         Color: {r: 0.5, g: 1, b: 0.6, a: 1}
-        OnEachTick: 0
+    - rid: 2403794511355445265
+      type: {class: CuesEffectComponent, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        OnApply:
+        - rid: 2403794261189067034
+        OnReapply: []
+        OnTick: []
+        OnHit: []
+        OnRemove: []
+        WhileActive:
+        - rid: 2403794261189067033
+        OnRefused: []
+        OnStackChange: []

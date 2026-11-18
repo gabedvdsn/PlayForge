@@ -37,7 +37,6 @@ namespace FarEmerald.PlayForge.Editor
             ["effects/duration"]           = ("EFFECTS.md", "Duration"),
             ["effects/components"]         = ("EFFECTS.md", "Components"),
             ["effects/workers"]            = ("EFFECTS.md", "Workers"),
-            ["effects/cues"]               = ("EFFECTS.md", "Cues"),
             ["effects/requirements"]       = ("EFFECTS.md", "Requirements"),
             ["effects/localdata"]          = ("EFFECTS.md", "Local Data"),
             ["items"]                      = ("ITEMS.md", null),

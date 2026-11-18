@@ -4,12 +4,11 @@ using UnityEngine;
 namespace FarEmerald.PlayForge
 {
     /// <summary>
-    /// Shakes the camera as its moment comes, as an effect lands, and on an effect's each tick where set, through the
-    /// shaker the game gives
+    /// Shakes the camera as its moment comes, in whichever list it's in, through the shaker the game gives
     /// <see cref="ForgeCues.Shaker"/>.
     /// </summary>
     [Serializable]
-    [ForgeMenu(Description = "Shakes the camera as its moment comes, and on an effect's each tick where set.")]
+    [ForgeMenu(Description = "Shakes the camera as its moment comes.")]
     public class CameraShakeCue : AbstractCueHandler
     {
         [NumberMin(0f)] public ScalableFloat Strength = 1f;
@@ -17,15 +16,9 @@ namespace FarEmerald.PlayForge
         [Tooltip("How long the shake lasts, in seconds")]
         [NumberMin(0f)] public ScalableFloat Duration = 0.2f;
 
-        [Tooltip("Shake on each tick too")]
-        public bool OnEachTick;
-
         public override void OnApplied(CueContext cue) => Shake(cue);
 
-        public override void OnTicked(CueContext cue)
-        {
-            if (OnEachTick) Shake(cue);
-        }
+        public override void OnTicked(CueContext cue) => Shake(cue);
 
         // Its strength and duration, read for what raised it as it plays on the cue's entity
         private void Shake(CueContext cue)

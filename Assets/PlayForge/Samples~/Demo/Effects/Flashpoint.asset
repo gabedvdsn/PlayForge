@@ -131,17 +131,14 @@ MonoBehaviour:
         rid: -2
       Rounding: 0
   Workers: []
-  Components: []
+  Components:
+  - rid: 2403794511355445256
   WorkerGroup:
     Name: Workers
     AttributeWorkers: []
     ImpactWorkers: []
     TagWorkers: []
     AnalysisWorkers: []
-  Cues:
-  - rid: 2403794261189066785
-  - rid: 2403794261189066786
-  - rid: 2403794261189066787
   SourceRequirements:
     Name: 
     ApplicationRequirements:
@@ -244,17 +241,24 @@ MonoBehaviour:
       data:
         Text: Flashpoint!
         Color: {r: 1, g: 0.6, b: 0.25, a: 1}
-        OnEachTick: 0
     - rid: 2403794261189066786
       type: {class: PrefabCue, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:
         Prefab: {fileID: 561868275064710946, guid: 5fe1027189a78264a89d44a9d943177e, type: 3}
-        WhileActive: 0
+        Placement:
+          At: 0
+          Socket: 
+          Offset: {x: 0, y: 0, z: 0}
+          Scatter: {x: 0, y: 0, z: 0}
+          Attach: 0
+          Facing: 0
         Lifetime:
           Magnitude: 0.6
           RealMagnitude: 2
           Scaler:
             rid: -2
+        Pooled: 0
+        Preallocate: 0
     - rid: 2403794261189066787
       type: {class: CameraShakeCue, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:
@@ -268,7 +272,6 @@ MonoBehaviour:
           RealMagnitude: 2
           Scaler:
             rid: -2
-        OnEachTick: 0
     - rid: 2403794261189066788
       type: {class: SimpleScaler, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:
@@ -490,3 +493,17 @@ MonoBehaviour:
           m_RotationOrder: 4
         Behaviours: []
         Value: 0.8
+    - rid: 2403794511355445256
+      type: {class: CuesEffectComponent, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        OnApply:
+        - rid: 2403794261189066785
+        - rid: 2403794261189066786
+        - rid: 2403794261189066787
+        OnReapply: []
+        OnTick: []
+        OnHit: []
+        OnRemove: []
+        WhileActive: []
+        OnRefused: []
+        OnStackChange: []

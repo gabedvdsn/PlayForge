@@ -5,12 +5,12 @@ using Object = UnityEngine.Object;
 namespace FarEmerald.PlayForge
 {
     /// <summary>
-    /// Plays a sound where its placement says, as its moment comes, as an effect lands, and on an effect's each tick
-    /// where set: on the one the cue is on, its source, an ability's target or each of its targets, or at the cue's
-    /// point; attached, it follows them as it plays.
+    /// Plays a sound where its placement says, as its moment comes, in whichever list it's in: on the one the cue is on,
+    /// its source, an ability's target or each of its targets, or at the cue's point; attached, it follows them as it
+    /// plays.
     /// </summary>
     [Serializable]
-    [ForgeMenu(Description = "Plays a sound where its placement says as its moment comes, and on an effect's each tick where set.")]
+    [ForgeMenu(Description = "Plays a sound where its placement says as its moment comes.")]
     public class SoundCue : AbstractCueHandler
     {
         public AudioClip Clip;
@@ -20,15 +20,9 @@ namespace FarEmerald.PlayForge
 
         [NumberRange(0f, 1f)] public ScalableFloat Volume = 1f;
 
-        [Tooltip("Play on each tick too")]
-        public bool OnEachTick;
-
         public override void OnApplied(CueContext cue) => Play(cue);
 
-        public override void OnTicked(CueContext cue)
-        {
-            if (OnEachTick) Play(cue);
-        }
+        public override void OnTicked(CueContext cue) => Play(cue);
 
         private void Play(CueContext cue)
         {

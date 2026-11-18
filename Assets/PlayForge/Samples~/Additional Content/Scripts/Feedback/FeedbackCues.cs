@@ -19,15 +19,9 @@ namespace FarEmerald.PlayForge.AdditionalContent
         [Tooltip("How large it floats, against the entity's numbers")]
         [Min(0.1f)] public float Scale = 1f;
 
-        [Tooltip("Floats each tick of a lasting effect too")]
-        public bool OnEachTick;
-
         public override void OnApplied(CueContext cue) => Float(cue);
 
-        public override void OnTicked(CueContext cue)
-        {
-            if (OnEachTick) Float(cue);
-        }
+        public override void OnTicked(CueContext cue) => Float(cue);
 
         private void Float(CueContext cue)
         {
@@ -52,15 +46,9 @@ namespace FarEmerald.PlayForge.AdditionalContent
         [Tooltip("How long the flash takes to fade, in seconds")]
         [Min(0.01f)] public float Duration = 0.25f;
 
-        [Tooltip("Flashes each tick of a lasting effect too")]
-        public bool OnEachTick;
-
         public override void OnApplied(CueContext cue) => Flash(cue);
 
-        public override void OnTicked(CueContext cue)
-        {
-            if (OnEachTick) Flash(cue);
-        }
+        public override void OnTicked(CueContext cue) => Flash(cue);
 
         private void Flash(CueContext cue)
         {

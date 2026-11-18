@@ -126,16 +126,14 @@ MonoBehaviour:
         rid: -2
       Rounding: 0
   Workers: []
-  Components: []
+  Components:
+  - rid: 2403794511355445275
   WorkerGroup:
     Name: Workers
     AttributeWorkers: []
     ImpactWorkers: []
     TagWorkers: []
     AnalysisWorkers: []
-  Cues:
-  - rid: 2403794400654131231
-  - rid: 2403794400654131232
   SourceRequirements:
     Name: 
     ApplicationRequirements:
@@ -200,10 +198,21 @@ MonoBehaviour:
           RealMagnitude: 2
           Scaler:
             rid: -2
-        OnEachTick: 0
     - rid: 2403794400654131232
       type: {class: FlashCue, ns: FarEmerald.PlayForge.AdditionalContent, asm: FarEmerald.PlayForge.AdditionalContent}
       data:
         Color: {r: 0.45, g: 0.75, b: 1, a: 1}
         Duration: 0.25
-        OnEachTick: 0
+    - rid: 2403794511355445275
+      type: {class: CuesEffectComponent, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        OnApply:
+        - rid: 2403794400654131231
+        - rid: 2403794400654131232
+        OnReapply: []
+        OnTick: []
+        OnHit: []
+        OnRemove: []
+        WhileActive: []
+        OnRefused: []
+        OnStackChange: []

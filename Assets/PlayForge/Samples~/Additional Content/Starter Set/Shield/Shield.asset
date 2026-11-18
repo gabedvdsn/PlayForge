@@ -134,15 +134,14 @@ MonoBehaviour:
         rid: -2
       Rounding: 0
   Workers: []
-  Components: []
+  Components:
+  - rid: 2403794511355445260
   WorkerGroup:
     Name: Workers
     AttributeWorkers: []
     ImpactWorkers: []
     TagWorkers: []
     AnalysisWorkers: []
-  Cues:
-  - rid: 2403794400654131242
   SourceRequirements:
     Name: 
     ApplicationRequirements:
@@ -207,7 +206,6 @@ MonoBehaviour:
         Text: Shielded
         Color: {r: 1, g: 0.85, b: 0.35, a: 1}
         Scale: 1
-        OnEachTick: 0
     - rid: 2403794400654131243
       type: {class: AbsorbStage, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:
@@ -215,3 +213,15 @@ MonoBehaviour:
         Enabled: 1
         Into: {fileID: 11400000, guid: 32ddedf576d7eed459371902d2a30e04, type: 2}
         On: 1
+    - rid: 2403794511355445260
+      type: {class: CuesEffectComponent, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        OnApply:
+        - rid: 2403794400654131242
+        OnReapply: []
+        OnTick: []
+        OnHit: []
+        OnRemove: []
+        WhileActive: []
+        OnRefused: []
+        OnStackChange: []

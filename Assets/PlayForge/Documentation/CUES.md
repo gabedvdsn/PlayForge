@@ -9,9 +9,7 @@ as a hit's spark, or a **lasting** cue's beginning and its end, as a shield's hu
 
 - **Effects**: an effect's **Cues** component plays its cues as it lands, as an application it takes in lands, as each
   tick executes, as an impact it deals lands, as it comes off, while it lasts, as an application is refused and as
-  its stacks change. The effect's
-  own Cues section plays its bursts as it lands, as its ticks execute and as it comes off, and its lasting cues while
-  it's on ([EFFECTS.md](EFFECTS.md#cues)).
+  its stacks change ([EFFECTS.md](EFFECTS.md#cues)).
 - **Abilities**: a **Cues** component plays an ability's as it activates, as it commits, while it's active, as it ends
   and as one is refused; a **Play Cue** task plays them at a stage's exact moment, on the caster, on the target or at
   the point ([ABILITIES.md](ABILITIES.md#cues)).
@@ -28,12 +26,13 @@ magnitude; and, for a lasting cue, the key its beginning and its end share.
 
 ## Handlers
 
-Each cue in a list is a handler, its kind picked from the list:
+Each cue in a list is a handler, its kind picked from the list. It plays at each moment whose list holds it, and, in a
+list of lasting cues, as a While Active, from its beginning to its end:
 
 - **Camera Shake** shakes the camera through the shaker the game gives `ForgeCues.Shaker`, an `ICameraShaker`.
 - **Sound** plays its clip where its Placement says ([Placement](#placement)).
-- **Prefab** places its prefab where its Placement says, for its **Lifetime**, or, with **While Active**, until its
-  cue ends ([Pooling](#pooling)).
+- **Prefab** places its prefab where its Placement says, for its **Lifetime**, or, as a lasting cue, until its cue
+  ends ([Pooling](#pooling)).
 - **Floating Text** floats a text where its Placement says, as a hit's damage, the gold a kill gave or a status's
   name ([Floating text](#floating-text)).
 - **Cue Tag** plays what its tag routes to ([Routes](#routes)).
