@@ -363,6 +363,20 @@ namespace FarEmerald.PlayForge.Lab
             else if (stepOnce) Step(StepSeconds);
             stepOnce = false;
             ReadSpace();
+            choosingSeen = AnyChoosing();
+        }
+
+        // Whether a cast of one of its units, or its caster's, chose its target as the last frame ended: a left-click
+        // then is the cast's, which its targeting may have taken before the lab reads it
+        private bool choosingSeen;
+
+        /// <summary>Whether a cast of one of the lab's units, or its caster's, waits for the author to choose its target.</summary>
+        public bool AnyChoosing()
+        {
+            if (Caster && Caster.TryGetTargeting(out _)) return true;
+            foreach (var unit in units)
+                if (unit && unit.TryGetTargeting(out _)) return true;
+            return false;
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
@@ -612,19 +626,22 @@ namespace FarEmerald.PlayForge.Lab
         // Selecting
         // ═══════════════════════════════════════════════════════════════════════════
 
-        /// <summary>Selects a unit, which then shows in the middle dock and is the source of what's dropped.</summary>
+        /// <summary>Selects a unit, which then shows in the selected panel and is the source of what's dropped.</summary>
         public void Select(LabUnit unit)
         {
             SelectedUnit = unit;
             if (unit) SelectedAsset = null;
+            // A selection brings its panel forward, over the lab's own
+            if (Panels) Panels.ShowSelectedPanel();
             Changed?.Invoke();
         }
 
-        /// <summary>Selects an asset, which then shows in the middle dock, level by level.</summary>
+        /// <summary>Selects an asset, which then shows in the selected panel, level by level.</summary>
         public void Select(ScriptableObject asset)
         {
             SelectedAsset = asset;
             if (asset) SelectedUnit = null;
+            if (Panels) Panels.ShowSelectedPanel();
             Changed?.Invoke();
         }
 
@@ -648,13 +665,14 @@ namespace FarEmerald.PlayForge.Lab
         }
 
         // Esc ends a cast waiting for its click; a left-click in the space selects the unit under it, or nothing over
-        // the ground
+        // the ground, unless it's the click a cast waits for, which chooses the cast's target and selects nothing
         private void ReadSpace()
         {
             var input = ForgeInput.Current;
             if (input.KeyPressed(KeyCode.Escape)) CancelCasts();
             if (!input.PointerPressed(0) || !input.TryGetPointerPosition(out var pointer)) return;
             if (Panels && Panels.IsOverPanel(pointer)) return;
+            if (choosingSeen || AnyChoosing()) return;
             if (TryPick(pointer, out var unit, out _)) Select(unit);
         }
 

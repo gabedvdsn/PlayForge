@@ -1,15 +1,18 @@
 using System.Collections.Generic;
 using System.Globalization;
+using FarEmerald.PlayForge.Lab;
 using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace FarEmerald.PlayForge.Samples.Demo
 {
     /// <summary>
-    /// The demo's screen, in UI Toolkit: the panel on the left that picks who fights and gives items and levels, the HUD
-    /// at the bottom that reads the player's hero, bars over each unit, and the words that float up as damage lands and
-    /// cues fire. Everything it shows it reads from the GAS: attributes, their item bonus by retention group, effects by
-    /// their visibility, cooldowns, levels.
+    /// The demo's screen, in UI Toolkit: the panel on the left that picks who fights, gives items and levels, and reads
+    /// the hero's attributes; the HUD, short and centred under the arena, with the hero's bars and slots, what a cast
+    /// waits for above it and the keys under it; bars over each unit, and the words that float up as damage lands and
+    /// cues fire. Only the panel and the HUD's box keep clicks: the rest of the screen is the arena's. Everything it
+    /// shows it reads from the GAS: attributes, their item bonus by retention group, effects by their visibility,
+    /// cooldowns, levels, and the cast choosing its target.
     /// </summary>
     [RequireComponent(typeof(UIDocument))]
     public class DemoHud : MonoBehaviour
@@ -34,9 +37,11 @@ namespace FarEmerald.PlayForge.Samples.Demo
         private VisualElement buffs;
         private Label heroLine;
         private Label dummyLine;
-        private Label castLine;
+        private Label waitLine;
+        private Label keysLine;
         private Bar health;
         private Bar mana;
+        private DemoPlayer controls;
 
         private readonly Dictionary<DemoUnit, Bar> unitBars = new();
         private readonly List<Floater> floaters = new();
@@ -77,37 +82,44 @@ namespace FarEmerald.PlayForge.Samples.Demo
             title.AddToClassList("demo-title");
             panel.Add(title);
             youSection = Section(panel, "You");
+            // The hero's attributes, as they are now. They filled the HUD, which stood a third of the screen tall
+            attributes = new VisualElement { name = "Attributes" };
+            attributes.AddToClassList("demo-attributes");
+            Section(panel, "Your Hero's Attributes").Add(attributes);
             foeSection = Section(panel, "Opponent");
             shopSection = Section(panel, "Items");
             var fight = Section(panel, "Fight");
             fight.Add(Button("Reset", "Both back where they started, at full health", () => DemoGame.Current?.ResetFight()));
-            var help = new Label("Right-click to move or attack. Q, W, E cast; 1–6 use items; S stops; Esc cancels. A targeted cast waits for a left-click.");
-            help.AddToClassList("demo-help");
-            fight.Add(help);
 
+            // The HUD, centred under the arena: what a cast waits for, the hero's effects, its box with the hero's bars
+            // and slots, and the keys. The dock and the lines around the box let clicks through to the arena
+            var dock = new VisualElement { name = "HudDock", pickingMode = PickingMode.Ignore };
+            dock.AddToClassList("demo-hud-dock");
+            root.Add(dock);
+            waitLine = new Label { name = "Waiting", pickingMode = PickingMode.Ignore };
+            waitLine.AddToClassList("demo-hud__wait");
+            waitLine.style.display = DisplayStyle.None;
+            dock.Add(waitLine);
+            buffs = new VisualElement { name = "Effects", pickingMode = PickingMode.Ignore };
+            buffs.AddToClassList("demo-buffs");
+            dock.Add(buffs);
             var hud = new VisualElement { name = "Hud" };
             hud.AddToClassList("demo-hud");
-            root.Add(hud);
+            dock.Add(hud);
+            var vitals = new VisualElement { name = "Vitals" };
+            vitals.AddToClassList("demo-hud__vitals");
+            hud.Add(vitals);
             heroLine = new Label { name = "Hero" };
             heroLine.AddToClassList("demo-hud__hero");
-            hud.Add(heroLine);
-            health = new Bar(hud, "demo-bar--health");
-            mana = new Bar(hud, "demo-bar--mana");
-            castLine = new Label { name = "Casting" };
-            castLine.AddToClassList("demo-hud__cast");
-            hud.Add(castLine);
+            vitals.Add(heroLine);
+            health = new Bar(vitals, "demo-bar--health");
+            mana = new Bar(vitals, "demo-bar--mana");
             slots = new VisualElement { name = "Slots" };
             slots.AddToClassList("demo-slots");
             hud.Add(slots);
-            var lower = new VisualElement();
-            lower.AddToClassList("demo-hud__lower");
-            hud.Add(lower);
-            attributes = new VisualElement { name = "Attributes" };
-            attributes.AddToClassList("demo-attributes");
-            lower.Add(attributes);
-            buffs = new VisualElement { name = "Effects" };
-            buffs.AddToClassList("demo-buffs");
-            lower.Add(buffs);
+            keysLine = new Label { name = "Keys", pickingMode = PickingMode.Ignore };
+            keysLine.AddToClassList("demo-hud__keys");
+            dock.Add(keysLine);
         }
 
         private void OnDisable()
@@ -295,32 +307,53 @@ namespace FarEmerald.PlayForge.Samples.Demo
 
         private void ShowHud(DemoUnit me)
         {
+            ShowKeys();
             if (me == null || !me.Alive)
             {
                 var seat = DemoGame.Current != null ? DemoGame.Current.PlayerSeat : null;
                 heroLine.text = seat != null && seat.DownAt >= 0f
                     ? $"Down. Back in {Mathf.Max(0f, DemoGame.Current.RespawnSeconds - (Time.time - seat.DownAt)):0.0} s"
                     : "";
+                ShowWaiting(null);
                 return;
             }
             var roster = me.Roster;
             heroLine.text = $"{me.Name}   Level {me.LevelOf(me.Identity)}";
             health.Show(me.Value(roster.Health), me.Base(roster.Health));
             mana.Show(me.Value(roster.Mana), me.Base(roster.Mana));
-            ShowCasting(me);
+            ShowWaiting(me);
             ShowSlots(me);
             ShowAttributes(me);
             ShowEffects(me);
         }
 
-        private void ShowCasting(DemoUnit me)
+        // The player's controls, which say the keys as they're set
+        private DemoPlayer Controls()
         {
-            string casting = null;
-            for (int slot = 1; slot <= 3 && casting == null; slot++)
-                if (me.Casting(me.AbilityAt(slot))) casting = me.AbilityAt(slot).GetName();
-            for (int i = 0; i < me.Seat.Items.Count && casting == null; i++)
-                if (me.Casting(me.ItemAbilityAt(i))) casting = me.ItemAbilityAt(i).GetName();
-            castLine.text = casting != null ? $"{casting}: left-click its target" : "";
+            if (!controls) controls = FindAnyObjectByType<DemoPlayer>();
+            return controls;
+        }
+
+        // What a cast waits for, and how to give it or let it go: "Fireball: Click a target · Esc or a right-click
+        // cancels". Nothing while none waits
+        private void ShowWaiting(DemoUnit me)
+        {
+            string text = null;
+            if (me != null && me.TryGetTargeting(out var ability))
+            {
+                var player = Controls();
+                text = $"{ability.GetName()}: {LabUnit.PromptOf(ability) ?? "Choose its target"}  ·  "
+                       + $"{(player ? player.CancelWords() : "Esc")} cancels";
+            }
+            waitLine.style.display = text != null ? DisplayStyle.Flex : DisplayStyle.None;
+            if (text != null && waitLine.text != text) waitLine.text = text;
+        }
+
+        private void ShowKeys()
+        {
+            var player = Controls();
+            string text = player ? player.KeysLine() : "";
+            if (keysLine.text != text) keysLine.text = text;
         }
 
         private void ShowSlots(DemoUnit me)
@@ -383,7 +416,8 @@ namespace FarEmerald.PlayForge.Samples.Demo
             }
             while (buffs.childCount < shown.Count)
             {
-                var chip = new Label();
+                // Over the arena, so a click goes through it
+                var chip = new Label { pickingMode = PickingMode.Ignore };
                 chip.AddToClassList("demo-effect");
                 buffs.Add(chip);
             }

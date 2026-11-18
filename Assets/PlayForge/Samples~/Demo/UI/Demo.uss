@@ -1,4 +1,4 @@
-/* The demo's screen: the panel on the left, the HUD at the bottom, bars and words over the units. */
+/* The demo's screen: the panel on the left, the HUD centred at the bottom, bars and words over the units. */
 
 .demo-root {
     flex-grow: 1;
@@ -124,32 +124,55 @@
     margin: 2px 0 4px 0;
 }
 
-/* The HUD */
+/* The HUD: short, centred under the arena right of the panel. The dock and the lines around the box let clicks
+   through to the arena; only the box keeps them */
+
+.demo-hud-dock {
+    position: absolute;
+    left: 354px;
+    right: 12px;
+    bottom: 10px;
+    align-items: center;
+}
 
 .demo-hud {
-    position: absolute;
-    left: 360px;
-    right: 12px;
-    bottom: 12px;
+    flex-direction: row;
+    align-items: center;
     background-color: rgba(18, 20, 26, 0.88);
     border-radius: 6px;
-    padding: 8px 12px;
+    padding: 6px 10px;
+}
+
+.demo-hud__vitals {
+    width: 210px;
+    margin-right: 10px;
 }
 
 .demo-hud__hero {
-    font-size: 15px;
+    font-size: 14px;
     -unity-font-style: bold;
-    margin-bottom: 4px;
+    margin-bottom: 2px;
 }
 
-.demo-hud__cast {
+.demo-hud__wait {
     color: rgb(255, 215, 120);
-    min-height: 16px;
+    -unity-font-style: bold;
+    background-color: rgba(18, 20, 26, 0.88);
+    border-radius: 4px;
+    padding: 3px 10px;
+    margin-bottom: 4px;
+    white-space: normal;
+    -unity-text-align: middle-center;
 }
 
-.demo-hud__lower {
-    flex-direction: row;
-    margin-top: 6px;
+.demo-hud__keys {
+    color: rgb(185, 192, 204);
+    font-size: 12px;
+    margin-top: 3px;
+    padding: 1px 8px;
+    background-color: rgba(18, 20, 26, 0.6);
+    border-radius: 3px;
+    -unity-text-align: middle-center;
 }
 
 .demo-bar {
@@ -157,7 +180,7 @@
 }
 
 .demo-bar__track {
-    height: 16px;
+    height: 14px;
     background-color: rgba(0, 0, 0, 0.55);
     border-radius: 3px;
     overflow: hidden;
@@ -218,14 +241,12 @@
 
 .demo-slots {
     flex-direction: row;
-    flex-wrap: wrap;
-    margin-top: 4px;
 }
 
 .demo-slot {
-    width: 64px;
-    height: 64px;
-    margin-right: 6px;
+    width: 50px;
+    height: 50px;
+    margin-right: 4px;
     border-radius: 4px;
     background-color: rgb(40, 44, 54);
     -unity-background-scale-mode: scale-to-fit;
@@ -256,7 +277,7 @@
     top: 0;
     bottom: 0;
     -unity-text-align: middle-center;
-    font-size: 18px;
+    font-size: 16px;
     -unity-font-style: bold;
     color: rgb(255, 255, 255);
     text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.9);
@@ -274,7 +295,6 @@
 .demo-attributes {
     flex-direction: row;
     flex-wrap: wrap;
-    width: 55%;
 }
 
 .demo-attribute {
@@ -286,8 +306,8 @@
 .demo-buffs {
     flex-direction: row;
     flex-wrap: wrap;
-    flex-grow: 1;
-    align-content: flex-start;
+    justify-content: center;
+    max-width: 760px;
 }
 
 .demo-effect {

@@ -20,18 +20,24 @@ The lab plays every PlayForge asset in the project's own folders.
 
 ## The panels
 
-Each panel collapses to a tab at its edge with its − button.
+Each panel but Selected collapses to a tab at its edge with its − button. The middle of the screen is the space's.
 
 - **Library** (left): the active Forge Project's assets by kind, abilities, effects, items, entities, attribute sets,
   attributes and scalers, each kind by name, or every asset of the project while it has no Forge Project. **Project**
   switches the active project, as The Forge does, and follows The Forge's switch. The search box filters them;
   **Refresh** lists them again after you make or delete one. A kind's color shows in its icon alone.
-- **Selected** (middle): hidden until something is selected. Click an asset in the library to see its numbers level by
+- **Selected** (right, over the Lab panel): shown as something is selected. Its **Lab** tab sets it aside, the
+  selection kept, and the Lab panel's **Selected** tab brings it back, as each selection does. Click an asset in
+  the library to see its numbers level by
   level, as "−80/−120/−160 Health"; **Open in The Forge** opens it there. Click a unit to see its attributes, tags,
   effects with their stacks and time left, abilities with their levels and cooldowns, and items. There, − and + change
-  an ability's level, × takes an ability or an item, and **Remove** takes the unit out.
-- **Lab** (right): the mode, the test dummies, the camera and the lab's time.
+  an ability's level, × takes an ability or an item, **Remove** takes the unit out, and **Take control** makes it
+  yours, or **Release** lets it go.
+- **Lab** (right, under Selected): the mode, the test dummies, the camera and the lab's time.
 - **Log** (bottom): collapsed until you open it, a page for each way the lab shows its working; see below.
+- **The status** (top, between the panels): what a cast waits for, in its targeting's words, as "Bolt: Click a
+  target · Esc or a right-click cancels"; what's selected, whom you control, and whether the lab is paused; and the
+  keys for what you can do now. Clicks go through it to the space.
 
 ## Dropping assets
 
@@ -87,8 +93,11 @@ buttons says whom you control.
 
 The controls are the Demo's: right-click the ground to walk there, a foe to attack it, or an ally to walk to it; **Q**,
 **W**, **E** and **R** cast its abilities past its attack, in its entity's order, and **1** to **6** its items' active
-abilities; an ability that needs a target waits for a left-click, and **Esc** cancels it; **S** stops it. They read
-PlayForge's input, `ForgeInput`, so a game's own input or a test's stands in.
+abilities; **S** stops it. An ability that needs a target waits for a left-click, while a ring on the ground shows
+its reach, its Cast Range or its Reach: another ability's key casts that one instead, a right-click order lets it
+go, and **Esc** cancels it. The click that picks a target selects nothing. The keys are the **Lab Controls**' own, as
+the status says them, and the ring's colors, width and material are its too. They read PlayForge's input,
+`ForgeInput`, so a game's own input or a test's stands in.
 
 Its orders go through a driver. The lab's walks a unit in a straight line and casts as the lab's units do. A project
 whose units move and cast their own way makes a **Lab Driver** asset (**Create → PlayForge → Lab Driver**) of its own

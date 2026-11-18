@@ -10,6 +10,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## Toward 1.0.0, since 0.1.0
 
 ### Added
+- **The Creator Lab tells the author what's going on** (LAB-19, LAB-20): a status over the space, what a cast
+  waits for, what's selected, whom they control and the keys; a ring at a cast's reach while it chooses its
+  target; a right-click order lets the cast go; and the selected panel docks at the right, the middle the space's.
 - **A cast choosing its target gives way to another** (FEAT-39): another of the entity's abilities activating
   cancels it, nothing of it paid, unless the ability's While Targeting or its entity's Targeting Yields holds;
   a game reads the wait, `AbilitySpecContainer.IsTargeting`, and a targeting task's `Prompt`.
@@ -1149,6 +1152,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   Asking whether its sequence was paused took 24 bytes a frame.
 
 ### Fixed
+- **The Demo's HUD left no room to play** (SP-35): short and centred under the arena, the attributes in the panel,
+  with what a cast waits for above it and the keys under it.
+- **The Creator Lab's buttons and fields were hard to read** (LAB-21): Unity's light runtime controls took the dark
+  panels' light text; they take the editor's dark neutrals.
 - An Area Effect around its activation's point, with none given, did nothing (FEAT-30). It lands around its caster,
   as its centre's choice says.
 - A critical section kept out only critical abilities asked for under its own activation policy (EP-57), where a

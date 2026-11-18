@@ -13,10 +13,29 @@
 }
 .lab-panel--left { left: 8px; top: 8px; bottom: 8px; width: 260px; }
 .lab-panel--right { right: 8px; top: 8px; bottom: 8px; width: 280px; }
-.lab-panel--middle { left: 280px; right: 300px; top: 8px; max-height: 58%; }
 .lab-panel--bottom { left: 280px; right: 300px; bottom: 8px; max-height: 30%; }
 .lab-panel--collapsed { bottom: auto; width: auto; max-height: none; }
 .lab-panel--collapsed.lab-panel--right { left: auto; }
+/* The log's tab stays at the bottom edge, where it opens: at the top it lay over the status */
+.lab-panel--collapsed.lab-panel--bottom { bottom: 8px; right: auto; }
+
+/* Unity's controls in the editor's dark neutrals, as the panels are: the runtime theme's light buttons and fields took
+   the panels' light text, and their words were hard to read */
+.lab-panel .unity-button { background-color: rgb(88, 88, 88); border-color: rgb(48, 48, 48); color: rgb(238, 238, 238); }
+.lab-panel .unity-button:hover:enabled { background-color: rgb(103, 103, 103); }
+.lab-panel .unity-button:active:enabled { background-color: rgb(70, 96, 124); }
+/* A field's label as wide as its words, from 72 px, so its input has room: the runtime theme's 150 px left the entity's
+   choice "Herc" */
+.lab-panel .unity-base-field__label { color: rgb(196, 196, 196); min-width: 72px; }
+.lab-panel .unity-base-text-field__input,
+.lab-panel .unity-base-popup-field__input { background-color: rgb(42, 42, 42); border-color: rgb(33, 33, 33); color: rgb(196, 196, 196); }
+.lab-panel .unity-base-popup-field__text { color: rgb(196, 196, 196); }
+.lab-panel .unity-base-popup-field__arrow { -unity-background-image-tint-color: rgb(196, 196, 196); }
+.lab-panel .unity-base-slider__tracker { background-color: rgb(42, 42, 42); border-color: rgb(33, 33, 33); }
+.lab-panel .unity-base-slider__dragger { background-color: rgb(153, 153, 153); border-color: rgb(48, 48, 48); }
+.lab-panel .unity-toggle__checkmark { background-color: rgb(42, 42, 42); border-color: rgb(33, 33, 33); -unity-background-image-tint-color: rgb(196, 196, 196); }
+.lab-panel .unity-foldout__checkmark { background-color: rgba(0, 0, 0, 0); -unity-background-image-tint-color: rgb(196, 196, 196); }
+.lab-panel .unity-foldout__text { color: rgb(210, 210, 210); }
 
 .lab-panel__header {
     flex-direction: row;
@@ -27,6 +46,23 @@
 }
 .lab-panel__title { -unity-font-style: bold; overflow: hidden; text-overflow: ellipsis; flex-shrink: 1; }
 .lab-panel__collapse { width: 22px; height: 18px; margin: 0; padding: 0; }
+.lab-panel__tab { height: 18px; margin: 0 4px 0 auto; padding: 0 8px; }
+
+/* The status, docked at the top between the panels: what a cast waits for, what's selected and the keys. Clicks go
+   through it to the space */
+.lab-status {
+    position: absolute;
+    top: 8px;
+    left: 280px;
+    right: 300px;
+    padding: 2px 8px;
+    background-color: rgba(34, 35, 38, 0.95);
+    border-width: 1px;
+    border-color: rgb(24, 24, 26);
+}
+.lab-status__line { color: rgb(196, 196, 196); font-size: 12px; white-space: normal; -unity-text-align: middle-center; }
+.lab-status__wait { color: rgb(210, 210, 210); }
+.lab-status__keys { color: rgb(176, 176, 176); }
 .lab-panel__content { flex-grow: 1; flex-shrink: 1; padding: 6px; }
 
 .lab-row { flex-direction: row; flex-wrap: wrap; align-items: center; }

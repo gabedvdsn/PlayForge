@@ -8,10 +8,12 @@ using UnityEngine.UIElements;
 namespace FarEmerald.PlayForge.Lab
 {
     /// <summary>
-    /// The lab's panels, UI Toolkit over the space: the library on the left, the selected in the middle, hidden
-    /// until something is, the mode on the right, and the log at the bottom; each collapses to a tab at its edge. Over the
-    /// space, each unit's bar. An asset dragged from the library and dropped on the space is the lab's to apply, cast or
-    /// give. Neutral panels, Unity's own controls, and a type's color in its icon alone.
+    /// The lab's panels, UI Toolkit over the space: the library on the left, the mode on the right with the selected over
+    /// it, shown as something is selected and set aside by its tab, and the log at the bottom; each other panel collapses to
+    /// a tab at its edge. The middle stays the space's. Over the space, each unit's bar, and a status at the top that clicks
+    /// go through: what a cast waits for, what's selected, whom the author controls, and the keys for what can be done now.
+    /// An asset dragged from the library and dropped on the space is the lab's to apply, cast or give. Neutral panels,
+    /// Unity's own controls, and a type's color in its icon alone.
     /// </summary>
     public class LabPanels : MonoBehaviour
     {
@@ -42,6 +44,12 @@ namespace FarEmerald.PlayForge.Lab
         private DropdownField teachChoice, giveChoice;
         private Slider distance, tilt, speed;
         private Button pause;
+        private Button modeToSelected;
+        private VisualElement status;
+        private Label statusWait, statusState, statusKeys;
+        // Whether the selected panel's tab set it aside for the lab's own under it, which a selection undoes
+        private bool selectedSetAside;
+        private bool choosingShown;
         private readonly Dictionary<LabUnit, (VisualElement root, VisualElement fill, Label line)> bars = new();
         private readonly List<ScriptableObject> entityChoices = new();
         private LabBottomPanel bottom;
@@ -110,11 +118,26 @@ namespace FarEmerald.PlayForge.Lab
             overlay.AddToClassList("lab-overlay");
             Root.Add(overlay);
 
+            // Over the space, at its top: what's waited on, what's selected and the keys, which clicks go through
+            status = new VisualElement { name = "Status", pickingMode = PickingMode.Ignore };
+            status.AddToClassList("lab-status");
+            Root.Add(status);
+            statusWait = StatusLine("StatusWait", "lab-status__wait");
+            statusState = StatusLine("StatusState", null);
+            statusKeys = StatusLine("StatusKeys", "lab-status__keys");
+
             library = Panel("Library", "lab-panel--left", "Library");
-            selected = Panel("Selected", "lab-panel--middle", "Selected");
             mode = Panel("Mode", "lab-panel--right", "Lab");
+            // The selected docks at the right, over the lab's own panel, so the middle stays the space's. It sat in the
+            // middle, up to more than half the screen's height, over what the author clicks
+            selected = Panel("Selected", "lab-panel--right", "Selected");
             log = Panel("Log", "lab-panel--bottom", "Log");
             Collapse(log, true);
+            // A tab on each of the two at the right brings the other forward. The selected one sets itself aside rather
+            // than collapse, as it lies over the lab's
+            HeaderButton(selected, "SelectedToLab", "Lab", "The lab's own panel, under this one; the selection stays", ShowLabPanel);
+            modeToSelected = HeaderButton(mode, "ModeToSelected", "Selected", "What's selected, over this panel", ShowSelectedPanel);
+            if (selected.Q<Button>(name: "SelectedCollapse") is { } selectedCollapse) selectedCollapse.style.display = DisplayStyle.None;
 
             BuildLibrary();
             BuildMode();
@@ -162,6 +185,42 @@ namespace FarEmerald.PlayForge.Lab
         }
 
         private static VisualElement Content(VisualElement panel) => panel.Q(name: $"{panel.name}Content");
+
+        // A button in a panel's header, before its collapse
+        private static Button HeaderButton(VisualElement panel, string buttonName, string text, string tip, Action click)
+        {
+            var header = panel.Q(name: $"{panel.name}Header");
+            var button = new Button(click) { name = buttonName, text = text, tooltip = tip };
+            button.AddToClassList("lab-panel__tab");
+            var collapse = panel.Q<Button>(name: $"{panel.name}Collapse");
+            header.Insert(collapse != null ? header.IndexOf(collapse) : header.childCount, button);
+            return button;
+        }
+
+        // A line of the status, hidden while it has nothing to say
+        private Label StatusLine(string lineName, string kind)
+        {
+            var line = new Label { name = lineName, pickingMode = PickingMode.Ignore };
+            line.AddToClassList("lab-status__line");
+            if (kind != null) line.AddToClassList(kind);
+            line.style.display = DisplayStyle.None;
+            status.Add(line);
+            return line;
+        }
+
+        /// <summary>Sets the selected panel aside, so the lab's own shows under it; the selection stays.</summary>
+        public void ShowLabPanel()
+        {
+            selectedSetAside = true;
+            DrawSelected();
+        }
+
+        /// <summary>Brings the selected panel back over the lab's, where something is selected, as each selection does.</summary>
+        public void ShowSelectedPanel()
+        {
+            selectedSetAside = false;
+            DrawSelected();
+        }
 
         /// <summary>Collapses a panel to the tab at its edge, or opens it.</summary>
         public void Collapse(VisualElement panel, bool collapsed)
@@ -276,6 +335,8 @@ namespace FarEmerald.PlayForge.Lab
             own.Add(followUnit);
             controlLine = new Label { name = "ControlLine" };
             controlLine.AddToClassList("lab-muted");
+            // Wrapped, as a line of the panel is: it ran past the panel's edge
+            controlLine.AddToClassList("lab-line");
             unitSection.Add(controlLine);
 
             battleSection = new VisualElement { name = "BattleSection" };
@@ -295,6 +356,7 @@ namespace FarEmerald.PlayForge.Lab
             fight.Add(new Button(() => lab?.ResetBattle()) { name = "ResetBattle", text = "Reset", tooltip = "Every bot back where it started, at full" });
             battleLine = new Label { name = "BattleLine" };
             battleLine.AddToClassList("lab-muted");
+            battleLine.AddToClassList("lab-line");
             battleSection.Add(battleLine);
 
             Heading(content, "Camera");
@@ -503,6 +565,8 @@ namespace FarEmerald.PlayForge.Lab
         private void Update()
         {
             if (Root == null || lab == null) return;
+            // A cast that starts or stops waiting for its target shows at once, not at the next redraw
+            bool choosing = lab.AnyChoosing();
             if (dirty)
             {
                 dirty = false;
@@ -516,7 +580,9 @@ namespace FarEmerald.PlayForge.Lab
                 DrawControlLine();
                 DrawLog();
                 FollowProject();
+                DrawStatus();
             }
+            else if (choosing != choosingShown) DrawStatus();
             DrawBars();
         }
 
@@ -533,6 +599,7 @@ namespace FarEmerald.PlayForge.Lab
             DrawBattleLine();
             DrawControlLine();
             DrawLog();
+            DrawStatus();
             if (lab.View)
             {
                 distance?.SetValueWithoutNotify(lab.View.Distance);
@@ -573,12 +640,58 @@ namespace FarEmerald.PlayForge.Lab
         {
             if (controlLine == null || lab == null) return;
             var unit = lab.ControlledUnit;
+            var controls = lab.Controls;
             controlLine.text = unit
-                ? $"You control {unit.name}: right-click to move or attack, Q W E R to cast, S to stop"
+                ? controls
+                    ? $"You control {unit.Name}: right-click to move or attack, {LabControls.KeysWords(controls.AbilityKeys)} to cast, "
+                      + $"{LabControls.KeyName(controls.StopKey)} to stop"
+                    : $"You control {unit.Name}"
                 : "No unit of your own: put one down, or take control of the one selected";
             takeControl?.SetEnabled(lab.SelectedUnit && lab.SelectedUnit != unit);
             releaseControl?.SetEnabled(unit);
             followUnit?.SetEnabled(unit);
+        }
+
+        // The status over the space: what a cast waits for and how to give it, the author's unit's first; what's selected,
+        // whom the author controls and the lab's time; and the keys for what can be done now, as the controls are set
+        private void DrawStatus()
+        {
+            if (status == null || lab == null) return;
+            choosingShown = lab.AnyChoosing();
+            var controls = lab.Controls;
+
+            string wait = null;
+            foreach (var unit in new[] { lab.ControlledUnit, lab.SelectedUnit, lab.Caster })
+            {
+                if (!unit || !unit.TryGetTargeting(out var ability)) continue;
+                string prompt = LabUnit.PromptOf(ability) ?? "Choose its target";
+                bool yours = unit == lab.ControlledUnit && controls;
+                string whose = unit == lab.Caster || yours ? "" : $"{unit.Name}'s ";
+                wait = $"{whose}{ability.GetName()}: {prompt}  ·  {(yours ? controls.CancelWords() : "Esc")} cancels";
+                break;
+            }
+            Show(statusWait, wait);
+
+            var state = new List<string>();
+            if (lab.SelectedUnit)
+                state.Add($"Selected: {lab.SelectedUnit.Name}, {lab.SelectedUnit.Side.Name}, level {lab.SelectedUnit.LevelOf(lab.SelectedUnit.Identity)}");
+            else if (lab.SelectedAsset) state.Add($"Selected: {LabAssets.NameOf(lab.SelectedAsset)}");
+            else state.Add("Nothing selected");
+            if (lab.ControlledUnit) state.Add($"You control {lab.ControlledUnit.Name}");
+            if (lab.Paused) state.Add("Paused");
+            Show(statusState, string.Join("  ·  ", state));
+
+            Show(statusKeys, lab.ControlledUnit && controls
+                ? controls.KeysLine()
+                : "Left-click: select  ·  Drag from the library onto the space  ·  Scroll: zoom  ·  Middle-drag: pan");
+        }
+
+        private static void Show(Label line, string text)
+        {
+            if (line == null) return;
+            bool any = !string.IsNullOrEmpty(text);
+            line.style.display = any ? DisplayStyle.Flex : DisplayStyle.None;
+            if (any && line.text != text) line.text = text;
         }
 
         // Who stands on each side, and who won
@@ -595,13 +708,18 @@ namespace FarEmerald.PlayForge.Lab
             }
         }
 
-        // The middle dock: the asset selected, level by level, or the unit, as it is now
+        // The selected panel: the asset selected, level by level, or the unit, as it is now; over the lab's own panel
+        // unless its tab set it aside, which a selection undoes
         private void DrawSelected()
         {
             if (selectedBody == null || lab == null) return;
             bool any = lab.SelectedUnit || lab.SelectedAsset;
-            selected.style.display = any ? DisplayStyle.Flex : DisplayStyle.None;
-            if (!any) return;
+            bool over = any && !selectedSetAside;
+            selected.style.display = over ? DisplayStyle.Flex : DisplayStyle.None;
+            // The lab's panel under it hides, so nothing of it shows through
+            mode.style.display = over ? DisplayStyle.None : DisplayStyle.Flex;
+            if (modeToSelected != null) modeToSelected.style.display = any && selectedSetAside ? DisplayStyle.Flex : DisplayStyle.None;
+            if (!any || selectedSetAside) return;
             selectedBody.Clear();
             if (lab.SelectedUnit) DrawUnit(lab.SelectedUnit);
             else DrawAsset(lab.SelectedAsset);
@@ -626,6 +744,12 @@ namespace FarEmerald.PlayForge.Lab
             var buttons = Row(selectedBody, "UnitButtons");
             buttons.Add(new Button(() => { lab.Select((LabUnit)null); }) { name = "Deselect", text = "Deselect" });
             buttons.Add(new Button(() => lab.RemoveUnit(unit)) { name = "RemoveUnit", text = "Remove" });
+            // Its control here too, as the lab's panel lies under this one
+            if (unit == lab.ControlledUnit)
+                buttons.Add(new Button(() => lab.ReleaseControl()) { name = "SelectedRelease", text = "Release", tooltip = "Let your unit go" });
+            else if (unit.Alive)
+                buttons.Add(new Button(() => lab.TakeControl(unit)) { name = "SelectedTakeControl", text = "Take control",
+                    tooltip = "Control this unit; a bot stops fighting until you let it go" });
 
             Heading(selectedBody, "Attributes");
             foreach (var line in LabSummary.AttributesOf(unit)) Line(selectedBody, line);

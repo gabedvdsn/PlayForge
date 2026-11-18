@@ -396,6 +396,60 @@ namespace FarEmerald.PlayForge.Lab
                 if (container != null && container.IsActive) abilities.Inject(container.Index, InterruptSequenceInjection.Instance);
         }
 
+        /// <summary>
+        /// The ability it's choosing a target for now, as a click-targeting task waits for a click: the first slot that
+        /// is. What a player's reach ring and a status line show.
+        /// </summary>
+        public bool TryGetTargeting(out Ability ability)
+        {
+            ability = null;
+            var abilities = Alive ? Gas.GetAbilitySystem() : null;
+            if (abilities == null) return false;
+            foreach (var container in abilities.Containers)
+            {
+                if (container?.Spec?.Base == null || !container.IsTargeting) continue;
+                ability = container.Spec.Base;
+                return true;
+            }
+            return false;
+        }
+
+        /// <summary>The words an ability's targeting asks the player with, as "Click a target", or null where it asks none.</summary>
+        public static string PromptOf(Ability ability) => ability?.Behaviour?.Targeting?.Prompt;
+
+        /// <summary>Ends each cast still choosing its target, as a right-click order does; a cast past it runs on.</summary>
+        public void CancelTargeting()
+        {
+            var abilities = Alive ? Gas.GetAbilitySystem() : null;
+            if (abilities == null) return;
+            foreach (var container in abilities.GetAbilityContainers())
+                if (container != null && container.IsTargeting) abilities.Inject(container.Index, InterruptSequenceInjection.Instance);
+        }
+
+        /// <summary>
+        /// How far an ability reaches from it, at its level of the ability: its Cast Range or another reach; else its
+        /// targeting's own range, as a Select Target In Range's; else its rules' Reach in the ability's Local Data, as a
+        /// bot reads it. 0 where it reaches anywhere. What a player's reach ring draws.
+        /// </summary>
+        public float Reach(Ability ability)
+        {
+            if (ability == null || Gas == null) return 0f;
+            if (ForgeReach.TryRead(Gas, ability, out float cast)) return cast;
+            if (ability.Behaviour?.Targeting is SelectGasTargetInRangeTask inRange) return ReadAtLevel(ability, inRange.MaxTargetRange);
+            if (Rules != null && Rules.ReachKey.IsValid && ability.TryGetLocalData(Rules.ReachKey, out var data)
+                && data.TryGet(out ScalableFloat number)) return ReadAtLevel(ability, number);
+            return 0f;
+        }
+
+        // A number at its level of the ability, where it knows it; else at its own level
+        private float ReadAtLevel(Ability ability, ScalableFloat number)
+        {
+            if (number == null) return 0f;
+            if (Gas.GetAbilitySystem() is { } abilities && abilities.TryGetAbilityContainer(ability, out var container) && container?.Spec != null)
+                return container.Spec.Read(number);
+            return number.Evaluate(NumberContext.Of((IGameplayAbilitySystem)Gas));
+        }
+
         /// <summary>The data an ability cast at another unit carries: the unit and its place.</summary>
         public ProcessDataPacket DataAt(LabUnit other)
         {

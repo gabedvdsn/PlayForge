@@ -5,7 +5,7 @@ using UnityEngine;
 namespace FarEmerald.PlayForge.Lab
 {
     /// <summary>
-    /// The middle dock's lines: an asset's numbers level by level, as "−80/−120/−160 Health",
+    /// The selected panel's lines: an asset's numbers level by level, as "−80/−120/−160 Health",
     /// and a unit's attributes and effects as they are now.
     /// </summary>
     public static class LabSummary

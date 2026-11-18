@@ -19,19 +19,22 @@ default material.
 
 - **Right-click** the ground to move. Right-click an enemy to attack it: the hero walks into range, then attacks.
 - **Q, W, E** cast the hero's abilities. An ability that needs a target waits for a **left-click** on an enemy, or on
-  the ground.
+  the ground: a line above the HUD says what it waits for, and a ring on the ground shows its reach. Another ability's
+  key casts that one instead, and a right-click order lets it go.
 - **1 to 6** use the items' abilities.
 - **S** stops. **Esc** cancels a cast that waits for its click.
 
 ## The panel and the HUD
 
 - **You:** your hero, its level with − and +, each ability's level, and your items, each with its level and Remove.
+- **Your Hero's Attributes:** each attribute as it is now, the part items add shown apart, as "STR 32 (+8)".
 - **Opponent:** an AI hero or the training dummy. For an AI hero: its hero, levels and difficulty. For the dummy: the
   damage it takes each second and its last blow.
 - **Items:** each item, with a button to give it to you or to your opponent.
 - **Fight:** Reset puts both back where they started, at full health.
-- **The HUD**, at the bottom: health and mana, the ability bar with cooldowns, your attributes with the part items add
-  shown apart, as "STR 32 (+8)", and the effects on you that are meant to be seen.
+- **The HUD**, centred at the bottom: your hero's health and mana and its ability bar with cooldowns, the effects on
+  you that are meant to be seen above it, and the keys under it. While a cast waits for its click, a line above it says
+  what it waits for. Only the HUD's box and the panel keep a click: the rest of the screen is the arena's.
 
 ## The heroes
 
