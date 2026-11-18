@@ -3,25 +3,6 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
-    /// <summary>How a target stands to its caster, as an Affiliation check takes it.</summary>
-    public enum ETargetAffiliation
-    {
-        /// <summary>An enemy: it shares none of the caster's sides.</summary>
-        Enemy,
-
-        /// <summary>An ally: it shares a side with the caster, the caster itself among them.</summary>
-        Ally,
-
-        /// <summary>An ally other than the caster itself.</summary>
-        OtherAlly,
-
-        /// <summary>The caster itself.</summary>
-        Self,
-
-        /// <summary>Anyone but the caster itself.</summary>
-        NotSelf
-    }
-
     /// <summary>Which way a Facing check looks.</summary>
     public enum EFacingCheck
     {
@@ -42,8 +23,9 @@ namespace FarEmerald.PlayForge
     [ForgeMenu(Name = "Affiliation", Description = "Activates only on a target that stands to its caster as it says: an enemy, an ally, itself, or anyone else.")]
     public class AffiliationValidation : IAbilityValidationRule
     {
-        [Tooltip("How the target must stand to its caster: an enemy shares none of its sides, an ally shares one")]
-        public ETargetAffiliation Target = ETargetAffiliation.Enemy;
+        [Tooltip("How the target must stand to its caster: an enemy shares none of its sides, an ally shares one, and the " +
+                 "caster is its own ally")]
+        public EAffiliationFilter Target = EAffiliationFilter.Enemies;
 
         public bool Validate(AbilityDataPacket data, Func<ITarget> getSource, out string error)
         {
@@ -55,17 +37,7 @@ namespace FarEmerald.PlayForge
                 return false;
             }
 
-            bool self = ReferenceEquals(target, caster);
-            var sides = caster.GetAffiliation();
-            bool passes = Target switch
-            {
-                ETargetAffiliation.Enemy => !self && ForgeEntities.Takes(EAffinityFilter.Enemies, sides, target),
-                ETargetAffiliation.Ally => self || ForgeEntities.Takes(EAffinityFilter.Allies, sides, target),
-                ETargetAffiliation.OtherAlly => !self && ForgeEntities.Takes(EAffinityFilter.Allies, sides, target),
-                ETargetAffiliation.Self => self,
-                ETargetAffiliation.NotSelf => !self,
-                _ => false
-            };
+            bool passes = ForgeEntities.Takes(Target, caster, caster.GetAffiliation(), target);
             error = passes ? null : $"{ValidationText.NameOf(target)} isn't {Wanted()}";
             return passes;
         }
@@ -73,10 +45,11 @@ namespace FarEmerald.PlayForge
         // What the target had to be, as a refusal says it
         private string Wanted() => Target switch
         {
-            ETargetAffiliation.Enemy => "an enemy of its caster",
-            ETargetAffiliation.Ally => "an ally of its caster",
-            ETargetAffiliation.OtherAlly => "another ally of its caster",
-            ETargetAffiliation.Self => "its caster itself",
+            EAffiliationFilter.Enemies => "an enemy of its caster",
+            EAffiliationFilter.Allies => "an ally of its caster",
+            EAffiliationFilter.OtherAllies => "another ally of its caster",
+            EAffiliationFilter.Self => "its caster itself",
+            EAffiliationFilter.Everyone => "anyone",
             _ => "anyone but its caster"
         };
 

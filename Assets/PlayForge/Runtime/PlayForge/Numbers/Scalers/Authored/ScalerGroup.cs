@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace FarEmerald.PlayForge
@@ -97,28 +98,11 @@ namespace FarEmerald.PlayForge
                 {
                     var member = Calculations[i];
                     if (member.RelativeOperation != EGroupOperation.Override || IsNone(member.Calculation)) continue;
-                    float read = NumberContext.ReadScaler(member.Calculation, in context);
-                    switch (OverrideMemberCollisionPolicy)
-                    {
-                        case EValueCollisionPolicy.UseFirst:
-                            return read;
-                        case EValueCollisionPolicy.UseMaximum:
-                            if (overriding == 0 || read > chosen) chosen = read;
-                            break;
-                        case EValueCollisionPolicy.UseMinimum:
-                            if (overriding == 0 || read < chosen) chosen = read;
-                            break;
-                        case EValueCollisionPolicy.UseAverage:
-                            chosen += read;
-                            break;
-                        default:
-                            chosen = read;
-                            break;
-                    }
-                    overriding++;
+                    chosen = ValueCollision.Fold(OverrideMemberCollisionPolicy, chosen, NumberContext.ReadScaler(member.Calculation, in context), overriding++);
+                    // The first stands, and those after it go unread
+                    if (OverrideMemberCollisionPolicy == EValueCollisionPolicy.UseFirst) break;
                 }
-                if (overriding > 0)
-                    return OverrideMemberCollisionPolicy == EValueCollisionPolicy.UseAverage ? chosen / overriding : chosen;
+                if (overriding > 0) return ValueCollision.Settle(OverrideMemberCollisionPolicy, chosen, overriding);
             }
 
             float sum = 0f;
@@ -222,5 +206,54 @@ namespace FarEmerald.PlayForge
 
         [Tooltip("Ignore all overriding member values")]
         Ignore
+    }
+
+    /// <summary>
+    /// How values that each claim one result settle by a collision policy: the highest, the lowest, their average, the
+    /// first or the last. The one rule a Group's overriding members, a cached Group's, a cached magnitude group's and an
+    /// attribute set's colliding elements settle by. Folded a value at a time, so it allocates nothing.
+    /// </summary>
+    internal static class ValueCollision
+    {
+        /// <summary>
+        /// What's chosen with the next value folded in, the index-th, from 0: the first is taken as it is; an average
+        /// sums, which <see cref="Settle(EValueCollisionPolicy, float, int)"/> divides; First and Ignore keep the first.
+        /// </summary>
+        public static float Fold(EValueCollisionPolicy policy, float chosen, float next, int index) => index == 0 ? next : policy switch
+        {
+            EValueCollisionPolicy.UseMaximum => next > chosen ? next : chosen,
+            EValueCollisionPolicy.UseMinimum => next < chosen ? next : chosen,
+            EValueCollisionPolicy.UseAverage => chosen + next,
+            EValueCollisionPolicy.UseLast => next,
+            _ => chosen,
+        };
+
+        /// <summary>What's chosen of the values folded, as many as count: an average's sum divided by its count.</summary>
+        public static float Settle(EValueCollisionPolicy policy, float chosen, int count) =>
+            policy == EValueCollisionPolicy.UseAverage && count > 0 ? chosen / count : chosen;
+
+        /// <summary>The same for a pair of values, Current and Base each folded on its own.</summary>
+        public static AttributeValue Fold(EValueCollisionPolicy policy, AttributeValue chosen, AttributeValue next, int index) =>
+            new(Fold(policy, chosen.CurrentValue, next.CurrentValue, index), Fold(policy, chosen.BaseValue, next.BaseValue, index));
+
+        /// <summary>The same for a pair of values, Current and Base each settled on its own.</summary>
+        public static AttributeValue Settle(EValueCollisionPolicy policy, AttributeValue chosen, int count) =>
+            new(Settle(policy, chosen.CurrentValue, count), Settle(policy, chosen.BaseValue, count));
+
+        /// <summary>
+        /// Which of the items one is picked, by each one's value: the highest, the lowest, the first on a tie, or the
+        /// last; the first for First, Ignore and an average, which picks none. -1 for none.
+        /// </summary>
+        public static int Pick<T>(EValueCollisionPolicy policy, IList<T> items, Func<T, float> valueOf)
+        {
+            if (items == null || items.Count == 0) return -1;
+            return policy switch
+            {
+                EValueCollisionPolicy.UseMaximum => items.IndexMax(valueOf),
+                EValueCollisionPolicy.UseMinimum => items.IndexMin(valueOf),
+                EValueCollisionPolicy.UseLast => items.Count - 1,
+                _ => 0,
+            };
+        }
     }
 }

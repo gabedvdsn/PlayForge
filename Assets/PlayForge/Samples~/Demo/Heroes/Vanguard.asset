@@ -16,57 +16,13 @@ MonoBehaviour:
   - Key:
       Name: Demo.AttackRange
       DisplayName: Demo.AttackRange
-    Type: 5
-    stringValue: 
-    boolValue: 0
-    intValue:
-      Magnitude: 0
-      RealMagnitude: 2
-      Scaler:
-        rid: -2
-      Rounding: 0
-    floatValue:
-      Magnitude: 2.4
-      RealMagnitude: 2
-      Scaler:
-        rid: -2
-    objectValue: {fileID: 0}
-    monoBehaviourValue: {fileID: 0}
-    scriptableObjectValue: {fileID: 0}
-    tagValue:
-      Name: 
-      DisplayName: 
-    attributeValue: {fileID: 0}
-    effectValue: {fileID: 0}
-    abilityValue: {fileID: 0}
-    entityValue: {fileID: 0}
+    Value:
+      rid: 2403794261189067146
   - Key:
       Name: Demo.CastOrder
       DisplayName: Demo.CastOrder
-    Type: 3
-    stringValue: Q E W
-    boolValue: 0
-    intValue:
-      Magnitude: 0
-      RealMagnitude: 2
-      Scaler:
-        rid: -2
-      Rounding: 0
-    floatValue:
-      Magnitude: 0
-      RealMagnitude: 2
-      Scaler:
-        rid: -2
-    objectValue: {fileID: 0}
-    monoBehaviourValue: {fileID: 0}
-    scriptableObjectValue: {fileID: 0}
-    tagValue:
-      Name: 
-      DisplayName: 
-    attributeValue: {fileID: 0}
-    effectValue: {fileID: 0}
-    abilityValue: {fileID: 0}
-    entityValue: {fileID: 0}
+    Value:
+      rid: 2403794261189067147
   _template: {fileID: 11400000, guid: dcb9af90ea4de394ea587997045b0622, type: 2}
   _templateOverrides:
   - AttributeSet
@@ -187,3 +143,15 @@ MonoBehaviour:
         Event:
           Name: 
           DisplayName: 
+    - rid: 2403794261189067146
+      type: {class: LocalFloat, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        Value:
+          Magnitude: 2.4
+          RealMagnitude: 2
+          Scaler:
+            rid: -2
+    - rid: 2403794261189067147
+      type: {class: LocalString, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        Value: Q E W

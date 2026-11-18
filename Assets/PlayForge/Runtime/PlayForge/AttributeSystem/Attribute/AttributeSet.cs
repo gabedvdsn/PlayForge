@@ -432,39 +432,11 @@ namespace FarEmerald.PlayForge
                     system.ProvideAttribute(attribute, blueprint);
                     break;
                 }
-                case EValueCollisionPolicy.UseMaximum:
-                {
-                    int idx = defaults.IndexMax(mav => mav.RootValue.BaseValue);
-                    system.ProvideAttribute(attribute, defaults[idx]);
-                    break;
-                }
-                case EValueCollisionPolicy.UseMinimum:
-                {
-                    int idx = defaults.IndexMin(mav => mav.RootValue.BaseValue);
-                    system.ProvideAttribute(attribute, defaults[idx]);
-                    break;
-                }
-                case EValueCollisionPolicy.UseFirst:
-                {
-                    var bp = defaults.First();
-                    system.ProvideAttribute(attribute, bp);
-                    break;
-                }
-                case EValueCollisionPolicy.UseLast:
-                {
-                    var bp = defaults.Last();
-                    system.ProvideAttribute(attribute, bp);
-                    break;
-                }
-                // The values that would override the first are passed by, as a scaler group passes its overrides by, so
-                // the first stands. It fell through to the default and threw
-                case EValueCollisionPolicy.Ignore:
-                {
-                    system.ProvideAttribute(attribute, defaults.First());
-                    break;
-                }
+                // The element the policy picks, by its base value: the highest, the lowest, the first or the last. Ignore
+                // passes the others by, as a scaler group passes its overrides by, so the first stands
                 default:
-                    throw new ArgumentOutOfRangeException(nameof(resolution), resolution, null);
+                    system.ProvideAttribute(attribute, defaults[ValueCollision.Pick(resolution, defaults, element => element.RootValue.BaseValue)]);
+                    break;
             }
         }
     }

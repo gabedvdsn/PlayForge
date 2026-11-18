@@ -186,8 +186,9 @@ passes it in, and one effect serves every strength.
     range is measured from: the caster, the activation's target (as an AI hands it, or a task before it in a
     Composite picks it), or its point; **Flat**, on by default, measures along the ground, and off, a sphere. **Use
     Physics** finds entities with physics instead, by collider on its **Detection Layers**, which show under it alone,
-    as it did, and a runtime entity by its position. Auto Target By Affinity's **Include Self** takes its caster where
-    it's of the sides it takes.
+    as it did, and a runtime entity by its position. **Takes** says whom each takes by how each stands to its caster:
+    its **Enemies**, its **Allies**, itself among them, its **Other Allies**, **Self**, **All But Self** or **Everyone**;
+    Auto Target takes All But Self to start, and Auto Target By Affinity its Enemies.
   - A targeting task's numbers, as its **Range**, its **Max Targets**, a pointer task's **Max Distance** and an
     attribute condition's value, are numbers that can scale by level or read an attribute, read as its activation
     starts, at its ability's level. A pointer's **Mouse Button** picks one of three, so it stays a choice.
@@ -230,8 +231,8 @@ This section is what the ability does once it has started.
     caster's, or the Caster's, the Game's, Unscaled, which runs while the game is paused, or Scaled, a pace of its own;
     the ability's other tasks keep the caster's. A stage that holds a critical task is critical.
     PlayForge's own tasks, by category: **Effects**, Apply Effects, Apply/Remove Effects, **Area Effect** (its
-    effects on each within its radius of its caster, its target or its point, of the sides it takes, by position on
-    either hub or with physics) and **Apply To Caster**; **Asset Loaders**, the Set tasks; **Process**, Create Mono
+    effects on each within its radius of its caster, its target or its point, its caster where the activation has
+    neither, of those it takes, by position on either hub or with physics) and **Apply To Caster**; **Asset Loaders**, the Set tasks; **Process**, Create Mono
     Process, Run Process and Disjoint; **Sequence**, Run Sequence and Inject; **Waits**, Delay, Channel, and **Wait For
     Event**, **Wait For Tag** (gained or lost) and **Wait For Attribute** (crossing a value), on its caster or its
     target, each with a **Timeout** and a **Record As** for a later stage's Condition, an event waited for being sent
@@ -296,10 +297,15 @@ The check types, by the list that offers them:
     passes.
   - **Holds Item**: passes when the checked entity holds **Item**, or, with **Equipped**, wears it. Naming none, it
     passes.
+  - **Condition**: passes while its condition, **When**, holds, as an effect's requirements and an On Hit read theirs:
+    a tag, an attribute, a level, a comparison of numbers, or a condition of your own (see
+    [SCALERS.md](SCALERS.md)). It's read against the activation, with the checked entity as its target, so among the
+    Caster Checks its target is the caster. With none, it passes.
 - Target Checks:
-  - **Affiliation**: passes when the target stands to its caster as **Target** says. An **Enemy** shares none of the
-    caster's sides and an **Ally** one, the caster itself among them; **Other Ally** leaves the caster out, **Self**
-    is the caster alone, and **Not Self** anyone else. A caster with no sides takes anyone as either.
+  - **Affiliation**: passes when the target stands to its caster as **Target** says, as a search's Takes does. Its
+    **Enemies** share none of the caster's sides and its **Allies** one, the caster itself among them; **Other Allies**
+    leaves the caster out, **Self** is the caster alone, **All But Self** anyone else, and **Everyone** anyone. A
+    caster with no sides takes anyone as either.
   - **Line of Sight**: passes when nothing on the **Blocking** layers blocks a line from the caster to its target, run
     **Height** above each, so the ground under them doesn't. 3D physics colliders block it; triggers and the two ends'
     own colliders don't.
@@ -461,9 +467,12 @@ Lifesteal worker names as its Share, as a passive applies it to its caster, whic
 Infinite effect of +0.15 Lifesteal heals its wearer 15% of each blow it deals. Its Lifesteal list is gone.
 ## Local Data
 
-Local Data is a list of named values stored on the asset. Each row has a **Key** (a tag), a **Type**, and a value of
-that type: String, Int, Float, Bool, Tag, Attribute, Effect, Ability, Entity, Object, ScriptableObject or MonoBehaviour.
-Object fields take project assets, not scene objects.
+Local Data is a list of named values stored on the asset. Each row has a **Key** (a tag) and a value of a kind: Float,
+Int, String, Bool, Tag, Attribute, Effect, Ability, Entity, Object, MonoBehaviour or ScriptableObject, or a kind of your
+own, a `[Serializable]` class made from `LocalDataValue<T>`, as a point or a colour, which the row's kinds offer beside
+PlayForge's. A row saves its own value alone. Object fields take project assets, not scene objects. Code reads a value by
+its type, `data.TryGet(out float range)` or `data.TryGet(out MyPoint point)`, and a number, a Float or an Int, which can
+scale, with `data.Value.TryReadNumber(context, out float number)`.
 
 Code reads a value with `ability.TryGetLocalData(key, out var data)`. The first row with that key wins. A tag check of
 your own, extending `AbstractTagValidationRule`, reads its tag's value with `GetValue`: the tag's weight on the entity

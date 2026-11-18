@@ -16,57 +16,13 @@ MonoBehaviour:
   - Key:
       Name: Demo.CastWhen
       DisplayName: Demo.CastWhen
-    Type: 3
-    stringValue: InRange
-    boolValue: 0
-    intValue:
-      Magnitude: 0
-      RealMagnitude: 2
-      Scaler:
-        rid: -2
-      Rounding: 0
-    floatValue:
-      Magnitude: 0
-      RealMagnitude: 2
-      Scaler:
-        rid: -2
-    objectValue: {fileID: 0}
-    monoBehaviourValue: {fileID: 0}
-    scriptableObjectValue: {fileID: 0}
-    tagValue:
-      Name: 
-      DisplayName: 
-    attributeValue: {fileID: 0}
-    effectValue: {fileID: 0}
-    abilityValue: {fileID: 0}
-    entityValue: {fileID: 0}
+    Value:
+      rid: 2403794261189067252
   - Key:
       Name: Demo.Reach
       DisplayName: Demo.Reach
-    Type: 5
-    stringValue: 
-    boolValue: 0
-    intValue:
-      Magnitude: 0
-      RealMagnitude: 2
-      Scaler:
-        rid: -2
-      Rounding: 0
-    floatValue:
-      Magnitude: 9
-      RealMagnitude: 2
-      Scaler:
-        rid: -2
-    objectValue: {fileID: 0}
-    monoBehaviourValue: {fileID: 0}
-    scriptableObjectValue: {fileID: 0}
-    tagValue:
-      Name: 
-      DisplayName: 
-    attributeValue: {fileID: 0}
-    effectValue: {fileID: 0}
-    abilityValue: {fileID: 0}
-    entityValue: {fileID: 0}
+    Value:
+      rid: 2403794261189067253
   _template: {fileID: 0}
   _templateOverrides: []
   _templateListSnapshots: []
@@ -250,3 +206,15 @@ MonoBehaviour:
         InternalMonoProcesses:
         - {fileID: 7704633089071360104, guid: 2c2581338df5dbe4da0772bcb9560bd1, type: 3}
         SpawnAt: 2
+    - rid: 2403794261189067252
+      type: {class: LocalString, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        Value: InRange
+    - rid: 2403794261189067253
+      type: {class: LocalFloat, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        Value:
+          Magnitude: 9
+          RealMagnitude: 2
+          Scaler:
+            rid: -2

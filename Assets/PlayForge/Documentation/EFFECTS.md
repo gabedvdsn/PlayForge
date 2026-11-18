@@ -394,7 +394,7 @@ enemies within 300", which the Components section's line and The Forge's summary
 
 An **Aura** component holds an effect on those near the one it's on, while it lasts. Items, abilities and
 entities have one too, each its own kind. Each has the **Effect** it holds, a **Radius** from its holder, read at each check, **Flat**,
-whom it **Takes** from its holder's sides, its holder too where **Include Holder** says, and an **Interval**, 0.25 s by
+whom it **Takes** by how each stands to its holder, its **Allies**, itself among them, to start, and an **Interval**, 0.25 s by
 default, at which it checks who's near, by its holder's own time. It puts its effect on each that comes near, from an
 origin of its own, and takes it off as they leave, die or end, as its holder dies or ends, or as the aura goes; an
 effect of its that ends on its own, a durational one, goes on again at its next check. An Infinite effect holds as long
@@ -407,8 +407,9 @@ it's equipped, an entity's as it registers. An entity's auras are its `AuraSet`,
 
 An **Area** component lands the effect on those near its target as it lands, as Storm Hammer stuns everyone near
 the one it hits: each within its **Radius** of the target, read as it lands, along the ground unless **Flat** is off;
-of the sides it **Takes** from its caster's (enemies, allies, or both; a caster with no sides takes anyone); its caster
-too where **Include Caster** says; and at most **Max Targets** besides the target, the nearest first, or every one at 0.
+of those it **Takes** by how each stands to its caster: its **Enemies**, its **Allies**, itself among them, its **Other
+Allies**, **Self**, **All But Self** or **Everyone** (a caster with no sides takes everyone as its allies and enemies);
+and at most **Max Targets** besides the target, the nearest first, or every one at 0.
 Each is found by its position, with no collider. Each takes the effect from the same origin, so its modifiers and its
 chance to apply are its own, and an effect that lands by an area spreads no further. A Radius of 0 is no area. It lands
 on its target and those it takes in the project's resolve order, its target among them, unless its **Use Resolve
@@ -447,7 +448,7 @@ A **Spread** component spreads its effect, or the **Effect** it names, from the 
 moments its **When** names, any of them: as the effect **Land**s, each **Tick**, as it comes off (**End**), however it
 ends, or as the one it's on dies (**Death**), as a plague jumps from its victim to the enemies near it. It takes
 each within its **Radius** of the one it's on, read at the effect's level, along the ground unless **Flat** is off; of
-the sides it **Takes** from its caster's; its caster too where **Include Caster** says; at most **Max Targets** each
+those it **Takes** by how each stands to its caster, its Enemies to start, as an Area's; at most **Max Targets** each
 time, the nearest first, or every one at 0; and passes over those who have the effect it spreads already, unless **Skip
 Holders** is off. Each takes the effect from the same origin, its caster's, so its modifiers and its chance to land
 are its own, in the project's resolve order unless **Use Resolve Order** is off. A landing it made spreads on only so
@@ -544,9 +545,12 @@ adds one. Two of an item modify twice.
 
 ## Local Data
 
-Local Data is a list of named values stored on the asset. Each row has a **Key** (a tag), a **Type**, and a value of
-that type: String, Int, Float, Bool, Tag, Attribute, Effect, Ability, Entity, Object, ScriptableObject or MonoBehaviour.
-Object fields take project assets, not scene objects.
+Local Data is a list of named values stored on the asset. Each row has a **Key** (a tag) and a value of a kind: Float,
+Int, String, Bool, Tag, Attribute, Effect, Ability, Entity, Object, MonoBehaviour or ScriptableObject, or a kind of your
+own, a `[Serializable]` class made from `LocalDataValue<T>`, as a point or a colour, which the row's kinds offer beside
+PlayForge's. A row saves its own value alone. Object fields take project assets, not scene objects. Code reads a value by
+its type, `data.TryGet(out float range)` or `data.TryGet(out MyPoint point)`, and a number, a Float or an Int, which can
+scale, with `data.Value.TryReadNumber(context, out float number)`.
 
 PlayForge doesn't read an effect's Local Data itself. Your code and workers can, with
 `effect.TryGetLocalData(key, out var data)`. The first row with that key wins.

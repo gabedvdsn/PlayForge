@@ -49,18 +49,19 @@ namespace FarEmerald.PlayForge
         
         protected virtual bool HasTriggered(ILocalDataUser system)
         {
-            return system.TryGetLocalData(MyKey, out var _hasTriggered) && _hasTriggered.boolValue;
+            return system.TryGetLocalData(MyKey, out var data) && data.TryGet(out bool triggered) && triggered;
         }
 
         protected virtual void SetTriggered(ILocalDataUser system)
         {
-            system.SetLocalData(MyKey, new DataWrapper(){ boolValue = true });
+            system.SetLocalData(MyKey, new DataWrapper(MyKey, new LocalBool { Value = true }));
         }
 
         protected virtual void ResetTriggered(ILocalDataUser system)
         {
             if (!system.TryGetLocalData(MyKey, out var data)) return;
-            data.boolValue = false;
+            if (data.Value is LocalBool triggered) triggered.Value = false;
+            else data.Value = new LocalBool();
         }
 
         /// <summary>
@@ -254,22 +255,26 @@ namespace FarEmerald.PlayForge
         private bool TryGetSide(ILocalDataUser system, out bool above)
         {
             above = false;
-            if (!system.TryGetLocalData(SideKey, out var data) || data.intValue.Evaluate(NumberContext.Of(system as IGameplayAbilitySystem)) == 0) return false;
-            above = data.intValue.Evaluate(NumberContext.Of(system as IGameplayAbilitySystem)) == 2;
+            if (!system.TryGetLocalData(SideKey, out var data) || !data.TryGet(out ScalableInt held)) return false;
+            int side = held.Evaluate(NumberContext.Of(system as IGameplayAbilitySystem));
+            if (side == 0) return false;
+            above = side == 2;
             return true;
         }
 
         private void SetSide(ILocalDataUser system, bool above)
         {
-            if (system.TryGetLocalData(SideKey, out var data)) data.intValue = above ? 2 : 1;
-            else system.SetLocalData(SideKey, new DataWrapper { intValue = above ? 2 : 1 });
+            int side = above ? 2 : 1;
+            if (!system.TryGetLocalData(SideKey, out var data)) system.SetLocalData(SideKey, new DataWrapper(SideKey, new LocalInt { Value = side }));
+            else if (data.Value is LocalInt held) held.Value = side;
+            else data.Value = new LocalInt { Value = side };
         }
 
         /// <summary>Ready to fire again, its side forgotten, so a revive's restoring isn't a crossing.</summary>
         public override void Rearm(ILocalDataUser system)
         {
             base.Rearm(system);
-            if (system.TryGetLocalData(SideKey, out var data)) data.intValue = 0;
+            if (system.TryGetLocalData(SideKey, out var data) && data.Value is LocalInt held) held.Value = 0;
         }
     }
     

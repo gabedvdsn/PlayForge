@@ -37,11 +37,8 @@ namespace FarEmerald.PlayForge
         [Tooltip("Where its middle is: its caster, its activation's target, or its activation's point")]
         public EAreaCentre Around = EAreaCentre.Target;
 
-        [Tooltip("Whom it reaches, by side against its caster's")]
-        public EAffinityFilter Takes = EAffinityFilter.Enemies;
-
-        [Tooltip("Its caster too, where the area reaches it and takes its side")]
-        public bool IncludeCaster;
+        [Tooltip("Whom it takes, by how each stands to its caster: its enemies, its allies, its other allies, itself, everyone else or everyone. A caster with no sides takes everyone as its allies and enemies")]
+        public EAffiliationFilter Takes = EAffiliationFilter.Enemies;
 
         [Tooltip("Measures along the ground, leaving height out; off, a sphere")]
         public bool Flat = true;
@@ -63,22 +60,23 @@ namespace FarEmerald.PlayForge
         {
             var caster = data.EffectOrigin?.GetSource();
             if (caster == null || Effects == null || Effects.Count == 0) return UniTask.CompletedTask;
+            // Its target or its point where the activation has one, else its caster, as its centre's choice says
             Vector3? centre = Around switch
             {
-                EAreaCentre.Caster => caster.GetTargetingPacket()?.position,
-                EAreaCentre.Point => data.TryGet(Tags.POSITION, EDataTarget.Primary, out Vector3 point) ? point : null,
-                _ => data.GetTargetingPacket(Tags.TARGET, out var packet, autoInterrupt: false) && packet != null ? packet.position : null,
+                EAreaCentre.Point when data.TryGet(Tags.POSITION, EDataTarget.Primary, out Vector3 point) => point,
+                EAreaCentre.Target when data.GetTargetingPacket(Tags.TARGET, out var packet, autoInterrupt: false) && packet != null => packet.position,
+                _ => caster.GetTargetingPacket()?.position,
             };
             if (!centre.HasValue) return UniTask.CompletedTask;
 
             float radius = Read(Radius, data);
             var found = new List<ITarget>();
-            if (UsePhysics) ForgeEntities.Around(centre, radius, DetectionLayers, caster, IncludeCaster, found);
-            else ForgeEntities.Within(centre.Value, radius, Flat, found, caster, IncludeCaster);
+            if (UsePhysics) ForgeEntities.Around(centre, radius, DetectionLayers, caster, true, found);
+            else ForgeEntities.Within(centre.Value, radius, Flat, found, caster);
             var sides = data.EffectOrigin.GetAffiliation();
             foreach (var target in found)
             {
-                if (target == null || target.IsDead || !ForgeEntities.Takes(Takes, sides, target)) continue;
+                if (target == null || target.IsDead || !ForgeEntities.Takes(Takes, caster, sides, target)) continue;
                 foreach (var effect in Effects) ApplyTo(data, target, effect);
             }
             return UniTask.CompletedTask;

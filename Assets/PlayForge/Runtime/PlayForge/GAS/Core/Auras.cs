@@ -22,11 +22,9 @@ namespace FarEmerald.PlayForge
         [Tooltip("Measures along the ground, leaving height out; off, a sphere")]
         public bool Flat = true;
 
-        [Tooltip("Whom it takes, from its holder's sides: allies, enemies, or both. A holder with no sides takes anyone")]
-        public EAffinityFilter Takes = EAffinityFilter.Allies;
-
-        [Tooltip("Its holder too, where it takes the holder's side")]
-        public bool IncludeHolder = true;
+        [Tooltip("Whom it takes, by how each stands to its holder: its allies, its other allies, its enemies, itself, everyone " +
+                 "else or everyone. A holder with no sides takes everyone as its allies and enemies")]
+        public EAffiliationFilter Takes = EAffiliationFilter.Allies;
 
         [Tooltip("How often it checks who's near, in seconds of its holder's time, read at its holder's level; 0, every step")]
         [NumberMin(0f)] public ScalableFloat Interval = 0.25f;
@@ -66,7 +64,7 @@ namespace FarEmerald.PlayForge
     public sealed class AuraEffectComponent : AbstractEffectComponent, IAuraComponent
     {
         /// <summary>What it does, in one line.</summary>
-        public override string Describe() => $"{NameOf(Aura?.Effect)} on {Whom(Aura?.Takes ?? EAffinityFilter.Allies)} within {NumberText.Of(Aura?.Radius)}";
+        public override string Describe() => $"{NameOf(Aura?.Effect)} on {Whom(Aura?.Takes ?? EAffiliationFilter.Allies)} within {NumberText.Of(Aura?.Radius)}";
 
         public AuraEntry Aura = new();
         AuraEntry IAuraComponent.Aura => Aura;
@@ -82,7 +80,7 @@ namespace FarEmerald.PlayForge
     public sealed class AuraAbilityComponent : AbstractAbilityComponent, IAuraComponent
     {
         /// <summary>What it does, in one line.</summary>
-        public override string Describe() => $"{NameOf(Aura?.Effect)} on {Whom(Aura?.Takes ?? EAffinityFilter.Allies)} within {NumberText.Of(Aura?.Radius)}";
+        public override string Describe() => $"{NameOf(Aura?.Effect)} on {Whom(Aura?.Takes ?? EAffiliationFilter.Allies)} within {NumberText.Of(Aura?.Radius)}";
 
         public AuraEntry Aura = new();
         AuraEntry IAuraComponent.Aura => Aura;
@@ -98,7 +96,7 @@ namespace FarEmerald.PlayForge
     public sealed class AuraItemComponent : AbstractItemComponent, IAuraComponent
     {
         /// <summary>What it does, in one line.</summary>
-        public override string Describe() => $"{NameOf(Aura?.Effect)} on {Whom(Aura?.Takes ?? EAffinityFilter.Allies)} within {NumberText.Of(Aura?.Radius)}";
+        public override string Describe() => $"{NameOf(Aura?.Effect)} on {Whom(Aura?.Takes ?? EAffiliationFilter.Allies)} within {NumberText.Of(Aura?.Radius)}";
 
         public AuraEntry Aura = new();
         AuraEntry IAuraComponent.Aura => Aura;
@@ -114,7 +112,7 @@ namespace FarEmerald.PlayForge
     public sealed class AuraEntityComponent : AbstractEntityComponent, IAuraComponent
     {
         /// <summary>What it does, in one line.</summary>
-        public override string Describe() => $"{NameOf(Aura?.Effect)} on {Whom(Aura?.Takes ?? EAffinityFilter.Allies)} within {NumberText.Of(Aura?.Radius)}";
+        public override string Describe() => $"{NameOf(Aura?.Effect)} on {Whom(Aura?.Takes ?? EAffiliationFilter.Allies)} within {NumberText.Of(Aura?.Radius)}";
 
         public AuraEntry Aura = new();
         AuraEntry IAuraComponent.Aura => Aura;
@@ -204,10 +202,10 @@ namespace FarEmerald.PlayForge
             if (!holderDead && here != null && entry.Effect != null)
             {
                 float radius = entry.Radius?.Evaluate(NumberContext.Of(holder)) ?? 0f;
-                if (radius > 0f) ForgeEntities.Within(here.position, radius, entry.Flat, near, holder, entry.IncludeHolder);
+                if (radius > 0f) ForgeEntities.Within(here.position, radius, entry.Flat, near, holder);
                 var sides = (holder as ITarget)?.GetAffiliation();
                 for (int i = near.Count - 1; i >= 0; i--)
-                    if (near[i].IsDead || !ForgeEntities.Takes(entry.Takes, sides, near[i])) near.RemoveAt(i);
+                    if (near[i].IsDead || !ForgeEntities.Takes(entry.Takes, holder, sides, near[i])) near.RemoveAt(i);
             }
 
             for (int i = run.Held.Count - 1; i >= 0; i--)

@@ -270,8 +270,9 @@ namespace FarEmerald.PlayForge.Lab
 
         /// <summary>A float its entity's Local Data holds, a number that can scale, read at its own level, or the fallback.</summary>
         public float LocalFloat(Tag key, float fallback) =>
-            Gas != null && key.IsValid && Gas.TryGetLocalData(key, out var data) && data.floatValue != null
-                ? data.floatValue.Evaluate(NumberContext.Of((IGameplayAbilitySystem)Gas))
+            Gas != null && key.IsValid && Gas.TryGetLocalData(key, out var data) && data.Value != null
+                       && data.Value.TryReadNumber(NumberContext.Of((IGameplayAbilitySystem)Gas), out float number)
+                ? number
                 : fallback;
 
         /// <summary>

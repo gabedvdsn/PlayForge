@@ -21,8 +21,8 @@ namespace FarEmerald.PlayForge
     [ForgeMenu("Automatic", Description = "Targets the entities in range of an affiliation, as the nearest ally to heal or every enemy in reach.")]
     public class AutoTargetByAffinityTask : AbstractGasTargetingAbilityTask
     {
-        [Tooltip("Which affiliations to include relative to the caster")]
-        public EAffinityFilter AffinityFilter = EAffinityFilter.Enemies;
+        [Tooltip("Whom it takes, by how each stands to its caster: its enemies, its allies, its other allies, itself, everyone else or everyone. A caster with no sides takes everyone as its allies and enemies")]
+        public EAffiliationFilter Takes = EAffiliationFilter.Enemies;
 
         [Tooltip("How targets are selected and sorted")]
         public EAutoTargetMode Mode = EAutoTargetMode.Nearest;
@@ -52,13 +52,10 @@ namespace FarEmerald.PlayForge
                  "on either hub is found by its position, with no collider needed")]
         public bool UsePhysics;
 
-        [Tooltip("Whether the caster is a candidate, where it's of the sides it takes")]
-        public bool IncludeSelf;
-
         [Tooltip("When true, dead targets are excluded")]
         public bool ExcludeDead = true;
 
-        public override string Description => $"Auto-target {AffinityFilter} ({Mode})";
+        public override string Description => $"Auto-target {Takes} ({Mode})";
 
         public override UniTask Activate(AbilityDataPacket data, CancellationToken token)
         {
@@ -71,7 +68,7 @@ namespace FarEmerald.PlayForge
             // Measured from the caster, the activation's target or its point
             var centre = CentreOf(data, origin);
             var candidates = GatherCandidates(centre, owner, RangeFor(data));
-            var filtered = FilterByAffinity(candidates, ownerAffiliation);
+            var filtered = FilterByAffinity(candidates, owner, ownerAffiliation);
             var valid = FilterValid(filtered);
             var sorted = SortCandidates(valid, centre);
             var selected = SelectTargets(sorted, Read(MaxTargets, data));
@@ -92,10 +89,10 @@ namespace FarEmerald.PlayForge
         private List<ITarget> GatherCandidates(Vector3? centre, ISource owner, float range)
         {
             // Every live entity, on both hubs, by its position, with no collider needed; physics where it asks, on its
-            // layers. Its caster where it asks: it was always left out
+            // layers. Its caster among them, which its filter takes or leaves
             var results = new List<ITarget>();
-            if (UsePhysics) ForgeEntities.Around(centre, range, DetectionLayers, owner, IncludeSelf, results);
-            else ForgeEntities.Within(centre ?? Vector3.zero, centre.HasValue ? range : 0f, Flat, results, owner, IncludeSelf);
+            if (UsePhysics) ForgeEntities.Around(centre, range, DetectionLayers, owner, true, results);
+            else ForgeEntities.Within(centre ?? Vector3.zero, centre.HasValue ? range : 0f, Flat, results, owner);
             return results;
         }
 
@@ -112,29 +109,12 @@ namespace FarEmerald.PlayForge
             _ => caster?.position,
         };
 
-        private List<ITarget> FilterByAffinity(List<ITarget> candidates, List<Tag> ownerAffiliation)
+        // Those it takes, by how each stands to its caster
+        private List<ITarget> FilterByAffinity(List<ITarget> candidates, ISource owner, List<Tag> ownerAffiliation)
         {
-            if (ownerAffiliation == null || ownerAffiliation.Count == 0)
-                return candidates; // No affiliation data — can't filter
-
             var results = new List<ITarget>();
-
             foreach (var target in candidates)
-            {
-                var targetAffiliation = target.GetAffiliation();
-                bool sharesAffiliation = HasOverlap(ownerAffiliation, targetAffiliation);
-
-                bool include = AffinityFilter switch
-                {
-                    EAffinityFilter.Allies => sharesAffiliation,
-                    EAffinityFilter.Enemies => !sharesAffiliation,
-                    EAffinityFilter.AlliesAndEnemies => true,
-                    _ => true
-                };
-
-                if (include) results.Add(target);
-            }
-
+                if (ForgeEntities.Takes(Takes, owner, ownerAffiliation, target)) results.Add(target);
             return results;
         }
 
@@ -170,16 +150,6 @@ namespace FarEmerald.PlayForge
             return sorted.GetRange(0, most);
         }
 
-        private static bool HasOverlap(List<Tag> a, List<Tag> b)
-        {
-            if (a == null || b == null) return false;
-            foreach (var tag in a)
-            {
-                if (b.Contains(tag)) return true;
-            }
-            return false;
-        }
-
         // Flat where its range is, so its nearest is the one its search measured nearest
         private float DistanceTo(ITarget target, Vector3 origin)
         {
@@ -190,18 +160,4 @@ namespace FarEmerald.PlayForge
         protected override void DisconnectInputHandler(AbilityDataPacket data) { }
     }
 
-    /// <summary>
-    /// Determines which affiliations to include when filtering targets.
-    /// </summary>
-    public enum EAffinityFilter
-    {
-        /// <summary>Only targets that share affiliation tags with the caster.</summary>
-        Allies,
-
-        /// <summary>Only targets that do NOT share affiliation tags with the caster.</summary>
-        Enemies,
-
-        /// <summary>All targets regardless of affiliation.</summary>
-        AlliesAndEnemies
-    }
 }

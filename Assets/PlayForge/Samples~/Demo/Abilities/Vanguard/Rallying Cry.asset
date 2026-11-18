@@ -16,57 +16,13 @@ MonoBehaviour:
   - Key:
       Name: Demo.CastWhen
       DisplayName: Demo.CastWhen
-    Type: 3
-    stringValue: InRange
-    boolValue: 0
-    intValue:
-      Magnitude: 0
-      RealMagnitude: 2
-      Scaler:
-        rid: -2
-      Rounding: 0
-    floatValue:
-      Magnitude: 0
-      RealMagnitude: 2
-      Scaler:
-        rid: -2
-    objectValue: {fileID: 0}
-    monoBehaviourValue: {fileID: 0}
-    scriptableObjectValue: {fileID: 0}
-    tagValue:
-      Name: 
-      DisplayName: 
-    attributeValue: {fileID: 0}
-    effectValue: {fileID: 0}
-    abilityValue: {fileID: 0}
-    entityValue: {fileID: 0}
+    Value:
+      rid: 2403794261189067244
   - Key:
       Name: Demo.Reach
       DisplayName: Demo.Reach
-    Type: 5
-    stringValue: 
-    boolValue: 0
-    intValue:
-      Magnitude: 0
-      RealMagnitude: 2
-      Scaler:
-        rid: -2
-      Rounding: 0
-    floatValue:
-      Magnitude: 6
-      RealMagnitude: 2
-      Scaler:
-        rid: -2
-    objectValue: {fileID: 0}
-    monoBehaviourValue: {fileID: 0}
-    scriptableObjectValue: {fileID: 0}
-    tagValue:
-      Name: 
-      DisplayName: 
-    attributeValue: {fileID: 0}
-    effectValue: {fileID: 0}
-    abilityValue: {fileID: 0}
-    entityValue: {fileID: 0}
+    Value:
+      rid: 2403794261189067245
   _template: {fileID: 0}
   _templateOverrides: []
   _templateListSnapshots: []
@@ -230,8 +186,7 @@ MonoBehaviour:
           Scaler:
             rid: -2
         Around: 0
-        Takes: 0
-        IncludeCaster: 0
+        Takes: 3
         Flat: 1
         UsePhysics: 1
         DetectionLayers:
@@ -239,3 +194,15 @@ MonoBehaviour:
           m_Bits: 4294967295
         Effects:
         - {fileID: 11400000, guid: 37f70951eeeab9b439b2fad88ae68bcf, type: 2}
+    - rid: 2403794261189067244
+      type: {class: LocalString, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        Value: InRange
+    - rid: 2403794261189067245
+      type: {class: LocalFloat, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        Value:
+          Magnitude: 6
+          RealMagnitude: 2
+          Scaler:
+            rid: -2

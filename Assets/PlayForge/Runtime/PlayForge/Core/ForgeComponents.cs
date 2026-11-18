@@ -62,8 +62,13 @@ namespace FarEmerald.PlayForge
             _ => asset.name,
         };
 
-        /// <summary>Who an area or an aura takes, in words: "allies", "enemies", "everyone".</summary>
-        protected static string Whom(EAffinityFilter takes) => System.Text.RegularExpressions.Regex.Replace(takes.ToString(), "(?<=[a-z])(?=[A-Z])", " ").ToLowerInvariant();
+        /// <summary>Who an area or an aura takes, in words: "allies", "enemies", "other allies", "everyone".</summary>
+        protected static string Whom(EAffiliationFilter takes) => takes switch
+        {
+            EAffiliationFilter.Self => "itself",
+            EAffiliationFilter.AllButSelf => "everyone else",
+            _ => System.Text.RegularExpressions.Regex.Replace(takes.ToString(), "(?<=[a-z])(?=[A-Z])", " ").ToLowerInvariant(),
+        };
     }
 
     /// <summary>What a holder's components keep for it: an object for each component, made the first time it's asked for.</summary>

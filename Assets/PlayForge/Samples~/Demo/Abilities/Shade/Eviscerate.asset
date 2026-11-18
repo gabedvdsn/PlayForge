@@ -16,57 +16,13 @@ MonoBehaviour:
   - Key:
       Name: Demo.CastWhen
       DisplayName: Demo.CastWhen
-    Type: 3
-    stringValue: FoeLow
-    boolValue: 0
-    intValue:
-      Magnitude: 0
-      RealMagnitude: 2
-      Scaler:
-        rid: -2
-      Rounding: 0
-    floatValue:
-      Magnitude: 0
-      RealMagnitude: 2
-      Scaler:
-        rid: -2
-    objectValue: {fileID: 0}
-    monoBehaviourValue: {fileID: 0}
-    scriptableObjectValue: {fileID: 0}
-    tagValue:
-      Name: 
-      DisplayName: 
-    attributeValue: {fileID: 0}
-    effectValue: {fileID: 0}
-    abilityValue: {fileID: 0}
-    entityValue: {fileID: 0}
+    Value:
+      rid: 2403794261189067249
   - Key:
       Name: Demo.Reach
       DisplayName: Demo.Reach
-    Type: 5
-    stringValue: 
-    boolValue: 0
-    intValue:
-      Magnitude: 0
-      RealMagnitude: 2
-      Scaler:
-        rid: -2
-      Rounding: 0
-    floatValue:
-      Magnitude: 3
-      RealMagnitude: 2
-      Scaler:
-        rid: -2
-    objectValue: {fileID: 0}
-    monoBehaviourValue: {fileID: 0}
-    scriptableObjectValue: {fileID: 0}
-    tagValue:
-      Name: 
-      DisplayName: 
-    attributeValue: {fileID: 0}
-    effectValue: {fileID: 0}
-    abilityValue: {fileID: 0}
-    entityValue: {fileID: 0}
+    Value:
+      rid: 2403794261189067250
   _template: {fileID: 0}
   _templateOverrides: []
   _templateListSnapshots: []
@@ -301,3 +257,15 @@ MonoBehaviour:
           Scaler:
             rid: -2
         ShareOfBase: 1
+    - rid: 2403794261189067249
+      type: {class: LocalString, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        Value: FoeLow
+    - rid: 2403794261189067250
+      type: {class: LocalFloat, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        Value:
+          Magnitude: 3
+          RealMagnitude: 2
+          Scaler:
+            rid: -2

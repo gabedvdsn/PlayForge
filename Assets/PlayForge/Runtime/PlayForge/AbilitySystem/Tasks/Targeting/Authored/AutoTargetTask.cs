@@ -24,8 +24,9 @@ namespace FarEmerald.PlayForge
         [Tooltip("Maximum number of targets to select (0 = all matching)")]
         [NumberMin(0f)] public ScalableInt MaxTargets = 1;
 
-        [Tooltip("Whether to include the caster as a candidate")]
-        public bool IncludeSelf;
+        [Tooltip("Whom it takes, by how each stands to its caster: everyone else, everyone, its enemies, its allies, its other " +
+                 "allies or itself. A caster with no sides takes everyone as its allies and enemies")]
+        public EAffiliationFilter Takes = EAffiliationFilter.AllButSelf;
 
         [Tooltip("Detection radius from the caster (0 = infinite, uses FindObjectsByType)")]
         [NumberMin(0f)] public ScalableFloat Range = 20f;
@@ -67,7 +68,7 @@ namespace FarEmerald.PlayForge
             // Measured from the caster, the activation's target or its point
             var centre = CentreOf(data, origin);
             var candidates = GatherCandidates(centre, owner, RangeFor(data));
-            var valid = FilterCandidates(candidates, NumberContext.Of(data));
+            var valid = FilterCandidates(candidates, owner, NumberContext.Of(data));
             var sorted = SortCandidates(valid, centre);
             var selected = SelectTargets(sorted, Read(MaxTargets, data));
 
@@ -91,10 +92,10 @@ namespace FarEmerald.PlayForge
         private List<ITarget> GatherCandidates(Vector3? centre, ISource owner, float range)
         {
             // Every live entity, on both hubs, by its position, with no collider needed; physics where it asks, on its
-            // layers
+            // layers. Its caster among them, which Takes takes or leaves
             var results = new List<ITarget>();
-            if (UsePhysics) ForgeEntities.Around(centre, range, DetectionLayers, owner, IncludeSelf, results);
-            else ForgeEntities.Within(centre ?? Vector3.zero, centre.HasValue ? range : 0f, Flat, results, owner, IncludeSelf);
+            if (UsePhysics) ForgeEntities.Around(centre, range, DetectionLayers, owner, true, results);
+            else ForgeEntities.Within(centre ?? Vector3.zero, centre.HasValue ? range : 0f, Flat, results, owner);
             return results;
         }
 
@@ -114,12 +115,16 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// Filters candidates by tag requirements, attribute conditions, and alive status.
         /// </summary>
-        private List<ITarget> FilterCandidates(List<ITarget> candidates, in NumberContext context)
+        private List<ITarget> FilterCandidates(List<ITarget> candidates, ISource owner, in NumberContext context)
         {
             var results = new List<ITarget>();
+            var sides = (owner as ITarget)?.GetAffiliation();
 
             foreach (var target in candidates)
             {
+                // Whom it takes, by how each stands to its caster
+                if (!ForgeEntities.Takes(Takes, owner, sides, target)) continue;
+
                 // Alive filter
                 if (ExcludeDead && target.IsDead) continue;
 

@@ -40,28 +40,63 @@ namespace FarEmerald.PlayForge
             foreach (var other in near)
             {
                 if (ReferenceEquals(other, killer) || ReferenceEquals(other, dead) || other.IsDead
-                    || other is not IGameplayAbilitySystem ally || !ForgeEntities.Takes(EAffinityFilter.Allies, sides, other)) continue;
+                    || other is not IGameplayAbilitySystem ally || !ForgeEntities.Takes(EAffiliationFilter.Allies, killer, sides, other)) continue;
                 ally.ApplyGameplayEffect(ally.GenerateEffectSpec(origin, Effect));
             }
         }
     }
 
-    /// <summary>Where a Respawn brings its entity back.</summary>
-    public enum ERespawnPlace
+    /// <summary>
+    /// Where a Respawn brings its entity back: its home, where it stood as it registered; where it died; a point; or a
+    /// place of your own, as a checkpoint or its side's base, a [Serializable] class made from this one, which is offered
+    /// beside them. Each says where from its entity as it dies, its killer among what it knows, and its home.
+    /// </summary>
+    [Serializable]
+    public abstract class AbstractRespawnPlace
     {
-        /// <summary>Where it stood as it registered: its spawn.</summary>
-        Home,
+        /// <summary>
+        /// Where the entity revives, from its context as it dies and its home, which is null where it never stood
+        /// anywhere; null for where it died. Null here.
+        /// </summary>
+        public virtual Vector3? Where(EntityComponentContext context, Vector3? home) => null;
 
-        /// <summary>Where it died.</summary>
-        WhereItDied,
+        /// <summary>What it says in its Respawn's line, as "at home".</summary>
+        public virtual string Describe() => "where it died";
+    }
 
-        /// <summary>At the Respawn's point.</summary>
-        Point,
+    /// <summary>Where the entity stood as it registered: its spawn. Where it never stood anywhere, where it died.</summary>
+    [Serializable]
+    [ForgeMenu(Name = "Home", Description = "Where the entity stood as it registered: its spawn.")]
+    public class HomeRespawnPlace : AbstractRespawnPlace
+    {
+        public override Vector3? Where(EntityComponentContext context, Vector3? home) => home;
+
+        public override string Describe() => "at home";
+    }
+
+    /// <summary>Where the entity died.</summary>
+    [Serializable]
+    [ForgeMenu(Name = "Where It Died", Description = "Where the entity died.")]
+    public class WhereItDiedRespawnPlace : AbstractRespawnPlace
+    {
+    }
+
+    /// <summary>A point in the world.</summary>
+    [Serializable]
+    [ForgeMenu(Name = "Point", Description = "A point in the world.")]
+    public class PointRespawnPlace : AbstractRespawnPlace
+    {
+        [Tooltip("Where it revives, in the world")]
+        public Vector3 Point;
+
+        public override Vector3? Where(EntityComponentContext context, Vector3? home) => Point;
+
+        public override string Describe() => $"at {Point}";
     }
 
     /// <summary>
-    /// Respawn: revives an entity that stays as it dies a while after, in its own time, at its home, where it died, or a
-    /// point, as a hero comes back at its fountain. Its Death's On Revive effects land as it does, as
+    /// Respawn: revives an entity that stays as it dies a while after, in its own time, at its home, where it died, a
+    /// point, or a place of your own, as a hero comes back at its fountain. Its Death's On Revive effects land as it does, as
     /// any revive's do; a revive before its time, as a buyback, ends the wait. The wait is its entity's
     /// <see cref="RespawnTimer"/>, a service a HUD can read. An entity that ends as it dies has nothing to
     /// revive, which the Problems view says. An entity holds one at most.
@@ -71,16 +106,14 @@ namespace FarEmerald.PlayForge
     public sealed class RespawnEntityComponent : AbstractEntityComponent
     {
         /// <summary>What it does, in one line.</summary>
-        public override string Describe() => $"Respawns after {NumberText.Of(Delay)} s, {System.Text.RegularExpressions.Regex.Replace(At.ToString(), "(?<=[a-z])(?=[A-Z])", " ").ToLowerInvariant()}";
+        public override string Describe() => $"Respawns after {NumberText.Of(Delay)} s, {At?.Describe() ?? "where it died"}";
 
         [Tooltip("How long after it dies it revives, in seconds of its own time, read at its level")]
         public ScalableFloat Delay = 5f;
 
-        [Tooltip("Where it revives: where it stood as it registered, where it died, or the point below")]
-        public ERespawnPlace At = ERespawnPlace.Home;
-
-        [Tooltip("Where it revives, where At is Point")]
-        public Vector3 Point;
+        [Tooltip("Where it revives: where it stood as it registered, where it died, a point, or a place of your own; none, " +
+                 "where it died")]
+        [SerializeReference] public AbstractRespawnPlace At = new HomeRespawnPlace();
 
         public override bool AllowsSeveral => false;
 
@@ -105,12 +138,7 @@ namespace FarEmerald.PlayForge
             if (ctx.System == null || !EntityDeath.Stays(ctx.Identity?.Death)) return;
             float delay = Delay == null ? 0f : Delay.Evaluate(NumberContext.Of(ctx.System));
             var spawn = ctx.GetState<Spawn>(this);
-            Vector3? where = At switch
-            {
-                ERespawnPlace.Home when spawn.Known => spawn.Home,
-                ERespawnPlace.Point => Point,
-                _ => null,
-            };
+            Vector3? where = At?.Where(ctx, spawn.Known ? spawn.Home : null);
             ctx.System.GetService<RespawnTimer>()?.ReviveIn(delay, where);
         }
     }

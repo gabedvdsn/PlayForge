@@ -10,6 +10,11 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## Toward 1.0.0, since 0.1.0
 
 ### Added
+- **A Condition check** (FEAT-30), `ConditionValidation`: an ability's activation passes while its condition holds, a
+  `GameplayCondition` read against the activation, with the checked entity as its target.
+- **Kinds of your own** (FEAT-30) for a Local Data value, `LocalDataValue<T>`; a Respawn's place, `AbstractRespawnPlace`;
+  and a Randomized scaler's variance, `AbstractVariance`: a `[Serializable]` class made from one is offered beside
+  PlayForge's.
 - **A Sequence cue** (EP-64): runs a task sequence on a packet loaded for the cue, a burst's for its course and a
   lasting one's until its cue ends, by the clock it picks, else the sequence's own, else its owner's.
 - **A Process cue** (EP-63): runs a MonoBehaviour process where its Placement says, on a packet loaded for the cue,
@@ -654,6 +659,17 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   page, through one table of links in the editor.
 
 ### Changed
+- Local Data's value is a class (FEAT-30): a `DataWrapper` holds its `Key` and a `[SerializeReference]` `Value`, one
+  of twelve kinds from `LocalFloat` to `LocalScriptableObject`, read with `TryGet<T>`, `TryReadNumber` or `Read`.
+  `EDataWrapperType` and the twelve value fields are gone, and an entry saves its own value alone.
+- A Respawn's `At` is an `AbstractRespawnPlace` (FEAT-30), so `ERespawnPlace` and its `Point` field are gone. A
+  Randomized scaler's `Variance` is an `AbstractVariance`, so `EVarianceMode`, `MinMultiplier` and `MaxMultiplier` are
+  gone.
+- One affiliation filter, `EAffiliationFilter` (FEAT-30): Allies, Enemies, Everyone, Other Allies, Self and All But
+  Self, for Area Effect, an effect's area, a spread, an aura, both auto targets and the Affiliation check, in place of
+  `EAffinityFilter` and `ETargetAffiliation`. Include Caster, Include Self and Include Holder fold into it, as Allies
+  against Other Allies; Auto Target By Affinity's `AffinityFilter` is `Takes`; and `ForgeEntities.Takes` takes its
+  searcher.
 - **An ability targets nothing implicitly by default** (EP-66): Use Implicit Targeting is off for a new ability, so
   it targets what its targeting picks; the Passive preset turns it on. A Select Position task's Max Distance is
   infinite by default. Saved abilities keep what they were saved with.
@@ -1128,6 +1144,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   Asking whether its sequence was paused took 24 bytes a frame.
 
 ### Fixed
+- An Area Effect around its activation's point, with none given, did nothing (FEAT-30). It lands around its caster,
+  as its centre's choice says.
 - A critical section kept out only critical abilities asked for under its own activation policy (EP-57), where a
   critical task promises to keep out any.
 - A task that linked its token got the game's clock and ran on while its sequence was paused (EP-58). It links through
@@ -1434,6 +1452,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   or turning `Enabled` off. Once the first had ended, it threw, and the rest ran on.
 
 ### Removed
+- `EffectImpactConfig`, `AbstractEffectDurationConfig`, `EInclusionPolicy`, `ValueModifier` and `ValueIntModifier`
+  (FEAT-30), which nothing made, read or saved; `ForgeHelper.TryComputeCachedMagnitudeModifierGroupValue` and
+  `ForgeUtils.TryGet`, which nothing called.
 - **An effect's own Cues** (EP-61): `GameplayEffect.Cues` and the Effect inspector's Cues section; an effect's
   cues are its Cues component's. The handlers' moment flags go with them, `PrefabCue.WhileActive` and
   `SoundCue`'s and `CameraShakeCue`'s `OnEachTick`: a handler plays at each moment whose list holds it, a

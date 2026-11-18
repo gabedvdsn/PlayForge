@@ -295,42 +295,4 @@ namespace FarEmerald.PlayForge
         /// </summary>
         LinkedToProvider
     }
-
-    public enum EDataWrapperType
-    {
-        MonoBehaviour,
-        ScriptableObject,
-        Object,
-        String,
-        Int,
-        Float,
-        Bool,
-        Tag,
-        Attribute,
-        Effect,
-        Ability,
-        Entity
-    }
-    
-    [Serializable]
-    public class DataWrapper
-    {
-        [ForgeTagContext(ForgeContext.LocalDataKey)]
-        public Tag Key;
-        public EDataWrapperType Type;
-
-        public string stringValue;
-        public bool boolValue;
-        // Each a number that can scale, 0 to start, so a wrapper made in code holds one, not null
-        public ScalableInt intValue = 0;
-        public ScalableFloat floatValue = 0f;
-        public Object objectValue;
-        public MonoBehaviour monoBehaviourValue;
-        public ScriptableObject scriptableObjectValue;
-        public Tag tagValue;
-        public Attribute attributeValue;
-        public GameplayEffect effectValue;
-        public Ability abilityValue;
-        public EntityIdentity entityValue;
-    }
 }

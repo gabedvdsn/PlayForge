@@ -253,8 +253,7 @@ namespace FarEmerald.PlayForge
             for (int i = taken.Count - 1; i >= 0; i--)
             {
                 var other = taken[i];
-                if (ReferenceEquals(other, Self) || other.IsDead || ReferenceEquals(other, caster) && !area.IncludeCaster
-                    || !ForgeEntities.Takes(area.Takes, sides, other))
+                if (ReferenceEquals(other, Self) || other.IsDead || !ForgeEntities.Takes(area.Takes, caster, sides, other))
                     taken.RemoveAt(i);
             }
             return taken;

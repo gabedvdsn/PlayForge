@@ -907,57 +907,6 @@ namespace FarEmerald.PlayForge
             };
         }
 
-        public static bool TryComputeCachedMagnitudeModifierGroupValue(IAttributeImpactCarrier deriv, CachedMagnitudeModifierGroupMember[] calculations, Func<CachedMagnitudeModifierGroupMember, float> selector, EValueCollisionPolicy overridePolicy, out float value)
-        {
-            if (calculations is null || calculations.Length == 0)
-            {
-                value = 0f;
-                return false;
-            }
-            
-            // Check for override members first
-            var overrides = calculations.Where(m => m.RelativeOperation == EGroupOperation.Override && m.Calculation != null);
-            var members = overrides as CachedMagnitudeModifierGroupMember[] ?? overrides.ToArray();
-            if (members.Any() && overridePolicy != EValueCollisionPolicy.Ignore)
-            {
-                value = overridePolicy switch
-                {
-                    EValueCollisionPolicy.UseMaximum => members.Max(selector.Invoke),
-                    EValueCollisionPolicy.UseMinimum => members.Min(selector.Invoke),
-                    EValueCollisionPolicy.UseAverage => members.Average(selector.Invoke),
-                    EValueCollisionPolicy.UseFirst => selector.Invoke(members.First()),
-                    EValueCollisionPolicy.UseLast => selector.Invoke(members.Last()),
-                    _ => throw new ArgumentOutOfRangeException()
-                };
-                return true;
-            }
-            
-            // Calculate additive sum
-            value = calculations
-                .Where(m => m.RelativeOperation == EGroupOperation.Add && m.Calculation != null)
-                .Sum(member => member.Calculation.Evaluate(deriv));
-            
-            // Apply multipliers
-            foreach (var member in calculations.Where(m => m.RelativeOperation == EGroupOperation.Multiply && m.Calculation != null))
-            {
-                value *= member.Calculation.Evaluate(deriv);
-            }
-
-            // Divided by each member that divides; one that reads 0 divides nothing
-            foreach (var member in calculations.Where(m => m.RelativeOperation == EGroupOperation.Divide && m.Calculation != null))
-            {
-                float divisor = member.Calculation.Evaluate(deriv);
-                if (divisor != 0f) value /= divisor;
-            }
-
-            float flatBonus = calculations
-                .Where(m => m.RelativeOperation == EGroupOperation.FlatBonus && m.Calculation != null)
-                .Sum(member => member.Calculation.Evaluate(deriv));
-            
-            value += flatBonus;
-            return true;
-        }
-        
         #endregion
         
         #region Math Utils

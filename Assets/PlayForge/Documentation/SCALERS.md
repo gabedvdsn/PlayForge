@@ -72,8 +72,10 @@ number field by what it reads, as "Uses 3".
   condition doesn't hold, and neither does Not it.
 - A **Clamped** keeps its **Value** between its **Min Value** and **Max Value**, three numbers of any kind; one made
   in the inspector clamps a value by level.
-- A **Randomized** scaler's **Variance**, **Min Multiplier** and **Max Multiplier** are numbers, so its variance can
-  widen by level.
+- A **Randomized** scaler's **Variance** is a kind of its own: **Percentage**, up or down by a **Share** of its value;
+  **Flat**, by an **Amount**; **Multiplier**, times one between its **Min** and its **Max**; or one of your own, as two
+  dice, a `[Serializable]` class made from `AbstractVariance` that overrides `Vary`, `Lowest` and `Highest`. Its numbers
+  read the variance as their object, so a Share can widen by level and a Max can be 3 × its Min.
 - A scaler's own numbers read the scaler as their object: a Clamped's Max Value can be Relative to a Field, 2 × its
   Min Value, whatever field the Clamped is in.
 - A **Group** joins several numbers as one. It lists its members, each an **Operation** then its **Scaler**, which
@@ -160,8 +162,8 @@ menu files its kinds by category, as a number field's does.
 
 A scaler's settings sit on a shaded block under its field, so they read as the scaler's among the fields around them.
 A kind shows only what it reads: a **Fixed Value** shows its value, and a **Randomized** scaler its variance, then the
-values its base value comes from. A kind's field that applies only to some of its settings shows only for them, as a
-Randomized scaler's **Min Multiplier** and **Max Multiplier** for its Multiplier mode.
+values its base value comes from. A kind's field that applies only to some of its settings shows only for them, as an
+Asset Part's worker key for an effect's Worker Value.
 
 - **Values**: **Per Level** or **Spread Over Levels**. A Table reads Per Level and By Level spreads, as their kinds say,
   so they have no choice here; a scaler of another kind with values for each level chooses.

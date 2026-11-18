@@ -420,22 +420,8 @@ MonoBehaviour:
           m_PostInfinity: 2
           m_RotationOrder: 4
         Behaviours: []
-        VarianceMode: 0
         Variance:
-          Magnitude: 0.15
-          RealMagnitude: 2
-          Scaler:
-            rid: -2
-        MinMultiplier:
-          Magnitude: 0.9
-          RealMagnitude: 2
-          Scaler:
-            rid: -2
-        MaxMultiplier:
-          Magnitude: 1.1
-          RealMagnitude: 2
-          Scaler:
-            rid: -2
+          rid: 2403794511355445263
         RollOncePerSpec: 1
     - rid: 2403794261189066869
       type: {class: SharedScaler, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
@@ -737,3 +723,11 @@ MonoBehaviour:
         WhileActive: []
         OnRefused: []
         OnStackChange: []
+    - rid: 2403794511355445263
+      type: {class: PercentageVariance, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        Share:
+          Magnitude: 0.15
+          RealMagnitude: 2
+          Scaler:
+            rid: -2

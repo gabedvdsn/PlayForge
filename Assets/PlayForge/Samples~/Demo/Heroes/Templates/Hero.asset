@@ -16,30 +16,8 @@ MonoBehaviour:
   - Key:
       Name: Demo.AttackRange
       DisplayName: Demo.AttackRange
-    Type: 5
-    stringValue: 
-    boolValue: 0
-    intValue:
-      Magnitude: 0
-      RealMagnitude: 2
-      Scaler:
-        rid: -2
-      Rounding: 0
-    floatValue:
-      Magnitude: 2.2
-      RealMagnitude: 2
-      Scaler:
-        rid: -2
-    objectValue: {fileID: 0}
-    monoBehaviourValue: {fileID: 0}
-    scriptableObjectValue: {fileID: 0}
-    tagValue:
-      Name: 
-      DisplayName: 
-    attributeValue: {fileID: 0}
-    effectValue: {fileID: 0}
-    abilityValue: {fileID: 0}
-    entityValue: {fileID: 0}
+    Value:
+      rid: 2403794261189067146
   _template: {fileID: 0}
   _templateOverrides: []
   _templateListSnapshots: []
@@ -134,3 +112,11 @@ MonoBehaviour:
         Event:
           Name: 
           DisplayName: 
+    - rid: 2403794261189067146
+      type: {class: LocalFloat, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        Value:
+          Magnitude: 2.2
+          RealMagnitude: 2
+          Scaler:
+            rid: -2

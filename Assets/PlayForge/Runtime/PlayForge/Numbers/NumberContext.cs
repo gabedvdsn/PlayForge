@@ -373,12 +373,7 @@ namespace FarEmerald.PlayForge
             localDataReads++;
             try
             {
-                switch (data.Type)
-                {
-                    case EDataWrapperType.Float: value = data.floatValue?.Evaluate(context) ?? 0f; return true;
-                    case EDataWrapperType.Int: value = data.intValue?.Evaluate(context) ?? 0; return true;
-                    default: return false;
-                }
+                return data.Value != null && data.Value.TryReadNumber(in context, out value);
             }
             finally
             {

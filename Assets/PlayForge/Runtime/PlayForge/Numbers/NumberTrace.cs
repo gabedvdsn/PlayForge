@@ -200,12 +200,8 @@ namespace FarEmerald.PlayForge
                 case RandomizedScaler randomized:
                     trace.Value = NumberContext.ReadScaler(kind, in context);
                     trace.Label = $"{trace.Label}, a roll";
-                    if (randomized.VarianceMode == EVarianceMode.Multiplier)
-                    {
-                        trace.Add(randomized.MinMultiplier, in context, randomized, "Min");
-                        trace.Add(randomized.MaxMultiplier, in context, randomized, "Max");
-                    }
-                    else trace.Add(randomized.Variance, in context, randomized, "Variance");
+                    if (randomized.Variance != null)
+                        foreach (var (part, number) in randomized.Variance.Numbers()) trace.Add(number, in context, randomized.Variance, part);
                     return trace;
 
                 default:

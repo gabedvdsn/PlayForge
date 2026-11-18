@@ -72,24 +72,10 @@ namespace FarEmerald.PlayForge
             }
         }
 
-        // An entry's value, as its kind says; a number read for the cue; a reference left empty, none
+        // An entry's value, as its kind reads it; a number read for the cue; a reference left empty, none
         private static object ValueOf(DataWrapper entry, in NumberContext context)
         {
-            object value = entry.Type switch
-            {
-                EDataWrapperType.String => entry.stringValue,
-                EDataWrapperType.Bool => (object)entry.boolValue,
-                EDataWrapperType.Int => (object)(entry.intValue?.Evaluate(context) ?? 0),
-                EDataWrapperType.Float => (object)(entry.floatValue?.Evaluate(context) ?? 0f),
-                EDataWrapperType.Tag => entry.tagValue.IsValid ? (object)entry.tagValue : null,
-                EDataWrapperType.Attribute => entry.attributeValue,
-                EDataWrapperType.Effect => entry.effectValue,
-                EDataWrapperType.Ability => entry.abilityValue,
-                EDataWrapperType.Entity => entry.entityValue,
-                EDataWrapperType.MonoBehaviour => entry.monoBehaviourValue,
-                EDataWrapperType.ScriptableObject => entry.scriptableObjectValue,
-                _ => entry.objectValue,
-            };
+            object value = entry.Value?.Read(in context);
             return value is Object reference && reference == null ? null : value;
         }
 

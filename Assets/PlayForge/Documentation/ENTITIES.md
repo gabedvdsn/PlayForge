@@ -175,8 +175,9 @@ each step of a turn in PlayForge's place. The Creator Lab's units stop a turn as
 ### Respawn
 
 A **Respawn** component revives an entity that stays as it dies once its **Delay**, in seconds of its own time and read
-at its level, has passed, at its **Home**, where it stood as it registered, **Where It Died**, or a **Point**,
-as a hero comes back at its fountain. Its Death's On Revive effects land as it does, as any revive's do, and a revive
+at its level, has passed, at its **Home**, where it stood as it registered, **Where It Died**, a **Point**, or a
+place of your own, as a checkpoint, a `[Serializable]` class made from `AbstractRespawnPlace` that says `Where` from the
+entity's context and its home, as a hero comes back at its fountain. Its Death's On Revive effects land as it does, as any revive's do, and a revive
 before its time, as a buyback, ends the wait. The wait is the entity's `RespawnTimer`, a service: a HUD reads
 `gas.FindService<RespawnTimer>()`'s `Waiting` and `TimeLeft`. An entity that ends as it dies has nothing to revive, which the Problems
 view says. A save keeps neither the entity's death nor its wait. An entity holds one at most.
@@ -318,9 +319,12 @@ it tick on Target, queuing Ticked".
 
 ## Local Data
 
-Local Data is a list of named values stored on the asset. Each row has a **Key** (a tag), a **Type**, and a value of
-that type: String, Int, Float, Bool, Tag, Attribute, Effect, Ability, Entity, Object, ScriptableObject or MonoBehaviour.
-Object fields take project assets, not scene objects.
+Local Data is a list of named values stored on the asset. Each row has a **Key** (a tag) and a value of a kind: Float,
+Int, String, Bool, Tag, Attribute, Effect, Ability, Entity, Object, MonoBehaviour or ScriptableObject, or a kind of your
+own, a `[Serializable]` class made from `LocalDataValue<T>`, as a point or a colour, which the row's kinds offer beside
+PlayForge's. A row saves its own value alone. Object fields take project assets, not scene objects. Code reads a value by
+its type, `data.TryGet(out float range)` or `data.TryGet(out MyPoint point)`, and a number, a Float or an Int, which can
+scale, with `data.Value.TryReadNumber(context, out float number)`.
 
 When a `GameplayAbilitySystem` component initializes, it loads the entity's Local Data into a store of its own. Code and
 workers read and write that store through the GAS, with `TryGetLocalData` and `SetLocalData`. Threshold analysis

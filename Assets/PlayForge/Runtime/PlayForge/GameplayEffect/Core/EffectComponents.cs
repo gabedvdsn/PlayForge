@@ -14,7 +14,7 @@ namespace FarEmerald.PlayForge
     public sealed class AreaEffectComponent : AbstractEffectComponent
     {
         /// <summary>What it does, in one line.</summary>
-        public override string Describe() => $"Lands on {Whom(Area?.Takes ?? EAffinityFilter.Enemies)} within {NumberText.Of(Area?.Radius)}" + (Area?.MaxTargets is { } most && (most.Magnitude > 0f || !AbstractScaler.IsNone(most.Scaler)) ? $", {NumberText.Of(most)} at most" : "");
+        public override string Describe() => $"Lands on {Whom(Area?.Takes ?? EAffiliationFilter.Enemies)} within {NumberText.Of(Area?.Radius)}" + (Area?.MaxTargets is { } most && (most.Magnitude > 0f || !AbstractScaler.IsNone(most.Scaler)) ? $", {NumberText.Of(most)} at most" : "");
 
         [Tooltip("Its area: as its effect lands on its target, it lands on each the area takes near that target too")]
         public EffectArea Area = new();
@@ -113,11 +113,8 @@ namespace FarEmerald.PlayForge
         [Tooltip("Measures along the ground, leaving height out; off, a sphere")]
         public bool Flat = true;
 
-        [Tooltip("Whom it takes, from its caster's sides: enemies, allies, or both. A caster with no sides takes anyone")]
-        public EAffinityFilter Takes = EAffinityFilter.Enemies;
-
-        [Tooltip("Its caster too, where it reaches them and takes their side")]
-        public bool IncludeCaster;
+        [Tooltip("Whom it takes, by how each stands to its caster: its enemies, its allies, its other allies, itself, everyone else or everyone. A caster with no sides takes everyone as its allies and enemies")]
+        public EAffiliationFilter Takes = EAffiliationFilter.Enemies;
 
         [Tooltip("At most this many each time it spreads, the nearest first; 0, every one it reaches")] 
         [NumberMin(0f)]
@@ -153,7 +150,7 @@ namespace FarEmerald.PlayForge
             float radius = spread.Radius == null ? 0f : spread.Radius.Evaluate(NumberContext.Of(spec));
             if (radius <= 0f) return;
 
-            // Each it reaches but the one it's on, the dead, and its caster unless it says, of the sides it takes
+            // Each it reaches but the one it's on and the dead, of those it takes by how each stands to its caster
             var taken = new List<ITarget>();
             ForgeEntities.Within(here.position, radius, spread.Flat, taken);
             var centre = here.position;
@@ -162,8 +159,8 @@ namespace FarEmerald.PlayForge
             for (int i = taken.Count - 1; i >= 0; i--)
             {
                 var other = taken[i];
-                if (ReferenceEquals(other, holder) || other.IsDead || ReferenceEquals(other, caster) && !spread.IncludeCaster
-                    || !ForgeEntities.Takes(spread.Takes, sides, other) || spread.SkipHolders && Holds(other, effect))
+                if (ReferenceEquals(other, holder) || other.IsDead || !ForgeEntities.Takes(spread.Takes, caster, sides, other)
+                    || spread.SkipHolders && Holds(other, effect))
                     taken.RemoveAt(i);
             }
             taken.Sort((a, b) => ForgeEntities.Distance(a, centre, spread.Flat).CompareTo(ForgeEntities.Distance(b, centre, spread.Flat)));

@@ -110,7 +110,7 @@ namespace FarEmerald.PlayForge.Lab
         {
             var casts = new List<Ability>(unit.Casts());
             var key = unit.Rules?.CastOrderKey ?? default;
-            string order = key.IsValid && unit.Gas.TryGetLocalData(key, out var data) ? data.stringValue : null;
+            string order = key.IsValid && unit.Gas.TryGetLocalData(key, out var data) && data.TryGet(out string said) ? said : null;
             if (string.IsNullOrWhiteSpace(order))
             {
                 foreach (var ability in casts) yield return ability;
@@ -128,10 +128,10 @@ namespace FarEmerald.PlayForge.Lab
         {
             var rules = unit.Rules;
             string when = rules != null && rules.CastWhenKey.IsValid && ability.TryGetLocalData(rules.CastWhenKey, out var whenData)
-                ? whenData.stringValue : "InRange";
+                && whenData.TryGet(out string kept) ? kept : "InRange";
             // Its reach: the ability's, its Cast Range or another, where it has one, else its Local Data's, 0 for anywhere
             float reach = ForgeReach.TryRead(unit.Gas, ability, out float cast) ? cast
-                : rules != null && rules.ReachKey.IsValid && ability.TryGetLocalData(rules.ReachKey, out var reachData) ? Read(ability, reachData.floatValue) : 0f;
+                : rules != null && rules.ReachKey.IsValid && ability.TryGetLocalData(rules.ReachKey, out var reachData) && reachData.TryGet(out ScalableFloat reachNumber) ? Read(ability, reachNumber) : 0f;
             bool inReach = reach <= 0f || unit.DistanceTo(foe) <= reach;
             away = when == "Low";
             return when switch

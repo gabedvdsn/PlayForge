@@ -118,47 +118,13 @@ namespace FarEmerald.PlayForge
             List<CachedMagnitudeModifierGroupMember> overrides,
             Func<AbstractCachedScaler, AttributeValue> eval)
         {
-            switch (OverrideMemberCollisionPolicy)
-            {
-                case EValueCollisionPolicy.UseFirst:
-                    return eval(overrides[0].Calculation);
-                case EValueCollisionPolicy.UseLast:
-                    return eval(overrides[overrides.Count - 1].Calculation);
-                case EValueCollisionPolicy.UseMaximum:
-                {
-                    var best = eval(overrides[0].Calculation);
-                    for (int i = 1; i < overrides.Count; i++)
-                    {
-                        var v = eval(overrides[i].Calculation);
-                        best = new AttributeValue(Mathf.Max(best.CurrentValue, v.CurrentValue), Mathf.Max(best.BaseValue, v.BaseValue));
-                    }
-                    return best;
-                }
-                case EValueCollisionPolicy.UseMinimum:
-                {
-                    var best = eval(overrides[0].Calculation);
-                    for (int i = 1; i < overrides.Count; i++)
-                    {
-                        var v = eval(overrides[i].Calculation);
-                        best = new AttributeValue(Mathf.Min(best.CurrentValue, v.CurrentValue), Mathf.Min(best.BaseValue, v.BaseValue));
-                    }
-                    return best;
-                }
-                case EValueCollisionPolicy.UseAverage:
-                {
-                    float c = 0f, b = 0f;
-                    foreach (var m in overrides)
-                    {
-                        var v = eval(m.Calculation);
-                        c += v.CurrentValue;
-                        b += v.BaseValue;
-                    }
-                    int n = overrides.Count;
-                    return new AttributeValue(c / n, b / n);
-                }
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
+            // The first or the last alone is read where it stands; the rest fold, a member at a time
+            var policy = OverrideMemberCollisionPolicy;
+            if (policy == EValueCollisionPolicy.UseFirst) return eval(overrides[0].Calculation);
+            if (policy == EValueCollisionPolicy.UseLast) return eval(overrides[overrides.Count - 1].Calculation);
+            var chosen = new AttributeValue(0f, 0f);
+            for (int i = 0; i < overrides.Count; i++) chosen = ValueCollision.Fold(policy, chosen, eval(overrides[i].Calculation), i);
+            return ValueCollision.Settle(policy, chosen, overrides.Count);
         }
     }
 

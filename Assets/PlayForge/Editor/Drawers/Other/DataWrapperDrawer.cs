@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;
@@ -8,12 +10,38 @@ using Object = UnityEngine.Object;
 namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
-    /// A Local Data row: its key, its type and its value, each a column of its own, laid out by the style sheet. It set its
-    /// columns' widths in C#, and drew a separator in a dark gray of its own, in either theme.
+    /// A Local Data row: its key, its value's kind and its value, each a column of its own, laid out by the style sheet.
+    /// A value's kind is a class, Float to ScriptableObject or one of your own: a kind that holds one Value draws it in the
+    /// row, and one of your own with more fields draws each under its name. Each row holds a value of its own, so a row
+    /// added as a copy of the last edits its own.
     /// </summary>
     [CustomPropertyDrawer(typeof(DataWrapper))]
     public class DataWrapperDrawer : PropertyDrawer
     {
+        // PlayForge's kinds, in the order an author reaches for them; a project's follow, by name
+        private static readonly string[] Order =
+        {
+            "Float", "Int", "String", "Bool", "Tag", "Attribute", "Effect", "Ability", "Entity", "Object", "MonoBehaviour", "ScriptableObject",
+        };
+
+        private const string None = "None";
+
+        /// <summary>Every kind a value can be, PlayForge's first, in their order, then a project's, by name.</summary>
+        internal static List<Type> Kinds() => TypeCache.GetTypesDerivedFrom<LocalDataValue>()
+            .Where(type => !type.IsAbstract && !type.IsGenericTypeDefinition && type.GetConstructor(Type.EmptyTypes) != null)
+            .OrderBy(type => Array.IndexOf(Order, KindName(type)) is var at && at >= 0 ? at : int.MaxValue)
+            .ThenBy(KindName)
+            .ToList();
+
+        /// <summary>A kind's name in the row: its menu name, or its class's, without "Local".</summary>
+        internal static string KindName(Type type)
+        {
+            var name = ForgeMenuAttribute.NameOf(type);
+            if (!string.IsNullOrEmpty(name)) return name;
+            name = type.Name;
+            return name.StartsWith("Local") && name.Length > "Local".Length ? name.Substring("Local".Length) : name;
+        }
+
         public override VisualElement CreatePropertyGUI(SerializedProperty property)
         {
             var root = new VisualElement { name = "DataWrapper" };
@@ -21,23 +49,15 @@ namespace FarEmerald.PlayForge.Editor
             ForgeTheme.Apply(root);
             root.AddToClassList("pf-data-wrapper");
 
-            // Get sub-properties
-            var keyProp = property.FindPropertyRelative("Key");
-            var typeProp = property.FindPropertyRelative("Type");
-            
-            var stringProp = property.FindPropertyRelative("stringValue");
-            var boolProp = property.FindPropertyRelative("boolValue");
-            var intProp = property.FindPropertyRelative("intValue");
-            var floatProp = property.FindPropertyRelative("floatValue");
-            var objectProp = property.FindPropertyRelative("objectValue");
-            var monoProp = property.FindPropertyRelative("monoBehaviourValue");
-            var soProp = property.FindPropertyRelative("scriptableObjectValue");
-            
-            var tagProp = property.FindPropertyRelative("tagValue");
-            var attributeProp = property.FindPropertyRelative("attributeValue");
-            var abilityProp = property.FindPropertyRelative("abilityValue");
-            var effectProp = property.FindPropertyRelative("effectValue");
-            var entityProp = property.FindPropertyRelative("entityValue");
+            var keyProp = property.FindPropertyRelative(nameof(DataWrapper.Key));
+            var valueProp = property.FindPropertyRelative(nameof(DataWrapper.Value));
+
+            // Unity's + copies the last row, and the new row held the last one's value, so an edit to one changed both
+            if (ScalerDrawer.FindSharedSibling(valueProp) >= 0)
+            {
+                ForgeLists.CopyOwn(valueProp);
+                property.serializedObject.ApplyModifiedProperties();
+            }
 
             // The row's first column, with no label: under one, as wide as an inspector's label column, the tag's box had
             // no width left to press
@@ -46,105 +66,143 @@ namespace FarEmerald.PlayForge.Editor
             keyField.BindProperty(keyProp);
             root.Add(keyField);
 
-            // Its type, a compact choice
-            var typeField = new EnumField((EDataWrapperType)typeProp.enumValueIndex) { name = "Type" };
+            // Its value's kind, a compact choice
+            var kinds = Kinds();
+            var names = new List<string> { None };
+            names.AddRange(kinds.Select(KindName));
+            var typeField = new PopupField<string>(names, 0) { name = "Type" };
             typeField.AddToClassList("pf-data-wrapper__type");
-            typeField.BindProperty(typeProp);
             root.Add(typeField);
 
-            // Its value, which the type chooses the field of
+            // Its value, which its kind holds
             var valueContainer = new VisualElement { name = "Value" };
             valueContainer.AddToClassList("pf-data-wrapper__value");
             root.Add(valueContainer);
 
-            // Initial draw
-            UpdateValueField(valueContainer, (EDataWrapperType)typeProp.enumValueIndex,
-                stringProp, boolProp, intProp, floatProp, objectProp, monoProp, soProp, tagProp, attributeProp, effectProp, abilityProp, entityProp);
+            // The kind and the value as drawn, so a new one, as an Undo puts back, draws them again: fields bound to a value
+            // that's gone read a property that has disappeared
+            Type shownType = null;
+            long shownId = 0;
+            bool shownMixed = false;
 
-            // Update value field when type changes
+            void Draw()
+            {
+                if (!ScalerFields.Alive(valueProp)) return;
+                valueProp.serializedObject.Update();
+                shownType = KindOf(valueProp);
+                shownId = valueProp.managedReferenceId;
+                shownMixed = EachAsset.Differ(valueProp, KindOf);
+                typeField.SetValueWithoutNotify(names[Math.Max(0, kinds.IndexOf(shownType) + 1)]);
+                typeField.showMixedValue = shownMixed;
+                DrawValue(valueContainer, valueProp);
+            }
+
             typeField.RegisterValueChangedCallback(evt =>
             {
-                UpdateValueField(valueContainer, (EDataWrapperType)evt.newValue,
-                    stringProp, boolProp, intProp, floatProp, objectProp, monoProp, soProp, tagProp, attributeProp, effectProp, abilityProp, entityProp);
+                int index = names.IndexOf(evt.newValue) - 1;
+                var chosen = index >= 0 ? kinds[index] : null;
+                // Each selected asset its own value of the kind, which a write through one property would share
+                EachAsset.Write(valueProp, own =>
+                {
+                    if (KindOf(own) != chosen) own.managedReferenceValue = chosen == null ? null : Activator.CreateInstance(chosen);
+                });
+                Draw();
             });
 
+            root.TrackSerializedObjectValue(property.serializedObject, _ =>
+            {
+                if (!ScalerFields.Alive(valueProp)) return;
+                if (KindOf(valueProp) != shownType || valueProp.managedReferenceId != shownId
+                    || EachAsset.Differ(valueProp, KindOf) != shownMixed) Draw();
+            });
+            Draw();
             return root;
         }
 
-        private void UpdateValueField(
-            VisualElement container,
-            EDataWrapperType type,
-            SerializedProperty stringProp,
-            SerializedProperty boolProp,
-            SerializedProperty intProp,
-            SerializedProperty floatProp,
-            SerializedProperty objectProp,
-            SerializedProperty monoProp,
-            SerializedProperty soProp,
-            SerializedProperty tagProp,
-            SerializedProperty attributeProp,
-            SerializedProperty effectProp,
-            SerializedProperty abilityProp,
-            SerializedProperty entityProp
-            )
+        // The kind a row's value is, or none
+        private static Type KindOf(SerializedProperty valueProp) => valueProp?.managedReferenceValue?.GetType();
+
+        // The value's own field, in the row where its kind holds one Value; else each of its fields under its name
+        private static void DrawValue(VisualElement container, SerializedProperty valueProp)
         {
             container.Clear();
-
-            var valueField = type switch
+            valueProp.serializedObject.Update();
+            if (valueProp.managedReferenceValue == null)
             {
-                EDataWrapperType.String => CreateStringField(stringProp),
-                EDataWrapperType.Bool => CreateBoolField(boolProp),
-                // Numbers that can scale, drawn by their own drawer: an Integer or Float field bound to one couldn't bind
-                EDataWrapperType.Int => CreatePropertyField(intProp),
-                EDataWrapperType.Float => CreatePropertyField(floatProp),
-                EDataWrapperType.Tag => CreatePropertyField(tagProp),
-                EDataWrapperType.Attribute => CreatePropertyField(attributeProp),
-                EDataWrapperType.Effect => CreatePropertyField(effectProp),
-                EDataWrapperType.Ability => CreatePropertyField(abilityProp),
-                EDataWrapperType.Entity => CreatePropertyField(entityProp),
-                EDataWrapperType.Object => CreateObjectField(objectProp, typeof(Object)),
-                // Each edits its own value; they had each other's
-                EDataWrapperType.ScriptableObject => CreateObjectField(soProp, typeof(ScriptableObject)),
-                EDataWrapperType.MonoBehaviour => CreateObjectField(monoProp, typeof(MonoBehaviour)),
-                _ => new Label("Select a type")
-            };
+                var pick = new Label("Pick a kind");
+                pick.AddToClassList("pf-data-wrapper__field");
+                container.Add(pick);
+                return;
+            }
 
-            valueField.AddToClassList("pf-data-wrapper__field");
-            container.Add(valueField);
-        }
-
-        private VisualElement CreateStringField(SerializedProperty prop)
-        {
-            var field = new TextField { bindingPath = prop.propertyPath };
-            field.BindProperty(prop);
-            return field;
-        }
-        
-        private VisualElement CreateBoolField(SerializedProperty prop)
-        {
-            var field = new Toggle { bindingPath = prop.propertyPath };
-            field.BindProperty(prop);
-            return field;
-        }
-
-        private VisualElement CreateObjectField(SerializedProperty prop, Type objectType)
-        {
-            var field = new ObjectField
+            var fields = new List<SerializedProperty>();
+            var end = valueProp.GetEndProperty();
+            var child = valueProp.Copy();
+            if (child.NextVisible(true))
             {
-                objectType = objectType,
-                allowSceneObjects = false // ScriptableObjects typically shouldn't reference scene objects
-            };
-            field.BindProperty(prop);
-            return field;
+                do
+                {
+                    if (SerializedProperty.EqualContents(child, end)) break;
+                    fields.Add(child.Copy());
+                } while (child.NextVisible(false));
+            }
+
+            bool single = fields.Count == 1 && fields[0].name == nameof(LocalDataValue<int>.Value);
+            foreach (var field in fields)
+            {
+                VisualElement drawn;
+                if (single) drawn = OneValue(field, valueProp);
+                else
+                {
+                    var labelled = new PropertyField(field);
+                    labelled.BindProperty(field);
+                    drawn = labelled;
+                }
+                drawn.AddToClassList("pf-data-wrapper__field");
+                container.Add(drawn);
+            }
         }
 
-        // A value drawn by its own drawer, with no label: the row's type says what it is
-        private VisualElement CreatePropertyField(SerializedProperty prop)
+        // A kind's one value, in the row with no label, as the row's kind says what it is: a string, a bool or an asset in a
+        // field of its type, which binds as it's made; a number that can scale, a tag or a kind of your own by its own drawer
+        private static VisualElement OneValue(SerializedProperty field, SerializedProperty valueProp)
         {
-            var field = new PropertyField(prop, "");
-            field.BindProperty(prop);
+            switch (field.propertyType)
+            {
+                case SerializedPropertyType.String:
+                {
+                    var text = new TextField();
+                    text.BindProperty(field);
+                    return text;
+                }
+                case SerializedPropertyType.Boolean:
+                {
+                    var toggle = new Toggle();
+                    toggle.BindProperty(field);
+                    return toggle;
+                }
+                case SerializedPropertyType.ObjectReference:
+                {
+                    // An asset's own field, of the type its kind holds; an asset holds no scene's object
+                    var asset = new ObjectField { objectType = HeldType(valueProp) ?? typeof(Object), allowSceneObjects = false };
+                    asset.BindProperty(field);
+                    return asset;
+                }
+                default:
+                {
+                    var drawn = new PropertyField(field, "");
+                    drawn.BindProperty(field);
+                    return drawn;
+                }
+            }
+        }
 
-            return field;
+        // The type a kind's one value holds: its LocalDataValue's T
+        private static Type HeldType(SerializedProperty valueProp)
+        {
+            for (var type = valueProp.managedReferenceValue?.GetType(); type != null; type = type.BaseType)
+                if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(LocalDataValue<>)) return type.GetGenericArguments()[0];
+            return null;
         }
 
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)

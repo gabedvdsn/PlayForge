@@ -187,7 +187,7 @@ namespace FarEmerald.PlayForge
         public virtual DataWrapper GetValue(AbilityDataPacket data, ITarget subject)
         {
             int weight = subject?.GetTagWeight(Tag) ?? -1;
-            if (weight >= 0) return new DataWrapper { floatValue = weight, intValue = weight };
+            if (weight >= 0) return new DataWrapper(Tag, new LocalInt { Value = weight });
             return data?.EffectOrigin is AbilitySpec ability && ability.Base.TryGetLocalData(Tag, out var local) ? local : null;
         }
 
@@ -325,6 +325,34 @@ namespace FarEmerald.PlayForge
         }
 
         public string GetName() => "Ability Level";
+    }
+
+    /// <summary>
+    /// A rule that holds while its condition does, as an effect's requirements and an On Hit read theirs: a tag, an
+    /// attribute, a level, a comparison of numbers, or any condition of your own. It's read against the activation, its
+    /// caster and its ability's level and Local Data, with the entity its list hands it as the target: the target among the
+    /// Target Checks, and the caster itself among the Caster Checks. With no condition, it holds.
+    /// </summary>
+    [Serializable]
+    [ForgeMenu(Description = "Activates only while its condition holds: a tag, an attribute, a level, or any other condition.")]
+    public class ConditionValidation : IAbilityValidationRule
+    {
+        [Tooltip("What must hold, read against the activation, with the entity this list checks as its target")]
+        [SerializeReference] public GameplayCondition When;
+
+        public bool Validate(AbilityDataPacket data, Func<ITarget> getSource, out string error)
+        {
+            error = null;
+            if (When == null) return true;
+            var subject = getSource?.Invoke();
+            var context = NumberContext.Of(data);
+            if (subject != null) context = context.WithTarget(subject);
+            if (When.Holds(in context)) return true;
+            error = $"{NumberText.Of(When)} doesn't hold{(subject != null ? $" for {ValidationText.NameOf(subject)}" : "")}";
+            return false;
+        }
+
+        public string GetName() => "Condition";
     }
 
     /// <summary>How a rule names what it checks as it says why it refused.</summary>

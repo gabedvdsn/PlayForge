@@ -31,11 +31,8 @@ namespace FarEmerald.PlayForge
         [Tooltip("Measures along the ground, leaving height out; off, a sphere")]
         public bool Flat = true;
 
-        [Tooltip("Whom it takes, from its caster's sides: enemies, allies, or both. A caster with no sides takes anyone")]
-        public EAffinityFilter Takes = EAffinityFilter.Enemies;
-
-        [Tooltip("Its caster too, where the area reaches it and takes its side")]
-        public bool IncludeCaster;
+        [Tooltip("Whom it takes, by how each stands to its caster: its enemies, its allies, its other allies, itself, everyone else or everyone. A caster with no sides takes everyone as its allies and enemies")]
+        public EAffiliationFilter Takes = EAffiliationFilter.Enemies;
 
         [Tooltip("At most this many besides its target, the nearest first; 0, every one it reaches")]
         [NumberMin(0f)] public ScalableInt MaxTargets = 0;

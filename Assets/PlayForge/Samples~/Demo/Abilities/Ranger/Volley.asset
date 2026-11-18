@@ -16,138 +16,28 @@ MonoBehaviour:
   - Key:
       Name: Demo.CastWhen
       DisplayName: Demo.CastWhen
-    Type: 3
-    stringValue: InRange
-    boolValue: 0
-    intValue:
-      Magnitude: 0
-      RealMagnitude: 2
-      Scaler:
-        rid: -2
-      Rounding: 0
-    floatValue:
-      Magnitude: 0
-      RealMagnitude: 2
-      Scaler:
-        rid: -2
-    objectValue: {fileID: 0}
-    monoBehaviourValue: {fileID: 0}
-    scriptableObjectValue: {fileID: 0}
-    tagValue:
-      Name: 
-      DisplayName: 
-    attributeValue: {fileID: 0}
-    effectValue: {fileID: 0}
-    abilityValue: {fileID: 0}
-    entityValue: {fileID: 0}
+    Value:
+      rid: 2403794261189067210
   - Key:
       Name: Demo.Reach
       DisplayName: Demo.Reach
-    Type: 5
-    stringValue: 
-    boolValue: 0
-    intValue:
-      Magnitude: 0
-      RealMagnitude: 2
-      Scaler:
-        rid: -2
-      Rounding: 0
-    floatValue:
-      Magnitude: 9
-      RealMagnitude: 2
-      Scaler:
-        rid: -2
-    objectValue: {fileID: 0}
-    monoBehaviourValue: {fileID: 0}
-    scriptableObjectValue: {fileID: 0}
-    tagValue:
-      Name: 
-      DisplayName: 
-    attributeValue: {fileID: 0}
-    effectValue: {fileID: 0}
-    abilityValue: {fileID: 0}
-    entityValue: {fileID: 0}
+    Value:
+      rid: 2403794261189067211
   - Key:
       Name: Demo.Volley.Arrow
       DisplayName: Demo.Volley.Arrow
-    Type: 0
-    stringValue: 
-    boolValue: 0
-    intValue:
-      Magnitude: 0
-      RealMagnitude: 2
-      Scaler:
-        rid: -2
-      Rounding: 0
-    floatValue:
-      Magnitude: 0
-      RealMagnitude: 2
-      Scaler:
-        rid: -2
-    objectValue: {fileID: 0}
-    monoBehaviourValue: {fileID: 7892143325512728370, guid: 29dd58fe15c9b01469a2d499ac09d67f, type: 3}
-    scriptableObjectValue: {fileID: 0}
-    tagValue:
-      Name: 
-      DisplayName: 
-    attributeValue: {fileID: 0}
-    effectValue: {fileID: 0}
-    abilityValue: {fileID: 0}
-    entityValue: {fileID: 0}
+    Value:
+      rid: 2403794261189067212
   - Key:
       Name: Demo.Volley.Radius
       DisplayName: Demo.Volley.Radius
-    Type: 5
-    stringValue: 
-    boolValue: 0
-    intValue:
-      Magnitude: 0
-      RealMagnitude: 2
-      Scaler:
-        rid: -2
-      Rounding: 0
-    floatValue:
-      Magnitude: 3.5
-      RealMagnitude: 2
-      Scaler:
-        rid: -2
-    objectValue: {fileID: 0}
-    monoBehaviourValue: {fileID: 0}
-    scriptableObjectValue: {fileID: 0}
-    tagValue:
-      Name: 
-      DisplayName: 
-    attributeValue: {fileID: 0}
-    effectValue: {fileID: 0}
-    abilityValue: {fileID: 0}
-    entityValue: {fileID: 0}
+    Value:
+      rid: 2403794261189067213
   - Key:
       Name: Demo.Volley.Arrows
       DisplayName: Demo.Volley.Arrows
-    Type: 4
-    stringValue: 
-    boolValue: 0
-    intValue:
-      Magnitude: 5
-      RealMagnitude: 2
-      Scaler:
-        rid: -2
-      Rounding: 0
-    floatValue:
-      Magnitude: 0
-      RealMagnitude: 2
-      Scaler:
-        rid: -2
-    objectValue: {fileID: 0}
-    monoBehaviourValue: {fileID: 0}
-    scriptableObjectValue: {fileID: 0}
-    tagValue:
-      Name: 
-      DisplayName: 
-    attributeValue: {fileID: 0}
-    effectValue: {fileID: 0}
-    abilityValue: {fileID: 0}
-    entityValue: {fileID: 0}
+    Value:
+      rid: 2403794261189067214
   _template: {fileID: 0}
   _templateOverrides: []
   _templateListSnapshots: []
@@ -325,3 +215,36 @@ MonoBehaviour:
           _typeName: FarEmerald.PlayForge.Samples.Demo.DemoSequences, FarEmerald.PlayForge.Samples.Demo,
             Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
           _methodName: Volley
+    - rid: 2403794261189067210
+      type: {class: LocalString, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        Value: InRange
+    - rid: 2403794261189067211
+      type: {class: LocalFloat, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        Value:
+          Magnitude: 9
+          RealMagnitude: 2
+          Scaler:
+            rid: -2
+    - rid: 2403794261189067212
+      type: {class: LocalMonoBehaviour, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        Value: {fileID: 7892143325512728370, guid: 29dd58fe15c9b01469a2d499ac09d67f, type: 3}
+    - rid: 2403794261189067213
+      type: {class: LocalFloat, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        Value:
+          Magnitude: 3.5
+          RealMagnitude: 2
+          Scaler:
+            rid: -2
+    - rid: 2403794261189067214
+      type: {class: LocalInt, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        Value:
+          Magnitude: 5
+          RealMagnitude: 2
+          Scaler:
+            rid: -2
+          Rounding: 0

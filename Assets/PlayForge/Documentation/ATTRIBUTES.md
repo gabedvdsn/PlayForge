@@ -76,9 +76,12 @@ lacks the Health role's attribute, with no death watcher of its own.
 
 ## Local Data
 
-Local Data is a list of named values stored on the asset. Each row has a **Key** (a tag), a **Type**, and a value of
-that type: String, Int, Float, Bool, Tag, Attribute, Effect, Ability, Entity, Object, ScriptableObject or MonoBehaviour.
-Object fields take project assets, not scene objects.
+Local Data is a list of named values stored on the asset. Each row has a **Key** (a tag) and a value of a kind: Float,
+Int, String, Bool, Tag, Attribute, Effect, Ability, Entity, Object, MonoBehaviour or ScriptableObject, or a kind of your
+own, a `[Serializable]` class made from `LocalDataValue<T>`, as a point or a colour, which the row's kinds offer beside
+PlayForge's. A row saves its own value alone. Object fields take project assets, not scene objects. Code reads a value by
+its type, `data.TryGet(out float range)` or `data.TryGet(out MyPoint point)`, and a number, a Float or an Int, which can
+scale, with `data.Value.TryReadNumber(context, out float number)`.
 
 PlayForge doesn't read an attribute's Local Data itself. Your code and workers can, with
 `attribute.TryGetLocalData(key, out var data)`. The first row with that key wins.

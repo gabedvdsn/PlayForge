@@ -4,6 +4,33 @@ using UnityEngine;
 namespace FarEmerald.PlayForge
 {
     /// <summary>
+    /// Whom a search or a check takes, by how each stands to its caster, or to an aura's holder: an enemy shares none of
+    /// its sides, an ally shares one, and the caster itself is an ally of itself and no one's enemy. The one choice an Area
+    /// Effect, an effect's area, a spread, an aura, the auto-target tasks and an Affiliation check make. A caster with no
+    /// sides takes every other one as its ally and its enemy alike.
+    /// </summary>
+    public enum EAffiliationFilter
+    {
+        /// <summary>Its allies, which share a side with it, itself among them.</summary>
+        Allies,
+
+        /// <summary>Its enemies, which share none of its sides.</summary>
+        Enemies,
+
+        /// <summary>Everyone, itself among them.</summary>
+        Everyone,
+
+        /// <summary>Its allies but itself.</summary>
+        OtherAllies,
+
+        /// <summary>Itself alone.</summary>
+        Self,
+
+        /// <summary>Everyone but itself.</summary>
+        AllButSelf,
+    }
+
+    /// <summary>
     /// Every live entity, on both hubs: each joins as its core initializes and leaves as it ends. An area search goes
     /// through it, as Auto Target and Auto Target by Affinity do: with no range they searched the scene for MonoBehaviour
     /// entities alone, so a runtime entity was never found; and with a range they searched with physics alone, which finds
@@ -57,12 +84,21 @@ namespace FarEmerald.PlayForge
         }
 
         /// <summary>
-        /// Whether <paramref name="target"/> is of the sides <paramref name="filter"/> takes, from <paramref name="sides"/>,
-        /// its searcher's: an ally shares a side, an enemy shares none. A searcher with no sides takes anyone.
+        /// Whether <paramref name="filter"/> takes <paramref name="target"/>, by how it stands to <paramref name="self"/>,
+        /// the searcher, whose sides are <paramref name="sides"/>: an ally shares a side, an enemy shares none, and the
+        /// searcher itself is its own ally and no one's enemy. A searcher with no sides takes every other one as either.
         /// </summary>
-        public static bool Takes(EAffinityFilter filter, List<Tag> sides, ITarget target)
+        public static bool Takes(EAffiliationFilter filter, ISource self, List<Tag> sides, ITarget target)
         {
-            if (filter == EAffinityFilter.AlliesAndEnemies || sides == null || sides.Count == 0) return true;
+            bool itself = self != null && ReferenceEquals(self, target);
+            switch (filter)
+            {
+                case EAffiliationFilter.Everyone: return true;
+                case EAffiliationFilter.Self: return itself;
+                case EAffiliationFilter.AllButSelf: return !itself;
+            }
+            if (itself) return filter == EAffiliationFilter.Allies;
+            if (sides == null || sides.Count == 0) return true;
             var theirs = target?.GetAffiliation();
             bool shares = false;
             if (theirs != null)
@@ -74,7 +110,7 @@ namespace FarEmerald.PlayForge
                     break;
                 }
             }
-            return filter == EAffinityFilter.Allies ? shares : !shares;
+            return filter == EAffiliationFilter.Enemies ? !shares : shares;
         }
 
         /// <summary>How far <paramref name="target"/> is from <paramref name="centre"/>, flat or not, or the most a float holds where it has no position.</summary>
