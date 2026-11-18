@@ -163,7 +163,8 @@ clock it would have had, the **Caster's**, the **Game's**, **Unscaled**, or **Sc
 clock it picks, the caster's unless it picks another. A `[Serializable]` class of your own made from it is offered
 beside them, its `ClockFor(data)` giving the clock for a run on a packet. An ability's Run Sequence task has one, which
 gives the sequence it runs a clock of its own and leaves the ability's other tasks the caster's; so do the Task Sequence
-Examples' components.
+Examples' components, and a Sequence cue, whose run goes by its pick, else the sequence's own clock, else that of
+the one the cue plays on.
 
 Under ProcessControl's fixed tick, a sequence waits for the next tick, and the ticks run on the game's time, so they stand
 with it. A clock that runs while the game's time stands says so, `FollowsTicks` false as the unscaled clock's is, and its

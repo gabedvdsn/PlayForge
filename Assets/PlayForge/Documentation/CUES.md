@@ -38,6 +38,9 @@ list of lasting cues, as a While Active, from its beginning to its end:
 - **Process** runs a MonoBehaviour process where its Placement says, on a packet loaded for the cue, with its **Data**
   list last ([Data packets](#data-packets)): a burst's runs its own course, and a lasting one's runs until its cue
   ends ([Pooling](#pooling)).
+- **Sequence** runs a task sequence on a packet loaded for the cue, with its **Data** list last: a burst's runs its
+  course, and a lasting one's runs until its cue ends. It goes by the clock its **Clock** picks, else the sequence's
+  own, else that of the one it plays on.
 - **Cue Tag** plays what its tag routes to ([Routes](#routes)).
 
 Write a handler of your own by deriving from `AbstractCueHandler`: override the moments it plays at, or `Burst` to play

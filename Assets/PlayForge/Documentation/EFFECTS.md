@@ -298,6 +298,8 @@ Each list's cues are listed as its workers are, each cue's kind picked from the 
   ([CUES.md](CUES.md#floating-text)).
 - **Process**: runs a MonoBehaviour process where its **Placement** says, on a data packet loaded for the cue, as a
   shield's while it lasts ([CUES.md](CUES.md#data-packets)).
+- **Sequence**: runs a task sequence on a data packet loaded for the cue, as a flicker while the effect lasts
+  ([CUES.md](CUES.md#handlers)).
 - **Cue Tag**: plays what its tag routes to ([CUES.md](CUES.md#routes)).
 
 A save's load ends each While Active cue and begins it again as the effect leaves and comes back, and plays no burst.

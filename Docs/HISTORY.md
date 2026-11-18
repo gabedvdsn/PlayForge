@@ -10,6 +10,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## Toward 1.0.0, since 0.1.0
 
 ### Added
+- **A Sequence cue** (EP-64): runs a task sequence on a packet loaded for the cue, a burst's for its course and a
+  lasting one's until its cue ends, by the clock it picks, else the sequence's own, else its owner's.
 - **A Process cue** (EP-63): runs a MonoBehaviour process where its Placement says, on a packet loaded for the cue,
   a burst's for its own course and a lasting one's until its cue ends; pooled, its objects come from the cue pool
   through `CuePoolInstantiator`. A registration takes an instantiator of its own, `.InstantiatedBy(...)`.
