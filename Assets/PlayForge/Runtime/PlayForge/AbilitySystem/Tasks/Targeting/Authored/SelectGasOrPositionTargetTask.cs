@@ -37,6 +37,8 @@ namespace FarEmerald.PlayForge
 
         public override string Description => "Raycast to select GAS target or position";
 
+        public override string Prompt => $"{PressWords(MouseButton)} a target or a point on the ground";
+
         public override async UniTask Activate(AbilityDataPacket data, CancellationToken token)
         {
             float reach = Read(MaxDistance, data);

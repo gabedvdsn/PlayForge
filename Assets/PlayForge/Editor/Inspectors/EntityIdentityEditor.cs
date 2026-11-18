@@ -378,14 +378,15 @@ namespace FarEmerald.PlayForge.Editor
                 SerializedObject = serializedObject,
                 PropertyPaths = new[]
                 {
-                    nameof(EntityIdentity.ActivationPolicy), nameof(EntityIdentity.StartingAbilities), nameof(EntityIdentity.AllowDuplicateAbilities),
-                    nameof(EntityIdentity.CrowdControl),
+                    nameof(EntityIdentity.ActivationPolicy), nameof(EntityIdentity.TargetingYields), nameof(EntityIdentity.StartingAbilities),
+                    nameof(EntityIdentity.AllowDuplicateAbilities), nameof(EntityIdentity.CrowdControl),
                 },
                 OnImportComplete = OnSectionReplaced,
                 OnClearComplete = OnSectionReplaced,
                 GetDefaultValue = path => path switch
                 {
                     nameof(EntityIdentity.ActivationPolicy) => (int)EAbilityActivationPolicy.QueueActivationIfBusy,
+                    nameof(EntityIdentity.TargetingYields) => true,
                     _ => null,
                 },
             });
@@ -404,6 +405,9 @@ namespace FarEmerald.PlayForge.Editor
             };
             policyField.AddToClassList(BaseField<System.Enum>.alignedFieldUssClassName);
             content.Add(policyField);
+            // Whether an ability choosing its target gives way to another, for each ability that leaves it to the entity
+            content.Add(BoundToggle(nameof(EntityIdentity.TargetingYields), nameof(EntityIdentity.TargetingYields), entity.TargetingYields,
+                "Targeting Yields", "An ability choosing its target is cancelled as another of the entity's activates, nothing of it paid, for each ability whose While Targeting is the entity's rule"));
 
             content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(EntityIdentity.StartingAbilities)), "StartingAbilities", "Starting Abilities"));
             // Each limit by its name, where an empty label left it unnamed

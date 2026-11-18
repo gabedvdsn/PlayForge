@@ -120,6 +120,16 @@ passes it in, and one effect serves every strength.
     (`CreateActivationRequest`'s `bufferWindow`).
 
   Whatever the choice, an ability can't start again while its own activation holds its claim.
+- **While Targeting**: whether the ability, while its targeting waits for the player, gives way as another of the
+  entity's abilities activates. A player who starts one ability's targeting and presses another's key means the other.
+  - **Entity's Rule** (default): the entity's **Targeting Yields**, set in its Abilities section, on by default.
+  - **Yields**: its targeting is cancelled, nothing of it paid, and its claim lets go at once, so the other starts,
+    ahead of anything waiting in the input buffer. It gives way only to an activation that passes its own checks, so
+    a press of an ability on cooldown leaves it be.
+  - **Holds**: it keeps its claim until its target is chosen or it's cancelled; the other does as its When Busy says.
+
+  An activation a trigger or Activate At Start makes doesn't cut a choice short, as the player didn't ask for it.
+  Code that activates for the game rather than the player says the same of its request: `CancelsTargeting = false`.
 - **Buffer Window** (default 0.3 s) and **Buffer Priority** (default 0): the input buffer's, under Queue, as above,
   each a number field read at the ability's level. A window of 0 doesn't wait, so the request is refused. They show under Queue and under the entity's policy, which may be
   Queue, and are hidden under the others.
@@ -175,6 +185,8 @@ passes it in, and one effect serves every strength.
     already holds its target, under TargetReal, or its point, under Position, as an AI's does, takes it with no
     click, unless the task's **Take Target From Data** is off; a handed target the task can't take, out of range
     or failing its requirements, fails the targeting at once.
+    While one waits, its slot's `IsTargeting` is true, and the task's `Prompt` gives the words to ask with, as "Click
+    a target", for a game's own screen, as the Creator Lab's and the Demo's show.
   - **Auto targeting** (Auto Target, Auto Target By Affinity) takes the entities within its **Range**, or its ability's
     Cast Range where it has one, the range measured from the caster and **Use Cast Range** on, sorted by its
     **Mode**, up to **Max Targets**, or every one at 0. Each is a target of the activation, and the first, the nearest

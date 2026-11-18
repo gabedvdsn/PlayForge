@@ -97,6 +97,8 @@ holds under a slow; `OwnScale` is code's part and `AttributeScale` the attribute
   while another is busy. Activate Anyway starts it at once. Refuse starts it only when no ability under that choice is
   busy, and refuses it otherwise. Queue makes it wait in a queue while one is busy. [ABILITIES.md](ABILITIES.md)
   explains each.
+- **Targeting Yields** (default on): an ability whose While Targeting is the entity's rule gives way, while it
+  waits for its target, as another of the entity's abilities activates. [ABILITIES.md](ABILITIES.md) explains it.
 - **Starting Abilities**: abilities the entity learns when its GAS initializes, each at its own Starting Level. Those
   set to Activate At Start then try to activate.
 - **Max Abilities** (default 99): the most abilities the entity can hold. Its kind can make it a scaler, which changes

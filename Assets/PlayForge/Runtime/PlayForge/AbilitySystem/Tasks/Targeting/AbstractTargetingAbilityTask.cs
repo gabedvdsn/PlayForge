@@ -11,7 +11,22 @@ namespace FarEmerald.PlayForge
         [Tooltip("If target validation fails, break out of Ability runtime")]
         public bool BreakRuntimeOnInvalid = true;
         public virtual string Description => null;
-        
+
+        /// <summary>
+        /// The words a game shows while the task waits for the player to choose, as "Click a point on the ground", beside
+        /// the ability's name; null for one that doesn't wait for the player, as an automatic one. A slot's
+        /// <see cref="AbilitySpecContainer.IsTargeting"/> says when it waits.
+        /// </summary>
+        public virtual string Prompt => null;
+
+        /// <summary>The words for pressing a pointer's button: "Click", "Right-click" or "Middle-click".</summary>
+        protected static string PressWords(int button) => button switch
+        {
+            1 => "Right-click",
+            2 => "Middle-click",
+            _ => "Click",
+        };
+
         public override bool IsCriticalSection => true;
 
         /// <summary>

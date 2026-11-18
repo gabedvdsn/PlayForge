@@ -10,6 +10,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## Toward 1.0.0, since 0.1.0
 
 ### Added
+- **A cast choosing its target gives way to another** (FEAT-39): another of the entity's abilities activating
+  cancels it, nothing of it paid, unless the ability's While Targeting or its entity's Targeting Yields holds;
+  a game reads the wait, `AbilitySpecContainer.IsTargeting`, and a targeting task's `Prompt`.
 - **The online documentation** (EP-68): the guides, built with DocFX into a site at
   https://gabedvdsn.github.io/PlayForge-Docs/, where each help (?) button opens its section.
 - **A Condition check** (FEAT-30), `ConditionValidation`: an ability's activation passes while its condition holds, a

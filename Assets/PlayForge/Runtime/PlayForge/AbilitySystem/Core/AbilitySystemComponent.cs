@@ -20,6 +20,13 @@ namespace FarEmerald.PlayForge
 
         private EAbilityActivationPolicy activationPolicy;
         public EAbilityActivationPolicy DefaultActivationPolicy => activationPolicy;
+        private bool targetingYields = true;
+
+        /// <summary>
+        /// Whether an ability of the entity's still choosing its target gives way as another of its abilities activates,
+        /// for each ability whose While Targeting leaves it to its entity: the identity's Targeting Yields.
+        /// </summary>
+        public bool TargetingYields => targetingYields;
         private bool allowDuplicateAbilities;
         private ScalableInt maxAbilitiesOperation;
 
@@ -151,7 +158,14 @@ namespace FarEmerald.PlayForge
 
             /// <summary>How long the request may wait in the input buffer, or below 0 for its ability's window.</summary>
             public float BufferWindow;
-            
+
+            /// <summary>
+            /// Whether an ability of the entity's still choosing its target gives way as this one starts, where its While
+            /// Targeting yields: a player's press means the ability pressed. A trigger's request and an activation at
+            /// start don't, as the player didn't ask for them.
+            /// </summary>
+            public bool CancelsTargeting;
+
             public AbilityActivationRequest(int index, AbilitySystemComponent asc, EAbilityActivationPolicy policy, ProcessDataPacket data)
             {
                 Index = index;
@@ -159,6 +173,7 @@ namespace FarEmerald.PlayForge
                 Policy = policy;
                 Data = data;
                 BufferWindow = -1f;
+                CancelsTargeting = true;
             }
         }
 
@@ -200,11 +215,13 @@ namespace FarEmerald.PlayForge
         #region Initialization
         
         public void Setup(
-            EAbilityActivationPolicy activationPolicy, 
+            EAbilityActivationPolicy activationPolicy,
             bool allowDuplicates,
-            ScalableInt maxAbilitiesOperation)
+            ScalableInt maxAbilitiesOperation,
+            bool targetingYields = true)
         {
             this.activationPolicy = activationPolicy;
+            this.targetingYields = targetingYields;
             this.allowDuplicateAbilities = allowDuplicates;
             this.maxAbilitiesOperation = maxAbilitiesOperation;
             
@@ -414,8 +431,11 @@ namespace FarEmerald.PlayForge
         private void InitializeNewAbility(int abilityIndex, AbilitySpec ability)
         {
             if (!ability.Base.Definition.ActivateImmediately) return;
-            
-            TryActivateAbility(CreateActivationRequest(abilityIndex));
+
+            // Not the player's press, so it cancels no one's targeting
+            var request = CreateActivationRequest(abilityIndex);
+            request.CancelsTargeting = false;
+            TryActivateAbility(request);
         }
 
         #endregion
@@ -509,6 +529,43 @@ namespace FarEmerald.PlayForge
             }
         }
 
+        /// <summary>
+        /// Whether the ability, while it chooses its target, gives way to another's activation: its While Targeting, or
+        /// its entity's <see cref="TargetingYields"/> where it leaves it to its entity.
+        /// </summary>
+        public bool Yields(Ability ability) => ability?.Definition?.WhileTargeting switch
+        {
+            EWhileTargeting.Yields => true,
+            EWhileTargeting.Holds => false,
+            _ => targetingYields,
+        };
+
+        // Each other running ability still choosing its target, and set to yield, gives way to the one starting: its
+        // targeting is cancelled and its claim let go at once. The input buffer waits meanwhile, so what was pressed now
+        // starts before what was pressed earlier
+        private void YieldTargetingTo(AbilitySpecContainer incoming)
+        {
+            int count = RunningCount();
+            if (count == 0) return;
+            var slots = ArrayPool<int>.Shared.Rent(count);
+            bool wasFiring = firingBuffer;
+            firingBuffer = true;
+            try
+            {
+                int found = CopyRunning(slots);
+                for (int i = 0; i < found; i++)
+                {
+                    if (!AbilityCache.TryGetValue(slots[i], out var running) || running == incoming) continue;
+                    if (running.IsTargeting && Yields(running.Spec.Base)) running.YieldTargeting();
+                }
+            }
+            finally
+            {
+                firingBuffer = wasFiring;
+                ArrayPool<int>.Shared.Return(slots);
+            }
+        }
+
         private static bool PassesWhileActive(AbilitySpecContainer container, TagCache tags) =>
             container.Spec.Base.Tags?.TagRequirements?.CheckWhileActiveRequirements(tags) ?? true;
 
@@ -592,7 +649,10 @@ namespace FarEmerald.PlayForge
                     CopyEvent(data, request);
                     request.SetPrimary(Tags.TARGET_REAL, target);
                 }
-                if (TryActivateAbility(CreateActivationRequest(slot, request), out _)) fired++;
+                // Not the player's press, so it cancels no one's targeting
+                var triggered = CreateActivationRequest(slot, request);
+                triggered.CancelsTargeting = false;
+                if (TryActivateAbility(triggered, out _)) fired++;
             }
             return fired;
         }
@@ -864,6 +924,10 @@ namespace FarEmerald.PlayForge
 
             // Each running ability in a stage this one cancels ends first, so this one starts clear of it
             CancelAbilitiesCancelledBy(ability);
+
+            // And each still choosing its target gives way, where it yields: a player who starts one ability's
+            // targeting and presses another's key means the other
+            if (req.CancelsTargeting) YieldTargetingTo(container);
 
             var status = ProcessActivationRequest(data, out why);
             if (status == EActivationStatus.Refused) return Refuse(out refusal, ability, req.Index, why);
@@ -1197,6 +1261,26 @@ namespace FarEmerald.PlayForge
         /// If ability system is busy, queue activation attempt
         /// </summary>
         [InspectorName("Queue")] QueueActivationIfBusy
+    }
+
+    // What an ability choosing its target does as another of its entity's activates, which the inspectors show as While
+    // Targeting
+    public enum EWhileTargeting
+    {
+        /// <summary>
+        /// As its entity's Targeting Yields says
+        /// </summary>
+        [InspectorName("Entity's Rule")] EntitysRule,
+
+        /// <summary>
+        /// Gives way: its targeting is cancelled, nothing of it paid, and the other starts
+        /// </summary>
+        [InspectorName("Yields")] Yields,
+
+        /// <summary>
+        /// Keeps its claim until its target is chosen or it's cancelled; the other does as its When Busy says
+        /// </summary>
+        [InspectorName("Holds")] Holds
     }
 
     public enum EAbilityActivationPolicyExtended

@@ -44,6 +44,8 @@ namespace FarEmerald.PlayForge
 
         public override string Description => "Click to select a direction from caster";
 
+        public override string Prompt => $"{PressWords(MouseButton)} a direction";
+
         // Where the data aims it: its point, or else its target's place
         private static bool TryGetDataAim(AbilityDataPacket data, out Vector3 point)
         {

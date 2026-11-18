@@ -848,6 +848,17 @@ from. It lives outside `Assets/` so it never ships in the package.
   domain, where GitBook's free plan serves only from gitbook.io. **A separate public repository,
   PlayForge-Docs, holds the built site on GitHub Pages**, so PlayForge's own repository can go private. DocFX
   came from nuget.org as a pinned dotnet tool, with the user's leave.
+- Decision 96, 2026-11-18: the Demo and the Creator Lab before publishing, the user's word. The middle panels stood too
+  tall to click the scene under them, in both; and the screens told the player too little: cast ranges, what's selected,
+  what's waited on, as a click, and the controls, as how to drive the Lab's own unit. And "being able to un-activate an
+  ability in its targeting phase by attempting to activate another ability (this actually should probably be a
+  feature!)". The framework's part is FEAT-39, after the 1.0.0 freeze check, as the user asked for it before publishing;
+  the screens' are LAB-19, LAB-20 and SP-35. The choices were mine, the recommendation, for the user's review: **a cast
+  choosing its target gives way by default**, as a MOBA's does, and an ability, or its entity, can hold; a trigger's
+  activation never cuts a choice short. **The Lab's selected panel docks at the right**, over its own, a tab between the
+  two, so the middle is the space's. **A status over the space and the Demo's HUD say what a cast waits for**, in its
+  targeting task's words, and the keys as they're set. **A ring on the ground shows a cast's reach** while it chooses
+  its target, and **a right-click order lets the cast go**, as a MOBA's does.
 
 **Open. Ask the user; do not assume:**
 1. ~~**Uncommitted changes**~~: decided, see above.
@@ -1337,6 +1348,7 @@ reads the old demos' fullest assets, so it moves to the new demo's as the old go
 | FEAT-36 | Interfaces that nothing takes | Decision 44: remove, in one pass, each a CHANGELOG line, the interfaces no code takes. Done in part, 2026-11-11: `IValidationReady` and `IValidationRule<T>` (`IAbilityValidationRule`, which an ability's activation rules take, declares its own `Validate`), `IAttributeHandler`, `IGameplayConfigUser`, `ILockedTagProvider`, and the commented-out `Utils/RuntimeProxy.cs` are gone. Open: `IProxyTaskBehaviourUser` and `IProxyTaskBehaviourCaller` (the behaviour runs itself over its users, `behaviour.RunAsync(users, token)`) with `CompositeBehaviourPacket`, which wait for the user's uncommitted process change, as `AbstractRuntimeProcess` and `AbstractMonoProcess` implement them. `IGameplayProcess`, `ITagSource`, `IWorkerGroupSource` and `IAnalysisUser` are implemented, and stay unless a pass finds them unused too. In part |
 | FEAT-37 | A builder for assets made in code | Decision 44: the helpers that make effects, abilities and entities in code, Proving Grounds' `ForgeAssets` and the Battle sample's `BattleAssets`, become a supported runtime API: a scope that destroys what it made, and a documentation page; first, a probe of what a thousand `CreateInstance` calls cost. Definitions stay assets. Found with ED-84: it should make asset tags as the Forge does, whose rule is internal to the editor. Open |
 | FEAT-38 | The tooling wishlist | Decision 45, the user's request of 2026-11-11: abilities, effects, entities and items from Dota 2, Risk of Rain 2 and Hades as assets, and what PlayForge should provide for the whole workflow, sorted into framework needs and Additional Content. Three labs in Proving Grounds, 25 assets played by 25 tests (`DotaAbilitiesLabTests`, `RiskOfRainLabTests`, `HadesLabTests`); what they needed is the Lab Kit (`Assets/ProvingGrounds/LabKit/`), seven classes, and 11 of the 25 needed none. The list, `Docs/TOOLING_WISHLIST.md`: 27 framework needs and 6 items of Additional Content, each a row under The tooling wishlist (FEAT-38), the user's three first: how an attribute's bonuses accumulate and a damage pipeline, retention groups in attribute reads, and death that keeps the entity; FEAT-31's sixteen carried over; and five bugs, GAS-72 to GAS-76. The sort approved, 2026-11-11, with the shapes of TW-1, TW-2 and TW-4 (Decision 46). Open |
+| FEAT-39 | A cast choosing its target gives way to another | The user's word of 2026-11-18, revisiting the Demo and the Creator Lab before publishing: "being able to un-activate an ability in its targeting phase by attempting to activate another ability (this actually should probably be a feature!)" (Decision 96). A cast choosing its target held its claim, so another ability's press waited in the input buffer behind a click that never came, and was let go. Done: as another of its entity's abilities activates, past its own checks, each ability still choosing its target gives way: its targeting is cancelled, nothing of it paid, and its claim lets go at once, so the other starts that frame, ahead of the input buffer. An ability's **While Targeting** (Entity's Rule, Yields, Holds) says whether it gives way, and its entity's **Targeting Yields**, on by default, is the rule. A trigger's request and an activation at start don't cut a player's choice short (`AbilityActivationRequest.CancelsTargeting`). A game reads the wait: `AbilitySpecContainer.IsTargeting`, and a targeting task's `Prompt`, its words for the player, as "Click a target", each Select task's by its button and a Composite's from its first. Both inspectors show the choice, and the Activation section's line names a While Targeting of the ability's own. Proving Grounds' `TargetingYieldTests`, five cases on both hubs |
 
 **Phase 5's order,** from the review's plan for the test project (its labs, one at a time) and the table above. A lab
 is a small game: assets the lab builds in code, and a bot that plays it in PlayMode tests under a live ProcessControl,
@@ -1699,6 +1711,10 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-18, **FEAT-39: a cast choosing its target gives way to another.** The user's word (Decision 96).
+  - Red, on HEAD with FEAT-39's tests alone: 8 of 10 failed for their reasons, on both hubs: another ability, activated while one waited for its click, was Buffered, not started; and there was no While Targeting, Targeting Yields, `IsTargeting` or `Prompt`. The trigger's guard passed on both, as a guard should.
+  - Gates, in `pg_lab`, a copy of its own beside the docs session's `pg_cues`, on HEAD and FEAT-39: EditMode 1091/1091, PlayMode 2289 passed, 8 skipped, of 2297, golden 25/25, on PlayForge b4d2bfaa.
 
 - 2026-11-17, **EP-68: the online documentation site.** The user's word (Decision 95).
   - Red, on HEAD with EP-68's test alone: EditMode's one case failed: ForgeDocs had no `UrlOf`, so no help topic had an address on the site.

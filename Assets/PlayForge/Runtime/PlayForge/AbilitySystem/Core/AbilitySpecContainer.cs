@@ -15,6 +15,21 @@ namespace FarEmerald.PlayForge
         public bool IsActive => _activeHandles.Count > 0;
         public bool IsClaiming => _activeHandles.Any(h => !h.ClaimReleased && (h.IsTargeting || h.IsExecuting));
 
+        /// <summary>
+        /// Whether a run of the ability is choosing its target now, as a click-targeting task waits for the player's
+        /// click: what a game shows as the wait, with its targeting's <see cref="AbstractTargetingAbilityTask.Prompt"/>.
+        /// One that gave way to another's activation chooses no more.
+        /// </summary>
+        public bool IsTargeting
+        {
+            get
+            {
+                foreach (var handle in _activeHandles)
+                    if (handle.IsTargeting && !handle.ClaimReleased) return true;
+                return false;
+            }
+        }
+
         /// <summary>True if an activation made under the policy is still running.</summary>
         public bool IsActiveUnder(EAbilityActivationPolicy policy)
         {
@@ -348,6 +363,23 @@ namespace FarEmerald.PlayForge
                 var stage = StageOf(handle);
                 if (stage != null && stage.IsCritical) continue;
                 Inject(handle, InterruptSequenceInjection.Instance);
+            }
+        }
+
+        /// <summary>
+        /// Each run still choosing its target gives way: its targeting is cancelled, nothing of it paid, and its claim
+        /// lets go now, so another activation starts at once while the cancelled targeting winds down.
+        /// </summary>
+        internal void YieldTargeting()
+        {
+            // Backwards, as an interrupted run can end inside the interrupt and leave the list
+            for (int i = _activeHandles.Count - 1; i >= 0; i--)
+            {
+                if (i >= _activeHandles.Count) continue;
+                var handle = _activeHandles[i];
+                if (!handle.IsTargeting || handle.ClaimReleased) continue;
+                Inject(handle, InterruptSequenceInjection.Instance);
+                handle.ReleaseClaimIfNeeded();
             }
         }
 

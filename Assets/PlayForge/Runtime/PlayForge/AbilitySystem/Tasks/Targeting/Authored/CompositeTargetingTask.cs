@@ -38,6 +38,18 @@ namespace FarEmerald.PlayForge
             }
         }
 
+        // The first of its tasks that asks the player, as the one that waits first
+        public override string Prompt
+        {
+            get
+            {
+                if (Tasks == null) return null;
+                foreach (var task in Tasks)
+                    if (task?.Prompt is { Length: > 0 } words) return words;
+                return null;
+            }
+        }
+
         public override void Prepare(AbilityDataPacket data)
         {
             // Prepare each sub-task

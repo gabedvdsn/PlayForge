@@ -325,6 +325,7 @@ namespace FarEmerald.PlayForge
         public int MaxLevel = 99;
 
         public EAbilityActivationPolicy ActivationPolicy = EAbilityActivationPolicy.QueueActivationIfBusy;
+        public bool TargetingYields = true;
 
         // Defaults as EntityIdentity's: unset, these were null, and giving an ability or an item threw
         public ScalableInt MaxAbilitiesOperation = new() { Magnitude = 99 };
@@ -382,6 +383,7 @@ namespace FarEmerald.PlayForge
             StartingLevel = data.StartingLevel;
             MaxLevel = data.MaxLevel;
             ActivationPolicy = data.ActivationPolicy;
+            TargetingYields = data.TargetingYields;
             MaxAbilitiesOperation = data.MaxAbilitiesOperation;
             StartingAbilities = data.StartingAbilities;
             AllowDuplicateAbilities = data.AllowDuplicateAbilities;

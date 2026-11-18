@@ -10,7 +10,15 @@ namespace FarEmerald.PlayForge
         public string Name;
         public string Description;
         
-        public EAbilityActivationPolicyExtended ActivationPolicy = EAbilityActivationPolicyExtended.UseLocalPolicy; 
+        public EAbilityActivationPolicyExtended ActivationPolicy = EAbilityActivationPolicyExtended.UseLocalPolicy;
+
+        /// <summary>
+        /// While it chooses its target, as a click-targeting task waits for the player, whether another of its entity's
+        /// abilities activating cancels it: its entity's rule, or its own. A player who starts one ability's targeting and
+        /// presses another's key means the other.
+        /// </summary>
+        [Tooltip("While it chooses its target, whether another of its entity's abilities activating cancels it, nothing of it paid: its entity's rule, or its own")]
+        public EWhileTargeting WhileTargeting = EWhileTargeting.EntitysRule;
 
         /// <summary>
         /// Under the Queue policy, how long a request that can't start yet waits in the input buffer, in seconds of the

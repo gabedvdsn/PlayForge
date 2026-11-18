@@ -15,8 +15,9 @@ The first release.
   attribute workers that change or answer each change.
 - **Gameplay effects**: instant, lasting or periodic, with stacking, requirements, immunities, a chance to apply,
   contained effects, purges, cues, components and workers, each impact run through its value pipeline.
-- **Abilities**: staged task workflows with targeting, costs and cooldowns, triggers, a buffer, and cancelling and
-  blocking by tag; tasks to apply effects, wait, send events and move.
+- **Abilities**: staged task workflows with targeting, which gives way as another ability is cast, costs and
+  cooldowns, triggers, a buffer, and cancelling and blocking by tag; tasks to apply effects, wait, send events
+  and move.
 - **Tags**, hierarchical and weighted, with tag workers; and **items**, with stacks, levels and what they grant.
 - **Cues**: what effects, abilities, entities and items show and sound, played through `ForgeCues` at their
   moments. A Cue Tag plays what the project's Cue Library routes its tag to, or an entity's Cue Receiver its own

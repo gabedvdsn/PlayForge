@@ -346,7 +346,8 @@ namespace FarEmerald.PlayForge.Editor
                 SerializedObject = serializedObject,
                 PropertyPaths = new[]
                 {
-                    DefinitionPath(nameof(AbilityDefinition.ActivationPolicy)), DefinitionPath(nameof(AbilityDefinition.BufferWindow)),
+                    DefinitionPath(nameof(AbilityDefinition.ActivationPolicy)), DefinitionPath(nameof(AbilityDefinition.WhileTargeting)),
+                    DefinitionPath(nameof(AbilityDefinition.BufferWindow)),
                     DefinitionPath(nameof(AbilityDefinition.BufferPriority)), DefinitionPath(nameof(AbilityDefinition.ActivateImmediately)),
                     DefinitionPath(nameof(AbilityDefinition.ChanceToActivate)), DefinitionPath(nameof(AbilityDefinition.ActivationRoll)),
                     DefinitionPath(nameof(AbilityDefinition.ProcCoefficient)), DefinitionPath(nameof(AbilityDefinition.IgnoresCrowdControl)),
@@ -369,6 +370,16 @@ namespace FarEmerald.PlayForge.Editor
             };
             policy.AddToClassList(BaseField<System.Enum>.alignedFieldUssClassName);
             content.Add(policy);
+
+            // Whether another ability's activation cancels it while it chooses its target
+            var whileTargeting = new EnumField("While Targeting", ability.Definition.WhileTargeting)
+            {
+                name = "WhileTargeting",
+                bindingPath = DefinitionPath(nameof(AbilityDefinition.WhileTargeting)),
+                tooltip = "While it chooses its target, whether another of the entity's abilities activating cancels it, nothing of it paid: the entity's rule, or its own",
+            };
+            whileTargeting.AddToClassList(BaseField<System.Enum>.alignedFieldUssClassName);
+            content.Add(whileTargeting);
 
             // The input buffer, which is what When Busy's Queue does: how long a press waits, and which goes first
             var window = CreatePropertyField(serializedObject.FindProperty(DefinitionPath(nameof(AbilityDefinition.BufferWindow))), "BufferWindow", "Buffer Window");
@@ -749,6 +760,9 @@ namespace FarEmerald.PlayForge.Editor
         private string ActivationSummary()
         {
             var parts = new List<string> { EnumName(ability.Definition.ActivationPolicy) };
+            // While Targeting, where it isn't the entity's rule, as "Holds while targeting"
+            if (ability.Definition.WhileTargeting != EWhileTargeting.EntitysRule)
+                parts.Add($"{EnumName(ability.Definition.WhileTargeting)} while targeting");
             if (ability.Cost != null) parts.Add(NameOf(ability.Cost));
             // Each attribute cost, as "30 Mana": its attribute's name, or its role's
             foreach (var cost in ability.AttributeCosts ?? new List<AttributeCost>())

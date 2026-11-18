@@ -24,7 +24,10 @@ namespace FarEmerald.PlayForge
         public int MaxLevel = 99;
         
         public EAbilityActivationPolicy ActivationPolicy = EAbilityActivationPolicy.QueueActivationIfBusy;
-        
+
+        [Tooltip("An ability of its choosing its target is cancelled as another of its abilities activates, for each ability whose While Targeting is the entity's rule")]
+        public bool TargetingYields = true;
+
         // These had no default, so an identity that didn't set them could hold nothing: a new asset's were 0
         [ScalerOperationKeyword("Max Abilities")]
         public ScalableInt MaxAbilitiesOperation = new() { Magnitude = 99 };

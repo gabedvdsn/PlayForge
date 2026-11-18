@@ -140,7 +140,7 @@ namespace FarEmerald.PlayForge
             // identity, which every entity of this kind shares, so one turncoat moved them all
             affiliation = registered ?? (identity.Affiliation != null ? new List<Tag>(identity.Affiliation) : null);
 
-            AbilitySystem.Setup(identity.ActivationPolicy, identity.AllowDuplicateAbilities, identity.MaxAbilitiesOperation);
+            AbilitySystem.Setup(identity.ActivationPolicy, identity.AllowDuplicateAbilities, identity.MaxAbilitiesOperation, identity.TargetingYields);
             AttributeSystem.Setup(identity.AttributeSet);
             ItemSystem.Setup(identity.AllowDuplicateItems, identity.AllowDuplicateEquippedItems, identity.MaxItemsOperation, identity.MaxEquippedItemsOperation);
 

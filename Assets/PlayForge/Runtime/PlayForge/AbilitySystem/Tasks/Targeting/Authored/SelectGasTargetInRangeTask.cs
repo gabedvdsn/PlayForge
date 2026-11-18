@@ -46,6 +46,8 @@ namespace FarEmerald.PlayForge
 
         public override string Description => $"Select GAS target within {MaxTargetRange}m";
 
+        public override string Prompt => $"{PressWords(MouseButton)} a target in range";
+
         public override async UniTask Activate(AbilityDataPacket data, CancellationToken token)
         {
             float reach = Read(MaxRayDistance, data);
