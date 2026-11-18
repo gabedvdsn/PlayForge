@@ -1452,6 +1452,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   or turning `Enabled` off. Once the first had ended, it threw, and the rest ran on.
 
 ### Removed
+- `Tools/DemoBuilder` (EP-67): the editor tool that built the Demo's assets in Phase 7 no longer compiled against
+  the package; the Demo's assets, edited directly since, are what ships.
 - `EffectImpactConfig`, `AbstractEffectDurationConfig`, `EInclusionPolicy`, `ValueModifier` and `ValueIntModifier`
   (FEAT-30), which nothing made, read or saved; `ForgeHelper.TryComputeCachedMagnitudeModifierGroupValue` and
   `ForgeUtils.TryGet`, which nothing called.
