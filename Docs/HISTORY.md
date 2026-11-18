@@ -10,6 +10,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## Toward 1.0.0, since 0.1.0
 
 ### Added
+- A double-click on a console message ForgeLog wrote opens the code that logged it (EP-65): ForgeLog's methods
+  are marked `[HideInCallstack]`, and the Console's double-click skips them and any method so marked.
 - **`TaskSequenceRuntime.CreateLinkedTokenSource`** (EP-58): a token source a task links to its token, whose token
   belongs to the task's run, so a wait on it keeps the run's clock and holds while the run is paused.
 - **`ActivationResult`** (EP-60): what came of a request to activate an ability, its `Status` Started, Buffered,

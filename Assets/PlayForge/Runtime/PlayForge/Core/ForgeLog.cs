@@ -16,6 +16,9 @@ namespace FarEmerald.PlayForge
     /// <para>What's said only when asked, a debug tool's output (TagCache.LogWeights, the Threshold Debugger worker,
     /// LogAction), ProcessControl's logs while its inspector's toggles are on, and a sequence's injection or chain
     /// logging, is information: the toggle decides whether it's made, and the level whether it's shown.</para>
+    ///
+    /// <para>Its methods are marked to hide in the Console's stack, as the Console's Strip Logging Callstack hides them, and
+    /// a double-click on a message it wrote opens the code that logged it, not this file.</para>
     /// </summary>
     public static class ForgeLog
     {
@@ -77,27 +80,35 @@ namespace FarEmerald.PlayForge
         /// <summary>Whether a message of a level, of a system, is let through.</summary>
         public static bool Allows(ESystem system, ELevel level) => level < ELevel.None && level >= LevelOf(system);
 
+        [HideInCallstack]
         public static void Verbose(string message, Object context = null) => Write(ESystem.General, ELevel.Verbose, message, context, null);
 
+        [HideInCallstack]
         public static void Info(string message, Object context = null) => Write(ESystem.General, ELevel.Info, message, context, null);
 
+        [HideInCallstack]
         public static void Warning(string message, Object context = null) => Write(ESystem.General, ELevel.Warning, message, context, null);
 
+        [HideInCallstack]
         public static void Error(string message, Object context = null) => Write(ESystem.General, ELevel.Error, message, context, null);
 
         /// <summary>A message of a system, about an entity where it names one, which a log filtered to it shows.</summary>
+        [HideInCallstack]
         public static void Verbose(ESystem system, string message, Object context = null, object subject = null) =>
             Write(system, ELevel.Verbose, message, context, subject);
 
         /// <inheritdoc cref="Verbose(ESystem, string, Object, object)"/>
+        [HideInCallstack]
         public static void Info(ESystem system, string message, Object context = null, object subject = null) =>
             Write(system, ELevel.Info, message, context, subject);
 
         /// <inheritdoc cref="Verbose(ESystem, string, Object, object)"/>
+        [HideInCallstack]
         public static void Warning(ESystem system, string message, Object context = null, object subject = null) =>
             Write(system, ELevel.Warning, message, context, subject);
 
         /// <inheritdoc cref="Verbose(ESystem, string, Object, object)"/>
+        [HideInCallstack]
         public static void Error(ESystem system, string message, Object context = null, object subject = null) =>
             Write(system, ELevel.Error, message, context, subject);
 
@@ -105,6 +116,7 @@ namespace FarEmerald.PlayForge
         /// An exception of a system, as an error, where an error is let through: the console shows it as Unity's own
         /// LogException does, with its stack, and <see cref="Logged"/> hears its type and message.
         /// </summary>
+        [HideInCallstack]
         public static void Exception(ESystem system, System.Exception exception, Object context = null, object subject = null)
         {
             if (exception == null || !Allows(system, ELevel.Error)) return;
@@ -113,6 +125,7 @@ namespace FarEmerald.PlayForge
                 subject, ForgeTime.Time, ForgeTime.FrameCount));
         }
 
+        [HideInCallstack]
         private static void Write(ESystem system, ELevel level, string message, Object context, object subject)
         {
             if (!Allows(system, level)) return;

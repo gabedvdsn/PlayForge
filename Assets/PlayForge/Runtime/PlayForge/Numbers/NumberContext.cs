@@ -487,6 +487,7 @@ namespace FarEmerald.PlayForge
         // The kinds that have said they can't be worked out where they were read, each said once
         private static readonly HashSet<Type> Unresolved = new();
 
+        [UnityEngine.HideInCallstack]
         internal static void LogUnresolved(NumberKind kind, in NumberContext context)
         {
             if (kind == null || !Unresolved.Add(kind.GetType())) return;

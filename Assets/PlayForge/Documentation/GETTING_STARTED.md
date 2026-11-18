@@ -257,6 +257,9 @@ Logging** (Verbose / Info / Warning / Error / None). In builds, set
 `ForgeLog.MinimumLevel` from code. What's said only when asked, `ProcessControl`'s lifecycle logs while its inspector's
 toggles are on, a sequence's or a chain's logging, a debug tool's output, is information: the toggle makes it, and the
 level shows it. `ForgeLog.Exception` logs an exception as Unity's own `LogException` does, its stack in the console.
+A double-click on a message ForgeLog wrote opens the code that logged it, not ForgeLog. Its methods are marked
+`[HideInCallstack]`, so the Console's **Strip Logging Callstack** leaves them out of the stack, and a logging wrapper
+of your own marked so is skipped too.
 
 Each message is of a system, effects, abilities, numbers, processes, sequences, saves, input and the rest (`ForgeLog.ESystem`), and
 a system can take a level of its own, `ForgeLog.SetLevel(ForgeLog.ESystem.Effects, ForgeLog.ELevel.Verbose)`, or give it
