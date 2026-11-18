@@ -31,8 +31,10 @@ The first release.
   effect's journal and each hit's steps; and **the Creator Lab**, a scene to try assets on units, test dummies and bots,
   with stops, stepping, watches and logs.
 - **Samples**: Battle, Demo, Additional Content, Task Sequence Examples and Process Group Examples; and a **test kit** for a game's own tests.
-- **Online documentation**: the guides, at [gabedvdsn.github.io/PlayForge-Docs](https://gabedvdsn.github.io/PlayForge-Docs/),
-  where each help (?) button in PlayForge's inspectors opens its section. The same guides ship in `Documentation`.
+- **Online documentation** at [gabedvdsn.github.io/PlayForge-Docs](https://gabedvdsn.github.io/PlayForge-Docs/): the guides,
+  each section a page of its own, and an API reference with a page for every public type, linked both
+  ways. Each help (?) button in PlayForge's inspectors opens its section. The same guides ship in
+  `Documentation`.
 
 Requires Unity 6000.0 or later, and UniTask 2.5.11 (MIT, Cysharp), which the Asset Store package includes; see
 `Third-Party Notices.txt`.

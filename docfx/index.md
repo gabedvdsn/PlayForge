@@ -5,17 +5,24 @@ attribute, tag and item is an asset you build in the inspector, and one hub on e
 
 ## Start here
 
-[Getting Started](../Assets/PlayForge/Documentation/GETTING_STARTED.md) sets PlayForge up in a project, makes an entity, and gives it an ability
+[Getting Started](guides/getting-started/index.md) sets PlayForge up in a project, makes an entity, and gives it an ability
 that changes an attribute through an effect.
 
 ## The guides
 
 | Area | Guides |
 | --- | --- |
-| Gameplay | [Entities](../Assets/PlayForge/Documentation/ENTITIES.md) · [Attributes](../Assets/PlayForge/Documentation/ATTRIBUTES.md) · [Attribute Sets](../Assets/PlayForge/Documentation/ATTRIBUTE_SETS.md) · [Effects](../Assets/PlayForge/Documentation/EFFECTS.md) · [Effect & Attribute Pipeline](../Assets/PlayForge/Documentation/EFFECT_PIPELINE.md) · [Value Pipelines](../Assets/PlayForge/Documentation/VALUE_PIPELINES.md) · [Scalers](../Assets/PlayForge/Documentation/SCALERS.md) · [Abilities](../Assets/PlayForge/Documentation/ABILITIES.md) · [Items](../Assets/PlayForge/Documentation/ITEMS.md) · [Cues](../Assets/PlayForge/Documentation/CUES.md) · [Workers](../Assets/PlayForge/Documentation/WORKERS.md) |
-| Running it | [Processes](../Assets/PlayForge/Documentation/PROCESSES.md) · [Task Sequences](../Assets/PlayForge/Documentation/TASK_SEQUENCES.md) · [Saving and Loading](../Assets/PlayForge/Documentation/SAVING.md) · [Spreadsheets](../Assets/PlayForge/Documentation/SPREADSHEETS.md) |
-| Tools | [The Creator Lab](../Assets/PlayForge/Documentation/CREATOR_LAB.md) · [Testing Your Content](../Assets/PlayForge/Documentation/TESTING.md) |
-| Recipes | [Recipes](../Assets/PlayForge/Documentation/RECIPES.md): common rules built from PlayForge's own assets, field by field |
+| Gameplay | [Entities](guides/entities/index.md) · [Attributes](guides/attributes/index.md) · [Attribute Sets](guides/attribute-sets/index.md) · [Effects](guides/effects/index.md) · [Effect & Attribute Pipeline](guides/effect-pipeline/index.md) · [Value Pipelines](guides/value-pipelines/index.md) · [Scalers](guides/scalers/index.md) · [Abilities](guides/abilities/index.md) · [Items](guides/items/index.md) · [Cues](guides/cues/index.md) · [Workers](guides/workers/index.md) |
+| Running it | [Processes](guides/processes/index.md) · [Task Sequences](guides/task-sequences/index.md) · [Saving and Loading](guides/saving/index.md) · [Spreadsheets](guides/spreadsheets/index.md) |
+| Tools | [The Creator Lab](guides/creator-lab/index.md) · [Testing Your Content](guides/testing/index.md) |
+| Recipes | [Recipes](guides/recipes/index.md): common rules built from PlayForge's own assets, field by field |
 
-These guides are the ones the package ships in `PlayForge/Documentation`, and each help button in PlayForge's
-inspectors opens its section here.
+These guides are the ones the package ships in `PlayForge/Documentation`, each section here a page of its own, and each
+help button in PlayForge's inspectors opens its section. A guide's **Built-in kinds** page lists the components,
+tasks, workers, cues, scalers and the rest that PlayForge ships for its pickers, each with what it does.
+
+## The API reference
+
+[The API reference](api/index.md) has a page for every public type of PlayForge: its runtime, the Creator Lab, its
+editor and its test kit, grouped by area. Each type's page links the guide to its area and the guide sections that
+name it, and each guide links the types it names to their pages.

@@ -1,2 +1,5 @@
 _site/
 obj/
+api/
+apidoc/
+guides/

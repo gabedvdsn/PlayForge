@@ -11,7 +11,10 @@ namespace FarEmerald.PlayForge.Editor
     /// </summary>
     internal static class ForgeDocs
     {
-        /// <summary>The documentation site: each Documentation page is at guides/, as HTML.</summary>
+        /// <summary>
+        /// The documentation site: each Documentation page is a folder under guides/, its opening at index.html and each
+        /// of its sections a page of its own.
+        /// </summary>
         internal const string Site = "https://gabedvdsn.github.io/PlayForge-Docs/";
 
         // Each topic's page, and its section's heading there; null for the whole page
@@ -86,16 +89,18 @@ namespace FarEmerald.PlayForge.Editor
             topic != null && Topics.TryGetValue(topic, out var target) ? target : ("GETTING_STARTED.md", null);
 
         /// <summary>
-        /// A topic's address on the site: its page as HTML, at its section's heading by the anchor the site gives it.
+        /// A topic's address on the site: its section's own page, named as the site names its heading, in its page's
+        /// folder, the page's name in lowercase with a hyphen for each underscore; or the page's opening, for a topic of
+        /// the whole page.
         /// </summary>
         internal static string UrlOf(string topic)
         {
             var (page, heading) = Resolve(topic);
-            var url = Site + "guides/" + Path.GetFileNameWithoutExtension(page) + ".html";
-            return heading == null ? url : url + "#" + AnchorOf(heading);
+            var folder = Path.GetFileNameWithoutExtension(page).ToLowerInvariant().Replace('_', '-');
+            return Site + "guides/" + folder + "/" + (heading == null ? "index" : AnchorOf(heading)) + ".html";
         }
 
-        // A heading's anchor as the site names it, GitHub's way: lowercase, each space a hyphen, other punctuation dropped
+        // A heading's name as the site gives it, GitHub's way: lowercase, each space a hyphen, other punctuation dropped
         private static string AnchorOf(string heading)
         {
             var anchor = new StringBuilder(heading.Length);

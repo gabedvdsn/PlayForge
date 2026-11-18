@@ -80,8 +80,9 @@ with 0 errors and 0 warnings.
 ## ☐ 6. Submission mechanics
 
 - ☐ Publisher account; support email/website.
-- ☑ Online documentation at https://gabedvdsn.github.io/PlayForge-Docs/ (EP-68): `bash docfx/publish.sh` builds and
-  publishes it again after a guide changes. The listing's description links to it.
+- ☑ Online documentation at https://gabedvdsn.github.io/PlayForge-Docs/ (EP-68, EP-69): the guides and the API
+  reference. `bash docfx/publish.sh` builds it from HEAD and publishes it again, after a commit that
+  changes a guide or the public API. The listing's description links to it.
 - ☐ Key images: icon 160×160, card 420×280, cover 1950×1300; ≥5 screenshots (The Forge
   and the Debugger are the strongest material); optional video.
 - ☐ Description; tags; state "samples render in the Built-in RP and URP; the runtime is render-pipeline-agnostic".

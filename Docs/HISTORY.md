@@ -10,6 +10,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## Toward 1.0.0, since 0.1.0
 
 ### Added
+- **The API reference and the guides' own pages** (EP-69): every public type's page on the docs site, and each
+  guide's sections on pages of their own, linked both ways; each help (?) button opens its section's page.
 - **The Creator Lab tells the author what's going on** (LAB-19, LAB-20): a status over the space, what a cast
   waits for, what's selected, whom they control and the keys; a ring at a cast's reach while it chooses its
   target; a right-click order lets the cast go; and the selected panel docks at the right, the middle the space's.

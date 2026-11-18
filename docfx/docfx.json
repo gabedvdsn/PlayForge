@@ -1,5 +1,36 @@
 {
   "$schema": "https://raw.githubusercontent.com/dotnet/docfx/main/schemas/docfx.schema.json",
+  "metadata": [
+    {
+      "src": [
+        {
+          "src": "../Assets/PlayForge",
+          "files": [
+            "Runtime/**/*.cs",
+            "Editor/**/*.cs",
+            "TestKit/**/*.cs"
+          ]
+        }
+      ],
+      "references": [
+        {
+          "src": "obj/refs",
+          "files": [
+            "*.dll"
+          ]
+        }
+      ],
+      "properties": {
+        "DefineConstants": "UNITY_EDITOR;UNITY_TESTS_FRAMEWORK;PLAYFORGE_INPUT_SYSTEM;ENABLE_INPUT_SYSTEM;ENABLE_LEGACY_INPUT_MANAGER"
+      },
+      "dest": "obj/api",
+      "outputFormat": "mref",
+      "memberLayout": "samePage",
+      "namespaceLayout": "flattened",
+      "enumSortOrder": "declaringOrder",
+      "disableGitFeatures": false
+    }
+  ],
   "build": {
     "content": [
       {
@@ -10,18 +41,33 @@
       },
       {
         "files": [
-          "toc.yml"
-        ],
-        "src": "guides",
-        "dest": "guides"
+          "guides/**/*.md",
+          "guides/toc.yml"
+        ]
       },
       {
         "files": [
-          "*.md"
-        ],
-        "src": "../Assets/PlayForge/Documentation",
-        "dest": "guides"
+          "api/*.yml",
+          "api/index.md"
+        ]
       }
+    ],
+    "resource": [
+      {
+        "files": [
+          "images/**"
+        ]
+      }
+    ],
+    "overwrite": [
+      {
+        "files": [
+          "apidoc/*.md"
+        ]
+      }
+    ],
+    "xref": [
+      "obj/unity.xrefmap.yml"
     ],
     "output": "_site",
     "template": [
@@ -36,13 +82,6 @@
       "_disableContribution": true,
       "_appLogoPath": "images/logo.svg",
       "_appFaviconPath": "images/logo.svg"
-    },
-    "resource": [
-      {
-        "files": [
-          "images/**"
-        ]
-      }
-    ]
+    }
   }
 }
