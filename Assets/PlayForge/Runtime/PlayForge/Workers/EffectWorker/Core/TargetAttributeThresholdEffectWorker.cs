@@ -4,6 +4,13 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
+    /// <summary>
+    /// The base of an effect worker that acts on each hit of its effect where an attribute meets a threshold:
+    /// <c>TargetAttribute</c> on its context's System, which for a hit is the dealer, the effect's caster, its Current,
+    /// its Base or both as <c>Target</c> says, compared with <c>Threshold</c> by <c>Policy</c>. Derive from it and
+    /// override <c>OnThresholdMet</c> for the actions it queues; <c>CanCompare</c> and <c>MeetsThreshold</c> can be
+    /// overridden too.
+    /// </summary>
     public abstract class TargetAttributeThresholdEffectWorker : AbstractEffectWorker
     {
         

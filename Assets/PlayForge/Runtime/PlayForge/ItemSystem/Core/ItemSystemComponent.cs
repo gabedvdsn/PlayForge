@@ -3,6 +3,14 @@ using System.Linq;
 
 namespace FarEmerald.PlayForge
 {
+    /// <summary>
+    /// An entity's inventory: the items it holds, each in a slot (an <c>ItemSpecContainer</c>) with its level and
+    /// stacks, and which of them it wears. <c>GiveItem</c>, <c>EquipItem</c>, <c>UnequipItem</c>, <c>RemoveItem</c> and
+    /// <c>ConsumeItem</c> change it, within its entity's item limits and duplicate rules; a worn item puts on its
+    /// Granted Effects and Granted Tags, lends its Active Ability and adds its workers, and takes them back as it comes
+    /// off. Code reaches it through the entity's hub, <c>GetItemSystem()</c>, and hears each change through its
+    /// <c>Callbacks</c>.
+    /// </summary>
     public class ItemSystemComponent : DeferredContextSystem
     {
         public readonly IGameplayAbilitySystem Self;

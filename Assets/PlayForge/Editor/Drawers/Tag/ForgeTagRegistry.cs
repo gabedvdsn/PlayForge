@@ -1137,6 +1137,10 @@ namespace FarEmerald.PlayForge.Editor
     // Asset Import Hook - Auto-refresh on asset changes
     // ═══════════════════════════════════════════════════════════════════════════════
     
+    /// <summary>
+    /// Marks the tag registry, <c>ForgeTagRegistry</c>, out of date whenever a .asset file is imported, deleted or
+    /// moved, so what reads it next, as a tag field's picker, scans the project's tags again.
+    /// </summary>
     public class TagRegistryAssetPostprocessor : AssetPostprocessor
     {
         static void OnPostprocessAllAssets(

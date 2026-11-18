@@ -482,6 +482,12 @@ namespace FarEmerald.PlayForge
         // Utility Methods
         // ═══════════════════════════════════════════════════════════════════════════
 
+        /// <summary>
+        /// Makes the names of unique tags. <c>GenerateDeterministicTag</c> makes a tag of a prefix and a text, padded
+        /// to a fixed length of 32 to 64 characters from their SHA-256 hash, or cut to it, so the same text always
+        /// gives the same tag, which reads as the text; <c>Tag.GenerateAsUnique</c> makes its tags so.
+        /// <c>GenerateUniqueRandomTag</c> makes a random name that no registered tag has.
+        /// </summary>
         public static class TagUtil
         {
             public const int rngGenerationBufferSize = 64;

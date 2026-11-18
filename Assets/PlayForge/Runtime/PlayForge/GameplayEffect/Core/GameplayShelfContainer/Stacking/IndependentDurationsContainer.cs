@@ -3,6 +3,11 @@ using System.Collections.Generic;
 
 namespace FarEmerald.PlayForge
 {
+    /// <summary>
+    /// The container of Stacks Have Independent Durations: each stack keeps its own timer and ticks and comes off as
+    /// its time runs out, so the effect lasts as long as its longest stack. Refresh restarts its oldest stack's time,
+    /// and Extend adds a stack.
+    /// </summary>
     public class IndependentDurationsContainer : AbstractStackingEffectContainer
     {
         protected IndependentDurationsContainer(GameplayEffectSpec spec, bool ongoing) : base(spec, ongoing)

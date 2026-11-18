@@ -17,6 +17,9 @@ namespace FarEmerald.PlayForge.Editor
         /// </summary>
         internal const string Site = "https://gabedvdsn.github.io/PlayForge-Docs/";
 
+        /// <summary>The API reference on the site: a page for each public type of PlayForge.</summary>
+        internal const string ApiReference = Site + "api/index.html";
+
         // Each topic's page, and its section's heading there; null for the whole page
         private static readonly Dictionary<string, (string page, string heading)> Topics = new()
         {
@@ -82,6 +85,9 @@ namespace FarEmerald.PlayForge.Editor
             ["cues"]                       = ("CUES.md", null),
             ["cues/routes"]                = ("CUES.md", "Routes"),
             ["cues/raised"]                = ("CUES.md", "Raised"),
+            ["editor"]                     = ("EDITOR.md", null),
+            ["editor/forge"]               = ("EDITOR.md", "The Forge"),
+            ["editor/settings"]            = ("EDITOR.md", "Preferences and Project Settings"),
         };
 
         /// <summary>The page and heading a topic names. An unknown topic gives the getting-started page.</summary>
@@ -117,5 +123,8 @@ namespace FarEmerald.PlayForge.Editor
         /// bars editor code from sending users out of the Editor unasked (rule 2.5.1.d).
         /// </summary>
         public static void Open(string topic) => UnityEngine.Application.OpenURL(UrlOf(topic));
+
+        /// <summary>Opens an address in the browser, as a link to the site's opening or its API reference does: on a click alone.</summary>
+        public static void OpenUrl(string url) => UnityEngine.Application.OpenURL(url);
     }
 }

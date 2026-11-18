@@ -5,6 +5,12 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
+    /// <summary>
+    /// An effect's duration section: its Policy and Duration, the clock it runs by, its periodic ticks, Tick On
+    /// Application and Additional Executions, what it does as it's applied to a target that has it already, and how its
+    /// stacks count. As a lasting effect lands, it makes the container the application lives in on the shelf and sets
+    /// its clock, reading its numbers for that application.
+    /// </summary>
     [Serializable]
     public class GameplayEffectDuration
     {
@@ -324,6 +330,12 @@ namespace FarEmerald.PlayForge
         }
     }
     
+    /// <summary>
+    /// How long an effect lives: Instant, the default, makes its change once and is done; Durational stays on the
+    /// target's shelf for its Duration; Infinite stays until something removes it. It gives the effect's first impact
+    /// its delivery: on applying for an Instant effect, and for a lasting one while it lasts, or on each tick where it
+    /// ticks.
+    /// </summary>
     public enum EEffectDurationPolicy
     {
         Instant,
@@ -331,6 +343,10 @@ namespace FarEmerald.PlayForge
         Infinite
     }
 
+    /// <summary>
+    /// How a whole-number field, a <c>ScalableInt</c>, makes a value read through its scaler whole: Floor rounds it
+    /// down, Ceil up, and Round to the nearest, a half away from zero. Scaled Stack Amount rounds its stacks by it too.
+    /// </summary>
     public enum ERoundingOperation
     {
         Floor,

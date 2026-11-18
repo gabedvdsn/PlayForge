@@ -6,6 +6,20 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
+    /// <summary>
+    /// The scene's scheduler of processes: every process, a GAS, a projectile, an ability's sequence, registers with
+    /// it, and it steps each from Unity's player loop, in Update, LateUpdate or FixedUpdate as the process's timing
+    /// asks, moves it between its states as its lifecycle says, and ends it. A Bootstrapper brings it up as the one
+    /// <c>Instance</c>, and it then registers the scene's own mono processes, as its Collect On Awake says.
+    ///
+    /// <para><c>ProcessControl.Register(process).HandledBy(handler).With(data).Run()</c> registers a process and starts
+    /// it, and its result holds the process's relay, which pauses, resumes and ends it; <c>RegisterGroup</c> and
+    /// <c>RegisterWithGroup</c> hold runtime processes in a group by a tag. Its control state (<c>SetControlState</c>)
+    /// pauses, closes or ends every process at once; its Fixed Tick Rate, above 0, steps every process at fixed steps
+    /// of game time, so a run comes out the same at any frame rate; and its <c>Callbacks</c> hear every process
+    /// register, change state and go. Its bookkeeping is its <c>World</c>, a <c>ProcessWorld</c>, which code can also
+    /// own and step with no scene.</para>
+    /// </summary>
     public class ProcessControl : MonoBehaviour, IGameplayProcessHandler, IManagerial
     {
         public static ProcessControl Instance;
@@ -513,6 +527,13 @@ namespace FarEmerald.PlayForge
         #endregion
     }
 
+    /// <summary>
+    /// What ProcessControl does as a whole: <c>Ready</c> takes new processes and runs them; <c>Waiting</c> takes them
+    /// and holds every process where it is; <c>Closed</c> takes no more and runs those it has; <c>ClosedWaiting</c>
+    /// takes no more and holds those it has; <c>Terminated</c> ends every process, a running one as its run ends, and
+    /// <c>TerminatedImmediately</c> ends them all at once, and neither takes more. <c>SetControlState</c> sets it, and
+    /// leaving a waiting state sends back what it held; the inspector's Start State is the one it starts in.
+    /// </summary>
     public enum EProcessControlState
     {
         Ready,              // Normal operation

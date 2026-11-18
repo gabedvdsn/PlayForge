@@ -582,6 +582,11 @@ namespace FarEmerald.PlayForge
         #endregion
     }
 
+    /// <summary>
+    /// Where a registered process is in its life: <c>Created</c>, as it's registered and set up, before its first move;
+    /// <c>Running</c>; <c>Waiting</c>, paused or waiting to run again; and <c>Terminated</c>, ended and cleaned up. A
+    /// relay's <c>State</c> reads it, and the process's lifecycle and ProcessControl's state decide each move.
+    /// </summary>
     public enum EProcessState
     {
         Created,    // Created but not initialized
@@ -590,6 +595,11 @@ namespace FarEmerald.PlayForge
         Terminated  // Terminated and cleaned up
     }
 
+    /// <summary>
+    /// Whether a process is stepped or its run awaited, as its wrapper's <c>Status</c> says: <c>Synchronous</c> for a
+    /// process of the Synchronous lifecycle, <c>Asynchronous</c> for any other, and <c>Unknown</c> where the wrapper
+    /// doesn't say.
+    /// </summary>
     public enum EProcessStatus
     {
         Asynchronous,  // waiting for an async process

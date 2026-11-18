@@ -9,7 +9,17 @@ namespace FarEmerald.PlayForge
     /// </summary>
     public class AttributeSystemCallbacks
     {
+        /// <summary>
+        /// A listener of an attribute coming or going, handed the attribute: <c>OnAttributeRegister</c> hears each
+        /// attribute the entity's attribute system takes, as its set is built, and <c>OnAttributeUnregister</c> each it
+        /// removes.
+        /// </summary>
         public delegate void AttributeDelegate(IAttribute attribute);
+        /// <summary>
+        /// A listener of a change that has landed on an attribute, handed its <c>ImpactData</c>: the entity, the
+        /// attribute, what it changed by after workers, bounds and rounding, its value before, and the change that did
+        /// it. <c>OnAttributeChanged</c>, <c>OnAttributeIncreased</c> and <c>OnAttributeReduced</c> take one.
+        /// </summary>
         public delegate void AttributeImpactDelegate(ImpactData data);
 
         /// <summary>
@@ -137,7 +147,16 @@ namespace FarEmerald.PlayForge
         // ATTRIBUTE STATE CHANGES
         // ═══════════════════════════════════════════════════════════════
         
+        /// <summary>
+        /// A listener of an attribute's Current emptying or filling, handed the attribute:
+        /// <c>OnAttributeCurrentZero</c> hears a change to its Current that leaves it at 0, and
+        /// <c>OnAttributeCurrentFull</c> one that leaves it at its Base, each as its share of its Base reads.
+        /// </summary>
         public delegate void AttributeStateDelegate(IAttribute attribute);
+        /// <summary>
+        /// A listener of an attribute's value changing, handed the attribute and its value before and after the change:
+        /// <c>OnAttributeBaseChanged</c> hears each change that moves its Base.
+        /// </summary>
         public delegate void AttributeValueChangeDelegate(IAttribute attribute, AttributeValue oldValue, AttributeValue newValue);
         
         #region On IAttribute Base Changed

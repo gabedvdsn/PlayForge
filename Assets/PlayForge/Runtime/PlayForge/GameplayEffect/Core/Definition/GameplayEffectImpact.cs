@@ -7,6 +7,13 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
+    /// <summary>
+    /// An effect's impact section: its first impact, the attribute it changes, the operation and the value it changes,
+    /// its magnitude, pipeline and impact types, whose delivery the duration gives it; its Additional Impacts, each
+    /// with a delivery of its own; its affiliation check, its chance to apply and its contained effects. On every
+    /// <c>GameplayEffect.Generate</c>, <c>RebuildEntries</c> derives the first impact's entry, which is never saved,
+    /// and appends the additional ones after it: <c>Entries</c> is what an application commits and registers.
+    /// </summary>
     [Serializable]
     public class GameplayEffectImpact
     {
@@ -268,6 +275,10 @@ namespace FarEmerald.PlayForge
 
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
+        /// <summary>
+        /// Walks the contained effects of one moment in place, each packet whose moment it is, as a <c>foreach</c> over
+        /// <c>ContainedEffects</c> does; it allocates nothing.
+        /// </summary>
         public struct Enumerator : IEnumerator<GameplayEffect>
         {
             private readonly ContainedEffectPacket[] packets;
@@ -301,6 +312,11 @@ namespace FarEmerald.PlayForge
         }
     }
     
+    /// <summary>
+    /// One of an effect's contained effects: the effect, the moment it lands at, as this one is applied, on each of its
+    /// execute ticks or as it's removed, and whom it lands on, this one's target or its caster. It lands from this
+    /// one's origin, with its set-by-caller magnitudes.
+    /// </summary>
     [Serializable]
     public struct ContainedEffectPacket
     {
@@ -321,6 +337,11 @@ namespace FarEmerald.PlayForge
         Caster,
     }
 
+    /// <summary>
+    /// How a field joins its number with its scaler, its Combine: Multiply With Scaler, the scaler times the number;
+    /// Add Scaler, the scaler plus the number; Use Magnitude, the number alone; Use Scaler, the scaler alone. A number
+    /// field, an attribute set element's sides, an effect's clock and Scaled Stack Amount each combine by it.
+    /// </summary>
     public enum EMagnitudeOperation
     {
         MultiplyWithScaler,
@@ -329,12 +350,22 @@ namespace FarEmerald.PlayForge
         UseScaler
     }
     
+    /// <summary>
+    /// A narrower <c>EAttributeTarget</c>, of the two choices that change Base: Current and Base together, or Base
+    /// alone. <c>ForgeHelper.Translate</c> gives the <c>EAttributeTarget</c> it names.
+    /// </summary>
     public enum EAttributeTargetLimited
     {
         CurrentAndBase,
         Base
     }
 
+    /// <summary>
+    /// The part of an attribute's value something reads: its Current, its Base, what's missing of it (base − current),
+    /// or its share (current ÷ base), as <c>AttributeParts.Read</c> reads it. A Threshold, a wait, the Attribute
+    /// condition and an attribute-backed number read through it; some fields, as a tracked impact's part or a retention
+    /// group's, read Base under Base and Current otherwise.
+    /// </summary>
     public enum EAttributeTargetBinary
     {
         Current,
@@ -347,6 +378,11 @@ namespace FarEmerald.PlayForge
         Share,
     }
 
+    /// <summary>
+    /// Which of an attribute's two values a change goes to: its Current, its Base, or both. An effect's impact names
+    /// one with its operation, as Add to Current or Multiply Base, and a transfer's Slot and a threshold effect
+    /// worker's Target choose by it too.
+    /// </summary>
     public enum EAttributeTarget
     {
         Current,
@@ -354,6 +390,11 @@ namespace FarEmerald.PlayForge
         CurrentAndBase
     }
 
+    /// <summary>
+    /// Which of an attribute's values a change must touch for a worker to take it: Current, Base, Current And Base, or
+    /// Current Or Base. A focused attribute worker's Target Modification and a context impact worker's Impact Target
+    /// choose by it; with their exclusive switch on, a change to Current or to Base must touch that one alone.
+    /// </summary>
     public enum EAttributeTargetExpanded
     {
         Current,
@@ -362,6 +403,11 @@ namespace FarEmerald.PlayForge
         CurrentOrBase
     }
 
+    /// <summary>
+    /// The moment in an effect's life another effect lands at: as it's applied (On Apply), on each of its execute ticks
+    /// (On Tick), or as it's removed (On Remove). A contained effect and an effect a modifier adds each name one; an
+    /// Instant effect has no ticks and no removal, so only its On Apply ones land.
+    /// </summary>
     public enum EApplyTickRemove
     {
         OnApply,
@@ -369,6 +415,12 @@ namespace FarEmerald.PlayForge
         OnRemove
     }
 
+    /// <summary>
+    /// Which targets an effect may land on, by their affiliation tags against its origin's: Always Allow, the default,
+    /// takes any; Affiliated, those that share the origin's sides; Unaffiliated, those that don't; Use Affiliation
+    /// List, those that carry the effect's own Affiliations. The impact's Comparison says whether one tag matching does
+    /// or every tag must, and a target it doesn't take refuses the effect.
+    /// </summary>
     public enum EAffiliationPolicy
     {
         UseAffiliationList,

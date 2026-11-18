@@ -502,6 +502,11 @@ namespace FarEmerald.PlayForge
         }
     }
     
+    /// <summary>
+    /// The entries of one type under a data packet's key, as <c>GetAll</c> and <c>TryGetAll</c> give them: the first
+    /// (<c>Primary</c>), the <c>Last</c>, one at random (<c>Any</c>), <c>All</c> of them or each once
+    /// (<c>AllDistinct</c>), or by an <c>EDataTarget</c>, and it enumerates them. <c>IsValid</c> where it holds any.
+    /// </summary>
     public struct DataValue<T> : IEnumerable<T>
     {
         private List<T> Data;
@@ -563,6 +568,10 @@ namespace FarEmerald.PlayForge
         }
     }
 
+    /// <summary>
+    /// Which entry under a data packet's key a read takes where the key holds several: <c>Primary</c>, the first;
+    /// <c>Any</c>, one at random; or <c>Last</c>, the last.
+    /// </summary>
     public enum EDataTarget
     {
         Primary,

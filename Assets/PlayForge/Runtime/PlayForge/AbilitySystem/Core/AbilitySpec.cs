@@ -5,6 +5,15 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
+    /// <summary>
+    /// An ability as one entity knows it, made as the entity learns it: the <c>Ability</c> (<c>Base</c>) and its caster
+    /// (<c>Source</c>), with its level kept on the caster under the ability's asset tag (<c>GetLevel</c>). It's the
+    /// origin of the effects the ability applies, so they take its level and context tags, and an activation's data
+    /// holds it as its <c>EffectOrigin</c>. It applies the ability's cost and cooldown (<c>ApplyUsageEffects</c>,
+    /// <c>PayCosts</c>, <c>SpendCooldown</c>), reads the ability's numbers at its level (<c>Read</c>), finds its
+    /// components (<c>Find&lt;T&gt;</c>), and keeps what they hold for this entity (<c>ComponentStates</c>) and its
+    /// cooldown model (<c>CooldownModel</c>), which a HUD reads.
+    /// </summary>
     public class AbilitySpec : BasicEffectOrigin
     {
         public Ability Base;

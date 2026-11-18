@@ -1,5 +1,12 @@
 ﻿namespace FarEmerald.PlayForge
 {
+    /// <summary>
+    /// How the stacks of an effect whose Re-application is Stack Existing keep time: Stacks Share One Duration, the
+    /// default, runs one timer for all, which a stack added doesn't reset, each tick executing once for each stack;
+    /// Stacks Have Independent Durations gives each stack its own timer and ticks, so they drop off one at a time;
+    /// Duration Taken From One Stack runs one stack's timer at a time, a stack lost and the timer restarted each time
+    /// it runs out.
+    /// </summary>
     public enum EEffectStackPolicy
     {
         /// <summary>

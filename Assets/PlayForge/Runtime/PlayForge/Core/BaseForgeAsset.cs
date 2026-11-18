@@ -5,6 +5,13 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
+    /// <summary>
+    /// The base of every PlayForge asset, a ScriptableObject: attributes directly, and abilities, effects, items,
+    /// attribute sets and entities through <c>BaseForgeLevelProvider</c>. It holds the asset's Local Data rows, read by
+    /// key with <c>TryGetLocalData</c>, and its template, an asset of the same type whose fields it takes when the
+    /// template is pushed, apart from those it overrides (<c>SetTemplate</c>, <c>IsFieldOverridden</c>). A type made
+    /// from it gives its name, description, default icon and the tags it grants.
+    /// </summary>
     public abstract class BaseForgeAsset : ScriptableObject, ILocalDataSource, IHasReadableDefinition, ITagSource
     {
         [SerializeField]
@@ -197,6 +204,12 @@ namespace FarEmerald.PlayForge
         }
     }
 
+    /// <summary>
+    /// What keeps Local Data of its own at runtime, as a GAS hub does: <c>InitLocalData</c> loads a source's rows,
+    /// <c>SetLocalData</c> and <c>TryGetLocalData</c> write and read a value by its key, and
+    /// <c>GetLocalDataStructure</c> gives the store itself. Code and workers read and write an entity's Local Data
+    /// through it, as a threshold analysis worker notes there that it has fired.
+    /// </summary>
     public interface ILocalDataUser
     {
         public void InitLocalData(ILocalDataSource source);
@@ -205,11 +218,21 @@ namespace FarEmerald.PlayForge
         public LocalDataStructure GetLocalDataStructure();
     }
 
+    /// <summary>
+    /// What holds Local Data rows, which <c>GetLocalData</c> gives: every PlayForge asset, and a runtime entity's
+    /// identity. A GAS loads its identity's rows into a store of its own as it initializes, and a number that reads
+    /// Local Data reads the rows of what it belongs to.
+    /// </summary>
     public interface ILocalDataSource
     {
         public List<DataWrapper> GetLocalData();
     }
 
+    /// <summary>
+    /// An entity's Local Data as its GAS holds it at runtime, a value under each key tag: loaded from its identity's
+    /// rows as it initializes (<c>Init</c>), then written with <c>Set</c> and read with <c>TryGet</c>, or with
+    /// <c>GetOrInit</c>, which adds a value where the key has none. A hub's <c>GetLocalDataStructure</c> gives it.
+    /// </summary>
     public class LocalDataStructure
     {
         private Dictionary<Tag, DataWrapper> data;

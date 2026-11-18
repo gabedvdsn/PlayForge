@@ -3,6 +3,11 @@ using Cysharp.Threading.Tasks;
 
 namespace FarEmerald.PlayForge
 {
+    /// <summary>
+    /// A stage task that makes its caster disjoint, as in Dota: each homing shot aimed at it whose data marks it
+    /// disjointable loses it, flies on to where the caster stood and lands on nothing. A skill shot, which aims at no
+    /// one, isn't touched.
+    /// </summary>
     [ForgeMenu("Process", Description = "Makes every disjointable shot homing on the caster lose it, as a dodge.")]
     public class DisjointAbilityTask : AbstractAbilityTask
     {

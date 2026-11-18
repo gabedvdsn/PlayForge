@@ -309,6 +309,12 @@ namespace FarEmerald.PlayForge
         public LocalDataStructure GetLocalDataStructure() => core.LocalData;
     }
 
+    /// <summary>
+    /// An entity's settings as a <c>RuntimeGameplayAbilitySystem</c> reads them: the Entity asset's fields in a plain
+    /// class. Made from an Entity asset, it takes the asset's values, sharing its lists rather than copying them, and
+    /// <c>Asset</c> names the asset; made in code, it describes an entity no asset does, and <c>Asset</c> is null. Two
+    /// runtime entities can share one.
+    /// </summary>
     public class RuntimeEntityIdentity : IHasReadableDefinition, ITagSource, ILocalDataSource, IWorkerGroupSource, IHasTextures
     {
         public string Name;

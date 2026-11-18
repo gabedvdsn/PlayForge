@@ -22,6 +22,11 @@ namespace FarEmerald.PlayForge
     /// </summary>
     public static class ForgeLog
     {
+        /// <summary>
+        /// How much a message matters: <c>Verbose</c>, chatty lifecycle traces, then <c>Info</c>, <c>Warning</c> and
+        /// <c>Error</c>. A message is let through at its system's level or above, and <c>None</c>, as a level, lets
+        /// nothing through, framework errors included.
+        /// </summary>
         public enum ELevel
         {
             /// <summary>Chatty lifecycle traces (sequence chain progress, registrations).</summary>

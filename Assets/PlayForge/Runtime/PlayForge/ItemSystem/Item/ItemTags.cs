@@ -3,6 +3,11 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
+    /// <summary>
+    /// An item's Tags: its <c>AssetTag</c>, made from its Name, which its holder carries while the item is in its
+    /// inventory, worn or not, and keeps the item's level under; its <c>ContextTags</c>, which the changes its effects
+    /// make carry as context; and its Granted Tags (<c>PassiveGrantedTags</c>), on its holder while it's equipped.
+    /// </summary>
     [System.Serializable]
     public class ItemTags
     {

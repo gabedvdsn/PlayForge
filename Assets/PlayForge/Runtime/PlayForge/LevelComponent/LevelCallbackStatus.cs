@@ -2,6 +2,12 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
+    /// <summary>
+    /// What a change to one of an entity's levels did, as its level system's callbacks and a hub's <c>SetLevel</c> and
+    /// <c>ModifyLevel</c> report it: the level under its key, the level and max level before, and whether it took.
+    /// <c>IsLevelUp</c>, <c>IsLevelDown</c> and the deltas compare before with after; <c>Success</c> is false where no
+    /// level is under the key or nothing changed.
+    /// </summary>
     public struct LevelCallbackStatus
     {
         public readonly IntValuePairClamped Level;

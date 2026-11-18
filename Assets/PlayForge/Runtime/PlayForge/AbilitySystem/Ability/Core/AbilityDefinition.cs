@@ -4,6 +4,14 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
+    /// <summary>
+    /// An ability's Definition: its <c>Name</c>, <c>Description</c> and <c>Textures</c>, and how it activates: its When
+    /// Busy (<c>ActivationPolicy</c>) and <c>WhileTargeting</c>; under Queue, its input buffer's <c>BufferWindow</c>
+    /// and <c>BufferPriority</c>; Activate At Start (<c>ActivateImmediately</c>), for a Starting Ability; its
+    /// <c>Triggers</c>, the gameplay events and gained tags that set it off on its own; its <c>ChanceToActivate</c> and
+    /// how that rolls (<c>ActivationRoll</c>); the <c>ProcCoefficient</c> its effects' hits carry where an effect sets
+    /// none of its own; and the crowd control it ignores (<c>IgnoresCrowdControl</c>).
+    /// </summary>
     [Serializable]
     public class AbilityDefinition
     {

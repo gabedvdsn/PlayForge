@@ -2,6 +2,13 @@
 
 namespace FarEmerald.PlayForge
 {
+    /// <summary>
+    /// What makes a mono process's object and takes it back, as a pool hands out an idle object and keeps it again as
+    /// its process ends. Derive from it and override <c>PrepareNew</c>, which makes or hands out an object of the
+    /// prefab registered, <c>PrepareExisting</c>, which readies one already in a scene, and <c>CleanProcess</c>, which
+    /// takes the object back as its process ends. A registration's <c>InstantiatedBy</c>, a process's own
+    /// <c>Instantiator</c> or its handler's gives one; with none, the object is cloned and destroyed.
+    /// </summary>
     public abstract class AbstractMonoProcessInstantiator
     {
         public AbstractMonoProcess Create(AbstractMonoProcess process, ProcessDataPacket data, bool isInstantiated)

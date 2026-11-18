@@ -16,6 +16,13 @@ namespace FarEmerald.PlayForge
          * - Stage lifecycle (activate, end)
          */
         
+        /// <summary>
+        /// The handler of an ability system's callbacks on its abilities' runs, handed an <c>AbilityCallbackStatus</c>:
+        /// <c>OnAbilityActivate</c> as an activation takes its claim, before its targeting;
+        /// <c>OnAbilityClaimReleased</c> as it lets the claim go; <c>OnAbilityEnd</c> as it ends;
+        /// <c>OnAbilityStageActivate</c> and <c>OnAbilityStageEnd</c> for each stage; <c>OnAbilityTaskActivate</c> and
+        /// <c>OnAbilityTaskEnd</c> for each task; and <c>OnAbilityInjection</c> for an injection sent into it.
+        /// </summary>
         public delegate void AbilitySystemCallbackDelegate(AbilityCallbackStatus status);
         
         // ═══════════════════════════════════════════════════════════════

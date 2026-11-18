@@ -8,6 +8,11 @@ using UnityEngine.UIElements;
 
 namespace FarEmerald.PlayForge.Editor
 {
+    /// <summary>
+    /// Extensions that find the C# field behind a <c>SerializedProperty</c>: <c>GetFieldInfo</c> walks the property's
+    /// path, going on into the object a <c>[SerializeReference]</c> field holds, and <c>GetAttribute&lt;T&gt;</c> and
+    /// <c>HasAttribute&lt;T&gt;</c> read an attribute the field is marked with.
+    /// </summary>
     public static class SerializedPropertyExtensions
     {
         /// <summary>

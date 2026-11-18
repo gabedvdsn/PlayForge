@@ -103,6 +103,11 @@ namespace FarEmerald.PlayForge
         }
     }
 
+    /// <summary>
+    /// One tier of a Threshold number: the <c>Level</c> it starts at, the <c>Value</c> it reads from that level up, a
+    /// number of any kind, and an optional <c>TierName</c>. Of the tiers at or below a level, the highest gives the
+    /// value.
+    /// </summary>
     [Serializable]
     public struct LevelThreshold
     {

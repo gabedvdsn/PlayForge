@@ -6,6 +6,9 @@ using static FarEmerald.PlayForge.Editor.ForgeDrawerStyles;
 
 namespace FarEmerald.PlayForge.Editor
 {
+    /// <summary>
+    /// A row of an asset's Textures: its tag, then its texture, a project asset, side by side on one line.
+    /// </summary>
     [CustomPropertyDrawer(typeof(TextureItem))]
     public class TextureItemDrawer : PropertyDrawer
     {

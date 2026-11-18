@@ -6,6 +6,13 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
+    /// <summary>
+    /// The base of an asset loader, a Set task: it puts assets in the activation's data under a key as it's prepared,
+    /// for the tasks after it to read, as a Run Sequence's sequence reads them with
+    /// <c>data.GetLoadedAssets&lt;T&gt;(tag)</c>; its own run ends at once. An ability's Asset Loaders run once an
+    /// activation, after its targeting and before its first stage, and one among a stage's tasks loads as the stage
+    /// starts. A loader of your own overrides <c>Prepare</c> and <c>IsCriticalSection</c>.
+    /// </summary>
     [Serializable]
     [ForgeMenu("Asset Loaders")]
     public abstract class AbstractSetAssetsTask : AbstractAbilityTask
@@ -16,6 +23,10 @@ namespace FarEmerald.PlayForge
         }
     }
     
+    /// <summary>
+    /// An asset loader that puts its <c>Assets</c>, PlayForge assets of any kind, in the activation's data under its
+    /// <c>Tag</c>, Assets by default.
+    /// </summary>
     [ForgeMenu(Description = "Puts assets in the ability's data under a key, for its later tasks.")]
     public class SetAssetsTask : AbstractSetAssetsTask
     {
@@ -37,6 +48,10 @@ namespace FarEmerald.PlayForge
         }
     }
     
+    /// <summary>
+    /// An asset loader that puts its <c>Effects</c> in the activation's data under its <c>Tag</c>, Effects by default,
+    /// for a later task to apply, as a sequence does with <c>data.TryApplyEffects(target, tag)</c>.
+    /// </summary>
     [ForgeMenu(Description = "Puts effects in the ability's data under a key, for its later tasks.")]
     public class SetEffectsTask : AbstractSetAssetsTask
     {
@@ -56,6 +71,10 @@ namespace FarEmerald.PlayForge
         }
     }
     
+    /// <summary>
+    /// An asset loader that puts its <c>Entities</c>, Entity assets, in the activation's data under its <c>Tag</c>,
+    /// Entities by default.
+    /// </summary>
     [ForgeMenu(Description = "Puts entities in the ability's data under a key, for its later tasks.")]
     public class SetEntitiesTask : AbstractSetAssetsTask
     {
@@ -76,6 +95,10 @@ namespace FarEmerald.PlayForge
         }
     }
     
+    /// <summary>
+    /// An asset loader that puts its <c>Attributes</c> in the activation's data under its <c>Tag</c>, Attributes by
+    /// default.
+    /// </summary>
     [ForgeMenu(Description = "Puts attributes in the ability's data under a key, for its later tasks.")]
     public class SetAttributesTask : AbstractSetAssetsTask
     {
@@ -96,6 +119,10 @@ namespace FarEmerald.PlayForge
         }
     }
     
+    /// <summary>
+    /// An asset loader that puts its <c>AttributeSets</c> in the activation's data under its <c>Tag</c>, Attribute Sets
+    /// by default.
+    /// </summary>
     [ForgeMenu(Description = "Puts attribute sets in the ability's data under a key, for its later tasks.")]
     public class SetAttributeSetsTask : AbstractSetAssetsTask
     {
@@ -116,6 +143,10 @@ namespace FarEmerald.PlayForge
         }
     }
     
+    /// <summary>
+    /// An asset loader that puts its <c>Abilities</c>, Ability assets, in the activation's data under its <c>Tag</c>,
+    /// Abilities by default.
+    /// </summary>
     [ForgeMenu(Description = "Puts abilities in the ability's data under a key, for its later tasks.")]
     public class SetAbilitiesTask : AbstractSetAssetsTask
     {
@@ -135,6 +166,9 @@ namespace FarEmerald.PlayForge
         }
     }
     
+    /// <summary>
+    /// An asset loader that puts its <c>Tags</c> in the activation's data under its <c>Tag</c>, Tags by default.
+    /// </summary>
     [ForgeMenu(Description = "Puts tags in the ability's data under a key, for its later tasks.")]
     public class SetTagsTask : AbstractSetAssetsTask
     {

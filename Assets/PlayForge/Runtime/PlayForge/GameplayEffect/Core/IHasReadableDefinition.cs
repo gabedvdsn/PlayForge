@@ -3,6 +3,12 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
+    /// <summary>
+    /// What has a name, a description and an icon to show: <c>GetName</c>, <c>GetDescription</c> and
+    /// <c>GetDefaultIcon</c>. Every PlayForge asset, an attribute, a tag and every target, a GAS hub among them, is
+    /// one, and an origin or a carrier gives the one behind it through <c>GetReadableDefinition</c>, as a combat log
+    /// names what dealt a hit.
+    /// </summary>
     public interface IHasReadableDefinition
     {
         public string GetName();

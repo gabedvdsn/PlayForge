@@ -5,6 +5,12 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
+    /// <summary>
+    /// A stage task that applies its <c>Effects</c> to each of the activation's targets, from the ability at its level
+    /// and with the magnitudes the caller set on the activation's data, in the project's resolve order unless
+    /// <c>UseResolveOrder</c> is off. <c>DelayBetweenApplicationMs</c> waits between one effect and the next, and
+    /// <c>RecordLandedAs</c> tags the activation's data as an effect lands, for a later stage's Condition.
+    /// </summary>
     [ForgeMenu("Effects", Description = "Applies its effects to the ability's targets.")]
     public class ApplyEffectsAbilityTask : AbstractAbilityTask
     {

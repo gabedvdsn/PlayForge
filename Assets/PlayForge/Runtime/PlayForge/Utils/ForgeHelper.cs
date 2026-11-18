@@ -9,6 +9,12 @@ using Random = UnityEngine.Random;
 
 namespace FarEmerald.PlayForge
 {
+    /// <summary>
+    /// Helpers the framework's code shares, many of them extension methods: an asset's texture under a tag, the sign of
+    /// a change and checks of it, tag requirement and query checks, tag matching by hierarchy, attribute arithmetic by
+    /// operation, a magnitude joined with its scaler, list helpers (<c>RandomChoice</c>, <c>Shuffle</c>,
+    /// <c>WeightedSample</c>, <c>SafeAdd</c>), and random points in a circle or a sphere.
+    /// </summary>
     public static class ForgeHelper
     {
         #region GAS Utils

@@ -3,6 +3,14 @@ using Cysharp.Threading.Tasks;
 
 namespace FarEmerald.PlayForge
 {
+    /// <summary>
+    /// A process as ProcessControl runs it: the packet and relay it's handed as it registers (<c>SendProcessData</c>),
+    /// its hooks as it initializes, waits, terminates and is destroyed, its steps at its timing (<c>WhenUpdate</c>,
+    /// <c>WhenLateUpdate</c>, <c>WhenFixedUpdate</c>), the run ProcessControl awaits (<c>RunProcess</c>), and whether
+    /// it keeps its run through a pause (<c>TryHandlePause</c>, <c>TryHandleResume</c>). It's a process handler too, so
+    /// the processes registered under it end with it. <c>AbstractMonoProcess</c> and <c>AbstractRuntimeProcess</c>
+    /// implement it, and a process of your own derives from one of them.
+    /// </summary>
     public interface IGameplayProcess : IGameplayProcessHandler
     {
         public void SendProcessData(ProcessDataPacket data, ProcessRelay relay);

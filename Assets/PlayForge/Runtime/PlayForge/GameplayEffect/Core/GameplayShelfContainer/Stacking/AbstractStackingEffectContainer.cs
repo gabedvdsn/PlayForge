@@ -2,6 +2,12 @@
 
 namespace FarEmerald.PlayForge
 {
+    /// <summary>
+    /// The base of the containers that count stacks, the kind an effect lives in when its Re-application isn't Add
+    /// Another, as its Stacking says: its <c>Stacks</c>, and <c>Stack</c>, which adds to them, each kind keeping its
+    /// clock its own way. An Effect Stacks number reads its count, and Tick On Application executes once for each
+    /// stack, unless a kind says otherwise.
+    /// </summary>
     public abstract class AbstractStackingEffectContainer : AbstractEffectContainer
     {
         public override int InstantExecuteTicks => Stacks;

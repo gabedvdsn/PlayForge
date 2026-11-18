@@ -4,6 +4,13 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
+    /// <summary>
+    /// Every attribute the game's entities use, by name, for code that finds one by its name, with <c>GetByName</c> or
+    /// <c>TryGetByName</c>. Names match in capitals with underscores for spaces, so Attack Speed and ATTACK_SPEED find
+    /// the same attribute, and the first attribute registered under a name stands. An entity's attribute system
+    /// registers each attribute it's given, as a Bootstrapper does the sets it names; the registry is cleared as play
+    /// starts, and by <c>Reset</c>.
+    /// </summary>
     public static class AttributeRegistry
     {
         private static readonly Dictionary<string, IAttribute> Library = new();

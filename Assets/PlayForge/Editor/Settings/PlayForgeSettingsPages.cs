@@ -51,10 +51,10 @@ namespace FarEmerald.PlayForge.Editor
         // ═══════════════════════════════════════════════════════════════════════════
 
         /// <summary>
-        /// Builds the project's page in a root: the active Forge Project's settings, where each type's new assets go,
-        /// each type's defaults, the Cost and Cooldown effects, its roles and its crowd control. Its
-        /// fields bind to the project, so an edit undoes, and each edit is saved in its asset. With no Forge Project, a
-        /// button makes one. They were the whole Unity project's, in ProjectSettings/PlayForgeSettings.asset.
+        /// Builds the project's page in a root: which PlayForge this is and links to its documentation, then the active
+        /// Forge Project's settings, where each type's new assets go, each type's defaults, the Cost and Cooldown effects,
+        /// its roles and its crowd control. Its fields bind to the project, so an edit undoes, and each edit is saved in
+        /// its asset. With no Forge Project, a button makes one.
         /// </summary>
         internal static VisualElement BuildProjectPage(VisualElement root)
         {
@@ -67,9 +67,41 @@ namespace FarEmerald.PlayForge.Editor
             description.name = "PlayForgeDescription";
             description.AddToClassList("pf-settings__description");
             page.Add(description);
+            page.Add(PackageLine());
+            page.Add(DocumentationLinks());
             page.Add(FolderSection());
             page.Add(ActiveProjectSection());
             return page;
+        }
+
+        // Which PlayForge this is, as its package.json says: its version and the Unity it needs
+        private static Label PackageLine()
+        {
+            var line = Note(ForgePackageInfo.Line());
+            line.name = "PackageVersion";
+            line.tooltip = ForgePackageInfo.Folder == null ? "Its package.json wasn't found" : $"From {ForgePackageInfo.Folder}";
+            return line;
+        }
+
+        // The documentation site's guides, the editor tools guide and the API reference, each button's tooltip its address;
+        // and the changelog the package ships
+        private static VisualElement DocumentationLinks()
+        {
+            var links = new VisualElement { name = "Documentation" };
+            links.AddToClassList("pf-settings__buttons");
+            void Link(string name, string text, string url) =>
+                links.Add(new Button(() => ForgeDocs.OpenUrl(url)) { name = name, text = text, tooltip = url });
+            Link("Guides", "Guides", ForgeDocs.Site);
+            Link("EditorTools", "Editor Tools", ForgeDocs.UrlOf("editor"));
+            Link("ApiReference", "API Reference", ForgeDocs.ApiReference);
+            var changelog = ForgePackageInfo.Changelog;
+            var button = new Button(() => EditorUtility.OpenWithDefaultApp(changelog))
+            {
+                name = "Changelog", text = "Changelog", tooltip = changelog ?? "No CHANGELOG.md beside the package's package.json",
+            };
+            button.SetEnabled(changelog != null);
+            links.Add(button);
+            return links;
         }
 
         // The PlayForge Folder, where a new Forge Project goes, each in a folder of its own, and the Bootstrap prefabs: the

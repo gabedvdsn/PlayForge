@@ -6,6 +6,11 @@ using UnityEngine.UI;
 
 namespace FarEmerald.PlayForge
 {
+    /// <summary>
+    /// A reader that shows one of a GAS's attributes in UI: its current and base values in <c>CurrentText</c> and
+    /// <c>BaseText</c>, and its current value's share of its base on <c>ValueSlider</c>. <c>AssignAttribute</c> names
+    /// the attribute and <c>Assign</c> the GAS; it shows them each Update step, and as the attribute changes.
+    /// </summary>
     public class AttributeReader : AbstractReader
     {
         [Header("Reader")]

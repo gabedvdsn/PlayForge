@@ -5,6 +5,11 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
+    /// <summary>
+    /// A stage task that runs its <c>Processes</c> as its stage starts, each registered for the caster, and waits while
+    /// any still runs, up to <c>MaxDuration</c> seconds read at the ability's level, counted by its run's clock or,
+    /// with <c>UseUnscaledDeltaTime</c>, unscaled; as the stage ends, it ends those still running.
+    /// </summary>
     [ForgeMenu("Process", Description = "Runs processes for the caster and waits for them, up to a time.")]
     public class RunProcessTask : AbstractAbilityTask
     {

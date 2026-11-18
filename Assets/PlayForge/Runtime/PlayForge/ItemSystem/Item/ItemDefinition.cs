@@ -3,6 +3,11 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
+    /// <summary>
+    /// An item's Definition: its <c>Name</c>, <c>Description</c> and <c>Textures</c>; its <c>Visibility</c> tag, which
+    /// a game's UI can filter by and the runtime doesn't act on; and its <c>MaxStackSize</c>, how many of it one
+    /// inventory slot holds, read at the item's level, 1 or less making each its own slot (<c>StackSizeOf</c>).
+    /// </summary>
     [System.Serializable]
     public class ItemDefinition
     {

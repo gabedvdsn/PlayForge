@@ -6,6 +6,12 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
+    /// <summary>
+    /// An attribute's two values as a pair: Base, the value it's measured against, and Current, the value in play, as a
+    /// pool's maximum and what's left of it. An entity's attribute reads as one, and so do a change, a bound and a
+    /// threshold; its operators work on both values at once, two are equal where each value is approximately, and
+    /// <c>Ratio</c>, <c>ClampedRatio</c> and <c>LerpedRatio</c> read Current against Base.
+    /// </summary>
     [Serializable]
     public struct AttributeValue
     {

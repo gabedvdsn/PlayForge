@@ -7,6 +7,11 @@ using static FarEmerald.PlayForge.Editor.ForgeDrawerStyles;
 
 namespace FarEmerald.PlayForge.Editor
 {
+    /// <summary>
+    /// The Attribute asset's inspector, which edits several attributes at once: its header, then Identity (Name,
+    /// Abbreviation, Description, Role and, for a Barrier, what it absorbs for and how it decays, Gains Scaled By, the
+    /// roles it plays in its project, and Textures), Local Data, and Used By, the assets that refer to it.
+    /// </summary>
     [CustomEditor(typeof(Attribute)), CanEditMultipleObjects]
     public class AttributeEditor : BasePlayForgeEditor
     {

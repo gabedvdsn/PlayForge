@@ -5,6 +5,13 @@ using Object = UnityEngine.Object;
 
 namespace FarEmerald.PlayForge
 {
+    /// <summary>
+    /// The wrapper ProcessControl holds a mono process in, passing each hook and step to its object and reading its
+    /// lifecycle, timing and priority from it. It gets the process's object as it registers: from the registration's
+    /// instantiator, else its handler's where the process uses its handler's, else the process's own, else a clone of
+    /// its prefab, or the scene object itself; as the process ends, what made the object takes it back, or the object
+    /// is destroyed.
+    /// </summary>
     public class MonoWrapperProcess : AbstractProcessWrapper
     {
         /// <summary>

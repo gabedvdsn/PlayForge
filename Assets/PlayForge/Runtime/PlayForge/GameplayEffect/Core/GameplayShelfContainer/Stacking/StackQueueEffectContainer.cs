@@ -1,5 +1,10 @@
 ﻿namespace FarEmerald.PlayForge
 {
+    /// <summary>
+    /// The container of Duration Taken From One Stack: one stack's timer runs at a time, and each time it runs out a
+    /// stack is lost and the timer restarts, so its time left counts the stacks still waiting. Each tick executes once
+    /// for each stack, and a stack added restarts the timer.
+    /// </summary>
     public class StackQueueEffectContainer : AbstractStackingEffectContainer
     {
         // Doubles because a float's rounding grows with its size and every frame adds to it: over five minutes

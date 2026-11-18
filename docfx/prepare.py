@@ -33,13 +33,14 @@ APIDOC = os.path.join(HERE, 'apidoc')
 GUIDE_GROUPS = [
     ('Getting Started', ['GETTING_STARTED']),
     ('Gameplay', ['ENTITIES', 'ATTRIBUTES', 'ATTRIBUTE_SETS', 'EFFECTS', 'EFFECT_PIPELINE', 'VALUE_PIPELINES', 'SCALERS',
-                  'ABILITIES', 'ITEMS', 'CUES', 'WORKERS']),
-    ('Running it', ['PROCESSES', 'TASK_SEQUENCES', 'SAVING', 'SPREADSHEETS']),
-    ('Tools', ['CREATOR_LAB', 'TESTING']),
-    ('Recipes', ['RECIPES']),
+                  'ABILITIES', 'ITEMS', 'TAGS', 'CUES', 'WORKERS']),
+    ('Running it', ['PROCESSES', 'TASK_SEQUENCES', 'SERVICES', 'SAVING', 'SPREADSHEETS']),
+    ('Tools', ['EDITOR', 'CREATOR_LAB', 'TESTING']),
+    ('Going further', ['EXTENDING', 'RECIPES']),
 ]
 # The contents' name for a guide whose title is longer than the contents want; the rest go by their titles
-SHORT_NAMES = {'EFFECTS': 'Effects', 'EFFECT_PIPELINE': 'Effect & Attribute Pipeline'}
+SHORT_NAMES = {'EFFECTS': 'Effects', 'EFFECT_PIPELINE': 'Effect & Attribute Pipeline',
+               'SERVICES': 'Time, Input and Logging'}
 
 # Each guide's page of the kinds PlayForge ships for its pickers, after its sections: a table for each family, every
 # concrete class made from the type it names or implementing it, with its menu and what it does, as its [ForgeMenu]

@@ -7,6 +7,14 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
+    /// <summary>
+    /// One slot of an entity's ability system: the <c>AbilitySpec</c> it holds (<c>Spec</c>), its slot (<c>Index</c>),
+    /// and the ability's activations as they run. It says whether the ability runs (<c>IsActive</c>), holds its claim
+    /// (<c>IsClaiming</c>), is choosing its target (<c>IsTargeting</c>), is cooling down (<c>IsCooldown</c>) and which
+    /// stage it's in (<c>ActiveStageIndex</c>); <c>Cancel</c> interrupts its runs, but one in a critical stage, and
+    /// <c>Inject</c> sends an injection into each. <c>AbilitySystemComponent.TryGetAbilityContainer</c> finds one by
+    /// slot or by ability.
+    /// </summary>
     public class AbilitySpecContainer : ITagSource
     {
         public AbilitySpec Spec;

@@ -6,6 +6,20 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
+    /// <summary>
+    /// The base of an ability's targeting task, the one task that picks what an activation acts on before its stages
+    /// run, as a click picks an entity or a search takes the enemies in range. Its <c>Activate</c> files the targeting
+    /// packet of what it picks under the activation's Target key, whose entity becomes the activation's target, or
+    /// calls <c>WhenTargetingInvalid</c>, which ends the activation where <c>BreakRuntimeOnInvalid</c> is on. Targeting
+    /// holds the activation's claim while it runs, and its slot's <c>IsTargeting</c> says while it chooses.
+    ///
+    /// <para>A task of your own overrides <c>Activate</c>; <c>Prompt</c>, the words a game shows while it waits for the
+    /// player; <c>TargetIsValid</c>, which targets it takes; and <c>ConnectInputHandler</c> and
+    /// <c>DisconnectInputHandler</c>, to hook an input handler of its own as it's prepared and unhook it as it's
+    /// cleaned, an override of <c>Prepare</c> calling the base's last. <c>TryGetDataTarget</c> and
+    /// <c>TryGetDataPoint</c> take a target or a point the activation's data already holds, as an AI's does, and
+    /// <c>WaitForPointerPress</c> waits for a press of the game's input.</para>
+    /// </summary>
     public abstract class AbstractTargetingAbilityTask : AbstractAbilityRelatedTask
     {
         [Tooltip("If target validation fails, break out of Ability runtime")]

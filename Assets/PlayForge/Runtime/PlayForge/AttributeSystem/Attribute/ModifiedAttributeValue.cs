@@ -2,6 +2,11 @@
 
 namespace FarEmerald.PlayForge
 {
+    /// <summary>
+    /// A change to an attribute's Current and Base as two deltas, with no carrier behind it:
+    /// <c>SourcedModifiedAttributeValue.ToModified</c> gives one. <c>Combine</c>, <c>Negate</c> and <c>Multiply</c>
+    /// work on both deltas at once.
+    /// </summary>
     public struct ModifiedAttributeValue
     {
         public float DeltaCurrentValue;

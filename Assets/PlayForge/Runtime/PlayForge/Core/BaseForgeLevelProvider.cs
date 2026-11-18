@@ -5,6 +5,12 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
+    /// <summary>
+    /// The base of the PlayForge assets with a level range: abilities, effects, items, attribute sets and entities. It
+    /// gives the asset's starting and max level, its name as a provider and its asset tag, and its link to another
+    /// provider whose range it takes, as an effect linked to its ability (<c>LinkToProvider</c>,
+    /// <c>LinkedProvider</c>); <c>HasCircularDependency</c> says whether a link would come back round to it.
+    /// </summary>
     public abstract class BaseForgeLevelProvider : BaseForgeAsset, ILevelProvider
     {
         public virtual int GetMaxLevel() { return 0; }

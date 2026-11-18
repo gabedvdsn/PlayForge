@@ -16,6 +16,11 @@ namespace FarEmerald.PlayForge
     [CreateAssetMenu(menuName = "PlayForge/Tag Library", fileName = "TagLibrary_", order = 45)]
     public class ForgeTagLibrary : ScriptableObject
     {
+        /// <summary>
+        /// A tag a Tag Library declares, which tag pickers offer under its contexts before any asset uses it: its
+        /// <c>Name</c>, the full dotted path; its <c>DisplayName</c>, where it reads otherwise, as a unique tag's; the
+        /// <c>Contexts</c> it's declared for, Universal where it names none; and a <c>Note</c> on what it's for.
+        /// </summary>
         [Serializable]
         public class Entry
         {

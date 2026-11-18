@@ -2,6 +2,11 @@
 
 namespace FarEmerald.PlayForge
 {
+    /// <summary>
+    /// A runtime process that calls an action in each of its Update steps, until it's ended. Made with the action
+    /// alone, it's named Action, SelfTerminating, and stepped in Update at the first priority; the longer constructor
+    /// gives its name, priority, timing and lifecycle.
+    /// </summary>
     public class ActionProcess : LazyRuntimeProcess
     {
         private Action action;
@@ -25,6 +30,9 @@ namespace FarEmerald.PlayForge
         }
     }
     
+    /// <summary>
+    /// An <c>ActionProcess</c> whose action is handed the same object, its source, each time it's called.
+    /// </summary>
     public class ActionProcess<T> : LazyRuntimeProcess where T : class
     {
         private Action<T> action;

@@ -3,6 +3,10 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
+    /// <summary>
+    /// Several effect workers as one: at each of its effect's moments its workers hear, as it lands, ticks, comes off
+    /// and hits, it runs each of its workers in turn and returns their actions together.
+    /// </summary>
     [ForgeMenu(Description = "Several effect workers as one.")]
     public class EffectWorkerGroup : AbstractEffectWorker
     {

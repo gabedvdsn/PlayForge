@@ -500,6 +500,11 @@ namespace FarEmerald.PlayForge
         bool Apply(TaskSequenceRuntime runtime);
     }
 
+    /// <summary>
+    /// An injection that does what a function of your own says: <c>applyFunc</c> is handed the run's runtime and
+    /// returns whether it applied, as one that adds to a count on a key press or jumps to a stage by name. With no
+    /// function it applies nothing.
+    /// </summary>
     public class DelegateSequenceInjection : ISequenceInjection
     {
         public DelegateSequenceInjection()

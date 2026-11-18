@@ -3,6 +3,12 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
+    /// <summary>
+    /// One activation of an ability as it runs, which its slot, an <c>AbilitySpecContainer</c>, keeps from its claim to
+    /// its end: its <c>Data</c>, the compiled <c>Proxy</c> that runs it, the tokens that cancel its targeting and its
+    /// stages, whether it's targeting or running its stages, and whether it has let its claim go. <c>HandleId</c>
+    /// numbers it among its entity's activations, from 0.
+    /// </summary>
     public class AbilityActivationHandle
     {
         public readonly AbilitySpecContainer Container;

@@ -411,6 +411,15 @@ namespace FarEmerald.PlayForge
         }
     }
 
+    /// <summary>
+    /// Reads what an ability does without running it, for tooltips, the editor's summaries and the Creator Lab:
+    /// <c>Build</c> gives its <c>AbilityBreakdown</c>, each effect it applies, in what role (a stage's task, its cost
+    /// or cooldown, or contained in another) and on whom, with its numbers at each of its levels read through their
+    /// scalers, and its components, triggers, chance to activate and attribute costs. <c>BuildEffectSeries</c> reads
+    /// one effect across a range of levels, against a caster and a target where it's given them, and
+    /// <c>EvaluateAtLevel</c> one number at a level; a number that reads what the read wasn't given, as the target, is
+    /// marked dynamic.
+    /// </summary>
     public static class AbilityInspector
     {
         // ═══════════════════════════════════════════════════════════════════════════

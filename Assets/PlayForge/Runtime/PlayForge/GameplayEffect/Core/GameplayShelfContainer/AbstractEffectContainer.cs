@@ -3,6 +3,14 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
+    /// <summary>
+    /// One lasting application of an effect on its target's shelf: its spec; its clock, the total duration, the time
+    /// left, the period and the time to its next tick; whether its ongoing requirements hold; and whether it's still
+    /// active. A Durational or Infinite effect's duration makes one as it lands, of the kind its re-application and
+    /// stacking choose; while it's on the shelf it grants the effect's asset tag and granted tags, and as it comes off
+    /// it reverses the effect's lasting impacts and lands its On Remove effects. Code finds one with
+    /// <c>TryGetEffectContainer</c> on the entity.
+    /// </summary>
     public abstract class AbstractEffectContainer : ITagSource
     {
         public GameplayEffectSpec Spec;

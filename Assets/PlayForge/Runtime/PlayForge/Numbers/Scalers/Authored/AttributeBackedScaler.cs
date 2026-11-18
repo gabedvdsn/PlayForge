@@ -134,6 +134,11 @@ namespace FarEmerald.PlayForge
         AsRemainder,
     }
 
+    /// <summary>
+    /// Which side's attribute is read: the <c>Source</c>, whose effect or impact it is, or the <c>Target</c>. A ×
+    /// Attribute scaler's Capture From chooses one, as does a <c>RelativeOperationContextImpactWorker</c>'s With
+    /// Respect To.
+    /// </summary>
     public enum ESourceTarget
     {
         [Tooltip("Use the target entity's attribute")]
@@ -143,6 +148,10 @@ namespace FarEmerald.PlayForge
         Source
     }
     
+    /// <summary>
+    /// When a × Attribute scaler reads its attribute: <c>OnCreation</c> captures it once, as the effect's spec is made,
+    /// and reads that snapshot after; <c>OnApplication</c> reads the live value each time the scaler is read.
+    /// </summary>
     public enum ECaptureAttributeWhen
     {
         [Tooltip("Capture once when effect is created (snapshot)")]

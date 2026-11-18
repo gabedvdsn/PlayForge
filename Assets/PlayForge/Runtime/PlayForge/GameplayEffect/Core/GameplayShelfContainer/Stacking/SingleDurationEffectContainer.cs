@@ -1,6 +1,10 @@
 ﻿
 namespace FarEmerald.PlayForge
 {
+    /// <summary>
+    /// The container of Stacks Share One Duration: one timer and one tick for every stack, which a stack added leaves
+    /// as they are; each tick executes once for each stack.
+    /// </summary>
     public class SingleDurationEffectContainer : AbstractStackingEffectContainer
     {
         // Doubles because a float's rounding grows with its size and every frame adds to it: over five minutes

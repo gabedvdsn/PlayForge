@@ -5,6 +5,13 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
+    /// <summary>
+    /// A stage task that runs a task sequence, or a chain, and waits for it to end: the one the static
+    /// <c>[TaskSequenceMethod]</c> method its <c>Sequence</c> names makes, called for each activation, or, for an
+    /// ability built in code, a fresh run of its <c>Definition</c>. It runs as a process in the caster's world, by the
+    /// <c>Clock</c> picked where one is, and ends as the activation is cancelled; a critical stage in the sequence
+    /// makes the task critical, and the ability lets its claim go as the sequence's critical section ends.
+    /// </summary>
     [ForgeMenu("Sequence", Description = "Runs a sequence a static method in code makes.")]
     public class RunSequenceTask : AbstractAbilityTask
     {

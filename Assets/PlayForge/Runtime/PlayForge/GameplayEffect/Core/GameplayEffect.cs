@@ -6,6 +6,17 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
+    /// <summary>
+    /// A Gameplay Effect asset: a change to an entity, as damage, a heal, a timed buff, a poison, a cost or a cooldown.
+    /// Abilities, items and code apply it to a target: <c>Generate</c>, through the target's <c>GenerateEffectSpec</c>,
+    /// makes a <c>GameplayEffectSpec</c> for one application, which <c>ApplyGameplayEffect</c> lands.
+    ///
+    /// <para>Its duration's Policy decides how long it lives: an Instant effect makes its change once, and a Durational
+    /// or Infinite one goes on the target's effect shelf until its time runs out or something removes it. Its impacts
+    /// change attributes, each a commit that stays or a modifier reversed as the effect ends; it can also grant tags
+    /// and abilities, apply contained effects, run workers and carry components, and its requirements and conditions
+    /// say whether it lands, goes on and comes off. It has no level of its own: it takes its origin's.</para>
+    /// </summary>
     [CreateAssetMenu(menuName = "PlayForge/Gameplay Effect", fileName = "Effect_", order = 21)]
     public class GameplayEffect : BaseForgeLevelProvider, IHasTextures
     {
@@ -88,8 +99,11 @@ namespace FarEmerald.PlayForge
         public StandardWorkerGroup WorkerGroup;
 
         /// <summary>
-        
+        /// Its source's tag requirements: the tags the source must hold or lack for the effect to land and to stay on,
+        /// and the tags that take the effect off.
+        /// </summary>
         public EffectTagRequirements SourceRequirements;
+        /// <summary>Its target's tag requirements, as its source's are.</summary>
         public EffectTagRequirements TargetRequirements;
 
         [Tooltip("Its conditions beside the tags of each phase: to land, to go on, and to come off")]
@@ -311,6 +325,11 @@ namespace FarEmerald.PlayForge
         public IReadOnlyList<TextureItem> GetTextureItems() => Definition?.Textures;
     }
 
+    /// <summary>
+    /// An effect's identity: its Name, which gives its asset tag, its Description, its Visibility, a tag a UI can read
+    /// to decide whether to show it, its Textures, whether its icon is its origin's (Inherit From Origin, by Origin
+    /// Texture), and the Retention Group its changes count toward unless an impact names its own.
+    /// </summary>
     [Serializable]
     public class GameplayEffectDefinition
     {
@@ -329,6 +348,13 @@ namespace FarEmerald.PlayForge
         [ForgeTagContext(ForgeContext.RetentionGroup)] public Tag RetentionGroup = Tags.IgnoreRetention;
     }
 
+    /// <summary>
+    /// An effect's tags: its Asset Tag, by which the effect system finds it as it's applied again or removed, and which
+    /// its target carries while it lasts; its Context Tags, which describe it and go with each change it makes, never
+    /// applied to the entity; its Granted Tags, applied to its target while it's on; and the tags it cleanses (Removes
+    /// Effects Tagged) and makes its target immune to (Blocks Effects Tagged). <c>Names</c> says whether an effect is
+    /// tagged with a tag, or a child of one, by any of the three.
+    /// </summary>
     [Serializable]
     public struct GameplayEffectTags
     {
@@ -388,6 +414,13 @@ namespace FarEmerald.PlayForge
     }
     
     // The names the inspector shows say the choice, as Stack Existing and Refresh Duration do
+    /// <summary>
+    /// What a Durational or Infinite effect does as it's applied to a target that has it already, matched by its asset
+    /// tag whoever applied it: Add Another, the default, adds a container of its own; Do Nothing takes nothing new in;
+    /// Replace Existing gives the old container the new application's values and modifiers, keeping its stacks and past
+    /// commits; Stack Existing adds stacks to it. All but Add Another then do with its time as the effect's
+    /// <c>EEffectInteractionPolicy</c> says.
+    /// </summary>
     public enum EEffectReApplicationPolicy
     {
         [InspectorName("Do Nothing")] DoNothing,  // Completely ignore new effect
@@ -396,6 +429,12 @@ namespace FarEmerald.PlayForge
         [InspectorName("Stack Existing")] StackExistingContainers  // Inject a duration-independent stack of the effect into the existing one
     }
 
+    /// <summary>
+    /// What a lasting effect on the target does with its time as it takes in an application under Do Nothing, Replace
+    /// Existing or Stack Existing: Do Nothing, the default, leaves it; Refresh Duration restarts it; Extend Duration
+    /// adds the new application's duration to it, or, where stacks keep their own durations, adds a stack. Refresh and
+    /// Extend run Tick On Application again.
+    /// </summary>
     public enum EEffectInteractionPolicy
     {
         [InspectorName("Do Nothing")] DoNothing,

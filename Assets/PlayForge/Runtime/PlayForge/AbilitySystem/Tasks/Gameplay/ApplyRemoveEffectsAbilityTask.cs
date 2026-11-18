@@ -5,6 +5,12 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
+    /// <summary>
+    /// A stage task that puts its <c>Effects</c> on each of the activation's targets as its stage starts, with the
+    /// caller's magnitudes, in the project's resolve order unless <c>UseResolveOrder</c> is off, and takes those
+    /// effects off the targets as the stage ends, whoever applied them. Its own run ends at once, so it holds its stage
+    /// no longer than the stage's other tasks do.
+    /// </summary>
     [ForgeMenu("Effects", Description = "Applies its effects as its stage starts and takes them off as the stage ends.")]
     public class ApplyRemoveEffectsAbilityTask : AbstractAbilityTask
     {

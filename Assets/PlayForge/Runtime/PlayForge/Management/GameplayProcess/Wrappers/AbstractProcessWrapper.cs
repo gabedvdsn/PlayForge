@@ -6,6 +6,12 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
+    /// <summary>
+    /// How ProcessControl holds a registered process of either kind: its relay, its data packet and its handler, with
+    /// the process's hooks and steps passed through to it and its lifecycle, timing and priority read from it.
+    /// <c>MonoWrapperProcess</c> holds a mono process and <c>RuntimeWrapperProcess</c> a runtime one; a relay's
+    /// <c>Wrapper</c> is it, and <c>TryGetProcess</c> finds the process inside.
+    /// </summary>
     public abstract class AbstractProcessWrapper
     {
         public ProcessRelay Relay;

@@ -4,12 +4,23 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
+    /// <summary>
+    /// An attribute as the attribute system knows it: a name, a description and an icon, an abbreviation and its
+    /// textures. The <c>Attribute</c> asset is one and a <c>RuntimeAttribute</c> made in code is another; an entity's
+    /// attributes, an effect's impacts and workers each name one.
+    /// </summary>
     public interface IAttribute : IHasReadableDefinition, ITagSource, IEquatable<IAttribute>
     {
         public string GetAbbreviation();
         public List<TextureItem> GetTextures();
     }
 
+    /// <summary>
+    /// An attribute made in code, with no asset behind it: a name, an abbreviation and a description where it's given
+    /// them, and textures <c>AddTexture</c> adds. <c>AttributeRegistry.GetByName</c> makes one for a name it doesn't
+    /// know, where it's asked to, and an entity's attribute system takes one with <c>ProvideAttribute(attribute,
+    /// value)</c>.
+    /// </summary>
     public class RuntimeAttribute : IAttribute
     {
         public readonly string Name;

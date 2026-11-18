@@ -128,6 +128,11 @@ namespace FarEmerald.PlayForge
         }
     }
 
+    /// <summary>
+    /// One member of a cached Group, which joins an attribute set's kept numbers: its <c>Calculation</c>, a cached
+    /// scaler, and how it joins the others, its <c>RelativeOperation</c>: added up, multiplied into the sum, dividing
+    /// it, added on after as a flat bonus, or overriding them all.
+    /// </summary>
     [Serializable]
     public struct CachedMagnitudeModifierGroupMember
     {

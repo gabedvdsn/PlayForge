@@ -4,6 +4,14 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
+    /// <summary>
+    /// One application of a Gameplay Effect: the effect, its origin, its source and its target, as the target's
+    /// <c>GenerateEffectSpec</c> makes it and <c>ApplyGameplayEffect</c> lands it. It keeps what belongs to that
+    /// application alone: magnitudes set by its caller, where it hit (<c>WithHit</c>), what modifiers changed of it,
+    /// its workers' and components' state, what it has dealt, and, while it lasts, the container that holds it on the
+    /// shelf. Its impacters, built once from its effect's entries, are what the attribute system evaluates for each
+    /// delivery.
+    /// </summary>
     public class GameplayEffectSpec : ICarrierApplication
     {
         public GameplayEffect Base;

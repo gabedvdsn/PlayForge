@@ -3,6 +3,12 @@ using JetBrains.Annotations;
 
 namespace FarEmerald.PlayForge
 {
+    /// <summary>
+    /// What an effect can land on: an entity, with its sides, its tags and a definition to show. It makes, applies and
+    /// removes effects (<c>GenerateEffectSpec</c>, <c>ApplyGameplayEffect</c>, <c>RemoveGameplayEffect</c>), reads and
+    /// changes its attributes, reads its levels, finds its subsystems, and says whether it's dead. Every GAS hub is
+    /// one, and so is a stand-in, as the placeholder a disjointed shot is aimed at.
+    /// </summary>
     public interface ITarget : IAffiliated, ITagHandler, IHasReadableDefinition
     {
         public void CommunicateTargetedIntent(AbstractGameplayMonoProcess entity);

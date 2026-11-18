@@ -46,6 +46,15 @@ namespace FarEmerald.PlayForge
         }
     }
 
+    /// <summary>
+    /// One of an ability's stages, which run one after another: the <c>Tasks</c> it starts together, and its Completion
+    /// (<c>StagePolicy</c>), which ends it as its last task ends (All) or its first (Any), cancelling the rest.
+    /// <c>ApplyUsageEffects</c> applies the ability's cost and cooldown in it, as it starts or, with
+    /// <c>ApplyUsageAtStageStart</c> off, as it ends well, once an activation; its <c>Condition</c> skips it unless a
+    /// tag is there, or missing; and its own <c>CancelledBy</c> and <c>Blocks</c>, where it names any, hold while it
+    /// runs in place of the ability's. A stage that holds a critical task is critical (<c>IsCritical</c>): it commits
+    /// the ability, so Cancelled By doesn't cancel it.
+    /// </summary>
     [Serializable]
     public class AbilityTaskBehaviourStage
     {
@@ -145,6 +154,11 @@ namespace FarEmerald.PlayForge
         Target,
     }
 
+    /// <summary>
+    /// How a list of tags is matched against another: <c>Any</c> passes where one of its tags is in the other,
+    /// <c>All</c> only where every one is. An effect's Affiliation Comparison is one, and so is the Context Matching
+    /// Policy of a focused attribute worker and of a context impact worker.
+    /// </summary>
     public enum EAnyAllPolicy
     {
         Any,

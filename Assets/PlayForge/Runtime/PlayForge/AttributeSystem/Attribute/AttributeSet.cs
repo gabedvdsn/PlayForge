@@ -5,6 +5,17 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
+    /// <summary>
+    /// An Attribute Set asset: the attributes an entity starts with, and how each starts, its Current and Base, its
+    /// bounds and its rounding, with those of its sub-sets. An entity names one, and as its GAS initializes each
+    /// element becomes its attribute's root value, the value before any effect, which a cached scaler can tie to the
+    /// entity's level or to another attribute.
+    ///
+    /// <para>Where an attribute appears in more than one element, the elements' Collision and the Resolution Policy of
+    /// the set the entity names decide its root. The entity carries the set's tag and its sub-sets', and holds their
+    /// worker groups' workers as it lives. The set's level range is its own, or a level provider's while it's linked,
+    /// and its cached scalers can size their values per level by it.</para>
+    /// </summary>
     [CreateAssetMenu(menuName = "PlayForge/Attribute Set", fileName = "AttributeSet_", order = 24)]
     public class AttributeSet : BaseForgeLevelProvider, IWorkerGroupSource
     {
@@ -201,6 +212,13 @@ namespace FarEmerald.PlayForge
         }
     }
 
+    /// <summary>
+    /// One element of an attribute set: an attribute and how it starts, its Current and its Base, each a number or a
+    /// cached scaler, Current able to follow Base; its bounds; its constraints, which clamp, scale and round it; the
+    /// retention group its root counts toward; and its Collision, for an attribute that appears more than once across
+    /// the set and its sub-sets. As the entity's GAS initializes, it becomes the attribute's root value, the value
+    /// before any effect.
+    /// </summary>
     [Serializable]
     public class AttributeSetElement
     {
@@ -233,6 +251,13 @@ namespace FarEmerald.PlayForge
         public AttributeValue ValueFromMagnitude => new(EffectiveCurrent.Magnitude, Base.Magnitude);
     }
 
+    /// <summary>
+    /// An attribute set element's Collision: the group it joins where its attribute appears in more than one element
+    /// across a set and its sub-sets. One group decides the attribute's root, the first there is of Use Set Collision
+    /// Setting, Use This, Combine and Use Existing, and the other groups' elements are passed over: Combine adds its
+    /// elements' values up, and each other group picks one, or averages them, by the Resolution Policy of the set the
+    /// entity names.
+    /// </summary>
     public enum EAttributeElementCollisionPolicy
     {
         UseSetCollisionSetting,
@@ -319,6 +344,11 @@ namespace FarEmerald.PlayForge
         };
     }
     
+    /// <summary>
+    /// How an attribute set element holds its attribute's values: Auto Clamp applies its bounds, Auto Scale With Base
+    /// changes Current by the same share as Base whenever Base changes, and Rounding, with its Snap Interval for Snap
+    /// To, rounds both values after the bounds each time they change.
+    /// </summary>
     [Serializable]
     public class AttributeConstraints
     {
@@ -334,6 +364,12 @@ namespace FarEmerald.PlayForge
         [NumberMin(0f)] public ScalableFloat SnapInterval = 0f;
     }
 
+    /// <summary>
+    /// The bounds an attribute set element holds its attribute's values in, with its Floor and Ceiling, each a Current
+    /// and a Base: Zero To Base holds Current between 0 and Base; Floor To Base, Current between the Floor's Current
+    /// and Base, and Base at or above the Floor's Base; Zero To Ceil, each between 0 and the Ceiling's; Floor To Ceil,
+    /// each between its Floor and its Ceiling; Unlimited, none. They hold only while the element's Auto Clamp is on.
+    /// </summary>
     public enum EAttributeOverflowPolicy
     {
         ZeroToBase,
@@ -344,6 +380,11 @@ namespace FarEmerald.PlayForge
         Unlimited
     }
 
+    /// <summary>
+    /// How an attribute set element rounds its attribute's Current and Base, after its bounds, each time the value
+    /// changes: None; To Floor, down; To Ceil, up; Round, to the nearest; Snap To, to the nearest multiple of its Snap
+    /// Interval. Rounding can make a change bigger or smaller than its effect asked for.
+    /// </summary>
     public enum EAttributeRoundingPolicy
     {
         None,
@@ -353,6 +394,11 @@ namespace FarEmerald.PlayForge
         SnapTo
     }
 
+    /// <summary>
+    /// The attributes an attribute set gives an entity, worked out as the entity's attribute system takes the set: each
+    /// element of the set and its sub-sets, by attribute and by its Collision. <c>InitializeAttributeSystem</c> then
+    /// gives the attribute system each attribute, with the root the set's collision settings pick.
+    /// </summary>
     public class AttributeSetMeta
     {
         private Dictionary<IAttribute, Dictionary<EAttributeElementCollisionPolicy, List<AttributeBlueprint>>> matrix; 

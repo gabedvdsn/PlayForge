@@ -6,6 +6,12 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
+    /// <summary>
+    /// An entity's levels, each under a tag: its own, under its identity's asset tag, and each of its abilities' and
+    /// items', under theirs, registered as they're given. <c>TrySetLevel</c> and <c>TryModifyLevel</c> set or change
+    /// one, as a hub's <c>SetLevel</c> and <c>ModifyLevel</c> do, and its <c>Callbacks</c> hear each change; an effect
+    /// that reads a level reads it again as it changes. A hub's <c>LevelSystem</c> gives it.
+    /// </summary>
     public class SystemLevelsComponent
     {
         private Dictionary<Tag, IntValuePairClamped> Levels = new();

@@ -10,6 +10,11 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## Toward 1.0.0, since 0.1.0
 
 ### Added
+- **Four new guides** (EP-70): extending PlayForge, tags, the editor tools, and time, randomness, input and
+  logging, each section a page of its own on the docs site.
+- **A summary for every public type** (EP-71), so each API page and IntelliSense says what it is.
+- **The docs from The Forge and Project Settings** (EP-72): The Forge's help button and Documentation menu, and
+  Project Settings → PlayForge's version line and documentation links.
 - **The API reference and the guides' own pages** (EP-69): every public type's page on the docs site, and each
   guide's sections on pages of their own, linked both ways; each help (?) button opens its section's page.
 - **The Creator Lab tells the author what's going on** (LAB-19, LAB-20): a status over the space, what a cast

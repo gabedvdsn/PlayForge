@@ -253,6 +253,12 @@ namespace FarEmerald.PlayForge
     /// </summary>
     public sealed class EffectChanges
     {
+        /// <summary>
+        /// An effect a modifier adds to one application: the moment it lands at, the effect, the rule that added it,
+        /// which won't change it again, and whom it lands on, the target or the caster. An application's changes hold
+        /// one for each contained effect a modifier adds, and one for each overflow effect, which lands as the
+        /// application overflows.
+        /// </summary>
         public readonly struct Packet
         {
             public readonly EApplyTickRemove When;
@@ -271,6 +277,11 @@ namespace FarEmerald.PlayForge
             }
         }
 
+        /// <summary>
+        /// A Value Pipeline stage a modifier's Change Impact adds to one application: the attribute whose impacts take
+        /// it, every one where it names none, and the stage. An impact that commits runs it after its own pipeline; a
+        /// lasting one takes it on its magnitude.
+        /// </summary>
         public readonly struct ImpactStage
         {
             public readonly Attribute Attribute;

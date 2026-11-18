@@ -1,5 +1,10 @@
 ﻿namespace FarEmerald.PlayForge
 {
+    /// <summary>
+    /// What an item system's callback is handed: the item's slot (<c>Container</c>) and <c>Spec</c>, the item system,
+    /// and whether what it tells succeeded (<c>Success</c>), as equipping an item already worn doesn't; <c>Index</c>,
+    /// <c>Item</c>, <c>Level</c> and <c>IsEquipped</c> read the slot.
+    /// </summary>
     public struct ItemCallbackStatus
     {
         public readonly ItemSpec Spec;

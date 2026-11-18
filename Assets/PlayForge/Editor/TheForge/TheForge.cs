@@ -13,8 +13,8 @@ namespace FarEmerald.PlayForge.Editor
     /// <summary>
     /// The Forge, PlayForge's main window: a list of the project's PlayForge assets
     /// beside a detail pane that holds the selected asset's inspector, under a summary of what it does and what uses it.
-    /// The toolbar holds Create, the type filters, Tags, the search and the problem count; the status bar holds the
-    /// counts. It follows the project, with no Refresh and no timer, and the validator's problems with it.
+    /// The toolbar holds Create, the type filters, Tags, the search, the problem count and the help button, which opens
+    /// the editor tools guide's section on The Forge; the status bar holds the counts. It follows the project, with no Refresh and no timer, and the validator's problems with it.
     /// One click selects a row and shows its asset. It had Create, View, Analysis and Settings tabs: the
     /// Analysis tab's power scores stay hidden until Items and Entities score too, and the Settings tab's settings
     /// are on the two settings pages.
@@ -136,7 +136,17 @@ namespace FarEmerald.PlayForge.Editor
             if (items.Count > 0) menu.AddItem(new GUIContent("Spreadsheets/Export Selected Item Stats…"), false, () => ForgeSpreadsheets.ExportStats(items));
             else menu.AddDisabledItem(new GUIContent("Spreadsheets/Export Selected Item Stats…"));
             menu.AddItem(new GUIContent("Spreadsheets/Import…"), false, ForgeSpreadsheets.Import);
+
+            // The documentation site: The Forge's own section, the editor tools guide, every guide and the API reference
+            menu.AddSeparator("");
+            menu.AddItem(new GUIContent("Documentation/The Forge"), false, () => ForgeDocs.Open(HelpTopic));
+            menu.AddItem(new GUIContent("Documentation/The Editor Tools"), false, () => ForgeDocs.Open("editor"));
+            menu.AddItem(new GUIContent("Documentation/All Guides"), false, () => ForgeDocs.OpenUrl(ForgeDocs.Site));
+            menu.AddItem(new GUIContent("Documentation/API Reference"), false, () => ForgeDocs.OpenUrl(ForgeDocs.ApiReference));
         }
+
+        // The editor tools guide's section on The Forge, which its help button and its window menu open
+        private const string HelpTopic = "editor/forge";
 
         // ═══════════════════════════════════════════════════════════════════════════
         // Following the project
@@ -350,6 +360,13 @@ namespace FarEmerald.PlayForge.Editor
             problemCount = new ToolbarButton(() => ForgeProblemsWindow.ShowWindow()) { name = "ProblemCount", tooltip = "Open the Problems view" };
             problemCount.AddToClassList("pf-forge__problems");
             toolbar.Add(problemCount);
+            // The editor tools guide's section on The Forge, on the documentation site
+            var help = new ToolbarButton(() => ForgeDocs.Open(HelpTopic))
+            {
+                name = "Help", tooltip = "Open The Forge's guide, in the editor tools guide online", userData = HelpTopic,
+            };
+            help.Add(new ForgeGlyph(ForgeGlyphShape.Help));
+            toolbar.Add(help);
             return toolbar;
         }
 

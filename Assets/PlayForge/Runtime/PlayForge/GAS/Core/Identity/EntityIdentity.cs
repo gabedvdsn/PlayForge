@@ -4,6 +4,16 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
+    /// <summary>
+    /// An Entity asset: one kind of entity, as the hero or a goblin, and its starting setup: its sides and tags, its
+    /// level range, its abilities and items and their limits, its attribute set and time scale attribute, its workers,
+    /// modifiers and components, its crowd control rules and what its death does. Many entities can share one.
+    ///
+    /// <para>A GAS hub reads it as it initializes, the <c>GameplayAbilitySystem</c> component that names it or a
+    /// <c>RuntimeGameplayAbilitySystem</c> whose identity is made from it: the hub gives the entity its workers,
+    /// registers its level under the asset's tag, gives its starting abilities, builds its attributes from its set and
+    /// gives its starting items, then applies its tags.</para>
+    /// </summary>
     [CreateAssetMenu(menuName = "PlayForge/Entity", fileName = "Entity_", order = 25)]
     public class EntityIdentity : BaseForgeLevelProvider, IWorkerGroupSource, IHasTextures
     {
@@ -254,6 +264,10 @@ namespace FarEmerald.PlayForge
         }
     }
 
+    /// <summary>
+    /// One of an entity's Starting Items: the item, given as the entity's GAS initializes, and whether it's equipped as
+    /// it's given.
+    /// </summary>
     [Serializable]
     public class StartingItemContainer
     {

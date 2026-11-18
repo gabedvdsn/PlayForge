@@ -71,6 +71,11 @@ namespace FarEmerald.PlayForge
         public virtual void Rearm(ILocalDataUser system) => ResetTriggered(system);
     }
 
+    /// <summary>
+    /// An analysis worker that kills its entity as an attribute reaches its threshold, as Health reaching 0: a
+    /// Threshold whose firing queues the entity's death, after its effects and its event where it has them. An entity
+    /// that holds one dies by it alone, not by its project's Health role reaching 0.
+    /// </summary>
     [Serializable]
     [ForgeMenu(Description = "Kills its entity as an attribute reaches its threshold, as Health reaching 0.")]
     public class DeathWatcherAnalysisWorker : ThresholdAnalysisWorker
@@ -278,6 +283,10 @@ namespace FarEmerald.PlayForge
         }
     }
     
+    /// <summary>
+    /// How a Threshold analysis worker compares what it reads with its threshold while its Crossing is While It Holds:
+    /// less than, less than or equal, greater than, greater than or equal, or equal, within 0.001.
+    /// </summary>
     public enum EThresholdComparison
     {
         LessThan,

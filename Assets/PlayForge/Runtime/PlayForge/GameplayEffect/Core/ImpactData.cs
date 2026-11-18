@@ -1,5 +1,12 @@
 ﻿namespace FarEmerald.PlayForge
 {
+    /// <summary>
+    /// A change as it landed on an attribute: the <c>Target</c> it landed on, the <c>Attribute</c>, the
+    /// <c>SourcedModifier</c> that made it, whose carrier names its source and its effect, the <c>RealImpact</c>, what
+    /// the attribute's Current and Base changed by after workers, bounds and rounding, and the <c>OldValue</c> before
+    /// it. Attribute callbacks, impact workers, an effect's Impact hook and the frame summary are each handed one;
+    /// <c>Ends</c> marks a lasting modifier coming off, a change but no hit.
+    /// </summary>
     public struct ImpactData
     {
         private ImpactData(ITarget target, IAttribute attribute, SourcedModifiedAttributeValue sourcedModifier, AttributeValue realImpact, AttributeValue oldValue)

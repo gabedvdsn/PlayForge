@@ -6,6 +6,9 @@ using UnityEngine.Events;
 
 namespace FarEmerald.PlayForge
 {
+    /// <summary>
+    /// A stage task that invokes its <c>Events</c>, each <c>UnityEvent</c> in turn, and ends at once.
+    /// </summary>
     [ForgeMenu("Utility", Description = "Invokes UnityEvents, for objects in the scene to answer.")]
     public class UnityEventAbilityTask : AbstractAbilityTask
     {

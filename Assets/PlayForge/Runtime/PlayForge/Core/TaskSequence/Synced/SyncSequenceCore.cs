@@ -84,6 +84,12 @@ namespace FarEmerald.PlayForge
     /// </summary>
     public class SyncedTaskSequence
     {
+        /// <summary>
+        /// Where a synced runner is, as its <c>State</c> says: <c>Ready</c>, built or reset and not stepped since;
+        /// <c>Running</c>; <c>Completed</c>, every stage done; or <c>Interrupted</c>. A step of a Completed or
+        /// Interrupted runner does nothing and returns true, and a repeating runner goes back to Ready after each
+        /// round.
+        /// </summary>
         public enum ERunnerState
         {
             Ready,

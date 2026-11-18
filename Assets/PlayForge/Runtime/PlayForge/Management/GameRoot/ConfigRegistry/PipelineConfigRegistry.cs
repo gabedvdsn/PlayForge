@@ -3,8 +3,16 @@ using JetBrains.Annotations;
 
 namespace FarEmerald.PlayForge
 {
+    /// <summary>
+    /// A static store of <c>GameplayPipelineConfiguration</c> lists, kept per source and per asset tag, and cleared as
+    /// play starts. Nothing in the package registers or reads one, and <c>Register</c> adds only to a list a source and
+    /// a tag already hold, which nothing makes.
+    /// </summary>
     public static class PipelineConfigRegistry
     {
+        /// <summary>
+        /// A class with no members, which nothing in the package uses.
+        /// </summary>
         public class ConfigPipeline
         {
             

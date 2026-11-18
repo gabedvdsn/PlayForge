@@ -7,6 +7,18 @@ using Cysharp.Threading.Tasks;
 
 namespace FarEmerald.PlayForge
 {
+    /// <summary>
+    /// The base of every task an ability runs: its targeting task, an <c>AbstractTargetingAbilityTask</c>, and its
+    /// stages' tasks and asset loaders, each an <c>AbstractAbilityTask</c>. Each is handed the activation's data:
+    /// <c>Prepare</c> as its stage starts, <c>Activate</c>, the work its stage waits on, and <c>Clean</c> as the stage
+    /// ends; <c>IsCriticalSection</c> says whether it's critical work, which commits its ability to its stage and keeps
+    /// out another ability's critical work while it runs.
+    ///
+    /// <para>One task object serves every activation of its ability, so what it keeps for one belongs in the
+    /// activation's data, not in its fields. <c>Read</c> gives one of its numbers at its ability's level,
+    /// <c>EntityOf</c> its caster or its first target, and <c>ApplyTo</c> applies an effect from the ability with the
+    /// activation's magnitudes.</para>
+    /// </summary>
     public abstract class AbstractAbilityRelatedTask
     {
         protected AbstractAbilityRelatedTask() { }

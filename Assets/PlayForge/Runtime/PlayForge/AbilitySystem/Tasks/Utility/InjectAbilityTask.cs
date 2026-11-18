@@ -4,6 +4,10 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
+    /// <summary>
+    /// A stage task that sends its <c>Injection</c>, an interrupt unless it's set to another, as a skip or a jump to a
+    /// stage, into its ability's running activations, and ends at once.
+    /// </summary>
     [ForgeMenu("Sequence", Description = "Sends a command into the ability's own run, as an interrupt.")]
     public class InjectAbilityTask : AbstractAbilityTask
     {

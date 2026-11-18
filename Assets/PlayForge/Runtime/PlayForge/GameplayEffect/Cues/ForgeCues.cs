@@ -102,6 +102,11 @@ namespace FarEmerald.PlayForge
         internal static void Dispatch(ECueEvent cueEvent, IReadOnlyList<AbstractCueHandler> handlers, in CueContext cue) =>
             Play(cueEvent, handlers, cue);
 
+        /// <summary>
+        /// A listener of <c>ForgeCues.Played</c>, invoked as each cue plays, after its handler, handed whether it
+        /// bursts, begins or ends, the handler, and the cue's context: what raised it, who's behind it and where it
+        /// plays.
+        /// </summary>
         public delegate void CuePlayedDelegate(ECueEvent cueEvent, AbstractCueHandler handler, in CueContext cue);
 
         /// <summary>Heard as each cue plays, after its handler: for a debugger, a recorder or a test.</summary>

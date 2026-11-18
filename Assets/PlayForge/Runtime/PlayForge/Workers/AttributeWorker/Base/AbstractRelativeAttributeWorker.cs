@@ -65,6 +65,10 @@ namespace FarEmerald.PlayForge
         }
     }
 
+    /// <summary>
+    /// Where a relative attribute worker reads its relative attribute: From Self, on the entity whose attribute
+    /// changes; From Source, on the source of the change.
+    /// </summary>
     public enum EFromSelfSource
     {
         FromSelf,

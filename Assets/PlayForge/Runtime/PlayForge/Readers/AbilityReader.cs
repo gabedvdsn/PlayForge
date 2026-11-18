@@ -3,6 +3,10 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
+    /// <summary>
+    /// A reader of an ability's cooldown: <c>Assign(Tag)</c> names the tag, and each Update step it finds the GAS's
+    /// longest effect duration under it. It shows nothing of what it finds.
+    /// </summary>
     public class AbilityReader : AbstractReader
     {
         [Header("Ability Reader")] 

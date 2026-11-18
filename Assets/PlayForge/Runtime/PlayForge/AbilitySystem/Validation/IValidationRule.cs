@@ -2,6 +2,11 @@
 
 namespace FarEmerald.PlayForge
 {
+    /// <summary>
+    /// The base of an ability check that reads one of the checked entity's attributes, as Attribute does: it holds the
+    /// <c>Attribute</c>, and a kind made from it overrides <c>Validate</c>, which checks the entity its list hands it,
+    /// and <c>GetName</c>. Without <c>[ValidationSide]</c>, either list offers it.
+    /// </summary>
     [Serializable]
     public abstract class AbstractAttributeValidationRule : IAbilityValidationRule
     {

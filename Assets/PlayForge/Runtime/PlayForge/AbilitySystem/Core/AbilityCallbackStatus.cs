@@ -2,6 +2,13 @@
 
 namespace FarEmerald.PlayForge
 {
+    /// <summary>
+    /// What an ability system's callback is handed: the activation's <c>Data</c> and the ability it runs
+    /// (<c>Ability</c>, its spec); for a stage's or a task's callback, the <c>Stage</c> and its <c>Tasks</c>,
+    /// <c>Task</c> being the one a task's callback tells of; for an injection's, the <c>Injection</c>; and
+    /// <c>Success</c>, which at an end says whether the task or the stage got there without being cancelled or failing,
+    /// and for an injection whether it was taken.
+    /// </summary>
     public struct AbilityCallbackStatus
     {
         public readonly AbilityDataPacket Data;

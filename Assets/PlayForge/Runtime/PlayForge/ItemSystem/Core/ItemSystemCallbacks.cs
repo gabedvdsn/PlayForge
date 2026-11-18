@@ -8,6 +8,13 @@ namespace FarEmerald.PlayForge
     /// </summary>
     public class ItemSystemCallbacks
     {
+        /// <summary>
+        /// The handler of an item system's callbacks, handed an <c>ItemCallbackStatus</c>: <c>OnItemGiven</c> and
+        /// <c>OnItemRemoved</c>, as an item comes into the inventory or a slot leaves it; <c>OnItemEquipped</c> and
+        /// <c>OnItemUnequipped</c>; <c>OnItemEffectsApplied</c> and <c>OnItemEffectsRemoved</c>, once for each effect a
+        /// worn item puts on or takes off; and <c>OnItemAbilityGranted</c> and <c>OnItemAbilityRevoked</c>, for the
+        /// ability it lends.
+        /// </summary>
         public delegate void ItemSystemCallbackDelegate(ItemCallbackStatus status);
         
         // ═══════════════════════════════════════════════════════════════

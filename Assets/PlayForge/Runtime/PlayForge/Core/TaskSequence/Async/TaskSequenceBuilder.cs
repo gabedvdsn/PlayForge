@@ -571,6 +571,13 @@ namespace FarEmerald.PlayForge
     // STAGE BUILDER
     // ═══════════════════════════════════════════════════════════════════════════
     
+    /// <summary>
+    /// Builds one stage of a sequence, handed to the action given to a builder's <c>Stage</c>, a stage's
+    /// <c>SubStage</c>, or a branch's <c>If</c> and <c>Default</c>: its tasks (<c>Task</c>, <c>Do</c>, <c>SyncTask</c>,
+    /// the delays and waits) and sub-stages, its policy (<c>WhenAll</c>, <c>WhenAny</c>, <c>WhenN</c>), its repeats,
+    /// time limits and conditions, the injections it allows, whether it's critical, its name, and its handlers,
+    /// <c>OnInit</c>, <c>OnRepeat</c>, <c>OnTimeout</c>, <c>OnTerminate</c> and the rest.
+    /// </summary>
     public class StageBuilder
     {
         private readonly SequenceStage _stage = new();
@@ -1111,6 +1118,11 @@ namespace FarEmerald.PlayForge
     // BRANCH BUILDER
     // ═══════════════════════════════════════════════════════════════════════════
     
+    /// <summary>
+    /// Builds a branch, a stage that picks one stage as it starts: the first whose <c>If</c> condition holds of the
+    /// run's data packet, else its <c>Default</c>, else none. It's handed to the action given to a builder's or a
+    /// stage's <c>Branch</c>. A synced runner can't run one.
+    /// </summary>
     public class BranchBuilder
     {
         private readonly BranchStage _branch = new();

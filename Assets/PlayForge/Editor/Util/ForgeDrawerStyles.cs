@@ -17,6 +17,11 @@ namespace FarEmerald.PlayForge.Editor
         // SECTION 1: Color Palette
         // ═══════════════════════════════════════════════════════════════════════════
         
+        /// <summary>
+        /// The colors PlayForge's editors draw with: accents and section tints, backgrounds, text and borders, status
+        /// colors, and a color for each kind of PlayForge asset, which <c>GetAssetColor</c> gives for a type, gray for
+        /// any it doesn't name.
+        /// </summary>
         public static class Colors
         {
             // Accent Colors (for left borders and highlights)
@@ -107,6 +112,10 @@ namespace FarEmerald.PlayForge.Editor
         // SECTION 2: Icon Characters
         // ═══════════════════════════════════════════════════════════════════════════
         
+        /// <summary>
+        /// Characters PlayForge's editors show as small icons in labels and buttons, each a string constant, as
+        /// <c>Check</c> (✓), <c>Cross</c> (✗) and <c>ArrowDown</c> (↓).
+        /// </summary>
         public static class Icons
         {
             public const string Target = "◎";

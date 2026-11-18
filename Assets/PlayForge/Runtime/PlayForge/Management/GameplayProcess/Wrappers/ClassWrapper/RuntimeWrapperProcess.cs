@@ -4,6 +4,10 @@ using Cysharp.Threading.Tasks;
 
 namespace FarEmerald.PlayForge
 {
+    /// <summary>
+    /// The wrapper ProcessControl holds a runtime process in: it passes each hook and step to the process, reads its
+    /// lifecycle, timing and priority from it, and marks it ended as it terminates, so it can be registered again.
+    /// </summary>
     public class RuntimeWrapperProcess : AbstractProcessWrapper
     {
         private AbstractRuntimeProcess Process;

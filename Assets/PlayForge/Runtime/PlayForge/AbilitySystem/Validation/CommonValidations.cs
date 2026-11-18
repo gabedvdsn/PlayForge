@@ -3,6 +3,11 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
+    /// <summary>
+    /// A Caster Check that passes while the caster can pay the ability's cost: what its Cost effect spends would leave
+    /// each attribute at 0 or more, and its Attribute Costs can be paid, the caster holding each attribute. A component
+    /// that waives the cost, as a Toggle turning off does, passes it. Its refusal is told as Cost.
+    /// </summary>
     [Serializable]
     [ValidationSide(EValidationSide.Caster)]
     [ForgeMenu(Description = "Activates only where the caster can pay the cost.")]
@@ -64,6 +69,11 @@ namespace FarEmerald.PlayForge
         public EActivationRefusal RefusedAs => EActivationRefusal.Cost;
     }
 
+    /// <summary>
+    /// A Caster Check that passes while the ability has a use in hand, as its cooldown model says: with the single
+    /// cooldown, while its caster doesn't carry its Cooldown's asset tag; with Charges, while one is in hand. A
+    /// component that waives the cooldown passes it. Its refusal is told as Cooldown.
+    /// </summary>
     [Serializable]
     [ValidationSide(EValidationSide.Caster)]
     [ForgeMenu(Description = "Activates only where the ability isn't cooling down, or with its charges counted, has one in hand.")]
@@ -96,6 +106,10 @@ namespace FarEmerald.PlayForge
         public EActivationRefusal RefusedAs => EActivationRefusal.Cooldown;
     }
 
+    /// <summary>
+    /// A check that passes while the entity it checks isn't dead: the caster among the Caster Checks, the target among
+    /// the Target Checks, each list's default. Its refusal of the caster is told as Dead.
+    /// </summary>
     [Serializable]
     [ForgeMenu(Description = "Activates only while the checked entity lives: the caster among the Caster Checks, the target among the Target Checks.")]
     public class IsAliveValidation : IAbilityValidationRule
@@ -119,6 +133,11 @@ namespace FarEmerald.PlayForge
         public EActivationRefusal RefusedAs => EActivationRefusal.Dead;
     }
 
+    /// <summary>
+    /// A check that compares the checked entity's current value of its <c>Attribute</c> with <c>Value</c>, read at the
+    /// ability's level, by <c>Comparison</c>; with <c>ShareOfBase</c>, its share of its base, from 0 to 1, as "below
+    /// half its health". An entity without the attribute fails it. Either list offers it.
+    /// </summary>
     [Serializable]
     [ForgeMenu(Description = "Activates only where an attribute of the checked entity, or its share of its base, compares with a value.")]
     public class AttributeValidation : AbstractAttributeValidationRule
@@ -195,6 +214,11 @@ namespace FarEmerald.PlayForge
         public abstract string GetName();
     }
 
+    /// <summary>
+    /// A check that compares the checked entity's weight of its <c>Tag</c> with <c>Weight</c>, read at the ability's
+    /// level, by <c>Comparison</c>, as combo points or stacks; an entity without the tag holds it at 0. Either list
+    /// offers it.
+    /// </summary>
     [Serializable]
     [ForgeMenu(Name = "Tag Weight", Description = "Activates only where the checked entity holds a tag at a weight that compares with a number, as combo points or stacks.")]
     public class TagWeightValidation : AbstractTagValidationRule
@@ -227,6 +251,11 @@ namespace FarEmerald.PlayForge
         public override string GetName() => "Tag Weight";
     }
 
+    /// <summary>
+    /// A check that passes while the checked entity has an effect on: its <c>Effect</c>, or any effect tagged
+    /// <c>Tagged</c> or a tag under it, by its asset tag, a context tag or a tag it grants; with <c>Without</c>, while
+    /// it has none of it. Naming neither, it passes.
+    /// </summary>
     [Serializable]
     [ForgeMenu(Name = "Has Effect", Description = "Activates only where the checked entity has an effect on, by asset or by tag; or, with Without, where it hasn't.")]
     public class HasEffectValidation : IAbilityValidationRule
@@ -265,6 +294,10 @@ namespace FarEmerald.PlayForge
         public string GetName() => "Has Effect";
     }
 
+    /// <summary>
+    /// A check that passes while the checked entity holds its <c>Item</c>, or, with <c>Equipped</c>, wears it. Naming
+    /// no item, it passes.
+    /// </summary>
     [Serializable]
     [ForgeMenu(Name = "Holds Item", Description = "Activates only where the checked entity holds an item; or, with Equipped, wears it.")]
     public class HoldsItemValidation : IAbilityValidationRule
@@ -296,6 +329,10 @@ namespace FarEmerald.PlayForge
         public string GetName() => "Holds Item";
     }
 
+    /// <summary>
+    /// A Caster Check that compares the ability's level on its caster with <c>Level</c>, by <c>Comparison</c>, as a
+    /// form it unlocks at a rank; by default, 2 or more.
+    /// </summary>
     [Serializable]
     [ValidationSide(EValidationSide.Caster)]
     [ForgeMenu(Name = "Ability Level", Description = "Activates only where the ability's level compares with a number, as a form it unlocks at a rank.")]

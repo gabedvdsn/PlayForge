@@ -208,6 +208,12 @@ namespace FarEmerald.PlayForge
     // SUPPORTING TYPES
     // ═══════════════════════════════════════════════════════════════════════════
 
+    /// <summary>
+    /// How an auto-targeting task, Auto Target or Auto Target By Affinity, orders the entities it finds before it takes
+    /// its Max Targets, the first being its primary target: <c>Nearest</c> or <c>Farthest</c> first, measured from
+    /// where its range is, or in a <c>Random</c> order; <c>All</c> leaves them as found. Max Targets still holds under
+    /// All, and 0 takes every one.
+    /// </summary>
     public enum EAutoTargetMode
     {
         /// <summary>Select the N nearest targets within range.</summary>

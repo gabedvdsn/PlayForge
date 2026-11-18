@@ -2,6 +2,11 @@
 
 namespace FarEmerald.PlayForge
 {
+    /// <summary>
+    /// A targeting packet that holds its own position, rotation and scale, set as it's made and changed only through
+    /// it: a point a click picked, a runtime entity's place, which whoever drives the entity keeps current, or a
+    /// snapshot of a transform, or of another packet, whose entity, transform and direction it keeps.
+    /// </summary>
     public class StaticTargetingPacket : AbstractTargetingPacket
     {
         private Vector3 _position;

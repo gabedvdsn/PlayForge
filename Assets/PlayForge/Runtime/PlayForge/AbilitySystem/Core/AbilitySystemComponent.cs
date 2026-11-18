@@ -149,6 +149,15 @@ namespace FarEmerald.PlayForge
             return new AbilityActivationRequest(index, this, _policy, _data) { BufferWindow = bufferWindow };
         }
         
+        /// <summary>
+        /// A request to activate the ability in one slot of an entity's ability system, which
+        /// <c>CreateActivationRequest</c> makes and <c>TryActivateAbility</c> takes: its slot (<c>Index</c>); the When
+        /// Busy it's asked under (<c>Policy</c>), as its ability says unless the request names another; the <c>Data</c>
+        /// it hands the activation, as a target an AI picked or set-by-caller magnitudes; how long it may wait in the
+        /// input buffer (<c>BufferWindow</c>), below 0 for its ability's Buffer Window; and whether an ability still
+        /// choosing its target gives way to it (<c>CancelsTargeting</c>), on as a player's press is, and off for a
+        /// trigger's request and Activate At Start's.
+        /// </summary>
         public struct AbilityActivationRequest
         {
             public int Index;
@@ -1245,6 +1254,14 @@ namespace FarEmerald.PlayForge
 
     // What an activation does when another holds its claim, which the inspectors show as When Busy. The names the
     // inspectors show say the choice: Queue, not Queue Activation If Busy
+    /// <summary>
+    /// What an activation does while another ability holds its claim, the When Busy the inspectors show. Activate
+    /// Anyway (<c>AlwaysActivate</c>) starts at once; Refuse (<c>ActivateIfIdle</c>) is refused, as Busy, while another
+    /// ability asked under Refuse holds its claim; Queue (<c>QueueActivationIfBusy</c>) waits in the input buffer, for
+    /// up to its Buffer Window, while a Queue ability holds its claim or a running stage blocks it. Whatever the
+    /// choice, an ability with critical tasks can't start while another with critical tasks holds its claim. An
+    /// entity's When Busy is one, and so is each activation request's <c>Policy</c>.
+    /// </summary>
     public enum EAbilityActivationPolicy
     {
         /// <summary>
@@ -1265,6 +1282,14 @@ namespace FarEmerald.PlayForge
 
     // What an ability choosing its target does as another of its entity's activates, which the inspectors show as While
     // Targeting
+    /// <summary>
+    /// What an ability still choosing its target does as another of its entity's abilities activates, past that one's
+    /// own checks, on a request that cancels targeting (<c>CancelsTargeting</c>), as a player's press does: the While
+    /// Targeting the inspectors show. Entity's Rule (<c>EntitysRule</c>) does as its entity's Targeting Yields says;
+    /// <c>Yields</c> gives way, its targeting cancelled, nothing of it paid, and its claim let go at once, so the other
+    /// starts; <c>Holds</c> keeps its claim until its target is chosen or it's cancelled, and the other does as its
+    /// When Busy says.
+    /// </summary>
     public enum EWhileTargeting
     {
         /// <summary>
@@ -1283,6 +1308,11 @@ namespace FarEmerald.PlayForge
         [InspectorName("Holds")] Holds
     }
 
+    /// <summary>
+    /// An ability's When Busy as its Definition holds it: Entity's Policy (<c>UseLocalPolicy</c>), the default, takes
+    /// its entity's When Busy, and the others are the <c>EAbilityActivationPolicy</c> choices, Activate Anyway, Refuse
+    /// and Queue. <c>TryActivateAbility</c> and <c>CreateActivationRequest</c> can name one in place of the ability's.
+    /// </summary>
     public enum EAbilityActivationPolicyExtended
     {
         /// <summary>

@@ -2,6 +2,12 @@
 
 namespace FarEmerald.PlayForge
 {
+    /// <summary>
+    /// A whole number held between a minimum and a maximum: every level PlayForge keeps is one, an entity's, an
+    /// ability's or an item's under its tag, and so is the level an origin gives and a number reads. Setting
+    /// <c>CurrentValue</c> clamps it, and moving a bound clamps it again; <c>Ratio</c> says where it stands between the
+    /// two.
+    /// </summary>
     public struct IntValuePairClamped
     {
         private int _currentValue;

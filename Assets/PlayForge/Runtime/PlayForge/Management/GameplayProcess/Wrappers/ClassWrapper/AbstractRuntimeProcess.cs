@@ -6,6 +6,20 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
+    /// <summary>
+    /// The base of every runtime process: a plain C# class, with no GameObject, that ProcessControl registers, steps
+    /// and ends, as a runtime GAS, a task sequence's process or a group's member. Its name, step priority, step timing
+    /// and lifecycle go to its base constructor; the one with none gives its type's name, the first priority, no step
+    /// timing and SelfTerminating. Only a runtime process joins a group.
+    ///
+    /// <para>Derive from it, or from <c>LazyRuntimeProcess</c> for a run that lasts until it's paused or ended, and
+    /// override <c>RunProcess</c>, the run ProcessControl awaits, and the hooks you need: <c>WhenInitialize</c>;
+    /// <c>WhenUpdate</c>, <c>WhenLateUpdate</c> and <c>WhenFixedUpdate</c> at its timing; <c>WhenWait</c> and
+    /// <c>WhenTerminate</c>; and <c>TryHandlePause</c> and <c>TryHandleResume</c> to keep a run through a pause. An
+    /// override of <c>WhenInitialize</c> or <c>WhenTerminate</c> calls the base's: the process is <c>IsInitialized</c>
+    /// from registration until it ends, so it can be registered again once ended, and what it handles ends with
+    /// it.</para>
+    /// </summary>
     public abstract class AbstractRuntimeProcess : IProxyTaskBehaviourCaller, IGameplayProcess
     {
         protected readonly string name;

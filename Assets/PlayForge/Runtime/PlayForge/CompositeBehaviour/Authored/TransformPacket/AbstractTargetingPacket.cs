@@ -3,6 +3,13 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
+    /// <summary>
+    /// Where something is, for targeting: its <c>position</c>, <c>rotation</c> and <c>scale</c>, the entity it is
+    /// (<c>target</c>) and its <c>transform</c> where it has them, and the <c>direction</c> it was aimed along, as
+    /// Select Direction sets. Each entity gives one (<c>ITarget.GetTargetingPacket</c>), and a targeting task files the
+    /// packet of what it picks under the activation's Target key, each packet's entity becoming one of the activation's
+    /// targets. <c>TargetingPacket</c> follows a transform, and <c>StaticTargetingPacket</c> holds its own values.
+    /// </summary>
     public abstract class AbstractTargetingPacket
     {
         public Transform transform { get; set; }

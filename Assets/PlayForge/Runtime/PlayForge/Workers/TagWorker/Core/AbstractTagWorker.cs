@@ -86,12 +86,21 @@ namespace FarEmerald.PlayForge
     // SUPPORTING TYPES
     // ═══════════════════════════════════════════════════════════════════════════
     
+    /// <summary>
+    /// A tag worker's requirements: its packets, each a tag and a weight the entity's must reach or stay under. The
+    /// worker is active while every packet holds, and always where it has none.
+    /// </summary>
     [Serializable]
     public class TagWorkerRequirements
     {
         public List<TagWorkerRequirementPacket> TagPackets = new();
     }
     
+    /// <summary>
+    /// One of a tag worker's requirements: a tag, whether the entity must carry it, Require, or must not, Avoid, and
+    /// the weight that decides, read at the entity's level. Require holds while the tag's weight is at least
+    /// <c>RequiredWeight</c>; Avoid while it's below.
+    /// </summary>
     [Serializable]
     public struct TagWorkerRequirementPacket
     {
@@ -108,11 +117,15 @@ namespace FarEmerald.PlayForge
         }
     }
 
+    /// <summary>
+    /// Which way a tag worker's requirement holds: Require, while the tag's weight on the entity is at least the
+    /// required weight; Avoid, while it's below it.
+    /// </summary>
     public enum ERequireAvoidPolicy
     {
         /// <summary>Tag weight must be >= RequiredWeight for worker to activate</summary>
         Require,
-        /// <summary>Tag weight must be < RequiredWeight for worker to activate</summary>
+        /// <summary>Tag weight must be &lt; RequiredWeight for worker to activate</summary>
         Avoid
     }
 }

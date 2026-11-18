@@ -15,6 +15,10 @@ namespace FarEmerald.PlayForge
     /// </summary>
     public class ForgeAssetCatalog : ScriptableObject, IAssetNames
     {
+        /// <summary>
+        /// One row of an Asset Catalog: the <c>Id</c> a save names an asset by, and the <c>Asset</c>. Where an ID or an
+        /// asset repeats, the first row holds.
+        /// </summary>
         [Serializable]
         public struct Entry
         {

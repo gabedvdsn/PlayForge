@@ -3,6 +3,13 @@ using JetBrains.Annotations;
 
 namespace FarEmerald.PlayForge
 {
+    /// <summary>
+    /// An entity's gameplay ability system as code meets it, whichever hub runs it: the <c>GameplayAbilitySystem</c>
+    /// component on a GameObject or a <c>RuntimeGameplayAbilitySystem</c> made in code. Through it code reaches the
+    /// entity's attribute, ability, item and effect systems, its tags, levels and effects, its callbacks, clock,
+    /// services and Local Data, and its turning, death and revival; <c>ToGASObject</c> gives the component, where there
+    /// is one. Code that works with any entity takes one.
+    /// </summary>
     public interface IGameplayAbilitySystem : ISource, ILocalDataUser, IAnalysisUser, IProxyTaskBehaviourCaller
     {
         /// <summary>

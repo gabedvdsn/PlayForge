@@ -4,6 +4,10 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
+    /// <summary>
+    /// Several impact workers as one: given to an entity, it gives it each of its workers, and each runs for the
+    /// changes it takes as it would on its own; taken back, it takes them back.
+    /// </summary>
     [ForgeMenu(Description = "Several impact workers as one.")]
     public class ImpactWorkerGroup : AbstractImpactWorker
     {

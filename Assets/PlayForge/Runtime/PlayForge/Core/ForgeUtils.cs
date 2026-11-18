@@ -3,6 +3,10 @@ using System.Collections.Generic;
 
 namespace FarEmerald.PlayForge
 {
+    /// <summary>
+    /// Extension methods for a list: <c>IndexMin</c> and <c>IndexMax</c> give the index of the element whose selected
+    /// value is lowest or highest, the first where several tie, and 0 for an empty list.
+    /// </summary>
     public static class ForgeUtils
     {
         public static int IndexMin<T>(this IList<T> list, Func<T, float> selector)

@@ -222,6 +222,11 @@ namespace FarEmerald.PlayForge
         }
     }
     
+    /// <summary>
+    /// A deferred action that writes its text through ForgeLog, at Info, as its turn comes: at Cleanup priority unless
+    /// it's given another, and only where its validity check, if it's given one, holds. A Threshold with no effects and
+    /// no event queues one as it fires.
+    /// </summary>
     public class LogAction : IRootAction
     {
         public string Log { get; set; }
@@ -250,6 +255,12 @@ namespace FarEmerald.PlayForge
         }
     }
     
+    /// <summary>
+    /// The deferred action that kills its entity as its turn comes, at Critical priority: the entity is marked dead,
+    /// which its callbacks, its components, its effects and its killer hear, and it ends, or stays dead, at its frame's
+    /// end, as its Death says. It's dropped where the entity is dead already; a death watcher and the Health role's
+    /// watch queue it.
+    /// </summary>
     public class DeathAction : IRootAction
     {
         public int Priority => ActionPriority.Critical; // High priority

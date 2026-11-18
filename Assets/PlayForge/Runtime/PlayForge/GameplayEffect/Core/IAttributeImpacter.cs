@@ -74,13 +74,6 @@ namespace FarEmerald.PlayForge
         float Evaluate(IAttributeImpactCarrier carrier);
     }
 
-    /// <summary>
-    /// Cross-carrier composition strategies for <see cref="ECalculationOperation.Multiply"/>
-    /// impacters. This is intentionally distinct from per-effect stacking policy:
-    /// stacking decides how the SAME effect re-applies stack against itself, while
-    /// MultiplyBehaviour decides how DIFFERENT carriers' multiply contributions to the
-    /// SAME attribute slot compose.
-    /// </summary>
     /// <summary>How an Add impacter combines with the others on its attribute.</summary>
     public enum EAddBehaviour
     {
@@ -94,6 +87,12 @@ namespace FarEmerald.PlayForge
         Diminishing,
     }
 
+    /// <summary>
+    /// How a Multiply impact combines with the other multiplies on the same value of its attribute: Multiplicative, the
+    /// default, compounds them, ×1.5 and ×1.5 making ×2.25; Additive Bonus adds each one's bonus, its value less 1, and
+    /// multiplies once, +50% and +50% making ×2.0. It's apart from stacking, which decides how one effect applied again
+    /// stacks against itself.
+    /// </summary>
     public enum EMultiplyBehaviour
     {
         /// <summary>

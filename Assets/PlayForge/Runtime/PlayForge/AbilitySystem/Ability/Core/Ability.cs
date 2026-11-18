@@ -6,6 +6,20 @@ using Object = UnityEngine.Object;
 
 namespace FarEmerald.PlayForge
 {
+    /// <summary>
+    /// An ability: one thing an entity can do, as a fireball, a dash or a heal. An entity learns it from its Entity
+    /// asset's Starting Abilities, from an equipped item's Active Ability or from code
+    /// (<c>AbilitySystemComponent.GiveAbility</c>), and keeps it in a slot with a level of its own, between its
+    /// <c>StartingLevel</c> and <c>MaxLevel</c>, kept under its asset tag.
+    ///
+    /// <para>An activation passes its caster's tag requirements and its Caster Checks (<c>SourceActivationRules</c>),
+    /// lets its <c>Behaviour</c>'s targeting task pick its target, which its Target Checks
+    /// (<c>TargetActivationRules</c>) then check, applies its <c>Cost</c> and <c>Cooldown</c> effects to its caster and
+    /// spends its <c>AttributeCosts</c>, as it starts or in the stage that takes them, and runs its stages of tasks.
+    /// Its <c>Definition</c> says how it activates, its <c>Tags</c> what it is, grants and requires, and its
+    /// <c>Components</c> add features with hooks into its life; its <c>WorkerGroup</c>, <c>OnHit</c> and
+    /// <c>Modifiers</c> hold on its entity while the entity knows it.</para>
+    /// </summary>
     [CreateAssetMenu(menuName = "PlayForge/Ability", fileName = "Ability_", order = 20)]
     public class Ability : BaseForgeLevelProvider, IWorkerGroupSource, IHasTextures
     {

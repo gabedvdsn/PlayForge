@@ -16,6 +16,11 @@ namespace FarEmerald.PlayForge
         // PROCESS LIFECYCLE
         // ═══════════════════════════════════════════════════════════════════════
 
+        /// <summary>
+        /// A handler of <c>OnProcessRegistered</c> and <c>OnProcessUnregistered</c>, ProcessControl's callbacks,
+        /// invoked for every process once it has registered and initialized, and just before it's removed, and handed
+        /// its relay and its data packet.
+        /// </summary>
         public delegate void ProcessDelegate(ProcessRelay relay, ProcessDataPacket data);
 
         /// <summary>
@@ -48,6 +53,10 @@ namespace FarEmerald.PlayForge
         // STATE TRANSITIONS
         // ═══════════════════════════════════════════════════════════════════════
 
+        /// <summary>
+        /// A handler of <c>OnProcessStateChanged</c>, ProcessControl's callback, invoked as any process moves from one
+        /// state to another, and handed its relay, the state it left, the state it entered and its data packet.
+        /// </summary>
         public delegate void ProcessStateDelegate(
             ProcessRelay relay,
             EProcessState oldState,
@@ -76,6 +85,12 @@ namespace FarEmerald.PlayForge
         // Fires only when the registering handler is an IGameplayAbilitySystem.
         // ═══════════════════════════════════════════════════════════════════════
 
+        /// <summary>
+        /// A handler of <c>OnGASProcessRegistered</c> and <c>OnGASProcessUnregistered</c>, ProcessControl's callbacks,
+        /// invoked for a process a GAS owns, one registered with the GAS as its handler or with an ability's packet
+        /// whose caster is the GAS, as it registers and just before it's removed, and handed the GAS, the process's
+        /// relay and its data packet.
+        /// </summary>
         public delegate void GASProcessDelegate(IGameplayAbilitySystem gas, ProcessRelay relay, ProcessDataPacket data);
 
         private GASProcessDelegate _onGASProcessRegistered;
@@ -102,6 +117,10 @@ namespace FarEmerald.PlayForge
         // CONTROL STATE
         // ═══════════════════════════════════════════════════════════════════════
 
+        /// <summary>
+        /// A handler of <c>OnControlStateChanged</c>, ProcessControl's callback, invoked as ProcessControl's own state
+        /// changes, and handed the state it left and the state it entered.
+        /// </summary>
         public delegate void ControlStateDelegate(EProcessControlState oldState, EProcessControlState newState);
 
         private ControlStateDelegate _onControlStateChanged;

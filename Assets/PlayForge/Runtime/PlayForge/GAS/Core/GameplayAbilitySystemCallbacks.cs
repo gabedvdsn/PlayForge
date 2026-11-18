@@ -284,6 +284,12 @@ namespace FarEmerald.PlayForge
         // The generic OnImpact event fires for both perspectives (backwards-compat).
         // ═══════════════════════════════════════════════════════════════════════════
 
+        /// <summary>
+        /// The handler of an entity's impact callbacks, handed the <c>ImpactData</c> of an impact as it's recorded: its
+        /// target, its attribute and the change that landed. <c>OnImpactDealt</c> hears those the entity dealt and
+        /// <c>OnImpactReceived</c> those it took, <c>OnImpact</c> either, and <c>OnReductionDealt</c>,
+        /// <c>OnIncreaseDealt</c>, <c>OnReductionReceived</c> and <c>OnIncreaseReceived</c> a loss or a gain alone.
+        /// </summary>
         public delegate void ImpactDelegate(ImpactData impact);
 
         /// <summary>
@@ -416,6 +422,10 @@ namespace FarEmerald.PlayForge
         // SPECIAL EVENT TRACKING
         // ═══════════════════════════════════════════════════════════════════════════
 
+        /// <summary>
+        /// The handler of an entity's <c>OnEntityDied</c> and <c>OnEntityRevived</c> callbacks, handed the entity's
+        /// hub: invoked as it's marked dead, before its frame ends, and as a staying entity revives.
+        /// </summary>
         public delegate void DeathDelegate(IGameplayAbilitySystem system);
         private event DeathDelegate _onEntityDied;
         public event DeathDelegate OnEntityDied { add => _onEntityDied += value; remove => _onEntityDied -= value; }

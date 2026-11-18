@@ -14,6 +14,12 @@ namespace FarEmerald.PlayForge
          * - Level changes (level changed, max level changed)
          */
         
+        /// <summary>
+        /// A handler of a level system's events, invoked as a level is registered or unregistered
+        /// (<c>OnLevelRegistered</c>, <c>OnLevelUnregistered</c>) and as one is set or changed (<c>OnLevelChanged</c>,
+        /// <c>OnMaxLevelChanged</c>, <c>OnLevelUp</c>, <c>OnLevelDown</c>), and handed the <c>LevelCallbackStatus</c>
+        /// of that change.
+        /// </summary>
         public delegate void LevelSystemCallbackDelegate(LevelCallbackStatus status);
         
         // ═══════════════════════════════════════════════════════════════

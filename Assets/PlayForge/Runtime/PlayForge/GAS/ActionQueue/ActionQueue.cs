@@ -27,6 +27,11 @@ namespace FarEmerald.PlayForge
         private int _count;
 
         // Callbacks for pipeline transparency
+        /// <summary>
+        /// A listener of an action in the queue, handed the action: <c>OnActionQueued</c> hears it as it's queued,
+        /// <c>OnActionExecuted</c> as it runs, and <c>OnActionInvalidated</c> as it's dropped unrun. An action the
+        /// system makes for itself, as a rescale, is used again once the queue has run it, so read it during the call.
+        /// </summary>
         public delegate void ActionCallback(IRootAction action);
 
         /// <summary>A listener of an action that failed: its IsValid or its Execute threw <paramref name="error"/>.</summary>

@@ -5,6 +5,15 @@ using Object = UnityEngine.Object;
 
 namespace FarEmerald.PlayForge
 {
+    /// <summary>
+    /// An ability's Tags: its <c>AssetTag</c>, made from its Name, which its entity carries while it knows the ability
+    /// and keeps the ability's level under; its <c>ContextTags</c>, which describe it and which the changes its effects
+    /// make carry as context; its Passive Tags (<c>PassiveGrantedTags</c>), on its entity while it knows the ability,
+    /// and its Active Tags (<c>ActiveGrantedTags</c>), while an activation runs; and its <c>TagRequirements</c> of its
+    /// caster, to activate and while it runs, and of its target. <c>Names</c> says whether a list of tags names an
+    /// ability, its asset tag or a context tag being one of them or under one, as Cancelled By and Blocks name
+    /// abilities.
+    /// </summary>
     [Serializable]
     public class AbilityTags
     {

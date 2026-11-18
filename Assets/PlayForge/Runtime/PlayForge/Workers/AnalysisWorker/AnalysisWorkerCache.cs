@@ -2,6 +2,11 @@
 
 namespace FarEmerald.PlayForge
 {
+    /// <summary>
+    /// An entity's analysis workers: each analyzes the entity and its frame's summary at its end of frame, after its
+    /// tag workers, and the actions it returns join the entity's action queue. A worker given by more than one source,
+    /// as two copies of an item, runs once, and stays until the last of them takes it back.
+    /// </summary>
     public class AnalysisWorkerCache : DeferredContextSystem
     {
         private List<AbstractAnalysisWorker> _workers;

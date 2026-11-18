@@ -2,6 +2,14 @@
 
 namespace FarEmerald.PlayForge
 {
+    /// <summary>
+    /// A change to an attribute on its way through the attribute system: a Current and a Base, and the carrier it comes
+    /// from, which names its source, its target, its impact types and its retention group. Code changes an attribute
+    /// directly with one, through the entity's <c>TryModifyAttribute</c>: <c>GenerateSimple</c> makes a raw delta with
+    /// no impact type, which workers take as they take an effect's change, and <c>GenerateUnworkable</c> one the system
+    /// makes on its own account, unworkable, as <c>ImpactIsWorkable</c> says, so it counts as no hit. Over an effect's
+    /// spec, the spec's impacters say what commits, and these values only travel with them.
+    /// </summary>
     public struct SourcedModifiedAttributeValue
     {
         public IAttributeImpactCarrier Carrier;

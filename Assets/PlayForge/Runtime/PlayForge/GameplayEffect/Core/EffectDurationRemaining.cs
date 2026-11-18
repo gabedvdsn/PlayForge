@@ -1,6 +1,11 @@
 ﻿
 namespace FarEmerald.PlayForge
 {
+    /// <summary>
+    /// How long an entity's effect under a tag has left: its total duration and the time remaining, and whether one was
+    /// found, as <c>GetLongestDurationFor</c> gives them for the one of the longest duration that has the tag as its
+    /// asset tag or grants it. An Infinite one gives float.MaxValue for both; <c>Ratio</c> is the share of it left.
+    /// </summary>
     public struct EffectDurationRemaining
     {
         public bool FoundDuration;

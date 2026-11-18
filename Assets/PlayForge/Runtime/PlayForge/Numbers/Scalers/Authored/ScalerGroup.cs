@@ -151,6 +151,11 @@ namespace FarEmerald.PlayForge
         }
     }
 
+    /// <summary>
+    /// One member of a Group number: its <c>Calculation</c>, a scaler or a kind of number, and how it joins the others,
+    /// its <c>RelativeOperation</c>: added up, multiplied into the sum, dividing it, added on after as a flat bonus, or
+    /// overriding them all.
+    /// </summary>
     [Serializable]
     public struct MagnitudeModifierGroupMember
     {
@@ -187,6 +192,12 @@ namespace FarEmerald.PlayForge
         Divide,
     }
 
+    /// <summary>
+    /// Which value stands where several claim one result: the highest (<c>UseMaximum</c>), the lowest, their average,
+    /// the first or the last, or none of them (<c>Ignore</c>). A Group's policy picks among its overriding members,
+    /// Ignore setting them aside so the rest join as they would; an attribute set's Resolution Policy picks among the
+    /// elements that give one attribute, Ignore keeping the first.
+    /// </summary>
     public enum EValueCollisionPolicy
     {
         [Tooltip("Use the highest value among conflicting members")]

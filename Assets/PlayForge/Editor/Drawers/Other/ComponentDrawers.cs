@@ -88,21 +88,41 @@ namespace FarEmerald.PlayForge.Editor
         protected override string HolderName => "AreaFields";
     }
 
+    /// <summary>
+    /// An effect's component: its kind, never None and named without "EffectComponent", as "Aura" for an
+    /// <c>AuraEffectComponent</c>, then its fields, folding to a line of their values. A kind an effect may hold only
+    /// once isn't offered while its list holds one.
+    /// </summary>
     [CustomPropertyDrawer(typeof(AbstractEffectComponent), true)]
     public class EffectComponentDrawer : AbstractComponentDrawer<AbstractEffectComponent>
     {
     }
 
+    /// <summary>
+    /// An ability's component: its kind, never None and named without "AbilityComponent", as "Cast Range" for a
+    /// <c>CastRangeAbilityComponent</c>, then its fields, folding to a line of their values. A kind an ability may hold
+    /// only once isn't offered while its list holds one.
+    /// </summary>
     [CustomPropertyDrawer(typeof(AbstractAbilityComponent), true)]
     public class AbilityComponentDrawer : AbstractComponentDrawer<AbstractAbilityComponent>
     {
     }
 
+    /// <summary>
+    /// An entity's component: its kind, never None and named without "EntityComponent", as "Respawn" for a
+    /// <c>RespawnEntityComponent</c>, then its fields, folding to a line of their values. A kind an entity may hold
+    /// only once isn't offered while its list holds one.
+    /// </summary>
     [CustomPropertyDrawer(typeof(AbstractEntityComponent), true)]
     public class EntityComponentDrawer : AbstractComponentDrawer<AbstractEntityComponent>
     {
     }
 
+    /// <summary>
+    /// An item's component: its kind, never None and named without "ItemComponent", as "Uses" for a
+    /// <c>UsesItemComponent</c>, then its fields, folding to a line of their values. A kind an item may hold only once
+    /// isn't offered while its list holds one.
+    /// </summary>
     [CustomPropertyDrawer(typeof(AbstractItemComponent), true)]
     public class ItemComponentDrawer : AbstractComponentDrawer<AbstractItemComponent>
     {

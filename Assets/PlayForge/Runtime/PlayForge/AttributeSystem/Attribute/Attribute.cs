@@ -7,6 +7,16 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
+    /// <summary>
+    /// An Attribute asset: one number an entity can have, as Health, Mana or Strength. It holds no value: an entity
+    /// takes its starting Current and Base from its attribute set, and effects change them from there. Sets, effects,
+    /// workers and conditions name the asset itself, and some lookups compare attributes by name, so give each its own.
+    ///
+    /// <para>Its Role says what it is, how bonuses to it add up and how a number reads it: a Value, a Bonus Share, a
+    /// Multiplier, a Resistance, or a Barrier, which takes each workable loss to the attribute it absorbs for first and
+    /// can decay. Gains Scaled By names an attribute that multiplies each workable gain to its Current, as Health's by
+    /// Healing Received.</para>
+    /// </summary>
     [CreateAssetMenu(menuName = "PlayForge/Attribute", fileName = "Attribute_", order = 23)]
     public class Attribute : BaseForgeAsset, IAttribute
     {

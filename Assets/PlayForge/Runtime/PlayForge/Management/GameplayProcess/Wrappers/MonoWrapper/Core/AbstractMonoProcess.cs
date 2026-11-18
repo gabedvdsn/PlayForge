@@ -7,6 +7,24 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
+    /// <summary>
+    /// The base of every MonoBehaviour process: a component, on a prefab or a scene object, that ProcessControl
+    /// registers, steps and ends, as a GAS hub or a projectile. Its lifecycle, step timing and step priority are fields
+    /// of its inspector, Synchronous in Update and LateUpdate at the first priority by default, and as it initializes
+    /// it takes the parent, position and rotation its packet gives. ProcessControl registers those already in a scene
+    /// as it starts.
+    ///
+    /// <para>Derive from it, or from <c>LazyMonoProcess</c> for a run that lasts until it's paused or ended, and
+    /// override <c>RunProcess</c>, the run ProcessControl awaits, and the hooks you need: <c>WhenInitialize</c>;
+    /// <c>WhenUpdate</c>, <c>WhenLateUpdate</c> and <c>WhenFixedUpdate</c> at its timing; <c>WhenWait</c>,
+    /// <c>WhenTerminate</c> and <c>WhenDestroy</c>; and <c>TryHandlePause</c> and <c>TryHandleResume</c> to keep a run
+    /// through a pause. An override of <c>WhenInitialize</c> or <c>WhenTerminate</c> calls the base's, and
+    /// <c>WhenDestroy</c> stands in for <c>OnDestroy</c>, which a class of its own would hide.</para>
+    ///
+    /// <para>Its object comes from its registration's instantiator, its handler's or its own <c>Instantiator</c>, or is
+    /// cloned from its prefab, and is given back or destroyed as the process ends. Processes on its child objects pause
+    /// and end with it, as ProcessControl cascades by default.</para>
+    /// </summary>
     public abstract class AbstractMonoProcess : MonoBehaviour, IProxyTaskBehaviourCaller, IGameplayProcess
     {
         [Header("Mono Gameplay Process")] 

@@ -3,6 +3,12 @@ using Cysharp.Threading.Tasks;
 
 namespace FarEmerald.PlayForge
 {
+    /// <summary>
+    /// A runtime process whose run lasts until it's paused or ended: its <c>RunProcess</c> waits a tick at a time while
+    /// it's active, so what it does goes in its steps and hooks, <c>WhenUpdate</c> and the rest. The base of most
+    /// runtime processes, a group, a runtime GAS and a task sequence's process among them; its constructor takes a
+    /// name, a step priority, a timing and a lifecycle.
+    /// </summary>
     public class LazyRuntimeProcess : AbstractRuntimeProcess
     {
         protected LazyRuntimeProcess()

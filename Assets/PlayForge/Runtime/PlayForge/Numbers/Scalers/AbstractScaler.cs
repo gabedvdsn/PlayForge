@@ -468,6 +468,12 @@ namespace FarEmerald.PlayForge
         All = LevelValues | LevelRange | Behaviours,
     }
 
+    /// <summary>
+    /// How a change applies its magnitude to an attribute's value: <c>Add</c> adds it, <c>Multiply</c> multiplies by
+    /// it, <c>FlatBonus</c> adds it after the multipliers, so they don't scale it, and <c>Override</c> sets the value
+    /// to it. An attribute's lasting modifiers apply in that order, and of several overrides of one value the lowest
+    /// order wins. An effect's impact chooses one as its Operation, and some workers do.
+    /// </summary>
     public enum ECalculationOperation
     {
         Add,
@@ -476,6 +482,11 @@ namespace FarEmerald.PlayForge
         FlatBonus
     }
 
+    /// <summary>
+    /// How a cached attribute-backed scaler joins the attribute it captures with its own value at the level: <c>Add</c>
+    /// adds them, <c>Multiply</c> multiplies them, and <c>UseAttributeValue</c> and <c>UseScalerValue</c> take one
+    /// alone.
+    /// </summary>
     public enum EScalerRelativeOperation
     {
         Add,
@@ -484,6 +495,12 @@ namespace FarEmerald.PlayForge
         UseScalerValue
     }
 
+    /// <summary>
+    /// The level range a scaler's values spread over, where they spread: the level provider's
+    /// (<c>LockToLevelProvider</c>, Provider's Levels), the scaler's own Max Level (<c>Unlocked</c>, Own Max Level), or
+    /// the provider's up to that Max Level (<c>Clamped</c>, Clamped to Provider), so the values reach their last at the
+    /// lower of the two.
+    /// </summary>
     public enum ELevelConfig
     {
         [Tooltip("Uses the provider's level range automatically.\n" +
@@ -501,6 +518,11 @@ namespace FarEmerald.PlayForge
         [InspectorName("Clamped to Provider")] Clamped
     }
     
+    /// <summary>
+    /// How a scaler whose values spread over levels reads a level between two of its points: <c>Constant</c> steps from
+    /// one to the next (Steps), <c>Linear</c> goes in a straight line (Straight Line), and <c>Smooth</c> along a smooth
+    /// curve (Smooth Curve).
+    /// </summary>
     public enum EScalerInterpolation
     {
         [Tooltip("No interpolation - jumps between values")]
@@ -529,6 +551,11 @@ namespace FarEmerald.PlayForge
         ClampedAuto,
     }
 
+    /// <summary>
+    /// Sets the tangent mode of a curve's key, on its left or its right, as <c>UnityEditor.AnimationUtility</c> does,
+    /// from code that builds into a player: in the editor it calls Unity's, and in a player it does nothing, so the
+    /// keys keep Unity's default tangents. A scaler shapes its curve with it.
+    /// </summary>
     public static class AnimationUtility
     {
         public static void SetKeyLeftTangentMode(AnimationCurve curve, int index, ECurveTangentMode mode)

@@ -261,6 +261,12 @@ namespace FarEmerald.PlayForge
         public HashSet<Type> CriticalAllowedInjections { get; set; }
     }
 
+    /// <summary>
+    /// A time limit on a sequence or a stage: once its <c>Seconds</c> have passed by the run's clock, its
+    /// <c>Injection</c> applies, a skip of the stage by default. <c>WithTimeout</c> on a builder or a stage adds one,
+    /// as a packet's <c>SetStageTimeout</c> does to the current stage from a task, and an <c>OnTimeout</c> handler is
+    /// handed the one that ran out.
+    /// </summary>
     public class SequenceTimeout
     {
         public float Seconds { get; set; }

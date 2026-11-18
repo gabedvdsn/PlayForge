@@ -7,6 +7,13 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
+    /// <summary>
+    /// Extension methods an ability's tasks use on a data packet: the targeting packet under a tag
+    /// (<c>GetTargetingPacket</c>, which interrupts a sequence's run where there's none, <c>SetTargetingPacket</c> and
+    /// <c>SetTargetingPackets</c>), and the effects loaded under a tag, applied to a target with the magnitudes the
+    /// caller set (<c>TryApplyEffects</c>) or read back (<c>GetLoadedAssets</c>). Its async loops, <c>WhileAsync</c>,
+    /// <c>DoWhileAsync</c> and <c>DoWhile</c>, wait a tick between rounds.
+    /// </summary>
     public static class ProcessTaskUtil
     {
         #region Ability Runtime Helpers

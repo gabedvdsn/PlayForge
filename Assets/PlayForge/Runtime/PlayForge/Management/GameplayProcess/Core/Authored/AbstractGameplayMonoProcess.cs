@@ -195,6 +195,11 @@ namespace FarEmerald.PlayForge
         }
     }
 
+    /// <summary>
+    /// A role and the attribute it reads on a gameplay mono process's origin: one row of the process's Attribute Pairs,
+    /// as ProjectileSpeed read from the caster's Projectile Speed. The process's own attribute in that role comes first
+    /// (<c>TryGetRole</c>).
+    /// </summary>
     [Serializable]
     public struct TagAttributePair
     {

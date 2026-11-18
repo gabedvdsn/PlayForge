@@ -2,6 +2,10 @@
 
 namespace FarEmerald.PlayForge
 {
+    /// <summary>
+    /// The container of an application with no stacks, which Add Another makes for each application of its effect: its
+    /// own clock, its ticks executing once each. Refresh restarts its time and its tick, and Extend adds to its time.
+    /// </summary>
     public class NonStackingEffectContainer : AbstractEffectContainer
     {
         // Doubles because a float's rounding grows with its size and every frame adds to it: over five minutes

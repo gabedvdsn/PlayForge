@@ -65,6 +65,13 @@ namespace FarEmerald.PlayForge
         }
     }
 
+    /// <summary>
+    /// The carrier of a change no effect's spec carries: a raw delta, an attribute's root value, a transfer's two
+    /// sides, a rescale or a returned blow. It names its source, its attribute, its impact types and its retention
+    /// group; one made over another carrier gives that one's origin, definition and context tags.
+    /// <c>IAttributeImpactCarrier.GenerateSourceDerivation</c> makes one, and a change made every frame keeps one and
+    /// hands the attribute system a new value over it each time, which allocates nothing.
+    /// </summary>
     public class SourceAttributeImpact : IAttributeImpactCarrier
     {
         public readonly ISource Source;
@@ -238,6 +245,12 @@ namespace FarEmerald.PlayForge
     // NullifiedImpactDerivation removed — see comment on the (also removed)
     // GenerateNullifiedDerivation factory above. The recompute model has no zombie state.
 
+    /// <summary>
+    /// A carrier to read numbers in at a level it's given, not its source's: its origin is a <c>LevelerEffectOrigin</c>
+    /// at that level, and it carries no change of its own. An entity reads its Max Abilities, Max Items and Max
+    /// Equipped Items at its level through one, and <c>AbilityInspector</c> reads an effect's numbers level by level
+    /// through one with no source; <c>IAttributeImpactCarrier.GenerateLevelerDerivation</c> makes one.
+    /// </summary>
     public class LevelerImpactDerivation : SourceAttributeImpact
     {
         private LevelerEffectOrigin levelerOrigin;
@@ -257,6 +270,11 @@ namespace FarEmerald.PlayForge
         }
     }
 
+    /// <summary>
+    /// The context tags a change carries, which workers can filter by: its origin's, <c>OriginTags</c>, and its
+    /// effect's own, <c>DerivationTags</c>; <c>All</c> gives them in that order. A carrier with no effect behind it
+    /// gives its source's alone.
+    /// </summary>
     public struct ImpactDerivationContext
     {
         public List<Tag> OriginTags;
