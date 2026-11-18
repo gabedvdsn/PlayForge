@@ -123,6 +123,26 @@ A Prefab cue with **Pooled** takes its objects from `ForgeCuePool` and gives the
 its Lifetime, in place of making and destroying one each time; the pool makes **Preallocate** of them ahead as the cue
 first plays. An `IPooledCue` on the prefab is told as it's taken and as it's given back, to reset it.
 
+## Data packets
+
+A cue that runs a process or a sequence hands it a data packet of its own, loaded for what raised the cue,
+`CuePackets.For(cue, data)`. It loads in four steps, each step's keys taking the place of an earlier step's:
+
+1. **An ability's activation:** an ability's cue starts from a copy of its activation's packet, with its targets, its
+   targeting data and the numbers its caller set.
+2. **The cue's context:**
+   - the cue itself under `Tags.CUE`, a `CueContext`;
+   - its asset under `Tags.ASSET`, the effect, the ability, the item or the entity's identity, and its spec under
+     `Tags.SPEC`, the effect's, the ability's or the item's;
+   - its source under `Tags.SOURCE`, and the one it plays on under `Tags.TARGET_REAL` where the activation named no
+     target;
+   - where it plays under `Tags.POSITION` and `Tags.ROTATION`, and what it follows under `Tags.TRANSFORM`;
+   - its owner's clock: the activation's for an ability's cue, else that of the one it plays on.
+3. **The asset's Local Data:** each row under its key, its numbers read for the cue, as at its level.
+4. **The cue's own Data list,** last, so it has the last word. A row with no value puts nothing.
+
+A process or a sequence reads it as it reads any packet: `data.TryGetFirst(Tags.CUE, out CueContext cue)`.
+
 ## Raises and sinks
 
 Each raise of a list of cues names what the list belongs to, its `CueSource`: an effect, an ability, an entity or an

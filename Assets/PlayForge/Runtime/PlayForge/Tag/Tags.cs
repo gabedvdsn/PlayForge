@@ -127,6 +127,15 @@ namespace FarEmerald.PlayForge
         /// <summary>Used to communicate the act of targeting to the targeted entity</summary>
         [ForgeTagExposed(ForgeContext.DataKey)] public static Tag TARGETED_INTENT { get; } = Tag.GenerateAsUnique("Targeted Intent");
 
+        /// <summary>A cue's <see cref="CueContext"/>, in the data its process or its sequence runs with.</summary>
+        [ForgeTagExposed(ForgeContext.DataKey)] public static Tag CUE { get; } = Tag.GenerateAsUnique("Cue");
+
+        /// <summary>The asset behind the data, as a cue's effect, ability, item or entity identity.</summary>
+        [ForgeTagExposed(ForgeContext.DataKey)] public static Tag ASSET { get; } = Tag.GenerateAsUnique("Asset");
+
+        /// <summary>The spec behind the data, as a cue's effect spec, ability spec or item spec.</summary>
+        [ForgeTagExposed(ForgeContext.DataKey)] public static Tag SPEC { get; } = Tag.GenerateAsUnique("Spec");
+
         [ForgeTagExposed(ForgeContext.DataKey)] public static Tag DATA { get; } = Tag.GenerateAsUnique("Data");
         [ForgeTagExposed(ForgeContext.DataKey)] public static Tag ASSETS { get; } = Tag.GenerateAsUnique("Assets");
         [ForgeTagExposed(ForgeContext.DataKey)] public static Tag EFFECTS { get; } = Tag.GenerateAsUnique("Effects");

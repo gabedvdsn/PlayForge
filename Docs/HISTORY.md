@@ -10,6 +10,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## Toward 1.0.0, since 0.1.0
 
 ### Added
+- **Cue data packets** (EP-62): `CuePackets.For(cue, data)`, the data a cue's process or sequence runs with. An
+  ability's cue starts from its activation's packet; then come the cue (`Tags.CUE`), its asset (`Tags.ASSET`) and
+  spec (`Tags.SPEC`), its source, its target, where it plays and its owner's clock; then the asset's Local Data,
+  read at the cue's level; then the cue's own Data list.
 - A double-click on a console message ForgeLog wrote opens the code that logged it (EP-65): ForgeLog's methods
   are marked `[HideInCallstack]`, and the Console's double-click skips them and any method so marked.
 - **`TaskSequenceRuntime.CreateLinkedTokenSource`** (EP-58): a token source a task links to its token, whose token
