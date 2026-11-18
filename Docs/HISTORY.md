@@ -10,6 +10,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## Toward 1.0.0, since 0.1.0
 
 ### Added
+- **The online documentation** (EP-68): the guides, built with DocFX into a site at
+  https://gabedvdsn.github.io/PlayForge-Docs/, where each help (?) button opens its section.
 - **A Condition check** (FEAT-30), `ConditionValidation`: an ability's activation passes while its condition holds, a
   `GameplayCondition` read against the activation, with the checked entity as its target.
 - **Kinds of your own** (FEAT-30) for a Local Data value, `LocalDataValue<T>`; a Respawn's place, `AbstractRespawnPlace`;

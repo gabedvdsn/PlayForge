@@ -1,0 +1,48 @@
+{
+  "$schema": "https://raw.githubusercontent.com/dotnet/docfx/main/schemas/docfx.schema.json",
+  "build": {
+    "content": [
+      {
+        "files": [
+          "index.md",
+          "toc.yml"
+        ]
+      },
+      {
+        "files": [
+          "toc.yml"
+        ],
+        "src": "guides",
+        "dest": "guides"
+      },
+      {
+        "files": [
+          "*.md"
+        ],
+        "src": "../Assets/PlayForge/Documentation",
+        "dest": "guides"
+      }
+    ],
+    "output": "_site",
+    "template": [
+      "default",
+      "modern"
+    ],
+    "globalMetadata": {
+      "_appName": "PlayForge",
+      "_appTitle": "PlayForge",
+      "_appFooter": "PlayForge 1.0.0 · Far Emerald",
+      "_enableSearch": true,
+      "_disableContribution": true,
+      "_appLogoPath": "images/logo.svg",
+      "_appFaviconPath": "images/logo.svg"
+    },
+    "resource": [
+      {
+        "files": [
+          "images/**"
+        ]
+      }
+    ]
+  }
+}

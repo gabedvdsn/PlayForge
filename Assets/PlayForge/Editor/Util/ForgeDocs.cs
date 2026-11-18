@@ -1,18 +1,19 @@
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using UnityEditor;
-using PackageInfo = UnityEditor.PackageManager.PackageInfo;
+using System.Text;
 
 namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
-    /// Where each help (?) button leads: a page in the package's Documentation folder, and the section on it. This one
-    /// table replaces 49 links to a hosted site on a domain PlayForge doesn't own, some of which named the wrong page.
-    /// A hosted site would change only <see cref="Open"/>.
+    /// Where each help (?) button leads: a page of the package's Documentation folder, and the section on it, opened on
+    /// PlayForge's documentation site, which is built from those same pages. The pages ship in the package too, for
+    /// reading offline.
     /// </summary>
     internal static class ForgeDocs
     {
+        /// <summary>The documentation site: each Documentation page is at guides/, as HTML.</summary>
+        internal const string Site = "https://gabedvdsn.github.io/PlayForge-Docs/";
+
         // Each topic's page, and its section's heading there; null for the whole page
         private static readonly Dictionary<string, (string page, string heading)> Topics = new()
         {
@@ -85,29 +86,31 @@ namespace FarEmerald.PlayForge.Editor
             topic != null && Topics.TryGetValue(topic, out var target) ? target : ("GETTING_STARTED.md", null);
 
         /// <summary>
-        /// Opens a topic's page in the system's app for Markdown. Only a click calls this: the Asset Store bars editor
-        /// code from sending users out of the Editor unasked (rule 2.5.1.d).
+        /// A topic's address on the site: its page as HTML, at its section's heading by the anchor the site gives it.
         /// </summary>
-        public static void Open(string topic)
+        internal static string UrlOf(string topic)
         {
-            var folder = DocumentationFolder();
-            var path = folder == null ? null : Path.Combine(folder, Resolve(topic).page);
-            if (path != null && File.Exists(path)) EditorUtility.OpenWithDefaultApp(path);
-            else ForgeLog.Warning($"No documentation page for '{topic}'.");
+            var (page, heading) = Resolve(topic);
+            var url = Site + "guides/" + Path.GetFileNameWithoutExtension(page) + ".html";
+            return heading == null ? url : url + "#" + AnchorOf(heading);
         }
 
-        // The package's Documentation folder, whether PlayForge came as a package or sits in Assets
-        private static string DocumentationFolder()
+        // A heading's anchor as the site names it, GitHub's way: lowercase, each space a hyphen, other punctuation dropped
+        private static string AnchorOf(string heading)
         {
-            var package = PackageInfo.FindForAssembly(typeof(ForgeDocs).Assembly);
-            if (package != null) return Path.Combine(package.resolvedPath, "Documentation");
-
-            // Imported into Assets: walk up from this script to the folder that holds Documentation
-            var guid = AssetDatabase.FindAssets("ForgeDocs t:Script").FirstOrDefault();
-            var folder = guid == null ? null : Path.GetDirectoryName(Path.GetFullPath(AssetDatabase.GUIDToAssetPath(guid)));
-            while (folder != null && !Directory.Exists(Path.Combine(folder, "Documentation")))
-                folder = Path.GetDirectoryName(folder);
-            return folder == null ? null : Path.Combine(folder, "Documentation");
+            var anchor = new StringBuilder(heading.Length);
+            foreach (char c in heading.Trim().ToLowerInvariant())
+            {
+                if (char.IsLetterOrDigit(c) || c == '-' || c == '_') anchor.Append(c);
+                else if (c == ' ') anchor.Append('-');
+            }
+            return anchor.ToString();
         }
+
+        /// <summary>
+        /// Opens a topic's section on the documentation site, in the browser. Only a click calls this: the Asset Store
+        /// bars editor code from sending users out of the Editor unasked (rule 2.5.1.d).
+        /// </summary>
+        public static void Open(string topic) => UnityEngine.Application.OpenURL(UrlOf(topic));
     }
 }

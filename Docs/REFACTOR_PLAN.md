@@ -842,6 +842,12 @@ from. It lives outside `Assets/` so it never ships in the package.
 - Decision 94, 2026-11-17: networking comes in 1.1.0, the user's word after the freeze check: "We can work on
   networking stuff in 1.1.0." NET-1 and NET-2, the two that had to land before 1.0.0 freezes, are in; the
   rest of the NET rows, Phases A to D, come in 1.1.0, Arcade Fighter's networked duel among them.
+- Decision 95, 2026-11-17: the online documentation, the user's answers. They want it live before launch, not after
+  1.0.0 is final as first planned. **DocFX**, over GitBook: it builds the package's own guides with no second
+  copy, can add a C# API reference from the XML comments later, and a static host serves it free on any
+  domain, where GitBook's free plan serves only from gitbook.io. **A separate public repository,
+  PlayForge-Docs, holds the built site on GitHub Pages**, so PlayForge's own repository can go private. DocFX
+  came from nuget.org as a pinned dotnet tool, with the user's leave.
 
 **Open. Ask the user; do not assume:**
 1. ~~**Uncommitted changes**~~: decided, see above.
@@ -1608,6 +1614,7 @@ EP-13 to EP-16 came as the pass went on; EP-17 to EP-25 are the user's notes of 
 | EP-65 | The user's word of 2026-11-17: a console message ForgeLog wrote linked to ForgeLog's own call to Unity's log, so a double-click opened `ForgeLog.cs` in place of the code that logged it. Done: ForgeLog's log methods and its `Write`, and the number helper that logs (`NumberContext.LogUnresolved`), are marked `[HideInCallstack]`, which the Console's Strip Logging Callstack leaves out of the stack; and `ForgeLogConsoleLink`, an `[OnOpenAsset]` hook, opens a double-click that would open ForgeLog's file at the first frame of the message's stack that isn't ForgeLog's, nor a method marked to hide, as a game's own logging wrapper may be. A message that didn't pass through ForgeLog opens as Unity opens it, and where the Console's message can't be read, as a later Unity's may differ, so does ForgeLog's | Editor | verified |
 | EP-66 | The user's two defaults of 2026-11-17, at their word, "Commit my two edits", then "Keep false, fix": an ability's Use Implicit Targeting is off by default, so a new ability targets what its targeting picks, not its caster; and a Select Position task's Max Distance is infinite by default. Gated first, the default alone failed 21 tests, 2 EditMode and 19 PlayMode, whose abilities relied on their caster as their target. Done: the Passive preset turns implicit targeting on, as a passive gives its holder its effects; the Battle sample's kit, Proving Grounds' test kit and its recipe book build their abilities with it on, as they're written and as the saved recipe abilities are; ED-66's drawer test turns it on to see Implicit Tag hide; ABILITIES.md says the default. The Active preset keeps the new default, and saved abilities keep what they were saved with | Abilities | verified |
 | EP-67 | The user's word of 2026-11-17, "Do whatever you think is best", on the dress rehearsal's finding: `Tools/DemoBuilder`, the editor tool that built the Demo's assets in Phase 7 (Decisions 37 to 39), named the editor namespace EP-25 renamed and the effect cue list and Prefab cue flag EP-61 removed, so it no longer compiled against the package. Done: retired, and the repository's Tools folder with it, its only tool: the Demo's assets, edited directly since by EP-61's re-authoring and FEAT-30, are what ships, and git history keeps the builder, last changed at 66dd1adb. Bringing it up to date would have meant reproducing those edits exactly, or a rebuild would overwrite them | Samples | verified |
+| EP-68 | The user's word of 2026-11-17: the online documentation ready before launch, built with DocFX ("Yes, use DocFX") and published from a separate public repository (Decision 95). Done: `docfx/` in the repository builds the site from the 19 guides the package ships in `Assets/PlayForge/Documentation`, with no copies: a landing page, the guides grouped by area, search, and PlayForge's mark. DocFX 2.81.0 is pinned as a local dotnet tool, and `docfx/publish.sh` pushes the built site to the public `gabedvdsn/PlayForge-Docs` repository, whose GitHub Pages serves it at https://gabedvdsn.github.io/PlayForge-Docs/. Each help (?) button opens its section there: `ForgeDocs.UrlOf` gives a topic's page as HTML at its heading's anchor, named as DocFX names it, and all 56 topics' anchors exist on the built site. The guides still ship in the package, for reading offline | Editor | verified |
 
 ### Networking (NET)
 
@@ -1692,6 +1699,12 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-17, **EP-68: the online documentation site.** The user's word (Decision 95).
+  - Red, on HEAD with EP-68's test alone: EditMode's one case failed: ForgeDocs had no `UrlOf`, so no help topic had an address on the site.
+  - Gates, in `pg_cues`, on HEAD and EP-68: EditMode 1091/1091, PlayMode 2279 passed, 8 skipped, of 2287, golden 25/25, on PlayForge 8d9f7eed.
+  - The site: DocFX 2.81.0 builds it with 0 warnings, all 56 help topics' anchors are on it, and https://gabedvdsn.github.io/PlayForge-Docs/
+    answers 200. The .NET 8 SDK is installed here (8.0.301 and 8.0.426), which CLAUDE.md says isn't.
 
 - 2026-11-17, **EP-67: DemoBuilder retired.** The user's word: "Do whatever you think is best".
   - `Tools/DemoBuilder` is gone, the repository's only tool there. No doc, script or test named it but this Log, and
