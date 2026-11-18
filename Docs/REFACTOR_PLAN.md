@@ -1692,6 +1692,16 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 
 Record baselines, gate results and notable decisions here, newest first.
 
+- 2026-11-17, **The export dress rehearsal on the final HEAD.** The user's word, after the freeze check.
+  - On PlayForge b27ea32e, `Tools/export-unitypackage.py --tests --build` in Proving Grounds: the export, 2.2 MB; a fresh
+    project's import, clean; its samples, 0 missing scripts, references and types; golden 25/25; and the Windows
+    player, succeeded with 0 errors and 0 warnings, 85 MB.
+  - The first run's player never built: the script called BuildVerification in `FarEmerald.PlayForge.Extended.Editor`,
+    which EP-25 renamed, so Unity found no such class. Fixed in Proving Grounds 4cc63be (SP-33).
+  - EP-25 missed one more tool: `Tools/DemoBuilder` still names the old editor namespace, and it adds cues to an
+    effect's own list and sets a Prefab cue's While Active, which EP-61 removed. It no longer compiles against the
+    package. The Demo's assets, edited directly since, are what ships.
+
 - 2026-11-17, **The 1.0.0 freeze check.** The user's word: the full gates on the combined HEAD once FEAT-30 landed,
   every uncommitted edit set aside.
   - On PlayForge 01ab5565 and Proving Grounds fa1bb73, in `pg_cues`: EditMode 1090/1090, PlayMode 2279 passed, 8

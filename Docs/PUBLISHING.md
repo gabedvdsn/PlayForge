@@ -65,6 +65,8 @@ reserved all rights, is gone; the Demo has an outline of its own.
 ## ☐ 5. Dress rehearsal (mandatory before submitting)
 
 `python Tools/export-unitypackage.py --tests --build`, in Proving Grounds, does the first four; the rest is by hand.
+The four passed again on 2026-11-17 on PlayForge b27ea32e, after the cue pass, FEAT-30 and EP-66: the player built
+with 0 errors and 0 warnings.
 
 1. ☑ Export `Assets/Plugins/PlayForge` (and nothing else) as a `.unitypackage`.
 2. ☑ Import it into a **brand-new** Unity 6 project.
