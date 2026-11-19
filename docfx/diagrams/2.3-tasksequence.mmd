@@ -1,0 +1,169 @@
+classDiagram
+class IActiveSequence:::ext {
+<<interface>>
++Run(data, token) UniTask
++TryRun() UniTask~bool~
++IsCriticalSection : bool
+}
+class TaskSequenceBuilder:::rt {
++static Create(name) TaskSequenceBuilder
++Stage(Action~StageBuilder~)
++Branch(Action~BranchBuilder~)
++Task(task)
++Delay(seconds)
++WithLifecycle(EProcessLifecycle, timing)
++Build() TaskSequenceDefinition
++BuildSequence() TaskSequence
++BuildSyncRunner() SyncedTaskSequence
+}
+class StageBuilder:::rt {
++Task(task)
++SubStage()
++WhenAll()
++WhenAny()
++WhenN(n)
++WithRepeat()
++WithTimeout(seconds)
++SkipWhen()
+}
+class TaskSequence:::rt {
++Definition : TaskSequenceDefinition
++Runtime : TaskSequenceRuntime
++IsRunning : bool
++RegisterAndRun(SequenceDataPacket) ProcessRelay
++Inject(ISequenceInjection)
++Interrupt()
++SkipCurrentStage()
++Then() TaskSequenceChain
+}
+class TaskSequenceChain:::rt {
++Then()
++WithRepeat()
++InterruptWhen()
++Pause()
++Resume()
++SkipCurrentSequence()
++CurrentIndex : int
+}
+class TaskSequenceDefinition:::rt {
++Stages : List~SequenceStage~
++Conditions : List~SequenceCondition~
++AllowedInjections
++MaxDurationSeconds
++Metadata : SequenceMetadata
++IsInjectionAllowed(inj, stage) bool
+}
+class SequenceStage:::rt {
++Tasks : List~ISequenceTask~
++SubStages
++Policy = WhenAll
++Timeouts
++Repeat
++Conditions
++OnInit
++OnTerminate
+}
+class BranchStage:::rt {
++Branches : List~BranchCase~
++DefaultBranch
++Evaluate(data)
+}
+class ISequenceTask:::ext {
+<<interface>>
+Prepare(SequenceDataPacket)
+Execute(SequenceDataPacket, CancellationToken) UniTask
+Step(SequenceDataPacket, float dt) bool
+Clean(SequenceDataPacket)
+}
+class SequenceTaskBase:::ext {
+<<abstract>>
+Execute is abstract
+}
+class SyncSequenceTaskBase:::ext {
+<<abstract>>
+Step is abstract
+Execute loops Step once per tick
+}
+class ISequenceStagePolicy:::ext {
+<<interface>>
+AwaitCompletion(runtime, stage, units, cts) UniTask
+WhenAll, WhenAny, WhenN, RepeatUntilSkipped
+}
+class ISequenceInjection:::ext {
+<<interface>>
+Apply(TaskSequenceRuntime) bool
+Interrupt, SkipStage, JumpToStage, BreakStageRepeat
+}
+class SequenceCondition:::rt {
++Predicate(data, runtime)
++Injection : ISequenceInjection
++FireOnce : bool
++IsStageLocal : bool
+}
+class TaskSequenceRuntime:::rt {
++StageIndex : int
++CurrentStage : SequenceStage
++CompletedSuccessfully : bool
++Run(data, token) UniTask
++Pause()
++Resume()
++Inject(inj, overridePermission)
++CheckConditions()
+}
+class TaskSequenceProcess:::rt {
++Sequence : TaskSequence
++Chain : TaskSequenceChain
++IsSynchronous : bool
++Interrupt()
++SkipCurrentSequence()
+}
+class ProcessDataPacket:::rt
+class SequenceDataPacket:::rt {
++Runtime : TaskSequenceRuntime
++StageIndex : int
++Interrupt()
++SkipStage()
++JumpToStage(index or name)
++RestartSequence()
++Inject(inj)
+}
+class TaskSequenceReference:::asset {
+<<struct>>
+points at a TaskSequenceMethod static method
++IsValid : bool
++GetActiveSequence() IActiveSequence
++IsChain() bool
+}
+class SyncedTaskSequence:::rt {
+deterministic, with no UniTask
++Step(data, dt) bool
++Interrupt()
++JumpToStage()
++Reset()
++State : ERunnerState
+}
+IActiveSequence <|.. TaskSequence
+IActiveSequence <|.. TaskSequenceChain
+TaskSequence --o TaskSequenceChain : holds
+TaskSequenceBuilder ..> StageBuilder : Stage
+TaskSequenceBuilder ..> TaskSequenceDefinition : Build
+TaskSequenceBuilder ..> TaskSequence : BuildSequence
+TaskSequenceBuilder ..> SyncedTaskSequence : BuildSyncRunner
+TaskSequence *-- TaskSequenceDefinition
+TaskSequence "1" --> "many" TaskSequenceRuntime : one per live run
+TaskSequenceDefinition "1" *-- "many" SequenceStage
+TaskSequenceDefinition o-- SequenceCondition
+SequenceStage <|-- BranchStage
+SequenceStage o-- ISequenceTask
+SequenceStage --> ISequenceStagePolicy : Policy
+SequenceCondition --> ISequenceInjection
+ISequenceTask <|.. SequenceTaskBase
+ISequenceTask <|.. SyncSequenceTaskBase
+TaskSequenceProcess --> TaskSequence
+TaskSequenceProcess --> TaskSequenceChain
+ProcessDataPacket <|-- SequenceDataPacket
+SequenceDataPacket --> TaskSequenceRuntime : Runtime
+TaskSequenceReference ..> IActiveSequence : GetActiveSequence
+classDef rt fill:#FFE86D,stroke:#CBB333,color:#574900
+classDef ext fill:#A0C4FB,stroke:#6A8BBF,color:#14315E
+classDef asset fill:#B8ACFB,stroke:#7D6DD4,color:#231266

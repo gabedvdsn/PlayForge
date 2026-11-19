@@ -1,0 +1,133 @@
+classDiagram
+class ISequenceTask:::ext {
+<<interface>>
+Prepare, Execute, Step, Clean
+}
+class AbilityTaskAdapter:::rt {
+Prepare, then Activate inside the task callbacks, then Clean
+}
+class AbstractAbilityRelatedTask:::ext {
+<<abstract>>
+shared across activations
++abstract IsCriticalSection : bool
+Prepare(AbilityDataPacket)
++abstract Activate(AbilityDataPacket, CancellationToken) UniTask
+Clean(AbilityDataPacket)
+#Read(ScalableFloat or ScalableInt, data)
+#EntityOf(data, NumberSide)
+#ApplyTo(data, ITarget, GameplayEffect)
+}
+class AbstractAbilityTask:::ext {
+<<Serializable abstract>>
+the stage tasks and loaders
+Description
+}
+class AbstractTargetingAbilityTask:::ext {
+<<abstract>>
+only in AbilityBehaviour.Targeting
++BreakRuntimeOnInvalid : bool
++Prompt : string
+ConnectInputHandler(data)
+DisconnectInputHandler(data)
+TargetIsValid(target) bool
+WhenTargetingInvalid(data)
+BreakAbilityRuntime()
+}
+class AbstractGasTargetingAbilityTask:::ext {
++Requirements
+}
+class AbstractSetAssetsTask:::ext {
+Asset Loaders, inline before stage 0
+}
+class AbstractCreateProcessAbilityTask:::ext {
+Process
+}
+class AbstractWaitTask:::ext {
+Waits, with a timeout and a stage flag
+}
+class DashTask:::rt {
+Movement, critical
+}
+class BlinkTask:::rt {
+Movement
+}
+class IForgeMover:::ext {
+<<interface>>
+on the caster's GameObject
++Hold(bool held)
++Stop()
+}
+class AbstractForgeComponent:::ext {
+<<abstract>>
+AllowsSeveral
+}
+class AbstractAbilityComponent:::ext {
+<<abstract>>
+Granted(ctx)
+Removed(ctx)
+CanStart(ctx) string, null allows
+Start(ctx)
+CanTakeTarget(ctx) string
+WindUp(ctx, token) UniTask
+ApplyUsage(ctx) bool
+Commit(ctx)
+End(ctx, EAbilityEnd)
+}
+class ChargesAbilityComponent:::rt {
+the ability's ICooldownModel
++Charges : ScalableInt
++Recharge : AbstractChargeRecharge
+}
+class ToggleAbilityComponent:::rt {
++Effect : GameplayEffect
+ApplyUsage turns it on or off
+}
+class CastRangeAbilityComponent:::rt {
+the ability's IAbilityReach
++Range
++Flat
+}
+class AuraAbilityComponent:::rt
+class AbstractChargeRecharge:::ext {
+<<abstract>>
+InHand(charges)
+Spend(charges, data)
+CountsASingleCharge
+}
+class EachChargeRecharge:::rt
+class AllAtOnceRecharge:::rt
+class IAbilityValidationRule:::ext {
+<<interface>>
++Validate(AbilityDataPacket, getSource, out string error) bool
++GetName() string
++RefusedAs : EActivationRefusal
+}
+class CostValidation:::rt
+class CooldownValidation:::rt
+class IsAliveValidation:::rt
+ISequenceTask <|.. AbilityTaskAdapter
+AbilityTaskAdapter --> AbstractAbilityTask : wraps
+AbstractAbilityRelatedTask <|-- AbstractAbilityTask
+AbstractAbilityRelatedTask <|-- AbstractTargetingAbilityTask
+AbstractTargetingAbilityTask <|-- AbstractGasTargetingAbilityTask
+AbstractAbilityTask <|-- AbstractSetAssetsTask
+AbstractAbilityTask <|-- AbstractCreateProcessAbilityTask
+AbstractAbilityTask <|-- AbstractWaitTask
+AbstractAbilityTask <|-- DashTask
+AbstractAbilityTask <|-- BlinkTask
+DashTask ..> IForgeMover : Hold, Stop
+BlinkTask ..> IForgeMover
+AbstractForgeComponent <|-- AbstractAbilityComponent
+AbstractAbilityComponent <|-- ChargesAbilityComponent
+AbstractAbilityComponent <|-- ToggleAbilityComponent
+AbstractAbilityComponent <|-- CastRangeAbilityComponent
+AbstractAbilityComponent <|-- AuraAbilityComponent
+ChargesAbilityComponent --> AbstractChargeRecharge : Recharge
+AbstractChargeRecharge <|-- EachChargeRecharge
+AbstractChargeRecharge <|-- AllAtOnceRecharge
+IAbilityValidationRule <|.. CostValidation
+IAbilityValidationRule <|.. CooldownValidation
+IAbilityValidationRule <|.. IsAliveValidation
+classDef rt fill:#FFE86D,stroke:#CBB333,color:#574900
+classDef ext fill:#A0C4FB,stroke:#6A8BBF,color:#14315E
+classDef asset fill:#B8ACFB,stroke:#7D6DD4,color:#231266

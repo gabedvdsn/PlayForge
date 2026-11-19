@@ -32,11 +32,12 @@ The first release.
   with stops, stepping, watches and logs.
 - **Samples**: Battle, Demo, Additional Content, Task Sequence Examples and Process Group Examples; and a **test kit** for a game's own tests.
 - **Online documentation** at [gabedvdsn.github.io/PlayForge-Docs](https://gabedvdsn.github.io/PlayForge-Docs/): the guides,
-  each section a page of its own, and an API reference with a page for every public type, linked both
-  ways. Among the guides: extending PlayForge with a game's own components, workers, tasks, scalers,
-  cues, rules and tools; tags; the editor tools; and time, randomness, input and logging. Each help (?)
-  button in PlayForge's inspectors and The Forge opens its section, and Project Settings → PlayForge
-  links them beside the package's version. The same guides ship in `Documentation`.
+  with a page for each section and for each component, worker, scaler kind and editor tool, and architecture
+  diagrams; and an API reference with a page for every public type, linked both ways. Among the guides:
+  extending PlayForge with a game's own components, workers, tasks, scalers, cues, rules and tools; tags;
+  the editor tools; and time, randomness, input and logging. Each help (?) button in PlayForge's inspectors
+  and The Forge opens its section, and Project Settings → PlayForge links them beside the package's
+  version. The same guides ship in `Documentation`.
 
 Requires Unity 6000.0 or later, and UniTask 2.5.11 (MIT, Cysharp), which the Asset Store package includes; see
 `Third-Party Notices.txt`.

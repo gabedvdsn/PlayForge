@@ -1,0 +1,99 @@
+classDiagram
+class EffectSystemComponent:::rt {
+the per-entity shelf, GASCore.EffectSystem
++ApplyGameplayEffect(GameplayEffectSpec) bool
++RemoveGameplayEffect(effect, origin or tag) bool
++RemoveEffectsTagged(List~Tag~) int
++Purge(predicate) int
++MoveTo(GameplayEffect, onto) int
++RefreshEffectsFrom(IEffectOrigin)
++GetLongestDurationFor(Tag) EffectDurationRemaining
++Tick()
+}
+class AbstractEffectContainer:::ext {
+<<abstract>>
++Spec : GameplayEffectSpec
++Ongoing : bool
++TotalDuration : float
++DurationRemaining : float
++ReverseImpact()
+UpdateTimeRemaining(dt)
+TickPeriodic(dt, out ticks)
+OnRemove()
+}
+class GameplayEffectSpec:::rt {
++RuntimeContainer : AbstractEffectContainer
+}
+class NonStackingEffectContainer:::rt {
+made under AppendNewContainer
+}
+class AbstractStackingEffectContainer:::ext {
+<<abstract>>
++Stacks : int
++Stack(n)
+}
+class SingleDurationEffectContainer:::rt {
+StacksShareOneDuration
+}
+class IndependentDurationsContainer:::rt {
+StacksHaveIndependentDurations
+}
+class StackQueueEffectContainer:::rt {
+DurationTakenFromOneStack
+}
+class GameplayEffectDuration:::asset {
++ReApplicationPolicy : EEffectReApplicationPolicy
++ReApplicationInteraction : EEffectInteractionPolicy
++StackPolicy : EEffectStackPolicy
++StackingConfigs : List~AbstractStackingConfig~
++GenerateContainer(spec, ongoing)
++FindStackingContainer()
+}
+class AbstractStackingConfig:::ext {
+<<abstract>>
+InitializeContainer(container)
+GetStacks(container, amount)
+GetCorrectContainer()
+}
+class StackBoundsConfig:::rt {
++Min : ScalableInt
++Max : ScalableInt
++OnMaxPolicy
++OverflowEffects
+}
+class EEffectReApplicationPolicy:::rt {
+<<enumeration>>
+DoNothing
+ReplaceOldContainer
+AppendNewContainer
+StackExistingContainers
+}
+class EEffectInteractionPolicy:::rt {
+<<enumeration>>
+DoNothing
+RefreshContainerDuration
+ExtendContainerDuration
+}
+class EffectDurationRemaining:::rt {
+<<struct>>
++FoundDuration : bool
++TotalDuration
++DurationRemaining
++Ratio
+}
+EffectSystemComponent "1" *-- "many" AbstractEffectContainer : Shelf
+AbstractEffectContainer "1" -- "1" GameplayEffectSpec : linked both ways
+AbstractEffectContainer <|-- NonStackingEffectContainer
+AbstractEffectContainer <|-- AbstractStackingEffectContainer
+AbstractStackingEffectContainer <|-- SingleDurationEffectContainer
+AbstractStackingEffectContainer <|-- IndependentDurationsContainer
+AbstractStackingEffectContainer <|-- StackQueueEffectContainer
+GameplayEffectDuration ..> AbstractEffectContainer : GenerateContainer
+GameplayEffectDuration o-- AbstractStackingConfig
+AbstractStackingConfig <|-- StackBoundsConfig
+GameplayEffectDuration --> EEffectReApplicationPolicy
+GameplayEffectDuration --> EEffectInteractionPolicy
+EffectSystemComponent ..> EffectDurationRemaining
+classDef rt fill:#FFE86D,stroke:#CBB333,color:#574900
+classDef ext fill:#A0C4FB,stroke:#6A8BBF,color:#14315E
+classDef asset fill:#B8ACFB,stroke:#7D6DD4,color:#231266

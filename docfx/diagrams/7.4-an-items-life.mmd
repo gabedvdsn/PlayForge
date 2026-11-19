@@ -1,0 +1,45 @@
+sequenceDiagram
+autonumber
+participant C as Caller
+participant I as ItemSystemComponent
+participant K as ItemSpecContainer
+participant M as Item components
+participant G as Owner GAS
+participant A as AbilitySystemComponent
+C->>I: GiveItem(item, level, out index)
+alt stackable, and a slot has room
+I->>K: ChangeStacks(+1), equipped effects refresh
+else a new slot
+I->>I: CanGiveItem, item.Generate(self, level)
+Note over I: the ItemSpec registers the item's level under its AssetTag
+I->>K: new ItemSpecContainer(spec, index)
+K->>M: Given
+end
+I-->>C: OnItemGiven
+C->>I: EquipItem(index or item)
+I->>K: CanEquipItem, then Equip()
+K->>K: IsEquipped = true
+K->>G: ApplyCarrier(effect.Generate(ItemSpec, Source)) per GrantedEffect
+K-->>C: OnItemEffectsApplied
+K->>A: GiveAbility(ActiveAbility, item level, out slot), LentBy the slot
+K-->>C: OnItemAbilityGranted
+K->>G: Item.InitWorkers(Source): workers, OnHit, modifiers
+K->>M: Equipped: SetBonus calls ForgeSets.Refresh, Aura gives its aura
+K->>G: CompileGrantedTags()
+K-->>C: OnItemEquipped
+Note over C,A: Use: an activation of the lent ability that committed ends
+A->>K: AbilitySpec.HearEnd, then the slot's HearUsed
+K->>M: Used, UsesItemComponent counts, then takes a stack or removes the item
+C->>I: ConsumeItemTask calls ConsumeItem(item, n)
+I->>I: RemoveItem(item, n), from the last slot first
+I-->>C: OnItemConsumed(item, used)
+C->>I: UnequipItem(index or item)
+I->>K: Unequip()
+K->>A: RemoveAbilityAt(slot, ability), OnItemAbilityRevoked
+K->>G: RemoveGameplayEffect(effect, ItemSpec), OnItemEffectsRemoved
+K->>M: Item.RemoveWorkers, Unequipped
+K->>G: CompileGrantedTags(), OnItemUnequipped
+C->>I: RemoveItem(index)
+I->>K: unequip it if equipped, take it off the shelf
+K->>M: Removed
+I-->>C: OnItemRemoved

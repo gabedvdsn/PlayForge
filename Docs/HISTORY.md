@@ -10,6 +10,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## Toward 1.0.0, since 0.1.0
 
 ### Added
+- **The guides rewritten for reading** (EP-73): short paragraphs, bullets, property tables and steps, with a page
+  of its own on the docs site for each component, worker, scaler kind and tool part.
+- **Architecture diagrams on the docs site** (EP-74): the board's 25 diagrams, checked against the code, each on
+  the guide page it explains.
 - **Four new guides** (EP-70): extending PlayForge, tags, the editor tools, and time, randomness, input and
   logging, each section a page of its own on the docs site.
 - **A summary for every public type** (EP-71), so each API page and IntelliSense says what it is.

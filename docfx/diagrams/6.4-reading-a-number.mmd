@@ -1,0 +1,32 @@
+flowchart TD
+classDef general fill:#FFE86D,stroke:#CBB333,color:#574900
+classDef decision fill:#A0C4FB,stroke:#6A8BBF,color:#14315E
+classDef terminator fill:#DDDDD8,stroke:#A8A8A0,color:#434339
+s(["number.Evaluate(NumberContext.Of(x)), where x is a spec,<br/>container, packet, worker context, entity, cue or ItemSpec<br/>tasks call Read(number, data), abilities AbilitySpec.Read"]):::terminator
+i["at spec creation, Initialize(spec) takes snapshots:<br/>a times-Attribute read OnCreation, a Randomized roll"]:::general
+c{"IsConstant?<br/>no scaler, or UseMagnitude"}:::decision
+k(["Constant"]):::terminator
+r{"does a NumberKind read what<br/>the context cannot provide?"}:::decision
+fb(["Magnitude on the context path, logged once,<br/>or the kind's Fallback on the carrier path"]):::terminator
+sc{"which scaler?"}:::decision
+nk["a NumberKind: Evaluate(in ctx)<br/>attributes, stacks, Local Data, tracked impacts,<br/>NumberWorkers.TryAsk, set-by-caller, sibling fields, conditions"]:::general
+grp["a ScalerGroup: its members,<br/>combined by EGroupOperation"]:::general
+pl["a plain scaler: Evaluate(ctx.Carrier),<br/>or through the internal NumberBridge"]:::general
+lv["the level: carrier.GetOrigin().GetLevel()<br/>an AbilitySpec or ItemSpec reads Source.GetLevel(assetTag),<br/>an entity its own, a LevelerEffectOrigin its fixed level"]:::general
+tb["the table LevelValues, or the Scaling curve<br/>over a max set by ELevelConfig:<br/>LockToLevelProvider, Unlocked or Clamped"]:::general
+bh["then the AbstractScalerBehaviour chain"]:::general
+cm["combine Magnitude and the scaler by EMagnitudeOperation:<br/>MultiplyWithScaler, AddScaler, UseMagnitude, UseScaler<br/>a ScalableInt then applies its Rounding"]:::general
+ip(["in an impact commit, the entry's ValuePipeline.Run<br/>and the modifier stages follow"]):::terminator
+s --> i --> c
+c -->|yes| k
+c -->|no| r
+r -->|yes| fb
+r -->|no| sc
+sc -->|NumberKind| nk
+sc -->|ScalerGroup| grp
+sc -->|plain| pl
+pl --> lv --> tb --> bh
+nk --> cm
+grp --> cm
+bh --> cm
+cm --> ip

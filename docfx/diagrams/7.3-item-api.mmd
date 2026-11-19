@@ -1,0 +1,103 @@
+classDiagram
+class Item:::asset {
+<<ScriptableObject>>
++Definition : ItemDefinition
++Tags : ItemTags
++GrantedEffects : List~GameplayEffect~
++ActiveAbility : Ability
++WorkerGroup : StandardWorkerGroup
++Components : List~AbstractItemComponent~
++Find() T, its first component that is a T
++Generate(ISource owner, int level) ItemSpec
+}
+class ItemDefinition:::asset {
++Name
++Description
++Textures
++MaxStackSize : ScalableInt
++StackSizeOf(spec) int
+}
+class ItemTags:::asset {
++AssetTag
++ContextTags
++PassiveGrantedTags
+}
+class ItemSystemComponent:::rt {
++GiveItem(Item, level, out int index) bool
++GiveAndEquipItem()
++EquipItem(index or item)
++UnequipItem(index or item)
++ConsumeItem(Item, int count) int
++RemoveItem(index, item, item and count, or tag)
++HasItem() bool
++Callbacks : ItemSystemCallbacks
+}
+class ItemSpecContainer:::rt {
+one inventory slot
++Spec : ItemSpec
++Index : int
++IsEquipped : bool
++ItemStacks : int
++Equip()
++Unequip()
+}
+class BasicEffectOrigin:::ext {
+<<abstract>>
+}
+class ItemSpec:::rt {
+the runtime item, origin of its effects
++Base : Item
++Stacks : int
++Source : ISource
++GetLevel()
++IsActive() means IsEquipped
+read with NumberContext.Of(ItemSpec)
+}
+class ItemSystemCallbacks:::rt {
++OnItemGiven
++OnItemRemoved
++OnItemEquipped
++OnItemUnequipped
++OnItemAbilityGranted
++OnItemConsumed(Item, int)
+}
+class AbstractForgeComponent:::ext {
+<<abstract>>
+}
+class AbstractItemComponent:::ext {
+<<abstract>>
+Given(ctx)
+Equipped(ctx)
+Unequipped(ctx)
+Removed(ctx)
+Used(ctx)
+}
+class UsesItemComponent:::rt {
++Uses : ScalableInt
++Left(container)
+}
+class SetBonusItemComponent:::rt {
++Set : Tag
++Pieces
++Bonus : GameplayEffect
+}
+class AuraItemComponent:::rt
+class ConsumeItemTask:::rt {
+an ability task under Items
+}
+Item *-- ItemDefinition
+Item *-- ItemTags
+Item o-- AbstractItemComponent
+Item ..> ItemSpec : Generate
+ItemSystemComponent "1" *-- "many" ItemSpecContainer
+ItemSpecContainer *-- ItemSpec
+BasicEffectOrigin <|-- ItemSpec
+ItemSystemComponent *-- ItemSystemCallbacks
+AbstractForgeComponent <|-- AbstractItemComponent
+AbstractItemComponent <|-- UsesItemComponent
+AbstractItemComponent <|-- SetBonusItemComponent
+AbstractItemComponent <|-- AuraItemComponent
+ConsumeItemTask ..> ItemSystemComponent : ConsumeItem
+classDef rt fill:#FFE86D,stroke:#CBB333,color:#574900
+classDef ext fill:#A0C4FB,stroke:#6A8BBF,color:#14315E
+classDef asset fill:#B8ACFB,stroke:#7D6DD4,color:#231266

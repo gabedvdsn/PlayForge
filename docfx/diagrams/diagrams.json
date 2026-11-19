@@ -1,0 +1,142 @@
+[
+  {
+    "file": "2.1-processcontrol.mmd",
+    "guide": "PROCESSES",
+    "caption": "A scene adapter steps one ProcessWorld from Unity's Update, LateUpdate and FixedUpdate. Register through the builder: ProcessControl.Register(x).HandledBy(h).With(data).In(world).Run(out relay)"
+  },
+  {
+    "file": "2.2-process-bases.mmd",
+    "guide": "PROCESSES",
+    "caption": "Every process implements IGameplayProcess. A Lazy base idles in RunProcess and lives on its step hooks; both GAS hubs, TaskSequenceProcess and GroupProcess derive from one.",
+    "section": "Kinds"
+  },
+  {
+    "file": "2.3-tasksequence.mmd",
+    "guide": "TASK_SEQUENCES",
+    "caption": "An immutable definition with one TaskSequenceRuntime per live run, so runs can overlap. Each registration makes a fresh TaskSequenceProcess.",
+    "section": "The parts"
+  },
+  {
+    "file": "2.4-process-lifecycles.mmd",
+    "guide": "PROCESSES",
+    "caption": "The default transitions of each EProcessLifecycle.",
+    "section": "Lifecycles"
+  },
+  {
+    "file": "2.5-the-frame-step.mmd",
+    "guide": "PROCESSES",
+    "caption": "Which phase each system steps in. A GAS hub steps at UpdateAndLate: GASCore.Tick() in Update, its end of frame in LateUpdate.",
+    "section": "Registering one"
+  },
+  {
+    "file": "3.1-entity-contracts-and-hubs.mmd",
+    "guide": "ENTITIES",
+    "caption": "IGameplayAbilitySystem is the entity contract. Both hubs implement it and forward to one internal GASCore, which reads only a RuntimeEntityIdentity."
+  },
+  {
+    "file": "3.2-entity-state-and-end-of-frame.mmd",
+    "guide": "WORKERS",
+    "caption": "What GASCore keeps besides the subsystems, the ActionQueue its end of frame drains, and the identity's death rules and entity components.",
+    "section": "The action queue"
+  },
+  {
+    "file": "3.3-creating-an-entity.mmd",
+    "guide": "ENTITIES",
+    "caption": "From the Bootstrapper to a registered entity. The runtime hub initializes in its constructor, the Mono hub when it registers.",
+    "section": "Identity"
+  },
+  {
+    "file": "3.4-death-and-revive.mmd",
+    "guide": "ENTITIES",
+    "caption": "What triggers death, what each EntityDeath policy does at the end of frame, and how an entity revives.",
+    "section": "Death"
+  },
+  {
+    "file": "4.1-ability-api.mmd",
+    "guide": "ABILITIES",
+    "caption": "The asset, its grant as an AbilitySpec in an AbilitySpecContainer slot, and one activation: an AbilityDataPacket and a pooled AbilityProxy that compiles lazily."
+  },
+  {
+    "file": "4.2-task-and-component-bases.mmd",
+    "guide": "EXTENDING",
+    "caption": "What a game derives from: ability tasks, targeting tasks, ability components, validation rules and recharges. Task instances belong to the asset and are shared.",
+    "section": "Ability tasks"
+  },
+  {
+    "file": "4.4-ability-activation.mmd",
+    "guide": "ABILITIES",
+    "caption": "From the request through the checks, targeting, usage, stages and tasks to the end. Each activation is two processes HandledBy the caster, in ProcessWorld.Of(caster).",
+    "section": "Activation"
+  },
+  {
+    "file": "5.1-effect-asset-spec-and-impacts.mmd",
+    "guide": "EFFECTS",
+    "caption": "The first impact entry is derived on every Generate() and never serialized. The Additional Impacts are authored entries, each with its own delivery. A spec's icon can come from its origin."
+  },
+  {
+    "file": "5.2-the-effect-shelf.mmd",
+    "guide": "EFFECT_PIPELINE",
+    "caption": "EffectSystemComponent is the per-entity shelf. Each shelved container is linked both ways to its spec, and the duration's policies decide how a re-application lands.",
+    "section": "4. Effect lifecycle (EffectSystemComponent)"
+  },
+  {
+    "file": "5.3-components-and-cues.mmd",
+    "guide": "EFFECTS",
+    "caption": "What an effect carries besides its impacts: components with lifecycle hooks, cues for presentation, modifiers that change other effects, and purges.",
+    "section": "Components"
+  },
+  {
+    "file": "5.4-an-effects-application.mmd",
+    "guide": "EFFECT_PIPELINE",
+    "caption": "From GenerateEffectSpec through the shelf's gates, the commits or the modifiers, the impact relay to the dealer, the ticks and the removal.",
+    "section": "1. The model in one page"
+  },
+  {
+    "file": "6.1-attribute-api.mmd",
+    "guide": "ATTRIBUTES",
+    "caption": "Attribute and AttributeSet assets become one CachedAttributeValue per attribute. Every change goes through one of the four verbs."
+  },
+  {
+    "file": "6.2-an-attribute-change.mmd",
+    "guide": "EFFECT_PIPELINE",
+    "caption": "What one change runs through, from the verb to the end of frame. Register and Unregister keep the transport value; only a Commit previews its delta.",
+    "section": "3. The four-verb attribute API (AttributeSystemComponent)"
+  },
+  {
+    "file": "6.3-numbers-api.mmd",
+    "guide": "SCALERS",
+    "caption": "Every authored number is a ScalableFloat or ScalableInt: a magnitude and a scaler, read with a NumberContext. NumberContext.Of has an overload for every place a number is read, ItemSpec included."
+  },
+  {
+    "file": "6.4-reading-a-number.mmd",
+    "guide": "SCALERS",
+    "caption": "How number.Evaluate(NumberContext.Of(x)) reaches a value, from the constant check to the combine.",
+    "section": "A magnitude field"
+  },
+  {
+    "file": "7.1-tags-and-events.mmd",
+    "guide": "TAGS",
+    "caption": "Each entity's TagCache holds weights, listeners and tag workers. Show a tag with ToString(), its DisplayName, never its raw Name."
+  },
+  {
+    "file": "7.2-workers.mmd",
+    "guide": "WORKERS",
+    "caption": "Reactive rules in five families. A StandardWorkerGroup routes each family to the cache that runs it; effect workers run per application of the effect that lists them."
+  },
+  {
+    "file": "7.3-item-api.mmd",
+    "guide": "ITEMS",
+    "caption": "An Item asset becomes an ItemSpec in an ItemSpecContainer slot. The spec is the origin of the item's effects, and its level lives under the item's AssetTag."
+  },
+  {
+    "file": "7.4-an-items-life.mmd",
+    "guide": "ITEMS",
+    "caption": "Given, equipped, used, consumed, unequipped and removed. Uses and Consume are two independent routes to spending an item."
+  },
+  {
+    "file": "8.1-authored-assets.mmd",
+    "guide": "GETTING_STARTED",
+    "caption": "Which asset holds which. Every asset derives from BaseForgeAsset, the levelled ones from BaseForgeLevelProvider. An Ability, effect, Item, AttributeSet or entity can LinkToProvider and follow another's level.",
+    "section": "The pieces in one paragraph"
+  }
+]

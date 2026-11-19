@@ -1,0 +1,142 @@
+classDiagram
+class Bootstrapper:::rt {
+<<MonoBehaviour>>
++ProcessControlPrefab
++GameRootPrefab
++BootstrapOnAwake : bool
++RegisterSets
++BootstrapOverrides()
+}
+class ProcessControl:::rt {
+<<MonoBehaviour>>
++static Instance : ProcessControl
++World : ProcessWorld
++FixedTickRate : int
++static Register(process) ProcessRegistration
++Bootstrap()
++DeferredInit()
++CollectSceneProcesses()
++TerminateAll()
+}
+class ProcessRegistration:::rt {
+<<struct>>
++HandledBy(IGameplayProcessHandler) ProcessRegistration
++With(ProcessDataPacket) ProcessRegistration
++In(ProcessControl or ProcessWorld) ProcessRegistration
++Run() ProcessRegistrationResult
++Run(out ProcessRelay) bool
+}
+class ProcessRegistrationResult:::rt {
+<<struct>>
++Relay : ProcessRelay
++Refusal : EProcessRegistrationRefusal
++Registered : bool
+}
+class EProcessRegistrationRefusal:::rt {
+<<enumeration>>
+None
+NoProcess
+NoProcessControl
+AlreadyRegistered
+ProcessControlClosed
+NotASequencePacket
+InitializeThrew
+}
+class ProcessWorld:::rt {
+<<sealed>>
++static Of(process) ProcessWorld
++Step(float dt)
++StepFixed()
++Tick : ForgeTickSource
++Callbacks : ProcessControlCallbacks
++MaxTicksPerFrame : int
++ProcessesForGAS(gas)
++TerminateAllForGAS(gas)
+}
+class ProcessControlBlock:::rt {
++State : EProcessState
++Relay : ProcessRelay
++Wrapper : AbstractProcessWrapper
++Handler : IGameplayProcessHandler
++Initialize()
++TryRun()
++TryTerminate()
++Step(EProcessStepTiming)
+}
+class ProcessRelay:::rt {
++CacheIndex : int
++State : EProcessState
++IsRunning : bool
++TryGetProcess(out T) bool
++WhenTerminated(token) UniTask
++Run()
++Pause()
++Terminate()
+}
+class AbstractProcessWrapper:::rt {
+<<abstract>>
+the uniform adapter the PCB drives
+}
+class MonoWrapperProcess:::rt {
+instantiator, prefab or scene object
+destroys its GameObject on terminate
+}
+class RuntimeWrapperProcess:::rt
+class ProcessDataPacket:::rt {
++static Default() ProcessDataPacket
++static SceneRoot() ProcessDataPacket
++AddPayload(Tag, T)
++TryGet(Tag, EDataTarget, out T) bool
++GetPrimary() T
++SetByCaller(Tag, float)
+}
+class ProcessControlCallbacks:::rt {
++OnProcessRegistered
++OnProcessUnregistered
++OnProcessStateChanged
++OnGASProcessRegistered
++OnControlStateChanged
+}
+class ForgeTick:::rt {
+<<static>>
++Next(token) UniTask
++NextFrame(token) UniTask
++WaitUntil(Func~bool~) UniTask
++Ticking : bool
+}
+class EProcessLifecycle:::rt {
+<<enumeration>>
+SelfTerminating
+RunThenWait
+RequiresControl
+Synchronous
+}
+class EProcessStepTiming:::rt {
+<<enumeration>>
+None
+Update
+LateUpdate
+FixedUpdate
+UpdateAndLate
+UpdateAndFixed
+LateAndFixed
+UpdateFixedAndLate
+}
+Bootstrapper ..> ProcessControl : creates
+ProcessControl ..> ProcessRegistration : Register
+ProcessRegistration ..> ProcessRegistrationResult : Run
+ProcessRegistrationResult --> EProcessRegistrationRefusal
+ProcessRegistration ..> ProcessDataPacket : With
+ProcessControl "1" *-- "1" ProcessWorld : World
+ProcessWorld "1" *-- "many" ProcessControlBlock
+ProcessWorld *-- ProcessControlCallbacks
+ProcessWorld ..> ForgeTick : Tick
+ProcessControlBlock "1" *-- "1" ProcessRelay
+ProcessControlBlock *-- AbstractProcessWrapper
+AbstractProcessWrapper <|-- MonoWrapperProcess
+AbstractProcessWrapper <|-- RuntimeWrapperProcess
+ProcessControlBlock ..> EProcessLifecycle
+ProcessWorld ..> EProcessStepTiming : step groups
+classDef rt fill:#FFE86D,stroke:#CBB333,color:#574900
+classDef ext fill:#A0C4FB,stroke:#6A8BBF,color:#14315E
+classDef asset fill:#B8ACFB,stroke:#7D6DD4,color:#231266

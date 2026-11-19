@@ -1,0 +1,59 @@
+sequenceDiagram
+autonumber
+participant G as Caller
+participant A as AbilitySystemComponent
+participant S as AbilitySpec
+participant K as AbilitySpecContainer
+participant P as AbilityProxy
+participant W as ProcessWorld of the caster
+participant R as TaskSequenceRuntime
+participant T as Task
+participant X as Target
+G->>A: TryActivateAbility(Ability, Tag or request)
+Note over G,A: also triggers, the input buffer and ActivateImmediateAbilities
+A->>A: AbilityDataPacket.GenerateFrom(spec, request, ...)
+A->>S: SourceRefusal: tags, crowd control, rules, CanStart
+A->>A: level zero, while-active, Blocks, ChanceToActivate
+alt refused
+A-->>G: a Refused ActivationResult, OnAbilityRefused(ActivationRefusal)
+end
+A->>A: CancelAbilitiesCancelledBy
+alt the request CancelsTargeting, as a press does, not a trigger or an activation at start
+A->>A: YieldTargetingTo: another ability still choosing its target gives way where its While Targeting yields, cancelled, nothing paid, its claim let go
+end
+A->>A: then the activation policy
+A->>K: ActivateAbility(data)
+K->>A: ClaimActive: OnAbilityActivate, components Start
+K->>P: TakeProxy, or GenerateProxy, which compiles
+K->>P: ActivateTargetingTask(token, data)
+P->>W: Register(CompiledTargeting).HandledBy(caster).With(data).In(world).Run()
+W->>T: the targeting task's Prepare, Activate, Clean
+T-->>W: TARGET packets through SetTargetingPacket
+W-->>P: relay.WhenTerminated
+K->>S: PickRefusal: a component's CanTakeTarget, as Cast Range's
+K->>K: ResolveTarget(ImplicitTag) into TARGET_REAL
+K->>S: TargetRefusal(target, data), the target checks
+alt targeting cancelled or failed, or its pick or target refused
+K-->>A: the activation ends Cancelled, nothing paid, a refused pick or target told through OnAbilityRefused
+end
+K->>K: WindUp: its entity's and its components' wind-ups, as Turn To Face
+K->>S: ApplyUsageEffects(data), unless a stage takes it
+Note over K,S: a component's ApplyUsage in their place, as Toggle's, else a cooldown or a charge through its CooldownModel, the Cost effect, the attribute costs
+K->>K: components Commit, CompileGrantedTags()
+Note over K,P: The claim is released here, unless a stage is critical
+K->>P: Activate(token, data)
+P->>P: the asset loaders run inline
+P->>W: Register(CompiledSequence).HandledBy(caster).With(data).In(world).Run()
+W->>R: its TaskSequenceProcess runs the stages
+loop each stage
+R->>R: a Branch skips it when its AbilityStageCondition fails
+R->>R: OnInit, OnAbilityStageActivate
+R->>T: Prepare, Execute (task.Activate), Clean
+T->>X: GenerateEffectSpec(data.EffectOrigin, effect)
+T->>X: ApplyCarrier(spec)
+R->>R: WhenAll or WhenAny, OnTerminate, OnAbilityStageEnd
+end
+W-->>P: relay.WhenTerminated
+K->>A: CleanHandle: release the claim, EndActivation, OnAbilityEnd
+K->>K: components End, the lent item's Used, CompileGrantedTags()
+Note over A,R: Interrupts: Inject(InterruptSequenceInjection.Instance) cancels the run. CancelAbilitiesTask and CancelledBy spare critical stages

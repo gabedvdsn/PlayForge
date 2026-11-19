@@ -16,6 +16,7 @@ Everything it writes is generated, and git ignores it: guides/, api/ and apidoc/
 import collections
 import io
 import os
+import posixpath
 import re
 import shutil
 import sys
@@ -192,11 +193,65 @@ class Anchors:
 
 
 class Section:
-    def __init__(self, title, lines):
-        self.title, self.lines = title, lines
+    """A ## section of a guide: its lines, and each heading in them with its anchor in the guide (None for a section
+    the site adds, as a catalog)."""
+
+    def __init__(self, title, lines, heads):
+        self.title, self.lines, self.heads = title, lines, heads
         self.slug = ''
-        self.anchors = {}   # the anchor of each heading in it on its own page, by the heading's anchor in the guide
-        self.titles = {}    # each heading's text, by its anchor in the guide
+
+
+class Page:
+    """A page of the site's guides: a guide's opening (depth 0), a ## section (1), or a ### part of a section with two or
+    more (2), each a page of its own under its section's folder."""
+
+    def __init__(self, guide, title, lines, depth, section=None, slug_=None):
+        self.guide, self.title, self.lines, self.depth, self.section = guide, title, lines, depth, section
+        self.slug = slug_
+        self.children = []
+        self.parent = None
+
+    @property
+    def path(self):
+        """Its file under guides/: the guide's folder, then index.md, its section's slug, or its section's folder."""
+        if self.depth == 0:
+            return '%s/index.md' % self.guide.slug
+        if self.depth == 1:
+            return '%s/%s.md' % (self.guide.slug, self.slug)
+        return '%s/%s/%s.md' % (self.guide.slug, self.parent.slug, self.slug)
+
+    @property
+    def uid(self):
+        if self.depth == 0:
+            return 'guide.' + self.guide.slug
+        if self.depth == 1:
+            return 'guide.%s.%s' % (self.guide.slug, self.slug)
+        return 'guide.%s.%s.%s' % (self.guide.slug, self.parent.slug, self.slug)
+
+    @property
+    def name(self):
+        """How a link names it: the guide's name, then its section's title and its own."""
+        parts = [self.guide.name] + ([plain(self.parent.title)] if self.depth == 2 else []) + (
+            [plain(self.title)] if self.depth else [])
+        return ': '.join(parts)
+
+    def href_from(self, page):
+        """Its address relative to another page."""
+        return posixpath.relpath(self.path, posixpath.dirname(page.path))
+
+
+def split_lines(lines, level):
+    """A section's lines split at its headings of a level, outside code: the lines before the first, then each heading's
+    text with the lines under it."""
+    mask = code_mask(lines)
+    head, parts = [], []
+    for line, code in zip(lines, mask):
+        heading = None if code else HEADING.match(line)
+        if heading and len(heading.group(1)) == level:
+            parts.append((heading.group(2), []))
+            continue
+        (parts[-1][1] if parts else head).append(line)
+    return head, parts
 
 
 class Guide:
@@ -213,24 +268,21 @@ class Guide:
         self.name = SHORT_NAMES.get(key, self.title)
         self.intro, self.sections = [], []
         guide_anchors = Anchors()
-        self.anchor_to = {guide_anchors.take(lines[title][2:]): (None, None)}
+        self.title_anchor = guide_anchors.take(lines[title][2:])
+        self.anchor_to = {}     # each heading's anchor in the guide: its page, and its anchor there or None
         current = None
         for i in range(title + 1, len(lines)):
             line = lines[i]
             heading = None if mask[i] else HEADING.match(line)
             if heading and len(heading.group(1)) == 2:
-                current = Section(heading.group(2), [])
-                self.sections.append(current)
-                current.page_anchors = Anchors()
-                current.page_anchors.take(current.title)
+                current = Section(heading.group(2), [], [])
                 current.guide_anchor = guide_anchors.take(current.title)
+                self.sections.append(current)
                 continue
-            if heading and current is not None:
+            if heading:
                 anchor = guide_anchors.take(heading.group(2))
-                current.anchors[anchor] = current.page_anchors.take(heading.group(2))
-                current.titles[anchor] = plain(heading.group(2))
-            elif heading:
-                guide_anchors.take(heading.group(2))
+                if current is not None:
+                    current.heads.append((len(heading.group(1)), heading.group(2), anchor))
             (current.lines if current is not None else self.intro).append(line)
         taken = set()
         for n, section in enumerate(self.sections):
@@ -238,12 +290,52 @@ class Guide:
             if section.slug in taken or section.slug == 'index':
                 raise SystemExit('%s.md: two sections would be the page %s.md' % (key, section.slug))
             taken.add(section.slug)
-            self.anchor_to[section.guide_anchor] = (section, None)
-            for anchor, page_anchor in section.anchors.items():
-                self.anchor_to[anchor] = (section, page_anchor)
 
-    def uid(self, section=None):
-        return 'guide.' + self.slug + ('' if section is None else '.' + section.slug)
+    def paginate(self):
+        """The guide's pages in reading order: its opening, then each section, each followed by its parts' pages where it
+        has two or more ### parts. Maps each heading's anchor in the guide to its page."""
+        index = Page(self, self.title, self.intro, 0)
+        self.anchor_to[self.title_anchor] = (index, None)
+        pages = [index]
+        for section in self.sections:
+            head, parts = split_lines(section.lines, 3)
+            page = Page(self, section.title, section.lines, 1, section, section.slug)
+            pages.append(page)
+            if getattr(section, 'guide_anchor', None):
+                self.anchor_to[section.guide_anchor] = (page, None)
+            heads = list(section.heads)
+            if len(parts) < 2:
+                anchors = Anchors()
+                anchors.take(section.title)
+                for level, text, anchor in heads:
+                    self.anchor_to[anchor] = (page, anchors.take(text))
+                continue
+            page.lines = head
+            anchors = Anchors()
+            anchors.take(section.title)
+            # The headings before its first part stay on the section's page
+            while heads and heads[0][0] != 3:
+                level, text, anchor = heads.pop(0)
+                self.anchor_to[anchor] = (page, anchors.take(text))
+            taken = set()
+            for n, (title, lines) in enumerate(parts):
+                # A part's file is named for its heading, with no hyphen at either end, as "× Attribute" gives
+                child = Page(self, title, lines, 2, section, slug(title).strip('-') or 'part-%d' % (n + 1))
+                if child.slug in taken or child.slug == 'index':
+                    child.slug = '%s-%d' % (child.slug, n + 1)
+                taken.add(child.slug)
+                child.parent = page
+                page.children.append(child)
+                pages.append(child)
+                child_anchors = Anchors()
+                child_anchors.take(title)
+                if heads and heads[0][0] == 3:
+                    self.anchor_to[heads.pop(0)[2]] = (child, None)
+                while heads and heads[0][0] > 3:
+                    level, text, anchor = heads.pop(0)
+                    self.anchor_to[anchor] = (child, child_anchors.take(text))
+        self.pages = pages
+        return pages
 
 
 # --------------------------------------------------------------------------------------------------------------- API
@@ -455,34 +547,34 @@ def xref(uid):
 
 # ------------------------------------------------------------------------------------------------------------ Guides
 
-def rewrite_links(guide, text, guides):
-    """The guide's links to guides, its own sections among them, made the pages that hold them."""
+def rewrite_links(page, text, guides):
+    """A page's links to guides, its own guide's headings among them, made the pages that hold them, relative to it."""
+    guide = page.guide
 
     def target(m):
         label, href = m.group(1), m.group(2)
-        page, _, anchor = href.partition('#')
+        file, _, anchor = href.partition('#')
         if re.match(r'^[a-z]+:', href):
             return m.group(0)
-        if page and not page.endswith('.md'):
+        if file and not file.endswith('.md'):
             return m.group(0)
-        key = page[:-3] if page else guide.key
+        key = file[:-3] if file else guide.key
         other = guides.get(key)
         if other is None:
             problem('%s.md links to %s, which is no guide' % (guide.key, href))
             return m.group(0)
-        section, page_anchor = (None, None)
+        to, to_anchor = other.pages[0], None
+        heading = None
         if anchor:
             if anchor not in other.anchor_to:
                 problem('%s.md links to %s, a heading %s.md lacks' % (guide.key, href, other.key))
-            section, page_anchor = other.anchor_to.get(anchor, (None, None))
-        name = other.name + (': ' + plain(section.title) if section is not None else '')
-        if page_anchor:
-            name = other.name + ': ' + section.titles[anchor]
-        if label.strip() == page or label.strip() == href:
-            label = name
-        folder = '' if other is guide else '../' + other.slug + '/'
-        return '[%s](%s%s%s)' % (label, folder, section.slug + '.md' if section is not None else 'index.md',
-                                 '#' + page_anchor if page_anchor else '')
+            else:
+                to, to_anchor = other.anchor_to[anchor]
+                heading = next((text for level, text, a in
+                                [h for section in other.sections for h in section.heads] if a == anchor), None)
+        if label.strip() == file or label.strip() == href:
+            label = to.name + (': ' + plain(heading) if to_anchor and heading else '')
+        return '[%s](%s%s)' % (label, to.href_from(page), '#' + to_anchor if to_anchor else '')
 
     return LINK.sub(target, text)
 
@@ -610,9 +702,8 @@ def catalog_section(guide, families, types, menus):
             lines.append('| %s | %s | %s |' % (kind, path.replace('/', ' › ') if path else '—', text))
             count += 1
         lines.append('')
-    section = Section(CATALOG_TITLE, lines)
+    section = Section(CATALOG_TITLE, lines, [])
     section.slug = slug(CATALOG_TITLE)
-    section.page_anchors = Anchors()
     section.guide_anchor = None
     return section, count
 
@@ -650,13 +741,130 @@ def first_sentence(lines):
     return sentence.rstrip(':;')
 
 
-def demote(lines):
-    """A section's lines on its own page: each heading one level up, as its ## heading is the page's title."""
+def demote(lines, levels):
+    """A page's lines with each heading the given number of levels up, as its own heading is the page's title: a
+    section's one, a section's part's two."""
     out = []
     for line, code in zip(lines, code_mask(lines)):
         heading = None if code else HEADING.match(line)
-        out.append(line[1:] if heading and len(heading.group(1)) > 2 else line)
+        if heading and levels:
+            level = max(2, len(heading.group(1)) - levels)
+            out.append('#' * level + ' ' + heading.group(2))
+        else:
+            out.append(line)
     return out
+
+
+DIAGRAMS = os.path.join(HERE, 'diagrams')
+
+
+def read_diagrams(guides):
+    """The diagrams the site shows, from diagrams/diagrams.json: each one's Mermaid file, the page it's shown on, as a
+    guide, its ## section and its ### part, and its caption."""
+    path = os.path.join(DIAGRAMS, 'diagrams.json')
+    if not os.path.exists(path):
+        return {}
+    import json
+    with io.open(path, encoding='utf-8') as f:
+        entries = json.load(f)
+    placed = collections.defaultdict(list)
+    for entry in entries:
+        guide = guides.get(entry['guide'])
+        page = None
+        if guide is not None:
+            for each in guide.pages:
+                if each.depth == 0 and not entry.get('section'):
+                    page = each
+                elif each.depth == 1 and plain(each.title) == entry.get('section') and not entry.get('part'):
+                    page = each
+                elif each.depth == 2 and plain(each.parent.title) == entry.get('section') \
+                        and plain(each.title) == entry.get('part'):
+                    page = each
+                if page is not None:
+                    break
+        if page is None:
+            problem('Figure %s names a page no guide has: %s' % (entry.get('file') or entry.get('image'), entry))
+            continue
+        if entry.get('image'):
+            if not os.path.exists(os.path.join(HERE, 'images', *entry['image'].split('/'))):
+                problem('Figure %s is no image under docfx/images' % entry['image'])
+                continue
+            placed[page.uid].append(('image', entry['image'], entry.get('caption', '')))
+            continue
+        with io.open(os.path.join(DIAGRAMS, entry['file']), encoding='utf-8') as f:
+            source = f.read().strip('\n')
+        placed[page.uid].append(('mermaid', source, entry.get('caption', '')))
+    return placed
+
+
+SCREENSHOT = re.compile(r'^\s*<!--\s*screenshot:\s*([\w-]+)\s*-->\s*$')
+
+
+def image_href(page, image):
+    """An image under docfx/images, as a page's link to it."""
+    return posixpath.relpath('images/' + image, posixpath.dirname('guides/' + page.path))
+
+
+def figure(page, kind, value, caption):
+    if kind == 'image':
+        lines = ['', '![%s](%s)' % (caption.strip().rstrip('.') or value, image_href(page, value)), '']
+    else:
+        lines = ['', '```mermaid'] + value.split('\n') + ['```', '']
+    if caption:
+        lines += ['*%s*' % caption.strip(), '']
+    return lines
+
+
+def with_figures(page, body, figures):
+    """A page's lines with its figures: each guide's screenshot comment as its image, where docfx/images/editor has it,
+    and the figures the figures file places after the page's opening paragraph, a diagram or an image each."""
+    out = []
+    for line in body:
+        shot = SCREENSHOT.match(line)
+        image = 'editor/%s.png' % shot.group(1) if shot else None
+        if image and os.path.exists(os.path.join(HERE, 'images', 'editor', shot.group(1) + '.png')):
+            out += figure(page, 'image', image, SHOT_CAPTIONS.get(shot.group(1), ''))
+        else:
+            out.append(line)
+    body = out
+    if not figures:
+        return body
+    at, seen = len(body), False
+    for n, line in enumerate(body):
+        if line.strip() and not line.startswith(('#', '|', '>', '```', '!')):
+            seen = True
+        elif seen and not line.strip():
+            at = n
+            break
+    block = []
+    for kind, value, caption in figures:
+        block += figure(page, kind, value, caption)
+    return body[:at] + block + body[at:]
+
+
+# Each screenshot's caption, by its name under docfx/images/editor
+SHOT_CAPTIONS = {
+    'the-forge': "The Forge, listing the Demo project's assets.",
+    'the-forge-ability': "The Forge, showing an ability's summary and inspector beside the list.",
+    'the-forge-tags': "The Forge's Tags view: the project's tags and what uses each.",
+    'inspector-effect': "An effect's inspector, its sections with their help buttons.",
+    'problems': "The Problems view.",
+    'project-settings': "Project Settings → PlayForge.",
+    'preferences': "Preferences → PlayForge.",
+    'debugger': "The Debugger's Entities view, in play mode.",
+    'debugger-entities': "The Debugger's Entities view, an entity selected.",
+    'debugger-processes': "The Debugger's Processes view.",
+    'debugger-tags': "The Debugger's Tags view.",
+    'debugger-timeline': "The Debugger's Timeline view.",
+    'demo': "The Demo in play mode.",
+    'creator-lab': "The Creator Lab.",
+    'the-forge-toolbar': "The Forge's toolbar.",
+    'new-forge-project-window': "New Forge Project.",
+    'new-asset-window': "The New Asset window.",
+    'rename-window': "The Rename window.",
+    'forge-project-inspector': "A Forge Project's inspector.",
+    'problems-view-by-rule': "The Problems view, By Rule.",
+}
 
 
 def write(path, text):
@@ -699,37 +907,38 @@ def build_guides(names, types):
             area_types[item.area[2]].append(item)
 
     for guide in guides.values():
-        folder = os.path.join(GUIDES, guide.slug)
-        pages = [(None, guide.intro)] + [(section, section.lines) for section in guide.sections]
-        for n, (section, lines) in enumerate(pages):
-            text = rewrite_links(guide, '\n'.join(demote(lines)).strip('\n'), guides)
+        guide.paginate()
+    figures = read_diagrams(guides)
+    for guide in guides.values():
+        pages = guide.pages
+        for n, page in enumerate(pages):
+            text = rewrite_links(page, '\n'.join(demote(page.lines, page.depth)).strip('\n'), guides)
             linked = set()
             body, mentioned = link_types(text.split('\n'), names, linked)
+            body = with_figures(page, body, figures.get(page.uid))
             for uid, count in mentioned.items():
-                named_in[uid].append((count, guide, section))
-            title = guide.title if section is None else plain(section.title)
-            page = [front(guide.uid(section)), '# %s\n\n' % (guide.title if section is None else section.title)]
-            page.append('\n'.join(body).strip('\n') + '\n')
-            if section is None:
-                if guide.sections:
-                    page.append('\n## In this guide\n\n')
-                    for each in guide.sections:
-                        line = first_sentence(rewrite_links(guide, '\n'.join(each.lines), guides).split('\n'))
-                        page.append('- [%s](%s.md)%s\n' % (each.title, each.slug, ': ' + line if line else ''))
+                named_in[uid].append((count, page))
+            out = [front(page.uid), '# %s\n\n' % page.title]
+            out.append('\n'.join(body).strip('\n') + '\n')
+
+            def listing(heading, children):
+                out.append('\n## %s\n\n' % heading)
+                for each in children:
+                    line = first_sentence(rewrite_links(each, '\n'.join(each.lines), guides).split('\n'))
+                    out.append('- [%s](%s)%s\n' % (each.title, each.href_from(page), ': ' + line if line else ''))
+
+            if page.depth == 0:
+                sections = [each for each in pages if each.depth == 1]
+                if sections:
+                    listing('In this guide', sections)
                 own = sorted({item.uid: item for item in area_types[guide.key]}.values(), key=lambda i: i.name.lower())
                 if own:
-                    page.append('\n## In the API\n\nThe types of this guide\'s area: %s.\n' % ', '.join(
+                    out.append('\n## In the API\n\nThe types of this guide\'s area: %s.\n' % ', '.join(
                         '[%s](%s)' % (item.name.replace('<', '&lt;'), xref(item.uid)) for item in own))
-            else:
-                before = pages[n - 1][0]
-                after = pages[n + 1][0] if n + 1 < len(pages) else None
-                steps = ['[← %s](%s)' % (plain(before.title), before.slug + '.md') if before else
-                         '[← %s](index.md)' % guide.name,
-                         '[%s](index.md)' % guide.name]
-                if after:
-                    steps.append('[%s →](%s.md)' % (plain(after.title), after.slug))
-                page.append('\n---\n\n' + ' · '.join(steps) + '\n')
-            write(os.path.join(folder, (section.slug if section else 'index') + '.md'), ''.join(page))
+            elif page.children:
+                # The template gives each page Previous and Next by the contents, and the breadcrumb its way up
+                listing('In this section', page.children)
+            write(os.path.join(GUIDES, *page.path.split('/')), ''.join(out))
 
     toc = []
     for group, group_keys in GUIDE_GROUPS:
@@ -738,10 +947,15 @@ def build_guides(names, types):
             guide = guides.get(key)
             if guide is None:
                 continue
-            entry = '- name: %s\n  href: %s/index.md\n' % (yaml_text(guide.name), guide.slug)
-            if guide.sections:
-                entry += '  items:\n' + ''.join('  - name: %s\n    href: %s/%s.md\n' % (
-                    yaml_text(plain(section.title)), guide.slug, section.slug) for section in guide.sections)
+            entry = '- name: %s\n  href: %s\n' % (yaml_text(guide.name), guide.pages[0].path)
+            sections = [page for page in guide.pages if page.depth == 1]
+            if sections:
+                entry += '  items:\n'
+                for page in sections:
+                    entry += '  - name: %s\n    href: %s\n' % (yaml_text(plain(page.title)), page.path)
+                    if page.children:
+                        entry += '    items:\n' + ''.join('    - name: %s\n      href: %s\n' % (
+                            yaml_text(plain(child.title)), child.path) for child in page.children)
             entries.append(entry)
         if len(group_keys) == 1:
             toc.extend(entries)
@@ -762,18 +976,19 @@ def build_api(guides, named_in, types):
     shutil.rmtree(APIDOC, ignore_errors=True)
     os.makedirs(APIDOC)
     for item in types:
-        sections = sorted(named_in.get(item.uid, []), key=lambda e: (-e[0], list(guides).index(e[1].key),
-                                                                     e[1].sections.index(e[2]) if e[2] else -1))
+        # The pages that name it most first, then in the guides' order and each guide's reading order
+        order = list(guides)
+        sections = sorted(named_in.get(item.uid, []), key=lambda e: (-e[0], order.index(e[1].guide.key),
+                                                                     e[1].guide.pages.index(e[1])))
         lines = []
         guide = guides.get(item.area[2]) if item.area else None
         if guide is not None:
-            lines.append('**Guide:** [%s](%s)' % (guide.name, xref(guide.uid())))
-        links = ['[%s](%s)' % (each.name + (': ' + plain(section.title) if section else ''), xref(each.uid(section)))
-                 for _, each, section in sections[:MOST_SECTIONS]]
+            lines.append('**Guide:** [%s](%s)' % (guide.name, xref(guide.pages[0].uid)))
+        links = ['[%s](%s)' % (page.name, xref(page.uid)) for _, page in sections[:MOST_SECTIONS]]
         if links:
             more = len(sections) - MOST_SECTIONS
             lines.append('**Named in:** ' + ' · '.join(links) + (
-                ', and %d more section%s' % (more, '' if more == 1 else 's') if more > 0 else ''))
+                ', and %d more page%s' % (more, '' if more == 1 else 's') if more > 0 else ''))
         if not lines:
             continue
         text = '\n\n'.join(lines)
@@ -819,7 +1034,7 @@ def build_api(guides, named_in, types):
             index.append('\n' if alone else '\n### %s\n\n' % area)
             if covered:
                 index.append('In the guides: %s.\n\n' % ', '.join(
-                    '[%s](%s)' % (g.name, xref(g.uid())) for g in covered))
+                    '[%s](%s)' % (g.name, xref(g.pages[0].uid)) for g in covered))
             index.append(', '.join('[%s](%s)' % (i.name.replace('<', '&lt;'), xref(i.uid)) for i in items) + '\n')
     namespaces = sorted(uid for uid, item in API_ITEMS.items() if item.kind == 'Namespace')
     toc.append('- name: Namespaces\n  items:\n')
@@ -898,7 +1113,7 @@ def main():
     topics = check_help_topics(guides)
     linked_types = sum(1 for item in types if named_in.get(item.uid))
     print('Guides: %d, as %d pages. API: %d types, %d of them named in the guides. Help topics: %d.' % (
-        len(guides), sum(1 + len(g.sections) for g in guides.values()), len(types), linked_types, topics))
+        len(guides), sum(len(g.pages) for g in guides.values()), len(types), linked_types, topics))
     if problems:
         print('\n'.join(problems), file=sys.stderr)
         raise SystemExit(1)

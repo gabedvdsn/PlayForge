@@ -1,0 +1,138 @@
+classDiagram
+class BaseForgeAsset:::ext {
+<<abstract ScriptableObject>>
++LocalData : List~DataWrapper~
++TryGetLocalData(Tag, out DataWrapper) bool
++Template
++SetTemplate(asset)
+GetGrantedTags()
+}
+class BaseForgeLevelProvider:::ext {
+<<abstract>>
+GetMaxLevel()
+GetStartingLevel()
+LinkToProvider(provider)
+}
+class EntityIdentity:::asset {
++AttributeSet
++StartingAbilities
++StartingItems, with EquipOnInit
++TimeScaleAttribute
++Modifiers
++CrowdControl
++Death: OnDeath and OnRevive effects, Body
++Components: Bounty and Aura effects
+}
+class AttributeSet:::asset {
++Attributes
++SubSets
++WorkerGroup
+}
+class Attribute:::asset {
++AbsorbsFor
++GainsScaledBy
+}
+class Ability:::asset {
++Behaviour: tasks name effects, items, processes, sequences
++Cost
++Cooldown
++AttributeCosts
++OnHit
++Modifiers
+}
+class GameplayEffect:::asset {
++ImpactSpecification: Attribute, ScalableFloat, ValuePipeline, Packets of contained effects
++DurationSpecification: overflow effects
++SourceRequirements, TargetRequirements
++GrantedAbilities
++Modifiers
+}
+class Item:::asset {
++GrantedEffects
++ActiveAbility
++Components: SetBonus, Aura
++Modifiers
+}
+class EffectModifier:::asset {
++Rule: conditions and changes
+}
+class ValuePipeline:::asset {
++Stages
+}
+class ScalerAsset:::asset {
++Scaler
+}
+class RequirementTemplate:::asset {
++Category
++Requirements
+}
+class CrowdControlRules:::asset {
++Rules
+}
+class ForgeAssetCatalog:::asset {
++Entries
++TryFind(id)
++AddProjectAssets()
+}
+class ForgeProject:::asset {
++Settings : ForgeProjectSettings
++static Current
++Use(project)
+}
+class ForgeProjectSettings:::asset {
++Roles : List~AttributeRole~
++CrowdControl
++Cues : CueLibrary
++ResolveOrder
++CombatLog
++Authoring : ForgeAuthoringSettings
++PurgeLevels
++Workers : StandardWorkerGroup
+}
+class CueLibrary:::asset {
++Routes: cue handlers by tag
+}
+class ForgeTagLibrary:::asset {
+<<ScriptableObject>>
++Entries
++Contexts
+read only by the editor
+}
+class TaskSequenceReference:::asset {
+points at a TaskSequenceMethod
+}
+BaseForgeAsset <|-- BaseForgeLevelProvider
+BaseForgeAsset <|-- Attribute
+BaseForgeLevelProvider <|-- EntityIdentity
+BaseForgeLevelProvider <|-- AttributeSet
+BaseForgeLevelProvider <|-- Ability
+BaseForgeLevelProvider <|-- GameplayEffect
+BaseForgeLevelProvider <|-- Item
+ForgeAssetCatalog <|-- ForgeProject
+ForgeProject *-- ForgeProjectSettings
+EntityIdentity --> AttributeSet
+EntityIdentity --> Ability : StartingAbilities
+EntityIdentity --> Item : StartingItems
+EntityIdentity --> CrowdControlRules
+EntityIdentity --> GameplayEffect : death, bounty, aura
+AttributeSet --> Attribute
+AttributeSet --> ScalerAsset : shared cached scalers
+Ability --> GameplayEffect : Cost, Cooldown, toggle, OnHit, tasks
+Ability --> Item : ConsumeItemTask
+Ability --> TaskSequenceReference : RunSequenceTask
+GameplayEffect --> Attribute
+GameplayEffect --> ValuePipeline
+GameplayEffect --> ScalerAsset : SharedScaler
+GameplayEffect --> RequirementTemplate
+GameplayEffect --> Ability : GrantedAbilities
+GameplayEffect --> EffectModifier
+Item --> GameplayEffect : GrantedEffects, SetBonus
+Item --> Ability : ActiveAbility
+EffectModifier --> GameplayEffect : contained and overflow effects
+ForgeProjectSettings --> Attribute : Roles
+ForgeProjectSettings --> CrowdControlRules
+ForgeProjectSettings --> CueLibrary : Cues
+ForgeProjectSettings --> GameplayEffect : Cost and Cooldown templates
+classDef rt fill:#FFE86D,stroke:#CBB333,color:#574900
+classDef ext fill:#A0C4FB,stroke:#6A8BBF,color:#14315E
+classDef asset fill:#B8ACFB,stroke:#7D6DD4,color:#231266

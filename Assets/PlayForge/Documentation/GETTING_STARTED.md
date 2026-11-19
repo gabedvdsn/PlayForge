@@ -1,32 +1,58 @@
 # PlayForge — Getting Started
 
-PlayForge is a Gameplay Ability System (GAS) framework for Unity 6+: entities own
-attributes, gameplay effects modify them, abilities orchestrate effects through staged
-task pipelines, and tags glue everything together for requirements, filtering and UI.
+PlayForge is a Gameplay Ability System (GAS) framework for Unity 6+. In it:
+
+- entities own attributes;
+- gameplay effects modify them;
+- abilities orchestrate effects through staged task pipelines;
+- tags glue everything together for requirements, filtering and UI.
 
 ## Requirements
 
-- **Unity 6.0+** (built and tested on 6000.0)
-- From the Asset Store, PlayForge installs in `Assets/Plugins/PlayForge`, and your Forge Projects go in
-  `Assets/PlayForge`, so the two never share a folder.
-- **UniTask** 2.5.11 (Cysharp, MIT). From the Asset Store, PlayForge includes it, in `PlayForge/ThirdParty/UniTask`;
-  a project that already has UniTask from Package Manager deletes that folder. Installed as a package from git, it
-  needs UniTask added in Package Manager by git URL, pinned to that release:
-  `https://github.com/Cysharp/UniTask.git?path=src/UniTask/Assets/Plugins/UniTask#2.5.11`. A package can't declare a
-  git dependency, so the project's manifest has to name it.
-- The samples are in `PlayForge/Samples` from the Asset Store, and import from Package Manager's Samples tab where
-  PlayForge is a package. **Battle**, a battle that plays itself, needs nothing more. **Demo**, a hero arena to pick heroes, give items and fight, needs nothing more either: it reads the Input
-  System where the project has it, and the Input Manager otherwise. **Task Sequence Examples** and **Process Group Examples** need nothing more.
-- The samples render in the **Built-in Render Pipeline** or **URP**. HDRP isn't supported.
+PlayForge needs Unity 6 and UniTask, and installs a little differently from the Asset Store and from git.
+
+- **Unity 6.0+**, built and tested on 6000.0.
+- **UniTask** 2.5.11 (Cysharp, MIT). How you get it depends on how you install PlayForge, as below.
+
+From the Asset Store:
+
+- PlayForge installs in `Assets/Plugins/PlayForge`, and your Forge Projects go in `Assets/PlayForge`, so the two never
+  share a folder.
+- PlayForge includes UniTask, in `PlayForge/ThirdParty/UniTask`. A project that already has UniTask from Package
+  Manager deletes that folder.
+- The samples are in `PlayForge/Samples`.
+
+Installed as a package from git:
+
+- PlayForge needs UniTask added in Package Manager by git URL, pinned to that release:
+  `https://github.com/Cysharp/UniTask.git?path=src/UniTask/Assets/Plugins/UniTask#2.5.11`.
+- A package can't declare a git dependency, so the project's manifest has to name UniTask.
+- The samples import from Package Manager's Samples tab.
+
+The samples need nothing more:
+
+- **Battle**: a battle that plays itself.
+- **Demo**: a hero arena to pick heroes, give items and fight. It reads the Input System where the project has it, and
+  the Input Manager otherwise.
+- **Task Sequence Examples** and **Process Group Examples**.
+
+The samples render in the **Built-in Render Pipeline** or **URP**. HDRP isn't supported.
 
 ## The pieces in one paragraph
 
-An **EntityIdentity** asset configures an entity: its **AttributeSet** (attributes with
-starting Current/Base values, clamping, regulation), starting **Abilities**, starting
-**Items**, tags and level range. At runtime a `GameplayAbilitySystem` (MonoBehaviour) or
-`RuntimeGameplayAbilitySystem` (plain class) instantiates that identity. **GameplayEffect**
-assets change attributes; each effect's impact entry has a *delivery* that decides
-everything about its lifecycle:
+This section shows how PlayForge's pieces fit together.
+
+An **EntityIdentity** asset configures an entity:
+
+- its **AttributeSet**: attributes with starting Current/Base values, clamping and regulation;
+- its starting **Abilities** and starting **Items**;
+- its tags and its level range.
+
+At runtime, a `GameplayAbilitySystem` (a MonoBehaviour) or a `RuntimeGameplayAbilitySystem` (a plain class)
+instantiates that identity.
+
+**GameplayEffect** assets change attributes. Each effect's impact entry has a *delivery*, which decides everything
+about its lifecycle:
 
 | Delivery | Meaning | Reversal |
 |---|---|---|
@@ -34,44 +60,55 @@ everything about its lifecycle:
 | **OnApply** | one permanent commit ("take 30 damage") | never |
 | **Periodic** | one permanent commit per tick ("5 HP/s") | never |
 
-**Abilities** run staged task lists (targeting → apply effects → run code-driven
-sequences), with cost and cooldown expressed as effects. Full pipeline reference:
-[EFFECT_PIPELINE.md](EFFECT_PIPELINE.md).
+**Abilities** run staged task lists (targeting → apply effects → run code-driven sequences). Their cost and cooldown
+are expressed as effects. [EFFECT_PIPELINE.md](EFFECT_PIPELINE.md) is the full pipeline reference.
 
-[RECIPES.md](RECIPES.md) builds ten common rules from these pieces with no code, a crit, an execute, a counter and more,
-each in the Additional Content sample; [WORKERS.md](WORKERS.md) maps when each kind of worker runs, and for whom.
-[CUES.md](CUES.md) brings together what effects, abilities, entities and items show and sound: their cues, and
-the Cue Library that routes cue tags to them.
+To go further:
+
+- [RECIPES.md](RECIPES.md) builds ten common rules from these pieces with no code, as a crit, an execute and a counter,
+  each in the Additional Content sample.
+- [WORKERS.md](WORKERS.md) maps when each kind of worker runs, and for whom.
+- [CUES.md](CUES.md) brings together what effects, abilities, entities and items show and sound: their cues, and the
+  Cue Library that routes cue tags to them.
 
 ## Quickstart: a damage ability in ~10 minutes
 
-Everything below can be done from **Window → PlayForge → The Forge** (its Create menu), or via
-the `Create → PlayForge` asset menu, which lists the Forge Project, then the assets The Forge lists, in its order, then
-the numbers, rules and the Tag Library.
+This quickstart builds a damage ability, Fireball, from its attribute up to a scene that runs it.
 
-1. **Attribute** — create `Attribute` asset "Health".
-2. **AttributeSet** — create a set; add an element for Health with Base/Current `100`,
-   Overflow policy `ZeroToBase` (Current can never exceed Base — pool-style).
-3. **EntityIdentity** — create one; assign the AttributeSet, set level range.
-4. **GameplayEffect "Fireball Damage"** — Duration policy `Instant`; impact: Attribute =
-   Health, Operation = `Add`, Magnitude = `-30` (or attach a scaler for per-level values
-   like −20/−30/−40/−50).
-5. **Ability "Fireball"** — add a targeting task (e.g. `SelectGasTargetTask`), one stage
-   with an `ApplyEffectsAbilityTask` referencing the damage effect; assign Cost/Cooldown
-   effects if desired; set the level range and link the damage effect's scaler
-   `LockToLevelProvider`.
-6. **Scene** — add a `GameplayAbilitySystem` to a GameObject, assign the EntityIdentity,
-   and bring PlayForge up with a `Bootstrapper`: the prefab PlayForge makes in `Assets/PlayForge/Bootstrap` as your
-   first Forge Project is made, or a GameObject with the component, naming the Forge Project the scene plays. It makes
-   ProcessControl and the GameRoot, which runs as the project's Game Root entity. Grant + activate the ability through
-   the `AbilitySystemComponent`, or drive everything from code with
-   `RuntimeGameplayAbilitySystem` (no GameObject needed), which `ProcessControl.Register(gas).Run()` starts.
+You can make each asset below from **Window → PlayForge → The Forge**, with its Create menu. You can also use the
+`Create → PlayForge` asset menu, which lists the Forge Project, then the assets The Forge lists, in its order, then the
+numbers, rules and the Tag Library.
+
+1. **Attribute**: create an `Attribute` asset named "Health".
+2. **AttributeSet**: create a set, and add an element for Health:
+   - Base/Current `100`;
+   - Overflow policy `ZeroToBase`, so Current can never exceed Base (pool-style).
+3. **EntityIdentity**: create one. Assign the AttributeSet, and set its level range.
+4. **GameplayEffect "Fireball Damage"**: set its Duration policy to `Instant`, and give it an impact:
+   - Attribute = Health, Operation = `Add`, Magnitude = `-30`;
+   - or attach a scaler for per-level values, like −20/−30/−40/−50.
+5. **Ability "Fireball"**:
+   - Add a targeting task, for example `SelectGasTargetTask`.
+   - Add one stage, with an `ApplyEffectsAbilityTask` referencing the damage effect.
+   - Assign Cost and Cooldown effects, if you want them.
+   - Set the level range, and link the damage effect's scaler with `LockToLevelProvider`.
+6. **Scene**:
+   - Add a `GameplayAbilitySystem` to a GameObject, and assign the EntityIdentity.
+   - Bring PlayForge up with a `Bootstrapper`: the prefab PlayForge makes in `Assets/PlayForge/Bootstrap` as your
+     first Forge Project is made, or a GameObject with the component, naming the Forge Project the scene plays.
+   - The `Bootstrapper` makes ProcessControl and the GameRoot, which runs as the project's Game Root entity.
+   - Grant and activate the ability through the `AbilitySystemComponent`.
+
+Instead of a GameObject, you can drive everything from code with `RuntimeGameplayAbilitySystem`, which needs none.
+`ProcessControl.Register(gas).Run()` starts it.
 
 ### Code-driven abilities (sequences)
 
-For behavior beyond declarative tasks, use `RunSequenceTask` pointing at a static
-`[TaskSequenceMethod]` builder. Load the effects it applies with a `SetEffectsTask`
-asset loader, and **annotate the sequence** so tooltips/analysis can decipher it:
+For behaviour beyond declarative tasks, an ability runs a code-driven sequence.
+
+1. Add a `RunSequenceTask` pointing at a static `[TaskSequenceMethod]` builder.
+2. Load the effects the sequence applies with a `SetEffectsTask` asset loader.
+3. In the builder, **annotate the sequence**, so tooltips and analysis can decipher it:
 
 ```csharp
 [TaskSequenceMethod("Ability: Chain Lightning")]
@@ -85,58 +122,111 @@ public static TaskSequence ChainLightning() =>
 
 ### Running a process or a sequence
 
-`ProcessControl.Register` starts a registration, and `Run` makes it: it registers the process, a MonoBehaviour or
-runtime process, a `TaskSequence` or a chain of them, and starts it. `HandledBy` names what the process belongs to,
-which ends it as it ends, and `With` the packet it carries. Left out, an ability's packet hands the process to the
-packet's source, and anything else to GameRoot. A refused registration says why:
+You run a process or a sequence from code through `ProcessControl.Register`. It starts a registration, and `Run` makes
+it.
+
+| Call | What it does |
+|---|---|
+| `ProcessControl.Register` | Starts a registration of a process: a MonoBehaviour or runtime process, a `TaskSequence`, or a chain of them. |
+| `HandledBy` | Names what the process belongs to, which ends it as it ends. |
+| `With` | Names the packet the process carries. |
+| `Run` | Registers the process, and starts it. |
+
+Left out, `HandledBy` follows the packet: an ability's packet hands the process to the packet's source, and anything else
+hands it to GameRoot. A refused registration says why:
 
 ```csharp
 var result = ProcessControl.Register(projectile).HandledBy(gas).With(data).Run();
 if (!result) ForgeLog.Warning($"Not registered: {result.Refusal}");
 ```
 
-A process an ability's **Create Mono Process** task spawns takes the ability as its origin, so the effects it
-applies are the caster's, at the ability's level. Its **Spawn At** puts it at the caster, as a projectile, or at the
-ability's target, as a fire on the ground, or where the data's Position says. A gameplay mono process, as `ProjectileMonoProcess`, carries
-attributes of its own in **Attributes**: each is an attribute, the role it's read by (a projectile reads its speed
-as ProjectileSpeed), and where it starts: its own value, a number or a scaler read at the spawning ability's level,
-the caster's attribute, or the caster's where it has one. The data that spawns it can set one under its role, and
-its code reads and sets them with `TryGetRole`, `SetRole`, `TryGetAttribute` and `SetAttribute`.
+A process that requires control waits after it registers. `relay.Run()` starts it.
 
-A process that requires control waits after it registers; `relay.Run()` starts it.
+#### Processes an ability spawns
 
-[PROCESSES.md](PROCESSES.md) covers processes, their lifecycles, pausing and groups, and
-[TASK_SEQUENCES.md](TASK_SEQUENCES.md) task sequences: their stages, tasks, repeats, injections, chains, synced runners
-and libraries.
+A process an ability's **Create Mono Process** task spawns takes the ability as its origin. So the effects it applies
+are the caster's, at the ability's level.
+
+The task's **Spawn At** says where the process appears:
+
+| Spawn At | Where the process appears |
+|---|---|
+| **At the Caster** | At the caster, as a projectile does. |
+| **At the Target** | At the ability's target, as a fire on the ground does. |
+| **As Its Data Says** | Where the data's Position says. |
+
+A gameplay mono process, as `ProjectileMonoProcess`, carries attributes of its own in **Attributes**. Each entry has:
+
+- an attribute;
+- the role it's read by, as a projectile reads its speed as ProjectileSpeed;
+- where it starts: its own value, the caster's attribute, or the caster's where the caster has it.
+
+Its own value is a number, or a scaler read at the spawning ability's level. The data that spawns the process can set
+an attribute under its role. The process's code reads and sets its attributes with `TryGetRole`, `SetRole`,
+`TryGetAttribute` and `SetAttribute`.
+
+To go further:
+
+- [PROCESSES.md](PROCESSES.md) covers processes, their lifecycles, pausing and groups.
+- [TASK_SEQUENCES.md](TASK_SEQUENCES.md) covers task sequences: their stages, tasks, repeats, injections, chains, synced
+  runners and libraries.
 
 ### Time and random numbers
 
-PlayForge reads time through `ForgeTime` and draws random numbers through `ForgeRandom`, which read Unity's `Time` and
-`Random` unless you put in your own: `ForgeTime.Use(clock)` with an `IForgeClock`, and `ForgeRandom.Use(new
-SeededRandom(seed))`, whose rolls repeat from their seed whatever else draws from Unity's. Each `Use` returns what it
-replaced, to put back. Each entity numbers its effects' applications (`GameplayEffectSpec.ApplicationId`) and its
-abilities' activations.
+This section covers where PlayForge's time and random numbers come from, and the clocks an entity or a sequence runs
+by.
 
-Each entity also has a clock of its own, `gas.GetClock()`: the game's time scaled by its `TimeScale`. Its effects run
-by it, its cooldowns among them, and so do its abilities' waits and sequences, so `TimeScale = 0.5f` slows one entity
-and no other. A scale of 0 holds the entity's time still; it isn't a pause.
+PlayForge reads time through `ForgeTime`, and draws random numbers through `ForgeRandom`. They read Unity's `Time` and
+`Random` unless you put in your own:
 
-A sequence can run by a clock of its own: `WithClock(UnscaledClock.Instance)` runs a pause menu's while the game's time
-stands, a `ScaledClock` runs one at a pace of its own, and a packet's `Clock`, an entity's among them, comes before
-either. An ability's Run Sequence task picks one in its inspector, its **Clock**. [TASK_SEQUENCES.md](TASK_SEQUENCES.md)
+| Call | What you put in |
+|---|---|
+| `ForgeTime.Use(clock)` | A clock of your own, an `IForgeClock`. |
+| `ForgeRandom.Use(new SeededRandom(seed))` | Seeded rolls, which repeat from their seed whatever else draws from Unity's `Random`. |
+
+Each `Use` returns what it replaced, so you can put it back. Each entity numbers its effects' applications
+(`GameplayEffectSpec.ApplicationId`) and its abilities' activations.
+
+#### An entity's clock
+
+Each entity also has a clock of its own, `gas.GetClock()`: the game's time, scaled by the entity's `TimeScale`.
+
+- The entity's effects run by it, its cooldowns among them.
+- Its abilities' waits and sequences run by it too.
+
+So `TimeScale = 0.5f` slows one entity and no other. A scale of 0 holds the entity's time still, but it isn't a pause.
+
+#### A sequence's clock
+
+A sequence can run by a clock of its own:
+
+- `WithClock(UnscaledClock.Instance)` runs a pause menu's sequence while the game's time stands still.
+- A `ScaledClock` runs a sequence at a pace of its own.
+- A packet's `Clock`, an entity's among them, comes before either.
+
+An ability's Run Sequence task picks a clock in its inspector, with its **Clock**. [TASK_SEQUENCES.md](TASK_SEQUENCES.md)
 has the order a run takes them in.
 
+#### Fixed ticks
+
 For a run that comes out the same at any frame rate, set ProcessControl's Fixed Tick Rate, as 60. The game then steps
-in ticks, each a fixed step of its time, as many a frame as the frame's time holds: every process steps once a tick,
-its end of frame with it, and each sequence's wait goes on by the tick. Code of your own that waits for a sequence's
-next frame awaits `ForgeTick.Next(token)`. 0, the default, steps once a frame. The ticks stand with the game's time, so
-a sequence on the unscaled clock waits for Unity's frames instead.
+in ticks, each a fixed step of its time, as many a frame as the frame's time holds:
+
+- Every process steps once a tick, its end of frame with it.
+- Each sequence's wait goes on by the tick.
+- Code of your own that waits for a sequence's next frame awaits `ForgeTick.Next(token)`.
+
+0, the default, steps once a frame. The ticks stand still with the game's time, so a sequence on the unscaled clock
+waits for Unity's frames instead.
 
 ### Tooltips: what does this ability do?
 
-`AbilityInspector.Build(ability)` returns a full static breakdown — every effect, its
-role, target scope, and per-level numbers evaluated through the real scaler pipeline, and its components, what sets it
-off on its own, its chance to activate and its Attribute Costs:
+`AbilityInspector.Build(ability)` describes what an ability does, for a tooltip. It returns a full static breakdown:
+
+- every effect, with its role, its target scope, and its per-level numbers, evaluated through the real scaler pipeline;
+- the ability's components;
+- what sets it off on its own, and its chance to activate;
+- its Attribute Costs.
 
 ```csharp
 var breakdown = AbilityInspector.Build(fireball);
@@ -149,152 +239,243 @@ string perLevel = impact.FormatTotal();           // "20/30/40/50"
 
 ## Tooling tour
 
-- **The Creator Lab** (`Window → PlayForge → Creator Lab`) — a space to try the project's own assets in: put units
-  and test dummies down, drop effects, abilities and items on them, and read any asset's numbers level by level. It
-  opens in a new scene and plays; its time pauses, steps and speeds up on its own. [CREATOR_LAB.md](CREATOR_LAB.md).
-- **The Forge** (`Window → PlayForge → The Forge`, or Alt+Shift+F, which focuses its search) — every
-  PlayForge asset of the active **Forge Project** in one list beside a detail pane. A Forge Project is a folder with a
-  project asset at its root (**Create → PlayForge → Forge Project**), and holds the assets under it that no project
-  inside it does. New Project makes one at once in a folder of its own under the PlayForge Folder, `Assets/PlayForge`
-  until Project Settings → PlayForge sets another, as `Assets/PlayForge/Arena/Arena.asset`, with its Game Root entity in
-  `Arena/GameRoot`; with no project, The Forge asks for the first. The toolbar holds Back and Forward, which go over the assets it has shown, as a browser's do, the
-  project menu, which switches projects and makes a new one, Create, a filter for each PlayForge asset type and More,
-  which holds the filters of the rest, Scaler assets, Requirement Templates, Value Pipelines, Effect Modifiers and Crowd
-  Control Rules, then Tags, the search and the problem count. Create makes an asset of a type: Blank, or from a preset under it, each ready to fill in: a
-  **Damage**, **Damage over Time**, **Buff**, **Debuff**, **Stun** (granting the tag of the project's crowd control rule
-  that stops every ability) or **Aura** effect; an **On-Hit** or **Active** item (the Active one with an ability of its
-  own, its cost and cooldown copies of the project's Cost and Cooldown effects); a **Passive** ability, which activates
-  as its entity starts and gives its holder its effects; or a
-  **Hero**, with an attribute set of the attributes playing the project's roles, Health first. The project's own
-  **Templates** follow, each a new asset's copy. A new asset goes into the active project, in its type's folder within the project's, as `Arena/Abilities`; the
-  first one made with no project makes one named for the game, in a folder of its own. With projects and none chosen, the active one is the
-  project at the root, or none, when The Forge shows the assets in no project. The asset menu moves or copies the
-  selected assets into another project, and renames an asset, as F2 on the list does: its name as its inspector gives
-  it, with the tag the name gives and the file following, or the file of an asset with no name of its own. Every asset picker, an object field's among them, offers the active project's
-  assets alone, and the tag picker the tags they use. The Demo's assets are a project of their own. Its window menu's
-  **Spreadsheets** writes the project's numbers by level, or its items' stats, to CSV, and reads a sheet back, listing
-  its changes before it makes them ([SPREADSHEETS.md](SPREADSHEETS.md)). The list's columns sort, Summary among them, which shows each asset's one line, as its inspector's header does; a click shows the asset's inspector in the detail pane, under its
-  summary: its description, then a line for each of its sections, or for a Scaler asset or a Requirement Template, of
-  its parts. A double click shows it in the Project window, and a row of an asset's Used By opens that asset in The
-  Forge. Tags lists the project's tags and what uses each. A context is a kind of tag, as Granted, Event, Impact Type or
-  Local Data Key, and a tag field's picker offers the kinds it takes. A tag used in a field of several contexts is
-  for each of them, alone, so each one's fields offer it. A tag's **Declared For** declares it for contexts, so their fields' pickers offer it, in a Tag
-  Library asset (`Create → PlayForge → Tag Library`), made where Project Settings
-  puts new assets while there's none. A Tag Library belongs to no Forge Project: every library in the project is read,
-  wherever it sits, so one library can serve them all. New Tag's **Contexts** start as its field's, and another chosen
-  declares the tag for it. A path that is one of PlayForge's own tags' text, as Blocked or Health, would make that very
-  tag: New Tag says so, and offers it with **Use It**. A contexts field's **New Context…** makes a context of the
-  project's own, which the Tag Library keeps and every contexts field offers; a field in the project's own code takes it
-  with `[ForgeTagContext("…")]`. A tag written in code, a static Tag field or property, reaches the pickers marked
-  `[ForgeTagExposed(...)]`, under the contexts it names, or under Code; one not marked stays out. The Tags view renames
-  a tag, as F2 or a row's **Rename…** does, and the tags under its path with it, everywhere they're stored; an asset's
-  own tag follows its asset's name instead.
-- **Debugger** (`Window → PlayForge → Debugger`) — the game as it plays, in four views the toolbar switches
-  between. **Entities** lists every entity, of either kind, beside the one selected: its attributes with what changed
-  them, its effects with the time each has left and where it came from, its abilities with their state and cooldown,
-  its tags with what grants them, and its combat log, newest first, a click on a hit showing its breakdown. It acts on the entity too: select a row, and the foot row under its table acts
-  on it. Set an attribute's base and current values (a double-click on a value goes to its field), apply an effect
-  or take one off, grant an ability and activate or interrupt it, or add a tag by name or from the project's tags (a
-  loose tag, which Remove takes back). With Follow Selection on, it shows the entity
-  you select in the scene. **Processes** lists every process with its state and how long its steps take, and
-  pauses, resumes or terminates the one selected. **Tags** shows every tag the entities hold, as a tree, and who
-  holds the one selected. **Timeline** records, as the game plays, each run of an ability, stage by stage, each
-  refused activation, each effect's time on the shelf and each effect refused, and draws them over the last seconds, a
-  track for each entity's ability or effect. Select a track to see an ability's stages and their tasks, with when the
-  selected run reached each, beside its runs, or an effect's applications and refusals, with its journal under them:
-  each landing, tick, hit and removal, and each worker that ran, by its hook and side, with what it queued. A
-  click on a journal entry shows its parts, and a click on a hit in the combat log its steps. Record pauses it, and
-  Clear forgets it. Docked in a
-  narrow column, each view's list sits above its detail. The window menu sets how often it reads the game.
-- **Asset fields** — every reference to a PlayForge asset is Unity's object field. **Open** beside it shows the asset
-  in a window of its own; **New**, beside an empty one, asks the new asset's name in The Forge's New dialog, starting as
-  the asset that holds the field and the field's, then makes it where Project Settings → PlayForge puts its type. An effect field's right-click menu has its template, a pick of the effects
-  nothing links, and New Linked Effect, which names the effect in the New Asset window and links it to the asset.
-- **Import and Clear** — each inspector section's header has Import, Clear and Help. Import opens the Import window:
-  choose a source on the left, the type's defaults first, then the assets of the type; the right lists the fields that differ,
-  each checked, beside their values now and the source's. Uncheck a field to leave it. A list is replaced, unless its
-  row's **Add** is on, which adds the source's items after its own. **Import N Changes** is one Undo step. The asset
-  menu's **Import from Another Asset...** does the same for the whole asset, which keeps its name, description, icons,
-  asset tag, template and level link. A Workers section's import lists every asset that has a worker
-  group, whatever its type. **Clear** resets the section's fields at once, and Undo takes it back.
-- **Templates** — an asset's menu **Set Template...** picks, from a searchable list of the other assets of its type,
-  the template it becomes a child of; an asset that takes it as its template isn't listed. A child
-  takes the template's fields when the template is pushed, with the template's asset menu **Push to Its Children**, as
-  one Undo step, and keeps each field it overrides: an edit to a child's field makes it the child's own, and its
-  inspector marks it as Unity marks a prefab instance's override. A marked field's right-click menu has **Revert to
-  Template**. Saving a template changes no child.
-- **Settings** — **Project Settings → PlayForge** shows the active Forge Project's settings, kept in its asset under
-  version control, each game its own: where each type's new assets go, within the project's folder, a new
-  asset's file its name alone; each type's defaults (the asset a new one starts as a copy of, and the assets Import lists first); the
-  effects a new Cost or Cooldown copies; its Templates, which The Forge's Create offers beside PlayForge's presets; and what its game reads through its GameRoot as it runs, the roles its
-  attributes play, by tag, and its default crowd control ([ATTRIBUTES.md](ATTRIBUTES.md#roles)). Its **PlayForge
-  Folder** is where a new Forge Project goes. With no Forge Project, **Create Forge Project** makes one named
-  for the game, in a folder of its own there.
-  **Preferences → PlayForge** holds your own view toggles, the most PlayForge's dropdowns grow to (**Menu Width** and
-  **Menu Height**), and the log level. The
-  Forge's window menu opens both.
-- **Golden tests** (the Test Runner's EditMode tab, `FarEmerald.PlayForge.Tests.Golden`) — the framework's behavioral
-  contract; run after upgrading.
-- **The test kit** (`FarEmerald.PlayForge.Testing`) — play your own abilities, effects and items in your own tests: a
-  live world for each test, stepped a frame at a time, entities on either hub, Cast, Use, Hold and Hit, scripted time
-  and rolls, and checks after each test that nothing leaked. [TESTING.md](TESTING.md) sets it up.
-- **Problems** (`Window → PlayForge → Problems`) — every problem the validator finds in the project's PlayForge
-  assets, such as a link with no provider, an impact that never applies or a field that reads a scaler it hasn't got,
-  with its severity and its asset; a click selects the asset. **By Rule**, in its toolbar, groups them under the rule
-  each breaks: where one step fixes a problem, its row has a Quick Fix, as **Store the Tag**, and its rule a **Fix
-  All**, each one Undo step. Its linter reads what the project's assets give each other: a stacking effect's periodic
-  number that reads its own stacks, an item's stacks read in an effect no item applies, a filter's impact type nothing
-  deals, and a trigger on an event nothing sends, which is a **Note**, as code may send it: the view lists notes under a
-  filter of their own, and the counts leave them out. An inspector's header counts its asset's problems. In
-  batch mode, `ForgeValidator.LogAll` writes them to the Console, a note as a plain line. Add a check of your own by
-  deriving from `ForgeValidationRule`: override `Name` to name its group, and give a problem a step that fixes it with
-  its `Fix`.
+This tour says what each of PlayForge's editor tools is for, and how to open it. [EDITOR.md](EDITOR.md) covers each
+tool in depth.
+
+### The Creator Lab
+
+**The Creator Lab** is a space to try the project's own assets in.
+
+- Open it from `Window → PlayForge → Creator Lab`. It opens in a new scene, and plays.
+- Put units and test dummies down, and drop effects, abilities and items on them.
+- Read any asset's numbers, level by level.
+- Its time pauses, steps and speeds up on its own.
+
+[CREATOR_LAB.md](CREATOR_LAB.md) covers the lab, and [EDITOR.md](EDITOR.md#the-creator-lab) its editor parts.
+
+### The Forge
+
+**The Forge** is PlayForge's main window: every PlayForge asset of the active **Forge Project**, in one list beside a
+detail pane.
+
+- Open it from `Window → PlayForge → The Forge`, or with Alt+Shift+F, which focuses its search.
+- Its toolbar holds Back and Forward, the project menu, Create, a filter for each asset type, Tags, the search and the
+  problem count.
+- A click on an asset shows its summary and its inspector in the detail pane. A double click shows it in the Project
+  window.
+- **Create** makes an asset, blank or from a preset: a **Damage**, **Damage over Time**, **Buff**, **Debuff**, **Stun**
+  or **Aura** effect, an **On-Hit** or **Active** item, a **Passive** ability, or a **Hero** entity.
+- The project's own **Templates** follow the presets in Create, each a new asset's copy.
+- The asset menu renames an asset, as F2 on the list does, and moves or copies the selected assets into another
+  project.
+
+[EDITOR.md](EDITOR.md#the-forge) covers The Forge in depth, and [EDITOR.md](EDITOR.md#new-assets-and-presets) its
+presets.
+
+### Forge Projects
+
+A Forge Project holds one game's PlayForge assets, and its settings.
+
+- It's a folder with a project asset at its root (**Create → PlayForge → Forge Project**). It holds the assets under it
+  that no project inside it does.
+- The Forge's project menu switches projects, and makes a new one. With no project, The Forge asks for the first.
+- The active project is the one The Forge shows. Every asset picker, an object field's among them, offers the active
+  project's assets alone, and the tag picker the tags they use.
+- The Demo's assets are a project of their own.
+
+[EDITOR.md](EDITOR.md#forge-projects) covers projects, the active project, and moving assets between projects.
+
+### The Tags view
+
+The Forge's **Tags** view lists the project's tags, and what uses each.
+
+- Open it with **Tags**, in The Forge's toolbar.
+- A context is a kind of tag, as Granted, Event, Impact Type or Local Data Key. A tag field's picker offers the kinds it
+  takes.
+- A tag's **Declared For** declares it for contexts, so their fields' pickers offer it. A Tag Library asset
+  (`Create → PlayForge → Tag Library`) keeps the declarations.
+- The view renames a tag, as F2 or a row's **Rename…** does, and the tags under its path with it, everywhere they're
+  stored. An asset's own tag follows its asset's name instead.
+
+[EDITOR.md](EDITOR.md#the-tags-view) covers the view, and [TAGS.md](TAGS.md) covers tags, their contexts and the Tag
+Library.
+
+### Spreadsheets
+
+The **Spreadsheets** commands write the project's numbers by level, or its items' stats, to CSV, and read a sheet back.
+
+- Open them from The Forge's window menu, under **Spreadsheets**.
+- Reading a sheet back lists its changes before it makes them.
+
+[SPREADSHEETS.md](SPREADSHEETS.md) covers spreadsheets in full, and [EDITOR.md](EDITOR.md#spreadsheets) names their
+editor parts.
+
+### The Debugger
+
+The **Debugger** shows the game as it plays, in four views the toolbar switches between.
+
+- Open it from `Window → PlayForge → Debugger`.
+- **Entities** lists every entity, of either kind, with its attributes, effects, abilities, tags and combat log. A foot
+  row under each table acts on the entity: set values, apply or remove effects, grant and activate abilities, add tags.
+- **Processes** lists every process with its state and how long its steps take. It pauses, resumes or terminates the
+  one selected.
+- **Tags** shows every tag the entities hold, as a tree, and who holds the one selected.
+- **Timeline** records each run of an ability, stage by stage, each effect's time on the shelf, and the refusals, and
+  draws them over the last seconds.
+
+[EDITOR.md](EDITOR.md#the-debugger) covers each view in depth.
+
+### The Problems view
+
+The **Problems** view lists every problem the validator finds in the project's PlayForge assets, with its severity and
+its asset.
+
+- Open it from `Window → PlayForge → Problems`, or from a problem count in The Forge's toolbar or an inspector's
+  header.
+- A problem is, for example, a link with no provider, an impact that never applies, or a field that reads a scaler it
+  hasn't got. A click selects the asset.
+- **By Rule**, in its toolbar, groups the problems under the rule each breaks. Where one step fixes a problem, its row
+  has a Quick Fix, as **Store the Tag**.
+- In batch mode, `ForgeValidator.LogAll` writes the problems to the Console.
+- Add a check of your own by deriving from `ForgeValidationRule`: override `Name` to name its group, and give a problem
+  a step that fixes it with its `Fix`.
+
+[EDITOR.md](EDITOR.md#the-problems-view-and-validation) covers the view, PlayForge's rules and the validator.
+
+### The settings pages
+
+PlayForge's **Settings** are on two pages: the project's, and your own.
+
+- **Project Settings → PlayForge** shows the active Forge Project's settings, kept in its asset under version control,
+  each game its own.
+- They say where new assets go and what they start as, and what the game reads through its GameRoot as it runs, as the
+  roles its attributes play ([ATTRIBUTES.md](ATTRIBUTES.md#roles)).
+- The page's **PlayForge Folder** is where a new Forge Project goes.
+- **Preferences → PlayForge** holds your own view toggles, the most PlayForge's dropdowns grow to (**Menu Width** and
+  **Menu Height**), and the log level.
+- The Forge's window menu opens both.
+
+[EDITOR.md](EDITOR.md#preferences-and-project-settings) covers both pages in depth.
+
+### Asset fields
+
+**Asset fields** are Unity's object fields: every reference to a PlayForge asset is one.
+
+- **Open**, beside a field, shows the asset in a window of its own.
+- **New**, beside an empty field, asks for the new asset's name, then makes it where Project Settings → PlayForge puts
+  its type.
+- An effect field's right-click menu has the field's template, where it has one, a pick of the effects nothing links,
+  and New Linked Effect.
+
+[EDITOR.md](EDITOR.md#fields-and-drawers) covers asset fields and PlayForge's other fields.
+
+### Import and Clear
+
+**Import and Clear** sit on each inspector section's header, beside Help.
+
+- Import opens the Import window. Choose a source on the left: the type's defaults first, then the assets of the type.
+- The right lists the fields that differ, each checked, beside their values now and the source's. Uncheck a field to
+  leave it.
+- **Import N Changes** imports the checked fields, as one Undo step.
+- The asset menu's **Import from Another Asset...** does the same for the whole asset.
+- **Clear** resets the section's fields at once, and Undo takes it back.
+
+[EDITOR.md](EDITOR.md#import-and-clear) covers both in depth.
+
+### Templates
+
+**Templates** let an asset take its fields from another asset of its type, its template.
+
+- An asset's menu **Set Template...** picks, from a searchable list of the other assets of its type, the template it
+  becomes a child of.
+- A child takes the template's fields when the template is pushed, with the template's asset menu
+  **Push to Its Children**, as one Undo step. Saving a template changes no child.
+- A child keeps each field it overrides. An edit to a child's field makes it the child's own, and its inspector marks
+  it as Unity marks a prefab instance's override.
+
+[EDITOR.md](EDITOR.md#templates) covers templates in depth.
+
+### Golden tests
+
+The **Golden tests** are the framework's behavioural contract.
+
+- Find them in the Test Runner's EditMode tab, under `FarEmerald.PlayForge.Tests.Golden`.
+- Run them after upgrading.
+
+### The test kit
+
+**The test kit** (`FarEmerald.PlayForge.Testing`) plays your own abilities, effects and items in your own tests.
+
+- Each test gets a live world, stepped a frame at a time, with entities on either hub.
+- A test plays them with Cast, Use, Hold and Hit, with scripted time and rolls.
+- After each test, the kit checks that nothing leaked.
+
+[TESTING.md](TESTING.md) sets it up.
 
 ## Logging
 
-All the runtime says goes through `ForgeLog`, controlled in **Preferences → PlayForge →
-Logging** (Verbose / Info / Warning / Error / None). In builds, set
-`ForgeLog.MinimumLevel` from code. What's said only when asked, `ProcessControl`'s lifecycle logs while its inspector's
-toggles are on, a sequence's or a chain's logging, a debug tool's output, is information: the toggle makes it, and the
-level shows it. `ForgeLog.Exception` logs an exception as Unity's own `LogException` does, its stack in the console.
-A double-click on a message ForgeLog wrote opens the code that logged it, not ForgeLog. Its methods are marked
-`[HideInCallstack]`, so the Console's **Strip Logging Callstack** leaves them out of the stack, and a logging wrapper
-of your own marked so is skipped too.
+All the runtime says goes through `ForgeLog`, whose level you control.
 
-Each message is of a system, effects, abilities, numbers, processes, sequences, saves, input and the rest (`ForgeLog.ESystem`), and
-a system can take a level of its own, `ForgeLog.SetLevel(ForgeLog.ESystem.Effects, ForgeLog.ELevel.Verbose)`, or give it
-back with null. `ForgeLog.Logged` hears each message let through, with its system and the entity it's about where it
-names one, as the Creator Lab's Log page does.
+- In the editor, set the level in **Preferences → PlayForge → Logging**: Verbose, Info, Warning, Error or None.
+- In builds, set `ForgeLog.MinimumLevel` from code.
+
+Some output is said only when asked, and it's information:
+
+- `ProcessControl`'s lifecycle logs, while its inspector's toggles are on;
+- a sequence's or a chain's logging;
+- a debug tool's output.
+
+For such output, the toggle makes it, and the level shows it.
+
+`ForgeLog.Exception` logs an exception as Unity's own `LogException` does, its stack in the console.
+
+A double-click on a message ForgeLog wrote opens the code that logged it, not ForgeLog. ForgeLog's methods are marked
+`[HideInCallstack]`, so the Console's **Strip Logging Callstack** leaves them out of the stack. A logging wrapper of
+your own marked so is skipped too.
+
+Each message is of a system (`ForgeLog.ESystem`): effects, abilities, numbers, processes, sequences, saves, input and
+the rest.
+
+- A system can take a level of its own, as
+  `ForgeLog.SetLevel(ForgeLog.ESystem.Effects, ForgeLog.ELevel.Verbose)`, or give it back with null.
+- `ForgeLog.Logged` hears each message let through, with its system, and the entity it's about where it names one. The
+  Creator Lab's Log page hears messages this way.
 
 ## Profiling
 
-PlayForge's work shows in Unity's Profiler under its own markers, in the Scripts category (`ForgeProfiler`):
+PlayForge's work shows in Unity's Profiler: markers time it, counters say how much of it there is, and two modules chart
+the counters.
 
-- `PlayForge.Update`, `PlayForge.LateUpdate` and `PlayForge.FixedUpdate`: the step loop at each timing.
-- `PlayForge.ProcessStep`: one process's step. Inside it, `PlayForge.Step.` and the process's type's name, with the
-  process's ID as the marker's metadata.
-- `PlayForge.GASStep` and `PlayForge.EndOfFrame`: a GAS's step, where its effects tick, and its end of frame, where
-  its queued actions and its tag and analysis workers run.
-- `PlayForge.ApplyEffect`: an effect's application, with its contained effects' inside it.
-- `PlayForge.ActivateAbility`: an ability's activation, up to the first of its tasks that waits.
-- `PlayForge.TagCompile` and `PlayForge.Recompute`: a GAS's tag compile and an attribute's recompute.
-- `PlayForge.Stage`: a sequence stage's start, an ability's among them: its tasks, up to the first that waits.
+The markers are in the Profiler's Scripts category (`ForgeProfiler`):
 
-The markers time the work. The counters, in the Profiler's PlayForge category (`ForgeCounters`), say how much of it
-there is:
+| Marker | What it times |
+|---|---|
+| `PlayForge.Update`, `PlayForge.LateUpdate`, `PlayForge.FixedUpdate` | The step loop at each timing. |
+| `PlayForge.ProcessStep` | One process's step. Inside it, `PlayForge.Step.` and the process's type's name, with the process's ID as the marker's metadata. |
+| `PlayForge.GASStep` | A GAS's step, where its effects tick. |
+| `PlayForge.EndOfFrame` | A GAS's end of frame, where its queued actions and its tag and analysis workers run. |
+| `PlayForge.ApplyEffect` | An effect's application, with its contained effects' inside it. |
+| `PlayForge.ActivateAbility` | An ability's activation, up to the first of its tasks that waits. |
+| `PlayForge.TagCompile` | A GAS's tag compile. |
+| `PlayForge.Recompute` | An attribute's recompute. |
+| `PlayForge.Stage` | A sequence stage's start, an ability's among them: its tasks, up to the first that waits. |
 
-- ProcessControl's processes running, waiting and created, and each frame's registrations, terminations, steps, state
-  changes and step time.
-- The entities by hub and the effects active, and each frame's effects applied and removed, impacts, activations,
-  refused activations, tag compiles and recomputes.
-- The sequences running, and each frame's stages started.
+The counters are in the Profiler's PlayForge category (`ForgeCounters`):
+
+| Counters | What they count |
+|---|---|
+| ProcessControl's | The processes running, waiting and created, and each frame's registrations, terminations, steps, state changes and step time. |
+| The GAS's | The entities by hub and the effects active, and each frame's effects applied and removed, impacts, activations, refused activations, tag compiles and recomputes. |
+| TaskSequence's | The sequences running, and each frame's stages started. |
 
 Two Profiler modules chart the counters. Turn them on in the Profiler window's list of modules:
 
-- **PlayForge Processes** charts ProcessControl's and TaskSequence's counters. Its details list the selected frame's
-  costliest processes, by their steps' time. PlayForge puts them into the capture while the Profiler records, so a
-  saved capture shows them too.
-- **PlayForge GAS** charts the GAS's counters.
+| Module | What it charts |
+|---|---|
+| **PlayForge Processes** | ProcessControl's and TaskSequence's counters. Its details list the selected frame's costliest processes, by their steps' time. |
+| **PlayForge GAS** | The GAS's counters. |
+
+PlayForge puts the costliest processes into the capture while the Profiler records, so a saved capture shows them too.
 
 A `ProfilerRecorder` reads a marker or a counter by its name, in the editor or in a development build. Unity compiles
-them out of release builds.
+the markers and counters out of release builds.

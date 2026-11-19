@@ -1,0 +1,107 @@
+classDiagram
+class Tag:::rt {
+<<Serializable struct>>
++Name : string, the identity
++DisplayName : string
++static Generate(name, displayName) Tag
++Child(name) Tag
++ToString() the display name, for UI
++IsValid : bool
++GetParent() Tag
++IsChildOf(Tag) bool
++MatchesOrIsChildOf(Tag) bool
+}
+class ETagMatchMode:::rt {
+<<enumeration>>
+Exact
+IncludeChildren
+IncludeParents
+SameRoot
+}
+class TagCache:::rt {
+one per entity
++GetAppliedTags()
++GetWeight(Tag) int, -1 when absent
++HasTag(Tag, ETagMatchMode) bool
++HasAnyTag()
++TagChanged : event
++Listen(Tag, handler, ETagChangeKind) TagListener
++BeginRebuild()
++EndRebuild()
++ProvideWorker(AbstractTagWorker)
+}
+class TagChange:::rt {
+<<readonly struct>>
++Tag
++Before
++After
++Added : bool
++Removed : bool
+}
+class TagListener:::rt {
+IDisposable
+hears its tag and the tags under it
+}
+class TagQuery:::asset {
+<<Serializable>>
++Tag
++Operator : EComparisonOperator
++Magnitude
++MatchMode : ETagMatchMode
++Validate(tags or TagCache) bool
++CountMatches()
+}
+class AvoidRequireTagGroup:::asset {
++AvoidTags : List~TagQuery~
++RequireTags : List~TagQuery~
++SourceTemplate : RequirementTemplate
++Validate(tags or TagCache) bool
+}
+class ITagHandler:::ext {
+<<interface>>
++GetAppliedTags()
++GetTagWeight(Tag)
++QueryTags(TagQuery)
++CompileGrantedTags()
+}
+class ITagSource:::ext {
+<<interface>>
++GetGrantedTags()
+}
+class TagRegistry:::rt {
+<<static>>
++Initialize()
++Register()
++Resolve(name) Tag
++GetAllTags()
++GetDirectChildren()
+}
+class Tags:::rt {
+<<static partial>>
+built-in tags marked ForgeTagExposed
+SYSTEM, GAME_ROOT, NONE
+IMPACT_DEALT, IMPACT_TAKEN, KILL, DIED, REVIVED
+TARGET, TARGET_REAL, SOURCE, DERIVATION, EFFECTS
+}
+class GrantedTagCompiler:::rt {
+<<internal static>>
++Compile(TagCache, AttributeSet, effects, abilities, items)
++AddEffect(TagCache, spec)
+}
+class ForgeEvents:::rt {
+<<static>>
++Send(to, Tag, source, subject)
+queued on the receiver, only if it listens
+}
+TagCache ..> TagChange : TagChanged
+TagCache ..> TagListener : Listen
+TagCache ..> ETagMatchMode
+TagQuery --> ETagMatchMode
+AvoidRequireTagGroup o-- TagQuery
+ITagHandler ..> TagQuery : QueryTags
+GrantedTagCompiler ..> TagCache : compiles into
+TagRegistry ..> Tag : Resolve
+Tags ..> Tag
+classDef rt fill:#FFE86D,stroke:#CBB333,color:#574900
+classDef ext fill:#A0C4FB,stroke:#6A8BBF,color:#14315E
+classDef asset fill:#B8ACFB,stroke:#7D6DD4,color:#231266

@@ -1,0 +1,132 @@
+classDiagram
+class ScalableFloat:::asset {
+<<Serializable>>
++Magnitude : float
++RealMagnitude : EMagnitudeOperation
++Scaler : AbstractScaler
++Evaluate(in NumberContext) float
++Evaluate(IAttributeImpactCarrier) float
++IsConstant : bool
++static From(func) ScalableFloat
+}
+class ScalableInt:::asset {
+<<Serializable>>
+the same, plus Rounding
++Rounding : ERoundingOperation
++Evaluate(in NumberContext) int
+}
+class NumberContext:::rt {
+<<readonly struct>>
++Caster, Target, Level, Origin, Carrier
++Magnitudes, LocalData, Data, Owner
++static Of(IAttributeImpactCarrier) NumberContext
++static Of(ProcessDataPacket) NumberContext
++static Of(ItemSpec) NumberContext
+Of also takes a container, a worker context,
+an ISource or GAS, a CueContext, a gameplay process
++static For(caster, target, level) NumberContext
++WithTarget(target) NumberContext
++Has(NumberReads) bool
++TryGetAttribute(side, attr, out v) bool
+}
+class NumberReads:::rt {
+<<Flags enumeration>>
+None, Level, Caster, Target, Caller
+LocalData, Carrier, Data, Owner, All
+}
+class IScaler:::ext {
+<<interface>>
++Initialize()
++Evaluate() float
+}
+class AbstractScaler:::ext {
+<<Serializable abstract>>
++Configuration : ELevelConfig
++MaxLevel : int
++LevelValues
++Interpolation
++Scaling : AnimationCurve
++Behaviours : List~AbstractScalerBehaviour~
+Evaluate(carrier) float
++GetValueAtLevel(int) float
+plain: Constant, Simple, AttributeBacked, EffectStacks,
+ItemStacks, Randomized, ScalerGroup, Shared
+}
+class NumberKind:::ext {
+<<Serializable abstract>>
+a number that reads the game
+Evaluate(in NumberContext) float
+Describe() string
+Reads : NumberReads
+Fallback
+Explain(ctx, NumberTrace)
+kinds: AssetPart, GroupImpact, LocalData,
+RelativeToField, StackingCurve, TrackedImpact
+}
+class SharedScaler:::rt {
+reads a ScalerAsset
+}
+class ScalerAsset:::asset {
+<<ScriptableObject>>
++Description
++Category
++Scaler : AbstractScaler
+}
+class SetByCallerScaler:::rt {
++Key
+}
+class ConditionalScaler:::rt {
++When : GameplayCondition
+}
+class WorkerNumberKind:::rt {
+asks NumberWorkers
+}
+class GameplayCondition:::ext {
+<<Serializable abstract>>
++Holds(in NumberContext) bool
+Evaluate(in NumberContext) bool
+Describe()
+Reads
+Tag, Attribute, Compare, Level, Always,
+Never, All, Any, Not, Chance
+}
+class ValuePipeline:::asset {
+<<ScriptableObject>>
++Description
++Stages : List~AbstractValueStage~
++Run(float value, carrier, ValueBreakdown) float
+}
+class AbstractValueStage:::ext {
+<<abstract>>
+Apply(float, in ValueRun) float
+Describe()
+Multiply, Add, Chance, Clamp,
+Absorb, Block, Evade, Execute
+}
+class AbstractCachedScaler:::ext {
+<<abstract>>
+attribute-set values only
+EvaluateActiveValue(blueprint, cache)
+RegulateContactWith(attr, cache)
+}
+class ForgeChance:::rt {
+<<static>>
++Roll(chance, ctx, ChanceRoll, key) bool
++LuckOf()
+}
+ScalableFloat --> AbstractScaler : Scaler
+ScalableInt --> AbstractScaler : Scaler
+ScalableFloat ..> NumberContext : Evaluate reads
+NumberContext ..> NumberReads
+IScaler <|.. AbstractScaler
+AbstractScaler <|-- NumberKind
+AbstractScaler <|-- SharedScaler
+SharedScaler --> ScalerAsset
+NumberKind <|-- SetByCallerScaler
+NumberKind <|-- ConditionalScaler
+NumberKind <|-- WorkerNumberKind
+ConditionalScaler --> GameplayCondition : When
+ValuePipeline o-- AbstractValueStage
+classDef rt fill:#FFE86D,stroke:#CBB333,color:#574900
+classDef ext fill:#A0C4FB,stroke:#6A8BBF,color:#14315E
+classDef asset fill:#B8ACFB,stroke:#7D6DD4,color:#231266

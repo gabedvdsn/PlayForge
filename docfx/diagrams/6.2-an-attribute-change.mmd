@@ -1,0 +1,19 @@
+flowchart TD
+classDef general fill:#FFE86D,stroke:#CBB333,color:#574900
+classDef decision fill:#A0C4FB,stroke:#6A8BBF,color:#14315E
+classDef terminator fill:#DDDDD8,stroke:#A8A8A0,color:#434339
+v(["a verb: RegisterModifier (Continuous), UnregisterModifier (its reversal),<br/>CommitImpact (permanent) or ModifyAttribute (a Commit with no impacters)"]):::terminator
+c1["CommitWithCarrier(attr, smav, runEvents, mode, impacters)"]:::general
+m{"mode?"}:::decision
+f["freeze the impacters: ScalerImpacter.Evaluate,<br/>ValuePipeline.Run, the modifier stages through RunAfter,<br/>then CachedAttributeValue.PreviewCommit makes the ChangeValue"]:::general
+pre["Callbacks.AttributePreChange(attr, change)<br/>then, when runEvents, the PreChange attribute workers:<br/>PreValidateWorkFor, ValidateWorkFor, an inline Intercept<br/>that may edit the change, or DeferredIntercept actions"]:::general
+soak["Commit only: a workable loss soaks into the Barrier-role<br/>attributes that absorb for it, and a workable gain<br/>is scaled by GainsScaledBy"]:::general
+arc["apply: Register adds the modifier, Unregister removes it,<br/>Commit records it under its retention group<br/>Recompute: root, Adds, Multiply, FlatBonus, the commits,<br/>Override (the lowest SortOrder wins)<br/>constrain: overflow clamp, rounding, AutoScaleWithBase"]:::general
+post["the PostChange attribute workers,<br/>then Callbacks.AttributePostChange"]:::general
+id["ImpactData.Generate: the target's RecordFrameImpactReceived<br/>(FrameSummary, OnImpactReceived, the combat log, IMPACT_TAKEN),<br/>then the dealer's ProvideFrameImpactDealt"]:::general
+cb["Callbacks.AttributeChanged, AttributeBaseChanged,<br/>AttributeCurrentZero or AttributeCurrentFull<br/>regulated attributes: RefreshRegulatedAttributes recomputes<br/>the dependents and runs their post-change workers and callbacks"]:::general
+eof(["at the end of frame: the deferred actions,<br/>the analysis workers and WatchProjectHealth"]):::terminator
+v --> c1 --> m
+m -->|Commit| f --> pre
+m -->|Register or Unregister| pre
+pre --> soak --> arc --> post --> id --> cb --> eof

@@ -1645,6 +1645,8 @@ EP-13 to EP-16 came as the pass went on; EP-17 to EP-25 are the user's notes of 
 | EP-70 | The user's word of 2026-11-17: "include comprehensive guide on extending the framework for user's own needs", and "more comprehensive guide documentation than what is currently there" (Decision 97). Done: four guides the package ships, each `##` section a page on the docs site: `EXTENDING.md`, extending PlayForge by what a game wants to do, each extension point's base, hooks, how its kind reaches the pickers, and an example that compiles; `TAGS.md`; `EDITOR.md`, the editor tools, every public editor type named; and `SERVICES.md`, time, randomness, input and logging. Each public type of the editor, of tags and of time, input and logging is named in a guide, and the extending guide names only the package's own bases, hooks and attributes: `GuideCoverageTests` holds both. Every example of the four compiles against the package. The Forge's shortcut in GETTING_STARTED.md is Alt+Shift+F, as the code binds it | Docs | verified |
 | EP-71 | The user's word of 2026-11-17, that a user "should be able to look up any script class … and see a page for it": 250 public types had a page with no summary, `GameplayEffect`, `Ability` and `ProcessControl` among them. Done: each has a `/// <summary>` written from its code, so every public type's API page, and IntelliSense, says what it is; comments only. Two malformed doc comments, DocFX's two warnings, are well-formed, and a summary meant for `EMultiplyBehaviour` that sat above `EAddBehaviour` is gone | Runtime | verified |
 | EP-72 | The user's word of 2026-11-18: "include a link to access editor tooling docs in the forge somewhere. Definitely include documentation links and package info in the project settings." Done: The Forge's toolbar ends with a help button that opens the editor tools guide's section on The Forge, and its window menu's **Documentation** opens that section, the editor tools guide, every guide and the API reference. Project Settings → PlayForge opens with which PlayForge it is, its version, package name and the Unity it needs, as its package.json says (`ForgePackageInfo`, which finds the file where Unity resolved the package or, imported into Assets, above its own script), and links to the guides, the editor tools guide, the API reference and the changelog. package.json names the site as its `documentationUrl`, which the Package Manager links | Editor | verified |
+| EP-73 | The user's word of 2026-11-18: "text feels too dense in the guide documentations. Utilize more sections, bullet points. Take inspiration from the unity documentation", "Avoid at all costs dense paragraphs of text. Keep paragraphs to a few sentences at most", "each component should realistically have its own guide page", and "The tooling tour page is insanely dense". Done: every guide restructured with its facts kept: short paragraphs, bullets, Unity-style property tables, numbered steps and callouts. On the site a `##` section with two or more `###` parts gives each part a page of its own, so each component, worker, scaler kind and tool part has one: 715 pages where EP-72 had 266. Getting Started's Tooling tour is a short page per tool, each linking the editor tools guide, which gives every tool its own pages. A checker kept every `##` heading in its order, every `###` heading, every name in backticks, bold term, code block and link | Docs | verified |
+| EP-74 | The user's word of 2026-11-18: "I do want to implement photos and graphs. For example, graphs from the miro document could be used". Done: the architecture board's 25 Mermaid diagrams, each checked against today's code and 17 corrected (the component API, kinds for enums, targeting giving way, cues as a component, and names the board had wrong), are in `docfx/diagrams/`. `diagrams.json` places each on the guide page it explains, after its opening paragraph, with the board's caption: the API of processes, entities, abilities, effects, attributes, numbers, tags, workers and items, and the sequences of an activation, an effect's application, an attribute change, an item's life and the frame step. Each parses with the site's own Mermaid | Docs | verified |
 
 ### Networking (NET)
 
@@ -1729,6 +1731,20 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-18, **EP-73 and EP-74: the guides rewritten for reading, and the board's diagrams on the site.** The
+  user's word.
+  - The measure, as no test reads prose: across the 23 guides, 239 paragraphs over 60 words and 180 bullets over 50
+    before; none after. The guides still name 690 of the 1039 types, the coverage tests' types each, and their 54
+    examples compile against the package's source.
+  - Gates, in `pg_cues`: EditMode 1101/1101 on HEAD (c31b2eec), EP-73 and ED-92's test fix; PlayMode 2296
+    passed, 8 skipped, of 2304, and golden 25/25, on 3ac95bc7 and EP-73, as the guides reach neither. A first
+    EditMode run failed 15 of The Forge's tests, on the active project a screenshot run had left set in the gate
+    copy, and ED_48_A, on the hidden columns two runs at once left set (ED-92).
+  - EP-74 is the site's alone, so no gate reads it; its 25 diagrams parse with the site's Mermaid, and the site
+    builds 715 pages with 0 warnings.
+  - The rewrite found more places the guides and code disagree, kept as written: in the shared notes,
+    docs-findings-2026-11-18.md.
 
 - 2026-11-18, **SP-36, ED-91: the samples hooked up as they ship.** The user's word: Flame Wall's process unassigned.
   - Red, on HEAD (PlayForge 3ac95bc7) with their tests alone: 4 tests, 3 failing: ED_91, Burning's tag read as stale, its name giving Effect.Burning; SP_36's script names, the eight Synced components and the Library Showcase; SP_36's checks, 174 problems. SP_36's missing scripts passed, a fresh copy binding the Demo's fire

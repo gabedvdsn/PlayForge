@@ -1,0 +1,120 @@
+classDiagram
+direction LR
+class AbstractForgeComponent:::ext {
+<<abstract>>
+AllowsSeveral
+per-holder state through ctx.GetState
+}
+class AbstractEffectComponent:::ext {
+<<abstract>>
+Lend(EffectComponentContext)
+Land(ctx)
+Tick(ctx)
+Hit(ctx)
+TakeBack(ctx)
+End(ctx)
+Death(ctx)
+also Reapply, Refused, StacksChanged
+}
+class AreaEffectComponent:::rt {
++Area : EffectArea
+}
+class TransferEffectComponent:::rt {
++Transfer : AttributeTransfer
+}
+class AuraEffectComponent:::rt {
++Aura : AuraEntry
+}
+class SideChangeEffectComponent:::rt {
++Source : ESideSource
++Sides
++Priority
++Interrupts : bool
+}
+class SpreadEffectComponent:::rt {
++When : ESpreadMoment
++Effect : GameplayEffect
++Radius
++MaxTargets
++Hops
+}
+class CuesEffectComponent:::rt {
+the effect's cues, by moment
++OnApply, OnTick, OnHit, OnRemove
++WhileActive, from Lend to TakeBack
+}
+class EffectArea:::asset {
++Radius
++Flat
++Takes : EAffiliationFilter
++MaxTargets
+}
+class AbstractCueHandler:::ext {
+<<abstract>>
+Burst(CueContext)
+OnApplied(ctx)
+OnTicked(ctx)
+OnRemoved(ctx)
+Begin(ctx)
+End(ctx)
+}
+class PrefabCue:::rt
+class SoundCue:::rt
+class CameraShakeCue:::rt {
+shakes through ForgeCues.Shaker
+}
+class EffectModifier:::asset {
+<<ScriptableObject>>
++Description
++Rule : EffectModifierRule
+}
+class EffectModifierRule:::asset {
++Direction : Outgoing, Incoming or Both
++EffectTags
++When : GameplayCondition
++Changes : List~AbstractEffectChange~
+}
+class AbstractEffectChange:::ext {
+<<abstract>>
+Apply(EffectChanges, spec, rule)
+Describe()
+also contained effect, overflow, stacks, chance
+}
+class ChangeImpactChange:::rt {
+adds a value stage
+}
+class DurationChange:::rt
+class GrantTagsChange:::rt
+class EffectPurge:::asset {
++Strength : a tier tag
++Kinds : List~Tag~
++AppliedBy : EPurgeRelation
++Filters : List~AbstractPurgeFilter~
+}
+class AbstractPurgeFilter:::ext {
+<<abstract>>
+Takes(in PurgeContext) bool
+}
+class ExceptTaggedPurgeFilter:::rt
+AbstractForgeComponent <|-- AbstractEffectComponent
+AbstractEffectComponent <|-- AreaEffectComponent
+AbstractEffectComponent <|-- TransferEffectComponent
+AbstractEffectComponent <|-- AuraEffectComponent
+AbstractEffectComponent <|-- SideChangeEffectComponent
+AbstractEffectComponent <|-- SpreadEffectComponent
+AbstractEffectComponent <|-- CuesEffectComponent
+CuesEffectComponent o-- AbstractCueHandler : by moment
+AreaEffectComponent --> EffectArea
+AbstractCueHandler <|-- PrefabCue
+AbstractCueHandler <|-- SoundCue
+AbstractCueHandler <|-- CameraShakeCue
+EffectModifier *-- EffectModifierRule
+EffectModifierRule o-- AbstractEffectChange
+AbstractEffectChange <|-- ChangeImpactChange
+AbstractEffectChange <|-- DurationChange
+AbstractEffectChange <|-- GrantTagsChange
+EffectPurge o-- AbstractPurgeFilter
+AbstractPurgeFilter <|-- ExceptTaggedPurgeFilter
+classDef rt fill:#FFE86D,stroke:#CBB333,color:#574900
+classDef ext fill:#A0C4FB,stroke:#6A8BBF,color:#14315E
+classDef asset fill:#B8ACFB,stroke:#7D6DD4,color:#231266

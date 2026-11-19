@@ -1,0 +1,131 @@
+classDiagram
+class IWorkerGroupSource:::ext {
+<<interface>>
++InitWorkers(ISource)
++RemoveWorkers(ISource)
+Ability, AttributeSet, EntityIdentity, Item
+}
+class StandardWorkerGroup:::asset {
+<<Serializable>>
++Name
++AttributeWorkers
++ImpactWorkers
++TagWorkers
++AnalysisWorkers
++ProvideWorkersTo(ISource)
++RemoveWorkersFrom(ISource)
+}
+class AttributeChangeMomentHandler:::rt {
+in the AttributeSystemComponent
+}
+class ImpactWorkerCache:::rt {
+in the AbilitySystemComponent
++RunImpactData(ImpactData, holder)
+}
+class TagCache:::rt
+class AnalysisWorkerCache:::rt {
++Analyze(gas)
+}
+class AbstractAttributeWorker:::ext {
+<<abstract>>
+runs for the changed entity
+Execution : EWorkerExecution
+Timing : PreChange, PostChange or Both
+PreValidateWorkFor(ChangeValue)
+ValidateWorkFor(WorkerContext)
+Intercept(WorkerContext)
+DeferredIntercept(ctx) IEnumerable~IRootAction~
+}
+class AbstractFocusedAttributeWorker:::ext {
++TargetAttribute
+}
+class AbstractRelativeAttributeWorker:::ext {
++RelativeTo
+}
+class MathAttributeWorker:::rt
+class AbstractImpactWorker:::ext {
+<<abstract>>
+runs for the dealer after the target's commit
+OncePerHit
+ValidateWorkFor(ImpactData)
+ActivateInline(ImpactData)
+CreateDeferredActions(ImpactWorkerContext)
+}
+class LifestealImpactWorker:::rt {
++Share
++Heals
++ImpactTypes
+}
+class AbstractEffectWorker:::ext {
+<<abstract>>
+runs per application of its effect
+OnEffectApplication(EffectWorkerContext)
+OnEffectTick(ctx)
+OnEffectRemoval(ctx)
+OnEffectImpact(ctx), for the dealer
+}
+class ReviveOnRemovalEffectWorker:::rt
+class AbstractTagWorker:::ext {
+<<abstract>>
+runs at the end of frame when tags changed
++Requirements : TagWorkerRequirements
+EvaluateEveryFrame
+Activate(gas)
+Tick(gas)
+Resolve(gas)
+}
+class AbstractAnalysisWorker:::ext {
+<<abstract>>
+runs at the end of frame, after tag workers
+Analyze(gas, FrameSummary) IEnumerable~IRootAction~
+Rearm(ILocalDataUser)
+}
+class ThresholdAnalysisWorker:::rt {
++Target
++Threshold
++Crossing
+OnThresholdReached()
+}
+class DeathWatcherAnalysisWorker:::rt {
+adds a DeathAction
+}
+class INumberWorker:::ext {
+<<interface>>
++TryGetNumber(Tag key, in NumberContext, out float) bool
+provided to NumberWorkers, read by WorkerNumberKind
+}
+class WorkerContext:::rt {
++System, AttributeCache, Change
++FrameSummary, ActionQueue
+}
+class ImpactWorkerContext:::rt {
++System, the dealer
++ImpactData, FrameSummary, ActionQueue
+}
+class EffectWorkerContext:::rt {
++System, Carrier, Spec, ExecuteTicks
++Impacts
++GetState(worker) T
+}
+IWorkerGroupSource ..> StandardWorkerGroup : holds
+StandardWorkerGroup ..> AttributeChangeMomentHandler : attribute workers
+StandardWorkerGroup ..> ImpactWorkerCache : impact workers
+StandardWorkerGroup ..> TagCache : tag workers
+StandardWorkerGroup ..> AnalysisWorkerCache : analysis workers
+AttributeChangeMomentHandler o-- AbstractAttributeWorker
+ImpactWorkerCache o-- AbstractImpactWorker
+TagCache o-- AbstractTagWorker
+AnalysisWorkerCache o-- AbstractAnalysisWorker
+AbstractAttributeWorker <|-- AbstractFocusedAttributeWorker
+AbstractFocusedAttributeWorker <|-- AbstractRelativeAttributeWorker
+AbstractRelativeAttributeWorker <|-- MathAttributeWorker
+AbstractImpactWorker <|-- LifestealImpactWorker
+AbstractEffectWorker <|-- ReviveOnRemovalEffectWorker
+AbstractAnalysisWorker <|-- ThresholdAnalysisWorker
+ThresholdAnalysisWorker <|-- DeathWatcherAnalysisWorker
+AbstractAttributeWorker ..> WorkerContext
+AbstractImpactWorker ..> ImpactWorkerContext
+AbstractEffectWorker ..> EffectWorkerContext
+classDef rt fill:#FFE86D,stroke:#CBB333,color:#574900
+classDef ext fill:#A0C4FB,stroke:#6A8BBF,color:#14315E
+classDef asset fill:#B8ACFB,stroke:#7D6DD4,color:#231266

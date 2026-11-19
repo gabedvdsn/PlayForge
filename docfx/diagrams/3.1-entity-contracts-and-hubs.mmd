@@ -1,0 +1,120 @@
+classDiagram
+class ITarget:::ext {
+<<interface>>
+anything an effect lands on
+IAffiliated, ITagHandler, IHasReadableDefinition
+}
+class IEffectOrigin:::ext {
+<<interface>>
++GetSource() ISource
++GetLevel() IntValuePairClamped
++GetAssetTag() Tag
++GetContextTags()
++IsActive() bool
+}
+class IGameplayProcessHandler:::ext {
+<<interface>>
+owns processes
+}
+class ISource:::ext {
+<<interface>>
++GetTagCache() TagCache
++GetActionQueue() ActionQueue
++GetFrameSummary() FrameSummary
++GetLongestDurationFor(Tag)
++SetLevel(Tag, IntValuePair)
++ModifyLevel(Tag, IntValuePair)
+}
+class IGameplayAbilitySystem:::ext {
+<<interface>>
+also ILocalDataUser, IAnalysisUser, IProxyTaskBehaviourCaller
++GetAbilitySystem() AbilitySystemComponent
++GetEffectSystem() EffectSystemComponent
++GenerateEffectSpec(IEffectOrigin, GameplayEffect) GameplayEffectSpec
++ApplyGameplayEffect(GameplayEffectSpec) bool
++TryGetAttributeValue(IAttribute, out AttributeValue) bool
++GetTagWeight(Tag) int
++SendGameplayEvent(Tag, ProcessDataPacket) int
++SetAffiliation(List~Tag~)
++MarkDead()
++Revive(at)
+}
+class GameplayAbilitySystem:::rt {
+<<MonoBehaviour>>
++EntityData : EntityIdentity
++Callbacks : GameplayAbilitySystemCallbacks
++static AddToGameObject(GameObject, EntityIdentity)
++ApplyGameplayEffect(IEffectOrigin, GameplayEffect)
++QueueAction(IRootAction)
+builds its GASCore at registration
+}
+class RuntimeGameplayAbilitySystem:::rt {
++ctor(EntityIdentity, AbstractTargetingPacket)
++EntityData : RuntimeEntityIdentity
++EndOfFrame()
+HandleDestruction()
+builds its GASCore in its constructor
+}
+class GameRoot:::rt {
++static Instance : GameRoot
++Project : ForgeProject
+the root entity and default handler
+}
+class GASCore:::rt {
+<<internal sealed>>
++AttributeSystem : AttributeSystemComponent
++AbilitySystem : AbilitySystemComponent
++ItemSystem : ItemSystemComponent
++EffectSystem : EffectSystemComponent
++LevelSystem : SystemLevelsComponent
++TagCache : TagCache
++Initialize(RuntimeEntityIdentity, registered)
++Tick()
++EndOfFrame() bool
++CompileGrantedTags()
++static Of(IGameplayAbilitySystem) GASCore
+}
+class RuntimeEntityIdentity:::rt {
+the only identity GASCore reads
++InitWorkers(ISource)
++RemoveWorkers(ISource)
++GetGrantedTags()
+}
+class EntityIdentity:::asset {
+<<ScriptableObject>>
++AssetTag, Affiliation, GrantedTags
++AttributeSet : AttributeSet
++StartingAbilities : List~Ability~
++StartingItems
++WorkerGroup : StandardWorkerGroup
++Components : List~AbstractEntityComponent~
++Find() T, its first component that is a T
++CrowdControl : CrowdControlRules
++Death : EntityDeath
+}
+class GameplayAbilitySystemCallbacks:::rt {
++OnSystemInitialized
++OnFrameComplete(FrameSummarySnapshot)
++OnEffectApplied(GameplayEffectSpec)
++OnEffectRemoved(GameplayEffectSpec)
++OnImpactDealt, OnImpactReceived
++OnReductionReceived, OnIncreaseReceived
++OnEntityDied, OnEntityRevived
+}
+ITarget <|-- ISource
+IEffectOrigin <|-- ISource
+IGameplayProcessHandler <|-- ISource
+ISource <|-- IGameplayAbilitySystem
+IGameplayAbilitySystem <|.. GameplayAbilitySystem
+IGameplayAbilitySystem <|.. RuntimeGameplayAbilitySystem
+GameplayAbilitySystem <|-- GameRoot
+GameplayAbilitySystem "1" *-- "1" GASCore : forwards to
+RuntimeGameplayAbilitySystem "1" *-- "1" GASCore : forwards to
+GameplayAbilitySystem *-- GameplayAbilitySystemCallbacks
+RuntimeGameplayAbilitySystem *-- GameplayAbilitySystemCallbacks
+GASCore --> RuntimeEntityIdentity : Identity
+EntityIdentity <.. RuntimeEntityIdentity : wraps a shallow copy
+GameplayAbilitySystem --> EntityIdentity : EntityData
+classDef rt fill:#FFE86D,stroke:#CBB333,color:#574900
+classDef ext fill:#A0C4FB,stroke:#6A8BBF,color:#14315E
+classDef asset fill:#B8ACFB,stroke:#7D6DD4,color:#231266

@@ -1,0 +1,133 @@
+classDiagram
+class GameplayEffect:::asset {
+<<ScriptableObject>>
++Definition : GameplayEffectDefinition
++Tags : GameplayEffectTags
++ImpactSpecification : GameplayEffectImpact
++DurationSpecification : GameplayEffectDuration
++Components : List~AbstractEffectComponent~
++Find() T, its first component that is a T
+its cues in a Cues component
++Workers : List~AbstractEffectWorker~
++Generate(IEffectOrigin origin, ITarget target) GameplayEffectSpec
+}
+class GameplayEffectDefinition:::asset {
++Name
++Description
++Visibility
++Textures
++InheritFromOrigin : bool
++OriginTexture
+}
+class GameplayEffectTags:::asset {
++AssetTag
++ContextTags
++GrantedTags
++RemovesEffectsTagged
++BlocksEffectsTagged
+}
+class GameplayEffectImpact:::asset {
+<<Serializable>>
+the authored first impact, plus more
++AttributeTarget
++ImpactOperation : ECalculationOperation
++MagnitudeOperation : ScalableFloat
++Pipeline : ValuePipeline
++AdditionalImpacts : List~AttributeImpactEntry~
++Entries, NonSerialized, rebuilt on every Generate
++RebuildEntries(duration)
++ResolveDelivery(duration, out warning) EImpactDelivery
+}
+class AttributeImpactEntry:::asset {
++AttributeTarget
++Delivery : EImpactDelivery
++Operation
++Magnitude : ScalableFloat
++Pipeline
++SortOrder
+}
+class EImpactDelivery:::rt {
+<<enumeration>>
+Continuous
+OnApply
+Periodic
+}
+class GameplayEffectDuration:::asset {
++DurationPolicy : EEffectDurationPolicy
++DurationOperation
++EnablePeriodicTicks : bool
++TickIntervalOperation
++ReApplicationPolicy
++StackPolicy
++GenerateContainer(spec, ongoing) AbstractEffectContainer
+}
+class EEffectDurationPolicy:::rt {
+<<enumeration>>
+Instant
+Durational
+Infinite
+}
+class EffectTagRequirements:::asset {
++ApplicationRequirements
++OngoingRequirements
++RemovalRequirements
+}
+class EffectConditions:::asset {
++Application : List~GameplayCondition~
++Ongoing
++Removal
+}
+class GameplayEffectSpec:::rt {
+one application
++Base : GameplayEffect
++Origin : IEffectOrigin
++Target : ITarget
++ApplicationId
++RuntimeContainer : AbstractEffectContainer
++SetByCaller(Tag, float)
++GetImpactersFor(IAttribute, EImpactDelivery)
++GetIcon() Texture2D, the origin's when inherited
+}
+class IAttributeImpactCarrier:::ext {
+<<interface>>
+origin, target, attribute, impact types
+}
+class ICarrierApplication:::ext {
+<<interface>>
+the facet that can be applied
+}
+class IAttributeImpacter:::ext {
+<<interface>>
++Operation
++TargetSlot
++SortOrder
++Pipeline
++Evaluate(carrier) float
+}
+class ScalerImpacter:::rt {
+one per entry, reads the live ScalableFloat
+}
+class ConstantImpacter:::rt
+class IHasTextures:::ext {
+<<interface>>
++GetTextureItems()
+}
+GameplayEffect *-- GameplayEffectDefinition
+GameplayEffect *-- GameplayEffectTags
+GameplayEffect *-- GameplayEffectImpact
+GameplayEffect *-- GameplayEffectDuration
+GameplayEffect *-- EffectTagRequirements : Source and Target
+GameplayEffect *-- EffectConditions
+GameplayEffectImpact "1" *-- "many" AttributeImpactEntry : AdditionalImpacts
+AttributeImpactEntry --> EImpactDelivery
+GameplayEffectDuration --> EEffectDurationPolicy
+GameplayEffect ..> GameplayEffectSpec : Generate
+IHasTextures <|.. GameplayEffect
+IAttributeImpactCarrier <|-- ICarrierApplication
+ICarrierApplication <|.. GameplayEffectSpec
+GameplayEffectSpec "1" *-- "many" ScalerImpacter
+IAttributeImpacter <|.. ScalerImpacter
+IAttributeImpacter <|.. ConstantImpacter
+classDef rt fill:#FFE86D,stroke:#CBB333,color:#574900
+classDef ext fill:#A0C4FB,stroke:#6A8BBF,color:#14315E
+classDef asset fill:#B8ACFB,stroke:#7D6DD4,color:#231266

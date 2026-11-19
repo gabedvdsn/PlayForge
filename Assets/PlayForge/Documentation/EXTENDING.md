@@ -1,10 +1,21 @@
 # PlayForge — Extending PlayForge
 
+This guide covers each place a game's own code plugs into PlayForge.
+
 PlayForge's rules are kinds a designer picks in an inspector: components, workers, tasks, scalers, conditions, stages,
-cue handlers and more. A game adds its own by writing a class of the same base. The editor finds the class, its picker
-offers it beside PlayForge's own, and it runs where they run, handed what they're handed. This guide covers each place a
-game's code plugs in: the base to derive from, the hooks it overrides and when each is called, how the kind reaches the
-inspector, what it's handed, a complete example, and the traps.
+cue handlers and more. A game adds its own by writing a class of the same base.
+
+The editor finds the class, and its picker offers it beside PlayForge's own. It runs where they run, handed what they're
+handed.
+
+Each extension point here follows the same order, leaving out what doesn't apply to it:
+
+1. What it's for, in a sentence.
+2. The base to derive from, and what its hooks are handed.
+3. Its hooks, and when PlayForge calls each.
+4. How the kind reaches the inspector's picker.
+5. A complete example.
+6. Its traps.
 
 Code that only uses PlayForge, as a script that casts an ability or reads an attribute, needs none of this. The kinds
 here plug into what [WORKERS.md](WORKERS.md), [SCALERS.md](SCALERS.md), [PROCESSES.md](PROCESSES.md) and
@@ -42,42 +53,58 @@ picker names and files it, how its fields show, where it keeps what it counts, a
 
 ### The assembly
 
-- The runtime assembly, `FarEmerald.PlayForge`, is referenced automatically, so scripts in Unity's default assembly see
-  it. A game's own assembly definition lists it among its references, with `UniTask` for anything async: an ability
-  task, a wind-up, a process or a sequence task.
-- Editor code, a validation rule or a drawer, lives in an editor-only assembly that also references
-  `FarEmerald.PlayForge.Editor`.
-- PlayForge's attribute asset is `FarEmerald.PlayForge.Attribute`, and `System.Attribute` shares its name: a file with
-  both `using System;` and `using FarEmerald.PlayForge;` that writes `Attribute` doesn't compile. The examples here
-  alias it, `using ForgeAttribute = FarEmerald.PlayForge.Attribute;`.
-- The editor's namespace is `FarEmerald.PlayForge.Editor`, so in code inside a namespace under `FarEmerald.PlayForge`, a
-  bare `Editor` names that namespace: write `UnityEditor.Editor` in full there.
+A kind of a game's own compiles in an assembly that references PlayForge's.
+
+| Code | Where it lives | What it references |
+| --- | --- | --- |
+| Runtime code | Unity's default assembly, or a game's own assembly definition | `FarEmerald.PlayForge`, and `UniTask` for anything async: an ability task, a wind-up, a process or a sequence task |
+| Editor code, as a validation rule or a drawer | An editor-only assembly | `FarEmerald.PlayForge.Editor` as well |
+
+The runtime assembly, `FarEmerald.PlayForge`, is referenced automatically, so scripts in Unity's default assembly see
+it. A game's own assembly definition lists it among its references.
+
+Two of PlayForge's names clash with others:
+
+- **`Attribute`.** PlayForge's attribute asset is `FarEmerald.PlayForge.Attribute`, and `System.Attribute` shares its
+  name. A file with both `using System;` and `using FarEmerald.PlayForge;` that writes `Attribute` doesn't compile.
+  - The examples here alias it: `using ForgeAttribute = FarEmerald.PlayForge.Attribute;`.
+- **`Editor`.** The editor's namespace is `FarEmerald.PlayForge.Editor`. In code inside a namespace under
+  `FarEmerald.PlayForge`, a bare `Editor` names that namespace, so write `UnityEditor.Editor` in full there.
 
 ### How a kind is found
 
-A field a designer picks a kind for is a `[SerializeReference]` field of an abstract base or an interface: an asset's
-**Components**, a stage's **Tasks**, a worker group's lists, a number field's **Kind**. Its picker lists every class
-that derives from the field's type, in any assembly the editor loads, and isn't abstract or an open generic. Nothing
-registers a kind: writing the class is enough.
+The editor finds a kind of a game's own by its base, so nothing registers a kind: writing the class is enough.
+
+A field a designer picks a kind for is a `[SerializeReference]` field of an abstract base or an interface. An
+asset's **Components**, a stage's **Tasks**, a worker group's lists and a number field's **Kind** are such fields.
+
+The field's picker lists every class that derives from the field's type, in any assembly the editor loads. It leaves out
+a class that's abstract or an open generic.
+
+Give each kind of your own these two things:
 
 - **A public constructor that takes nothing.** The picker makes the kind with it as it's picked. The number, condition
-  and Local Data menus list only classes that have one; another picker lists a class without one and fails as it's
+  and Local Data menus list only classes that have one. Another picker lists a class without one, and fails as it's
   picked.
 - **`[Serializable]`**, as PlayForge's own kinds are. The condition menu lists only serializable classes.
-- The constructor runs once for each pick, so it can set defaults of its own over its base's, as
-  `CantFallBelowAttributeWorker` sets its timing and its sign. Field initializers run with it.
+
+The constructor runs once for each pick, so it can set defaults of its own over its base's, as
+`CantFallBelowAttributeWorker` sets its timing and its sign. Field initializers run with it.
 
 ### How a kind is named and filed
 
-`[ForgeMenu]` on the class says where its picker files it and what it's called:
+`[ForgeMenu]` on a kind's class says where its picker files it and what it's called.
 
-- `[ForgeMenu("Effects")]` files it under a submenu, and a slash nests them, as `"Effects/Areas"`. A path holds for the
-  classes made from the one that names it, so a kind of `AbstractScaler`'s is filed under its **Scaler** submenu
-  unless it names another; `[ForgeMenu("")]` puts a kind at the top whatever its base names.
-- `Name = "..."` replaces the class's name in the picker and in the field.
-- `Description = "..."` is what the picker says while the kind is highlighted.
+| Argument | What it does |
+| --- | --- |
+| A path, as `[ForgeMenu("Effects")]` | Files the kind under a submenu. A slash nests them, as `"Effects/Areas"`. |
+| `Name = "..."` | Replaces the class's name in the picker and in the field. |
+| `Description = "..."` | What the picker says while the kind is highlighted. |
 
-Without a `Name`, a picker shows the class's name spaced out, its family's word taken off its end:
+A path holds for the classes made from the one that names it. So a kind of `AbstractScaler`'s is filed under
+its **Scaler** submenu, unless it names another. `[ForgeMenu("")]` puts a kind at the top, whatever its base names.
+
+Without a `Name`, a picker shows the class's name spaced out, with its family's word taken off its end:
 
 | Family | Words taken off | Example |
 | --- | --- | --- |
@@ -95,48 +122,62 @@ A number kind takes the name its `[NumberKind]` gives, and a condition the one i
 
 ### How its fields show
 
-A kind's fields draw under its picker as Unity draws their types: public fields and `[SerializeField]` ones, each with
-its `[Tooltip]`. `[HideInInspector]` keeps one out. Two attributes show a field only while another field of the same
-object says so:
+A kind's fields draw under its picker as Unity draws their types.
 
-- `[ShownWhen(nameof(UsePhysics))]` shows it while a bool is on, and `[ShownWhen(nameof(Mode), (int)EMode.Area)]` while
-  an enum holds one of the values given. Tasks, components, workers, cue handlers and the other kinds a picker makes
-  read it.
-- `[ForgeShowWhen(nameof(Mode), EMode.Curved)]` does the same in scalers, number kinds and conditions.
+The picker draws a kind's public fields and its `[SerializeField]` ones, each with its `[Tooltip]`. `[HideInInspector]`
+keeps one out.
 
-A number field of a kind's own is a `ScalableFloat` or a `ScalableInt`, limited with `[NumberMin]`, `[NumberMax]` or
-`[NumberRange]`; Unity's own `[Min]` and `[Range]` don't work on one ([SCALERS.md](SCALERS.md#a-number-field-in-your-own-code)).
+Two attributes show a field only while another field of the same object says so:
+
+| Attribute | Shows the field while | Read by |
+| --- | --- | --- |
+| `[ShownWhen(nameof(UsePhysics))]` | A bool is on | Tasks, components, workers, cue handlers and the other kinds a picker makes |
+| `[ShownWhen(nameof(Mode), (int)EMode.Area)]` | An enum holds one of the values given | The same kinds |
+| `[ForgeShowWhen(nameof(Mode), EMode.Curved)]` | The same as the two above | Scalers, number kinds and conditions |
+
+A number field of a kind's own is a `ScalableFloat` or a `ScalableInt`. Limit it with `[NumberMin]`, `[NumberMax]` or
+`[NumberRange]`: Unity's own `[Min]` and `[Range]` don't work on one
+([SCALERS.md](SCALERS.md#a-number-field-in-your-own-code)).
+
 A tag field takes `[ForgeTagContext(...)]` to say which tags its picker offers ([Tags in code](#tags-in-code)).
 
 ### One object for every holder
 
-A kind is one object on its asset, shared by every entity the asset reaches: one Burn effect's component serves every
-burning entity, one ability's task every activation of it. A kind keeps nothing for one holder in its own fields. Each
-family hands it a place to keep that:
+A kind is one object on its asset, shared by every entity the asset reaches.
+
+One Burn effect's component serves every burning entity, and one ability's task serves every activation of it. So a kind
+keeps nothing for one holder in its own fields.
+
+Each family hands it a place to keep that:
 
 | Family | Where it keeps what it counts for one holder |
 | --- | --- |
 | Components | `ctx.GetState<T>(this)`: one effect application's, one entity's ability's, one entity's, one entity's item's |
 | Effect workers | `ctx.GetState<T>(this)` in its hooks, `spec.GetWorkerState<T>(this)` elsewhere: one application's |
 | Ability tasks | `data.GetTaskState<T>(this)`: one activation's |
-| Targeting tasks, sequence tasks | locals of their run, or the run's data packet |
-| Tag and analysis workers | the entity: an entity service, or its Local Data |
-| Cue handlers | a dictionary keyed by `cue.Key ?? cue.Spec` |
+| Targeting tasks, sequence tasks | Locals of their run, or the run's data packet |
+| Tag and analysis workers | The entity: an entity service, or its Local Data |
+| Cue handlers | A dictionary keyed by `cue.Key ?? cue.Spec` |
 
 A `[NonSerialized]` field that caches something of the kind's own, made from its settings, is fine, as Cast Range keeps
 its Check Range.
 
 ### Renaming a kind
 
-A kind is saved by its class's name, assembly and namespace. Renaming or moving the class needs Unity's `[MovedFrom]`,
-or every asset that holds one loses it; the Problems view lists an asset that holds a class it can't find.
+A kind is saved by its class's name, assembly and namespace, so renaming one needs care.
+
+Renaming or moving the class needs Unity's `[MovedFrom]`, or every asset that holds one loses it. The Problems view
+lists an asset that holds a class it can't find.
 
 ## Components
 
 A component is a feature an asset carries in its **Components** section: an effect's, an ability's, an entity's or an
-item's. It hears its asset's moments through hooks, each a no-op it may override, and it's the way to add a feature
-that needs more than one moment, as a mark that pays its caster when the marked one dies. Each family is a base in the
-runtime assembly, in `FarEmerald.PlayForge`:
+item's.
+
+It hears its asset's moments through hooks, each a no-op it may override. It's the way to add a feature that needs more
+than one moment, as a mark that pays its caster when the marked one dies.
+
+Each family is a base in the runtime assembly, in `FarEmerald.PlayForge`:
 
 | Base | Held by | Its context |
 | --- | --- | --- |
@@ -145,37 +186,59 @@ runtime assembly, in `FarEmerald.PlayForge`:
 | `AbstractEntityComponent` | an Entity asset's **Components**, or a runtime entity's | `EntityComponentContext` |
 | `AbstractItemComponent` | an item's **Components** | `ItemComponentContext` |
 
-Every component also has, from `AbstractForgeComponent`:
+Every component also has these members, from `AbstractForgeComponent`:
 
-- `AllowsSeveral`: false for a kind that makes no sense twice, which the **Components** list then offers only while the
-  asset holds none.
-- `Describe()`: what it does in one line with its numbers, as "Range 6", which The Forge's summary and the breakdowns
-  show beside its name; null for its name alone.
-- `NameOf(asset)`, protected, an asset's name for that line: its PlayForge name, its file's, or "nothing".
+| Hook | When PlayForge calls it |
+| --- | --- |
+| `AllowsSeveral` | As the **Components** list offers kinds. False, for a kind that makes no sense twice, has the list offer it only while the asset holds none. |
+| `Describe()` | As The Forge's summary and the breakdowns show the component: what it does in one line with its numbers, as "Range 6", beside its name. Null shows its name alone. |
 
-Other code finds a component through its asset's `Find<T>()`, as `ability.Find<IAbilityReach>()` or
-`spec.Find<ICooldownModel>()`, by its class or by an interface it implements.
+Its protected `NameOf(asset)` gives an asset's name for that line: its PlayForge name, its file's, or "nothing".
+
+Each kind lists its own traps, and Traps, last in this section, lists those every component shares.
 
 ### Effect components
 
-`AbstractEffectComponent`'s hooks are called with an `EffectComponentContext`: `System`, the entity of the moment;
-`Spec`, the effect's application; `ExecuteTicks`, for a tick; `ImpactData`, for a hit; and `GetState<T>(this)`.
+An effect component adds a feature to an effect, heard at each moment of the effect's life.
 
-| Hook | Called |
+Derive from `AbstractEffectComponent`. An effect holds it in its **Components**, and its hooks are called with an
+`EffectComponentContext`:
+
+| Member | Holds |
+| --- | --- |
+| `System` | The entity of the moment. |
+| `Spec` | The effect's application. |
+| `ExecuteTicks` | For a tick, how many ticks it executes. |
+| `ImpactData` | For a hit, its impact. |
+| `GetState<T>(this)` | What the component keeps for this application ([State a component keeps](#state-a-component-keeps)). |
+
+#### Hooks
+
+| Hook | When PlayForge calls it |
 | --- | --- |
 | `Lend(ctx)` | As a lasting effect starts to last on the one it's on: as it lands, before `Land`; as it takes another's place under its tag; and as a load or a move puts it back, where it doesn't land again. An instant effect lends nothing. |
 | `TakeBack(ctx)` | As a lasting effect stops lasting there, matching each `Lend`: as it comes off, before `End`; as another takes its place; and as a load clears it or a move takes it away. |
 | `Land(ctx)` | As the effect lands, with its workers' Application. |
-| `Tick(ctx)` | As a lasting effect executes its period's tick; not on a tick that doesn't execute. |
+| `Tick(ctx)` | As a lasting effect executes its period's tick. It isn't called on a tick that doesn't execute. |
 | `Hit(ctx)` | As an impact the effect deals lands. `System` is then the dealer, the effect's caster. |
 | `End(ctx)` | As the effect comes off: an instant one as it's done, a lasting one as it's removed. |
 | `Death(ctx)` | As the one it's on dies while it's on them, before what the death ends comes off. |
 | `Reapply(ctx)` | As another application lands on one it's on already and is taken in: a stack, a refresh, an extension or a replacement. `Spec` is the application that came. |
 | `Refused(ctx, refusal)` | As an application is refused, as by an immunity or a missed chance. Nothing else of it is heard. |
-| `StacksChanged(ctx, before, after)` | As its stacks change while it lasts; not as it lands, comes off or is loaded. |
+| `StacksChanged(ctx, before, after)` | As its stacks change while it lasts. It isn't called as the effect lands, comes off or is loaded. |
 
-`Lend` and `TakeBack` are for what an effect gives while it lasts and must give back exactly once, as an aura: a load
+`Lend` and `TakeBack` are for what an effect gives while it lasts and must give back exactly once, as an aura. A load
 calls them where `Land` and `End` aren't called.
+
+#### In the picker
+
+An effect's **Components** list offers every class derived from `AbstractEffectComponent`, as
+[How a kind is found](#how-a-kind-is-found) describes. The picker shows `BountyMarkEffectComponent` as **Bounty Mark**,
+and `[ForgeMenu]` can name and file it otherwise.
+
+#### Example
+
+This component gives the effect's caster an effect as the one it's on dies while it lasts:
 
 ```csharp
 using System;
@@ -207,32 +270,60 @@ namespace MyGame
 }
 ```
 
+#### Traps
+
+- **A load calls `Lend` and `TakeBack`** on a lasting effect's components. What a component applied as its effect landed
+  comes back from the save on its own.
+
 ### Ability components
 
-`AbstractAbilityComponent`'s hooks are called with an `AbilityComponentContext`: `Spec`, the ability as its entity holds
-it; `Data`, the activation's data packet, null as the ability is granted or removed; `Source`, the entity that holds it;
-and `GetState<T>(this)`.
+An ability component adds a feature to an ability: it can refuse an activation, make it wait as it winds up, and take
+over how its cost and cooldown apply.
 
-| Hook | Called |
+Derive from `AbstractAbilityComponent`. An ability holds it in its **Components**, and its hooks are called with an
+`AbilityComponentContext`:
+
+| Member | Holds |
+| --- | --- |
+| `Spec` | The ability as its entity holds it. |
+| `Data` | The activation's data packet. It's null as the ability is granted or removed. |
+| `Source` | The entity that holds it. |
+| `GetState<T>(this)` | What the component keeps for this entity's ability. |
+
+#### Hooks
+
+| Hook | When PlayForge calls it |
 | --- | --- |
 | `Granted(ctx)`, `Removed(ctx)` | As an entity learns the ability, and loses it. |
-| `CanStart(ctx)` | As an activation is asked for, after the ability's own Caster Checks: a reason refuses it, nothing of it paid; null lets it go on. |
-| `CanTakeTarget(ctx)` | As its targeting ends, whichever task picked: the pick is in `Data` under `Tags.TARGET`, not yet resolved to an entity, as a picked point has none. A reason ends the activation there, before its wind-up, its cost and its stages. |
-| `RefusedAs` | The refusal kind `CanStart` and `CanTakeTarget` are told as: `Rule` unless it says, as Cast Range says `Range`. |
+| `CanStart(ctx)` | As an activation is asked for, after the ability's own Caster Checks. A reason refuses it, nothing of it paid; null lets it go on. |
+| `CanTakeTarget(ctx)` | As its targeting ends, whichever task picked. A reason ends the activation there, before its wind-up, its cost and its stages. |
+| `RefusedAs` | As a refusal from `CanStart` or `CanTakeTarget` is told: the refusal kind it's told as. It's `Rule` unless it says, as Cast Range says `Range`. |
 | `WindUp(ctx, token)` | After its targeting and its Target Checks, before its cost and its first stage. The activation waits on it, with its entity's components' wind-ups and its other components', all together. |
 | `Start(ctx)` | As an activation starts, its claim taken. |
-| `ApplyUsage(ctx)` | In place of the ability applying its cost and its cooldown: true says it did, false leaves it to the ability. Build one from `ctx.Spec.PayCosts(data)` and `ctx.Spec.SpendCooldown(data)`. |
-| `Waives(ctx)` | The checks of its use it waives for this activation, `EUsageCheck.Cost`, `EUsageCheck.Cooldown` or both, as a Toggle that's on can always turn off. |
+| `ApplyUsage(ctx)` | In place of the ability applying its cost and its cooldown: true says it did, and false leaves it to the ability. Build one from `ctx.Spec.PayCosts(data)` and `ctx.Spec.SpendCooldown(data)`. |
+| `Waives(ctx)` | The checks of its use it waives for this activation: `EUsageCheck.Cost`, `EUsageCheck.Cooldown` or both. A Toggle that's on waives them, so it can always turn off. |
 | `Commit(ctx)` | As an activation's cost and cooldown apply. |
-| `CategoryOf(ctx, effect)` | The purge categories an effect its ability put on is of, beside the ability's own. |
+| `CategoryOf(ctx, effect)` | As a purge finds an effect its ability put on: the purge categories it's of, beside the ability's own. |
 | `End(ctx, how)` | As an activation ends: `EAbilityEnd.Done`, `Cancelled` or `Failed`. |
 | `Refused(ctx, refusal)` | As an activation is refused, nothing of it paid. |
 | `DescribeUsage()` | What it adds to the ability's Activation line after its cost and cooldown, as "3 charges". |
 | `TargetCheck`, `CasterCheck` | A check it stands behind, shown among the ability's Target Checks or Caster Checks while the ability holds it ([Validation rules](#validation-rules)). |
 
+In `CanTakeTarget`, the pick is in `Data` under `Tags.TARGET`, not yet resolved to an entity, as a picked point has
+none.
+
+#### In the picker
+
+An ability's **Components** list offers every class derived from `AbstractAbilityComponent`
+([How a kind is found](#how-a-kind-is-found)). One whose `AllowsSeveral` is false, as the example's, is offered only
+while the ability holds none.
+
+#### Example
+
 A component that enforces a rule says so in the ability's checks by returning an `AbstractComponentValidationRule<T>`
-from `TargetCheck`. The check is the rule's place in the list and passes; the component does the refusing. A minimum
-range, the mirror of Cast Range:
+from `TargetCheck`. The check is the rule's place in the list, and it passes: the component does the refusing.
+
+This example is a minimum range, the mirror of Cast Range:
 
 ```csharp
 using System;
@@ -284,23 +375,52 @@ namespace MyGame
 }
 ```
 
-A target or a point an AI hands in its request is refused soonest in `CanStart`, before targeting, reading
-`Tags.TARGET_REAL` and `Tags.POSITION` from the data, as Cast Range does: the request is then refused at once, with
-nothing of it run.
+> [!TIP]
+> A target or a point an AI hands in its request is refused soonest in `CanStart`, before targeting. Read
+> `Tags.TARGET_REAL` and `Tags.POSITION` from the data, as Cast Range does: the request is then refused at once, with
+> nothing of it run.
+
+#### Traps
+
+- **`CanStart` and `CanTakeTarget` are asked often**, an AI's every request among them. Keep them quick and free of
+  allocation, and of side effects: a refusal must leave nothing behind.
+- **A wind-up is cancelled through its token.** Await with it, and let `OperationCanceledException` pass: it ends the
+  activation as cancelled, its cost unpaid. Any other exception fails the activation, which is written to the Console.
+- **`Granted` and `Removed` have no data**: `ctx.Data` is null there.
 
 ### Entity components
 
-`AbstractEntityComponent`'s hooks are called with an `EntityComponentContext`: `System`, the entity; `Killer`, for its
-death, the source of the last loss it took from another; `Identity`, its settings as its GAS uses them; and
-`GetState<T>(this)`.
+An entity component adds a feature to an entity: it hears the entity register, die, revive and end, and can make its
+abilities wait as they wind up.
 
-| Hook | Called |
+Derive from `AbstractEntityComponent`. An Entity asset holds it in its **Components**, or a runtime entity does, and its
+hooks are called with an `EntityComponentContext`:
+
+| Member | Holds |
+| --- | --- |
+| `System` | The entity. |
+| `Killer` | For its death, the source of the last loss it took from another. |
+| `Identity` | Its settings as its GAS uses them. |
+| `GetState<T>(this)` | What the component keeps for this entity. |
+
+#### Hooks
+
+| Hook | When PlayForge calls it |
 | --- | --- |
 | `Register(ctx)` | As the entity registers, its systems set up. |
 | `Death(ctx)` | As it dies, whether it stays or ends. |
 | `Revive(ctx)` | As a staying entity revives. |
 | `End(ctx)` | As it ends. |
-| `WindUp(ctx, ability, token)` | As an activation of one of its abilities winds up, with the ability's own components' wind-ups; `ability` is that activation's context. |
+| `WindUp(ctx, ability, token)` | As an activation of one of its abilities winds up, with the ability's own components' wind-ups. `ability` is that activation's context. |
+
+#### In the picker
+
+An Entity asset's **Components** list offers every class derived from `AbstractEntityComponent`
+([How a kind is found](#how-a-kind-is-found)).
+
+#### Example
+
+This component makes each of its entity's abilities wait a moment before its first stage, as a heavy unit braces:
 
 ```csharp
 using System;
@@ -335,23 +455,46 @@ namespace MyGame
 }
 ```
 
-The wait counts the entity's own clock, so a slow on the entity slows its brace, and `ForgeTick.Next(clock, token)`
-steps with the game's fixed tick where one is on.
+The wait counts the entity's own clock, so a slow on the entity slows its brace. `ForgeTick.Next(clock, token)` steps
+with the game's fixed tick where one is on.
+
+#### Traps
+
+- **A wind-up is cancelled through its token**, as an ability component's is. Await with it, and let
+  `OperationCanceledException` pass.
 
 ### Item components
 
-`AbstractItemComponent`'s hooks are called with an `ItemComponentContext`: `Container`, the item as its entity holds it;
-`Source`, the entity; `Restoring`, true where the moment comes from a load; and `GetState<T>(this)`.
+An item component adds a feature to an item: it hears the item given, equipped, unequipped, removed and used.
 
-| Hook | Called |
+Derive from `AbstractItemComponent`. An item holds it in its **Components**, and its hooks are called with an
+`ItemComponentContext`:
+
+| Member | Holds |
+| --- | --- |
+| `Container` | The item as its entity holds it. |
+| `Source` | The entity. |
+| `Restoring` | True where the moment comes from a load. |
+| `GetState<T>(this)` | What the component keeps for this entity's item. |
+
+#### Hooks
+
+| Hook | When PlayForge calls it |
 | --- | --- |
 | `Given(ctx)` | As an entity is given the item in a slot of its own. |
-| `Equipped(ctx)`, `Unequipped(ctx)` | As it's equipped and unequipped, and as a load puts it back worn or takes it off, with `Restoring` true. |
-| `Removed(ctx)` | As it's taken away; an equipped item is unequipped first. |
+| `Equipped(ctx)`, `Unequipped(ctx)` | As it's equipped and unequipped. Also as a load puts it back worn or takes it off, with `Restoring` true. |
+| `Removed(ctx)` | As it's taken away. An equipped item is unequipped first. |
 | `Used(ctx)` | As its holder's use of the item's ability ends, having paid what it costs. |
 
-A load puts back what a component's earlier moments did, the effects it applied and the loose tags it added among them,
-so a component does nothing of that kind where `Restoring` is true:
+#### In the picker
+
+An item's **Components** list offers every class derived from `AbstractItemComponent`
+([How a kind is found](#how-a-kind-is-found)).
+
+#### Example
+
+A load puts back what a component's earlier moments did, the effects it applied and the loose tags it added among them.
+So a component does nothing of that kind where `Restoring` is true, as this one shows:
 
 ```csharp
 using System;
@@ -386,43 +529,63 @@ namespace MyGame
 }
 ```
 
+#### Traps
+
+- **A load calls `Equipped` and `Unequipped`** on an item's components, with `Restoring` true. What a component applied
+  comes back from the save on its own.
+
 ### State a component keeps
 
-`ctx.GetState<T>(this)` makes a `T` the first time it's asked for and keeps it for that holder: one effect application,
-one entity's ability, one entity, one entity's item. A state that needs more than a constructor with no parameters is
-made and kept through the holder's `ComponentStates`, which `AbilitySpec`, `GameplayEffectSpec` and `ItemSpecContainer`
-each have: `TryGet<T>(this, out state)`, then `Keep(this, state)`. A save keeps no component state.
+A component keeps what it counts for one holder through its context, never in its own fields.
+
+`ctx.GetState<T>(this)` makes a `T` the first time it's asked for, and keeps it for that holder:
+
+| Component | Its holder |
+| --- | --- |
+| An effect's | One effect application |
+| An ability's | One entity's ability |
+| An entity's | One entity |
+| An item's | One entity's item |
+
+A state that needs more than a constructor with no parameters is made and kept through the holder's `ComponentStates`,
+which `AbilitySpec`, `GameplayEffectSpec` and `ItemSpecContainer` each have:
+
+1. `TryGet<T>(this, out state)` finds the state, where it's kept already.
+2. Where it isn't, make it, then `Keep(this, state)`.
+
+A save keeps no component state.
 
 ### Capabilities other code finds
 
-A component can implement an interface other code asks an asset for:
+A component can implement an interface that other code asks an asset for.
 
-- `IAbilityReach`, `bool TryReadReach(AbilitySpec spec, ProcessDataPacket data, out float range, out bool flat)`: how far
-  its ability reaches. Targeting tasks, the Creator Lab's bots and a game's AI read it through `ForgeReach`.
-- `ICooldownModel`: how many uses its ability holds and how one is spent, in place of the single cooldown.
-  `AbilitySpec.CooldownModel` finds it, and the Cooldown check and the ability's usage go through it, as Charges does.
-- `IAuraComponent` is PlayForge's own components' mark. Nothing reads it; an aura of a component's own is given and taken
-  back from its `Lend` and `TakeBack` through `ForgeAuras.Provide` and `ForgeAuras.Remove`.
+Other code finds a component through its asset's `Find<T>()`, by its class or by an interface it implements, as
+`ability.Find<IAbilityReach>()` or `spec.Find<ICooldownModel>()`.
+
+| Interface | What it answers | Who asks |
+| --- | --- | --- |
+| `IAbilityReach` | How far its ability reaches: `bool TryReadReach(AbilitySpec spec, ProcessDataPacket data, out float range, out bool flat)`. | Targeting tasks, the Creator Lab's bots and a game's AI, through `ForgeReach`. |
+| `ICooldownModel` | How many uses its ability holds and how one is spent, in place of the single cooldown, as Charges does. | `AbilitySpec.CooldownModel` finds it. The Cooldown check and the ability's usage go through it. |
+
+`IAuraComponent` is PlayForge's own components' mark, and nothing reads it. An aura of a component's own is given from
+its `Lend` through `ForgeAuras.Provide`, and taken back from its `TakeBack` through `ForgeAuras.Remove`.
 
 ### Traps
 
+These traps apply to every kind of component.
+
 - **A component is shared.** A field it sets as one entity's moment comes is every entity's. Keep it in the context's
   state.
-- **`CanStart` and `CanTakeTarget` are asked often**, an AI's every request among them. Keep them quick and free of
-  allocation, and of side effects: a refusal must leave nothing behind.
-- **A wind-up is cancelled through its token.** Await with it, and let `OperationCanceledException` pass: it ends the
-  activation as cancelled, its cost unpaid. Any other exception fails the activation, which is written to the Console.
-- **`Granted` and `Removed` have no data**: `ctx.Data` is null there.
-- **A load calls `Lend` and `TakeBack`** on a lasting effect's components, and `Equipped` and `Unequipped` on an item's
-  with `Restoring` true. What a component applied as its asset landed comes back from the save on its own.
 - **`Describe()` runs as The Forge draws**, often: no side effects.
 
 ## Workers
 
-A worker is a small rule an entity holds in a worker group, or an effect holds in its **Workers**, that reacts to what
-happens: an attribute's change, a hit it deals, its tags, its frame's events, an effect's life. This section covers
-writing each kind; [WORKERS.md](WORKERS.md#the-map) maps when each runs and on whose system, and
-[WORKERS.md](WORKERS.md#the-action-queue) the queue its actions wait in.
+A worker is a small rule that reacts to what happens: an attribute's change, a hit it deals, its tags, its frame's
+events, an effect's life.
+
+An entity holds workers in a worker group, and an effect holds them in its **Workers**. This section covers writing each
+kind. [WORKERS.md](WORKERS.md#the-map) maps when each runs and on whose system, and
+[WORKERS.md](WORKERS.md#the-action-queue) covers the queue its actions wait in.
 
 | Base | Picked in | Hooks |
 | --- | --- | --- |
@@ -434,28 +597,64 @@ writing each kind; [WORKERS.md](WORKERS.md#the-map) maps when each runs and on w
 
 A worker group (`StandardWorkerGroup`) sits on an attribute set, an Entity asset, a Forge Project's settings, an item,
 an ability and an effect ([WORKERS.md](WORKERS.md#where-workers-come-from)). Code gives an entity one with
-`group.ProvideWorkersTo(entity)` and takes it back with `group.RemoveWorkersFrom(entity)`.
+`group.ProvideWorkersTo(entity)`, and takes it back with `group.RemoveWorkersFrom(entity)`.
 
 A deferred worker returns actions, `IEnumerable<IRootAction>`, which wait in its entity's action queue for its end of
 frame ([Deferred actions](#deferred-actions)). Return `Array.Empty<IRootAction>()` for none.
 
+Each kind lists its own traps, and Traps, last in this section, lists those every worker shares.
+
 ### Attribute workers
 
-An attribute worker runs inside a change to one of its entity's attributes. `AbstractFocusedAttributeWorker` watches
-one, its **Target Attribute**, and filters the changes it takes by its **Timing** (`TimingConfig`: Pre Change, Post
-Change or both), **Sign Policy**, **Allow Self Modification**, impact types and context tags, and registers itself;
-a worker of it overrides `Execution` and its hook:
+An attribute worker runs inside a change to one of its entity's attributes, where it can edit the change or queue
+actions.
 
-- `EWorkerExecution.Inline`: `Intercept(WorkerContext ctx)` runs inside the change. In Pre Change it edits
-  `ctx.Change.Value`, and what it leaves is what commits.
-- `EWorkerExecution.Deferred`: `DeferredIntercept(WorkerContext ctx)` returns actions, which run at the end of frame.
-- `EWorkerExecution.InlineAndDeferred`: both.
+Derive from `AbstractFocusedAttributeWorker`. It watches one attribute, its **Target Attribute**, and registers itself.
 
-`WorkerContext` holds `System`, the entity whose attribute changes; `AttributeCache`, its attributes' values as they
-stand; `Change`; `FrameSummary`; and `ActionQueue`. `AbstractAttributeWorker` itself leaves everything to the worker:
-`Timing`, `PreValidateWorkFor(ChangeValue)`, a quick first test, `ValidateWorkFor(WorkerContext)`, and
-`RegisterWithHandler` and `DeRegisterFromHandler`, which add it to the pre- and post-change handlers with
-`handler.AddWorker(attribute, this)` and take it off with `RemoveWorker`.
+It filters the changes it takes by its **Timing** (`TimingConfig`: Pre Change, Post Change or both),
+its **Sign Policy**, **Allow Self Modification**, impact types and context tags.
+
+`AbstractRelativeAttributeWorker` adds `GetRelative(ctx)`, the value of the attribute it's relative to.
+
+Its hooks are handed a `WorkerContext`:
+
+| Member | Holds |
+| --- | --- |
+| `System` | The entity whose attribute changes. |
+| `AttributeCache` | Its attributes' values as they stand. |
+| `Change` | The change. |
+| `FrameSummary` | The frame's summary, which records its impacts. |
+| `ActionQueue` | The entity's action queue. |
+
+#### Hooks
+
+A worker of `AbstractFocusedAttributeWorker` overrides `Execution` and its hook:
+
+| Hook | When PlayForge calls it |
+| --- | --- |
+| `Execution` | Says which hook runs: `EWorkerExecution.Inline`, `EWorkerExecution.Deferred`, or `EWorkerExecution.InlineAndDeferred` for both. |
+| `Intercept(WorkerContext ctx)` | Inside the change, for an inline worker. In Pre Change it edits `ctx.Change.Value`, and what it leaves is what commits. |
+| `DeferredIntercept(WorkerContext ctx)` | During the change, for a deferred worker. It returns actions, which run at the end of frame. |
+
+`AbstractAttributeWorker` itself, the base under it, leaves everything to the worker. A worker derived from it directly
+also implements these:
+
+| Hook | When PlayForge calls it |
+| --- | --- |
+| `Timing` | Says when in the change it runs. |
+| `PreValidateWorkFor(ChangeValue)` | First, as a quick test of the change. |
+| `ValidateWorkFor(WorkerContext)` | Then, with the whole context: whether it works on the change. |
+| `RegisterWithHandler`, `DeRegisterFromHandler` | They add it to the pre- and post-change handlers with `handler.AddWorker(attribute, this)`, and take it off with `RemoveWorker`. |
+
+#### In the picker
+
+A worker group's attribute workers offer every class derived from `AbstractAttributeWorker`
+([How a kind is found](#how-a-kind-is-found)). Its constructor can set defaults over its base's, as the example's sets
+its timing and its sign.
+
+#### Example
+
+This worker keeps any one loss of its attribute to a share of the attribute's base, so no hit takes it all:
 
 ```csharp
 using System;
@@ -492,34 +691,60 @@ namespace MyGame
 }
 ```
 
+#### Traps
+
 - **Edit a change by building it again from itself**, as above. `ChangeValue.Add`, `Multiply` and `Override` mark the
-  change workable whatever it was, so a system change they touch starts reaching impact workers and lifesteal
+  change workable whatever it was. So a system change they touch starts reaching impact workers and lifesteal
   ([WORKERS.md](WORKERS.md#workable-and-unworkable)).
-- **An inline worker never changes an attribute itself**, which would run workers inside workers. It edits the change, or
-  it's deferred.
-- `AbstractRelativeAttributeWorker` adds `GetRelative(ctx)`, the value of the attribute it's relative to.
+- **An inline worker never changes an attribute itself**, which would run workers inside workers. It edits the change,
+  or it's deferred.
 
 ### Impact workers
 
 An impact worker runs as a change its holder dealt lands on another's attribute, for the attribute it subscribes to.
+
 **It runs for the dealer**: its context's `System` is its holder, the one who dealt the change, and the one hit is
-`ImpactData.Target`. `ImpactWorkerContext` holds `System`, `ImpactData` (`Target`, `Attribute`, `SourcedModifier`,
-`RealImpact`, `OldValue`), `FrameSummary` and `ActionQueue`.
+`ImpactData.Target`.
+
+Derive from `AbstractContextImpactWorker`, which does the validation and the subscription from its fields, or from
+`AbstractImpactWorker` for a worker that does them itself. Its hooks are handed an `ImpactWorkerContext`:
+
+| Member | Holds |
+| --- | --- |
+| `System` | Its holder, the dealer. |
+| `ImpactData` | The hit: `Target`, `Attribute`, `SourcedModifier`, `RealImpact`, `OldValue`. |
+| `FrameSummary` | The frame's summary. |
+| `ActionQueue` | The action queue. |
+
+`AbstractContextImpactWorker`'s fields are **Impacted Attribute**, impact
+types, **Impact Target**, **Impact Sign**, **Allow Self Impact**, context tags, and a **Work Attribute** for its work.
+
+It starts narrow, **Any Context Tag** off and **Impact Sign** Positive, so it takes only gains carrying the context tags
+it names. A worker of it that means losses from anything says so in its constructor, as the example does.
+
+#### Hooks
 
 `AbstractImpactWorker`'s members:
 
-- `PreValidateWorkFor(ImpactData)`, a quick first test, then `ValidateWorkFor(ImpactData)`.
-- `Execution`: `Deferred` unless it says. A deferred one returns actions from `CreateDeferredActions(ctx)`; an inline one
-  acts in `ActivateInline(ImpactData)`.
-- `SubscribeToCache(ImpactWorkerCache)` and `UnsubscribeFromCache`, which give it to the cache under an attribute with
-  `cache.ProvideWorker(attribute, this)` and take it back with `RemoveWorker`.
-- `OncePerHit`: true runs it once for a hit however many of it its holder has, its project's and its own.
-- **Accept Unworkable Impact** (`AcceptUnworkableImpact`): off, it hears only workable changes.
+| Hook | When PlayForge calls it |
+| --- | --- |
+| `PreValidateWorkFor(ImpactData)` | First, as a quick test. |
+| `ValidateWorkFor(ImpactData)` | Then, as the whole test. |
+| `Execution` | `Deferred` unless it says. |
+| `CreateDeferredActions(ctx)` | For a deferred worker: it returns its actions. |
+| `ActivateInline(ImpactData)` | For an inline worker: it acts here. |
+| `SubscribeToCache(ImpactWorkerCache)`, `UnsubscribeFromCache` | They give it to the cache under an attribute with `cache.ProvideWorker(attribute, this)`, and take it back with `RemoveWorker`. |
+| `OncePerHit` | True runs it once for a hit, however many of it its holder has, its project's and its own. |
+| **Accept Unworkable Impact** (`AcceptUnworkableImpact`) | Off, it hears only workable changes. |
 
-`AbstractContextImpactWorker` does the validation and the subscription from its fields: **Impacted Attribute**, impact
-types, **Impact Target**, **Impact Sign**, **Allow Self Impact**, context tags, and a **Work Attribute** for its work.
-It starts narrow, **Any Context Tag** off and **Impact Sign** Positive, so it takes only gains carrying the context tags
-it names; a worker of it that means losses from anything says so in its constructor:
+#### In the picker
+
+A worker group's impact workers offer every class derived from `AbstractImpactWorker`
+([How a kind is found](#how-a-kind-is-found)). The picker shows `GainOnHitWorker` as **Gain On Hit**.
+
+#### Example
+
+This worker gives its holder some of its **Work Attribute** for each point of loss it deals another, as rage:
 
 ```csharp
 using System;
@@ -560,21 +785,41 @@ namespace MyGame
 ```
 
 `SourcedModifiedAttributeValue.GenerateSimple(source, attribute, current, base)` makes a change of the source's own, a
-workable one. A change made for a worker is never built over the hit's carrier, `ctx.ImpactData.SourcedModifier`: that
-would count as the hit's effect again.
+workable one.
+
+#### Traps
+
+- **An impact worker's System is the dealer** ([WORKERS.md](WORKERS.md#traps)).
+- **A change made for a worker is never built over the hit's carrier**, `ctx.ImpactData.SourcedModifier`: that would
+  count as the hit's effect again.
 
 ### Tag workers
 
-A tag worker acts while its entity's tags meet its **Tag Requirements**. Its hooks are handed the entity:
+A tag worker acts while its entity's tags meet its **Tag Requirements**.
 
-- `Activate(system)`, as its requirements come to be met, and `Resolve(system)`, as they no longer are. Each runs as an
-  action at the entity's end of frame, at `ActionPriority.TagWorker`.
-- `Tick(system)`, at each end of frame while they hold, after the activations. **Tick Pause** (`TickPause`) is the
-  frames between ticks, read at the entity's level: 0 ticks every frame, -1, as it starts, never. It counts frames, not
-  seconds.
-- `ValidateWorkFor(ITagHandler)`: whether its requirements are met, by default its packets' weights.
-- `EvaluateEveryFrame`: true has it asked in every end of frame, for a worker whose `ValidateWorkFor` reads more than
-  tags; otherwise it's asked only in a frame the entity's tags changed.
+Derive from `AbstractTagWorker`. Its hooks are handed the entity.
+
+#### Hooks
+
+| Hook | When PlayForge calls it |
+| --- | --- |
+| `Activate(system)` | As its requirements come to be met. It runs as an action at the entity's end of frame, at `ActionPriority.TagWorker`. |
+| `Resolve(system)` | As they no longer are. It runs as an action the same way. |
+| `Tick(system)` | At each end of frame while they hold, after the activations, as its **Tick Pause** says. |
+| `ValidateWorkFor(ITagHandler)` | Whether its requirements are met: by default, its packets' weights. |
+| `EvaluateEveryFrame` | True has it asked in every end of frame, for a worker whose `ValidateWorkFor` reads more than tags. Otherwise it's asked only in a frame the entity's tags changed. |
+
+**Tick Pause** (`TickPause`) is the frames between ticks, read at the entity's level. 0 ticks every frame, and -1, the
+value it starts at, never ticks. It counts frames, not seconds.
+
+#### In the picker
+
+A worker group's tag workers offer every class derived from `AbstractTagWorker`
+([How a kind is found](#how-a-kind-is-found)).
+
+#### Example
+
+This worker sends its entity an event as its tag requirements come to be met, and another as they stop:
 
 ```csharp
 using System;
@@ -608,20 +853,40 @@ namespace MyGame
 }
 ```
 
-The events feed the entity's abilities' triggers and their Wait For Event tasks. A tag worker is handed only its entity,
-and it's one object for every entity that holds it: what it keeps for one entity goes in an entity service or the
-entity's Local Data.
+The events feed the entity's abilities' triggers and their Wait For Event tasks.
+
+#### Traps
+
+- **A tag worker is handed only its entity**, and it's one object for every entity that holds it. What it keeps for one
+  entity goes in an entity service or the entity's Local Data.
 
 ### Analysis workers
 
-An analysis worker reads its entity's frame as it ends, after the tag workers: `Analyze(IGameplayAbilitySystem system,
-FrameSummary frameSummary)` returns the actions it queues. The summary holds the frame's impacts, dealt and received
-(`ImpactsDealt`, `ImpactsReceived`, and by attribute, target and source), the effects applied and removed, the deaths,
-and the actions dropped and failed.
+An analysis worker reads its entity's frame as it ends, after the tag workers.
 
-For a worker that fires once, the base keeps a mark in the entity's Local Data: `HasTriggered(system)`,
-`SetTriggered(system)` and `ResetTriggered(system)`, under its own key, `MyKey`. A revive calls `Rearm(system)`, which
-resets it.
+Derive from `AbstractAnalysisWorker`. Its hook is handed the entity and the frame's summary.
+
+The summary holds the frame's impacts, dealt and received (`ImpactsDealt`, `ImpactsReceived`, and by attribute, target
+and source). It also holds the effects applied and removed, the deaths, and the actions dropped and failed.
+
+For a worker that fires once, the base keeps a mark in the entity's Local Data, under its own key, `MyKey`.
+`HasTriggered(system)` reads the mark, `SetTriggered(system)` sets it, and `ResetTriggered(system)` clears it.
+
+#### Hooks
+
+| Hook | When PlayForge calls it |
+| --- | --- |
+| `Analyze(IGameplayAbilitySystem system, FrameSummary frameSummary)` | At every end of frame of every entity that holds the worker, after the tag workers. It returns the actions it queues. |
+| `Rearm(system)` | As the entity revives. It resets the mark. |
+
+#### In the picker
+
+A worker group's analysis workers offer every class derived from `AbstractAnalysisWorker`
+([How a kind is found](#how-a-kind-is-found)).
+
+#### Example
+
+This worker applies an effect to its entity in a frame it deals enough hits to others:
 
 ```csharp
 using System;
@@ -660,22 +925,53 @@ namespace MyGame
 }
 ```
 
-`Analyze` runs at every end of frame of every entity that holds the worker. A method that `yield return`s makes an
-object each call, so one that usually returns nothing returns `Array.Empty<IRootAction>()` instead, as above.
+#### Traps
+
+- **`Analyze` runs at every end of frame** of every entity that holds the worker. A method that `yield return`s makes an
+  object each call. So one that usually returns nothing returns `Array.Empty<IRootAction>()` instead, as above.
 
 ### Effect workers
 
-An effect worker hears its effect's life. Each hook is handed an `EffectWorkerContext` and returns actions:
+An effect worker hears its effect's life: as it lands, as it lasts, as it comes off, and as a change it made lands.
 
-| Hook | Called | `System` |
-| --- | --- | --- |
-| `OnEffectApplication(ctx)` | As the effect lands. | The one it's on |
-| `OnEffectTick(ctx)` | Every frame a periodic effect lasts, with `ExecuteTicks`, the ticks that frame executes: most frames none. | The one it's on |
-| `OnEffectRemoval(ctx)` | As it comes off. | The one it's on |
-| `OnEffectImpact(ctx)` | As a change it made lands, with `ImpactData`. | The dealer, its caster |
+Derive from `AbstractEffectWorker`. An effect holds it in its **Workers**. Each hook is handed an `EffectWorkerContext`
+and returns actions:
 
-The context also holds `Carrier`, the effect's application, with `Spec` the same as a `GameplayEffectSpec`;
-`FrameSummary`; `ActionQueue`; `Impacts`; and `GetState<T>(this)`, what the worker keeps for this application.
+| Member | Holds |
+| --- | --- |
+| `System` | The one it's on, or for `OnEffectImpact` the dealer. |
+| `Carrier` | The effect's application, with `Spec` the same as a `GameplayEffectSpec`. |
+| `ExecuteTicks` | For a tick, the ticks that frame executes. |
+| `ImpactData` | For an impact, the change that landed. |
+| `Impacts` | For an instant effect's removal, every impact it made, one for each attribute. Empty otherwise. |
+| `FrameSummary` | The frame's summary. |
+| `ActionQueue` | The action queue. |
+| `GetState<T>(this)` | What the worker keeps for this application. |
+
+Two bases under it add more:
+
+- `AbstractAccumulatingEffectWorker` adds a running total of the effect's impacts, through `GetAccumulationData(ctx)`,
+  which a worker of it implements to keep that total.
+- `TargetAttributeThresholdEffectWorker` queues the actions its `OnThresholdMet(ctx)` returns as its target's attribute
+  meets a threshold.
+
+#### Hooks
+
+| Hook | When PlayForge calls it |
+| --- | --- |
+| `OnEffectApplication(ctx)` | As the effect lands. `System` is the one it's on. |
+| `OnEffectTick(ctx)` | Every frame a periodic effect lasts, with `ExecuteTicks`, the ticks that frame executes: most frames none. `System` is the one it's on. |
+| `OnEffectRemoval(ctx)` | As it comes off. `System` is the one it's on. |
+| `OnEffectImpact(ctx)` | As a change it made lands, with `ImpactData`. `System` is the dealer, its caster. |
+
+#### In the picker
+
+An effect's **Workers** list offers every class derived from `AbstractEffectWorker`
+([How a kind is found](#how-a-kind-is-found)).
+
+#### Example
+
+This worker applies an effect from the caster as its effect comes off, once it has ticked enough:
 
 ```csharp
 using System;
@@ -719,57 +1015,75 @@ namespace MyGame
 }
 ```
 
-`AbstractAccumulatingEffectWorker` adds a running total of the effect's impacts, through
-`GetAccumulationData(ctx)`, which a worker of it keeps; `TargetAttributeThresholdEffectWorker` queues the actions its
-`OnThresholdMet(ctx)` returns as its target's attribute meets a threshold.
+#### Traps
+
+- **`OnEffectTick` runs every frame** of a periodic effect, not on each tick. Act where `ExecuteTicks` is above 0.
+- **`OnEffectImpact` runs on the dealer's side**, as an impact worker does.
 
 ### A worker that answers a number
 
-A worker of any kind that implements `INumberWorker`, `bool TryGetNumber(Tag key, in NumberContext context, out float
-value)`, answers number fields of the Worker kind under a key ([SCALERS.md](SCALERS.md#asking-a-worker)).
+A worker of any kind can answer number fields of the Worker kind, under a key.
+
+Implement `INumberWorker` on the worker, beside its base.
+
+| Hook | When PlayForge calls it |
+| --- | --- |
+| `bool TryGetNumber(Tag key, in NumberContext context, out float value)` | As a number field of the Worker kind asks it for its key ([SCALERS.md](SCALERS.md#asking-a-worker)). |
 
 ### Traps
 
-- **An impact worker's System is the dealer**, and an effect worker's `OnEffectImpact` runs on the dealer's side too
-  ([WORKERS.md](WORKERS.md#traps)).
-- **`OnEffectTick` runs every frame** of a periodic effect, not on each tick. Act where `ExecuteTicks` is above 0.
+These traps apply to every kind of worker.
+
 - **A deferred worker's actions wait for the end of frame**, so what it reads as it builds them may have changed as they
   run. An action reads the state it acts on as it executes.
 - **A worker is shared**: a tag or analysis worker keeps nothing for one entity in its fields.
-- **Allocation.** Workers run in the frame's hot path; an attribute worker for every change. Hold back from new lists,
+- **Allocation.** Workers run in the frame's hot path, an attribute worker for every change. Hold back from new lists,
   closures and iterators in a hook that runs for every change, and return `Array.Empty<IRootAction>()` for nothing.
 
 ## Deferred actions
 
-A deferred action is a piece of work queued to an entity that runs at its end of frame, by priority: what deferred
-workers return, and what any code queues with `entity.GetActionQueue().Enqueue(action)`. This section covers writing one;
-[WORKERS.md](WORKERS.md#the-action-queue) covers when the queue runs and what it tells.
+A deferred action is a piece of work queued to an entity that runs at its end of frame, by priority.
+
+Deferred workers return them, and any code queues one with `entity.GetActionQueue().Enqueue(action)`. This section
+covers writing one; [WORKERS.md](WORKERS.md#the-action-queue) covers when the queue runs and what it tells.
+
+### Writing an action
+
+An action of a game's own does a piece of work at an entity's end of frame, as sending it an event once the frame's
+changes have run.
+
+Implement `IRootAction`. For an action that holds only while its carrier's origin is active, derive from
+`EffectScopedAction` instead:
+
+- an ability's holds while a run of it is active;
+- an item's holds while it's equipped;
+- an entity's holds always.
+
+`EffectScopedAction` takes the carrier in its constructor, keeps it as `carrier`, and leaves `Description` and `Execute`
+to its kind.
+
+#### Hooks
 
 `IRootAction` has four members:
 
-- `int Priority { get; }`: higher runs first, in the order queued within one. `ActionPriority` names the levels:
-  `Critical` (100), `High` (50), `Normal` (0), `Low` (-50), `TagWorker` (-100), `Analysis` (-200), `Cleanup` (-300).
-  `Enqueue(action, priorityOverride)` queues one at another.
-- `bool IsValid { get; }`: asked as its turn comes; false drops it unrun.
-- `string Description { get; }`: its line in the logs, the debugger and the effect journal.
-- `void Execute(ISource system)`: its work. `system` is the entity whose queue runs it.
-
-PlayForge's own, each usable from a game's code:
-
-| Action | Does |
+| Hook | When PlayForge calls it |
 | --- | --- |
-| `ModifyAttributeAction(target, attribute, value, runEvents = true, priority = null)` | Changes an attribute by a `SourcedModifiedAttributeValue`. |
-| `ApplyEffectAction(target, effect, origin, priority = null)` | Applies an effect from an origin. |
-| `RemoveEffectAction(target, effect, priority = null)` | Removes an effect. |
-| `LambdaAction(action, description, priority, isValid)` | Runs a function, while its validity check, if it's given one, holds. |
-| `LogAction` | Writes a line through `ForgeLog`. |
-| `DeathAction(system)` | Kills the entity, at `Critical`. |
+| `int Priority { get; }` | As the queue orders its actions. Higher runs first, and within one priority, in the order queued. |
+| `bool IsValid { get; }` | As its turn comes. False drops it unrun. |
+| `string Description { get; }` | Its line in the logs, the debugger and the effect journal. |
+| `void Execute(ISource system)` | As its turn comes, where it's valid: its work. `system` is the entity whose queue runs it. |
 
-`EffectScopedAction` is a base for an action that holds while its carrier's origin is active: an ability's while a run
-of it is active, an item's while it's equipped, an entity's always. It takes the carrier in its constructor, keeps it
-as `carrier`, and leaves `Description` and `Execute` to its kind.
+`ActionPriority` names the levels: `Critical` (100), `High` (50), `Normal` (0), `Low` (-50), `TagWorker` (-100),
+`Analysis` (-200), `Cleanup` (-300). `Enqueue(action, priorityOverride)` queues one at another priority.
 
-An action of a game's own:
+#### In the picker
+
+No picker offers an action. A deferred worker returns it, or code queues it with
+`entity.GetActionQueue().Enqueue(action)`.
+
+#### Example
+
+This action sends an entity a gameplay event once the frame's changes have run:
 
 ```csharp
 using FarEmerald.PlayForge;
@@ -798,45 +1112,82 @@ namespace MyGame
 }
 ```
 
-- **The queue runs in the entity's end of frame**, which a Mono hub runs as it steps in LateUpdate: its process timing
+#### Traps
+
+- **The queue runs in the entity's end of frame**, which a Mono hub runs as it steps in LateUpdate. Its process timing
   takes LateUpdate, as Update And Late does, or its queue never runs.
 - **An action queued to another entity runs at that entity's end of frame**: this frame if it's still to come, by the
   order the entities step in, or the next.
 - **An action that throws is caught**: it's told as failed, written to the Console, and the rest of the queue runs.
-- **An action the system makes for itself is used again** once the queue has run it, so a listener of the queue's events
-  reads it during the call and keeps nothing of it.
+- **An action the system makes for itself is used again** once the queue has run it. So a listener of the queue's events
+  reads it during the call, and keeps nothing of it.
 - **An action that queues another for good is cut off** at 10,000 a pass, with an error.
+
+### PlayForge's own actions
+
+PlayForge's own actions are each usable from a game's code.
+
+| Action | Does |
+| --- | --- |
+| `ModifyAttributeAction(target, attribute, value, runEvents = true, priority = null)` | Changes an attribute by a `SourcedModifiedAttributeValue`. |
+| `ApplyEffectAction(target, effect, origin, priority = null)` | Applies an effect from an origin. |
+| `RemoveEffectAction(target, effect, priority = null)` | Removes an effect. |
+| `LambdaAction(action, description, priority, isValid)` | Runs a function, while its validity check, if it's given one, holds. |
+| `LogAction` | Writes a line through `ForgeLog`. |
+| `DeathAction(system)` | Kills the entity, at `Critical`. |
 
 ## Ability tasks
 
 An ability task is a step of an ability's stage: it's picked in a stage's **Tasks**, runs with the stage, and is handed
-the activation's data. This section covers writing one; [ABILITIES.md](ABILITIES.md#stages) covers stages.
+the activation's data.
 
-`AbstractAbilityTask` (from `AbstractAbilityRelatedTask`):
+This section covers writing one; [ABILITIES.md](ABILITIES.md#stages) covers stages.
 
-| Member | Is |
+### Stage tasks
+
+A stage task is one step of an ability's stage, as applying an effect to the target several times.
+
+Derive from `AbstractAbilityTask` (from `AbstractAbilityRelatedTask`). Its hooks are handed the activation's data, an
+`AbilityDataPacket`, which holds the activation:
+
+| Member | Holds |
 | --- | --- |
-| `IsCriticalSection` | Required. True holds the ability's claim while its stage runs, so the entity's other activations wait or are refused as their When Busy says, and the run takes only the injections its critical policy allows, an interrupt by default. A run with no critical stage lets its claim go as it starts. |
+| `data.EffectOrigin` | The ability's spec, whose `GetSource()` is the caster. |
+| `data.AbilitySpec` | The same, as an `AbilitySpec`. |
+| `data.TryGetFirstTarget(out ITarget target)`, `data.TryGetTarget(EDataTarget policy, out target)` | The entities its targeting picked, filed under `Tags.TARGET_REAL`. |
+| `data.GetTargetingPacket(Tags.TARGET, out var packet, autoInterrupt: false)` | The pick's place, an entity's or a point's. With `autoInterrupt` on, its default, a missing pick interrupts the run. |
+| `data.TryGet(Tags.POSITION, EDataTarget.Primary, out Vector3 point)`, `data.AddPayload(key, value)`, `data.TryGetFirst(key, out T value)` | Anything filed under a tag. |
+| `data.GetTaskState<T>(this)` | What the task keeps for this activation. |
+
+Its helpers are protected and static:
+
+- `Read(number, data)`: a `ScalableFloat` or `ScalableInt` read at the ability's level.
+- `EntityOf(data, NumberSide.Caster)` and `NumberSide.Target`: its caster, or the activation's first target.
+- `ApplyTo(data, target, effect)`: applies an effect from the activation, with the magnitudes its caller set.
+
+#### Hooks
+
+| Hook | When PlayForge calls it |
+| --- | --- |
+| `IsCriticalSection` | Required. True holds the ability's claim while its stage runs. |
 | `Prepare(data)` | Before its stage's tasks run. |
-| `Activate(data, token)` | Required. Its work, awaited. An interrupt cancels the token. |
+| `Activate(data, token)` | Required: its work, awaited. An interrupt cancels the token. |
 | `Clean(data)` | After it ends, however it ended. |
 | `Description` | Its line in the ability's breakdown. |
 
-Its helpers, protected and static: `Read(number, data)`, a `ScalableFloat` or `ScalableInt` read at the ability's
-level; `EntityOf(data, NumberSide.Caster)` and `NumberSide.Target`; and `ApplyTo(data, target, effect)`, which applies
-an effect from the activation with the magnitudes its caller set.
+While a critical stage holds the claim, the entity's other activations wait or are refused, as their When Busy says. The
+run takes only the injections its critical policy allows, an interrupt by default. A run with no critical stage lets its
+claim go as it starts.
 
-The data, an `AbilityDataPacket`, holds the activation:
+#### In the picker
 
-- `data.EffectOrigin`, the ability's spec, whose `GetSource()` is the caster; `data.AbilitySpec`, the same as an
-  `AbilitySpec`.
-- `data.TryGetFirstTarget(out ITarget target)` and `data.TryGetTarget(EDataTarget policy, out target)`: the entities its
-  targeting picked, filed under `Tags.TARGET_REAL`.
-- `data.GetTargetingPacket(Tags.TARGET, out var packet, autoInterrupt: false)`: the pick's place, an entity's or a
-  point's. With `autoInterrupt` on, its default, a missing pick interrupts the run.
-- `data.TryGet(Tags.POSITION, EDataTarget.Primary, out Vector3 point)`, `data.AddPayload(key, value)`,
-  `data.TryGetFirst(key, out T value)`: anything filed under a tag.
-- `data.GetTaskState<T>(this)`: what the task keeps for this activation.
+A stage's **Tasks** offer every class derived from `AbstractAbilityTask` ([How a kind is found](#how-a-kind-is-found)).
+The example's `[ForgeMenu("Effects")]` files it under the Effects submenu, where the picker shows `PulseTask`
+as **Pulse**.
+
+#### Example
+
+This task applies its effect to the target several times, a pause apart:
 
 ```csharp
 using System;
@@ -880,50 +1231,92 @@ namespace MyGame
 }
 ```
 
+#### Traps
+
 - **Wait through the task library or the run's clock.** `SequenceTaskLibrary.Delay(seconds, token)` and the library's
-  other waits hold while the run is paused. A loop of its own reads `TaskSequenceRuntime.ClockOfRun(token, data)` for
-  the run's clock and awaits `ForgeTick.Next(clock, token)` or `ForgeTick.NextFrame(token)`.
+  other waits hold while the run is paused.
+  - A loop of its own reads `TaskSequenceRuntime.ClockOfRun(token, data)` for the run's clock, and awaits
+    `ForgeTick.Next(clock, token)` or `ForgeTick.NextFrame(token)`.
 - **Await with the token.** An interrupt cancels it, and a task that ignores it runs on after its ability has ended.
 - **One task serves every activation**: keep what one activation counts in `data.GetTaskState<T>(this)`.
-- **A stage's policy is All or Any.** An ability compiles only those two; a stage policy of another type
+- **A stage's policy is All or Any.** An ability compiles only those two. A stage policy of another type
   (`IAbilityProxyStagePolicy`) runs as All, with a warning.
 
 ### Asset loaders
 
-An asset loader, picked in an ability's **Asset Loaders**, puts assets in the activation's data for its tasks to read.
-It derives from `AbstractSetAssetsTask`, whose `Activate` does nothing; it overrides `IsCriticalSection` and does its
-work in `Prepare(data)`, with `data.AddPayload(tag, asset)`. An ability's loaders run once an activation, after its
-targeting and before its first stage, each prepared, activated and cleaned at once: a loader's `Activate` isn't awaited.
+An asset loader puts assets in the activation's data for its tasks to read.
+
+Derive from `AbstractSetAssetsTask`, whose `Activate` does nothing. A loader overrides `IsCriticalSection`, and does its
+work in `Prepare(data)`, with `data.AddPayload(tag, asset)`.
+
+#### Hooks
+
+| Hook | When PlayForge calls it |
+| --- | --- |
+| `Prepare(data)` | Once an activation, after its targeting and before its first stage. The loader's work goes here. |
+| `IsCriticalSection` | Required, as for every ability task. |
+
+An ability's loaders run once an activation, after its targeting and before its first stage. Each is prepared, activated
+and cleaned at once, so a loader's `Activate` isn't awaited.
+
+#### In the picker
+
+An ability's **Asset Loaders** offer every class derived from `AbstractSetAssetsTask`.
 
 ## Targeting tasks
 
-A targeting task picks what an activation acts on before its stages run: it's the ability's **Targeting**, one task, run
-as the activation starts. This section covers writing one, and what a task must do while its ability waits on it.
+A targeting task picks what an activation acts on before its stages run.
 
-`AbstractTargetingAbilityTask` (from `AbstractAbilityRelatedTask`, not marked `[Serializable]`: mark a task of your own):
+It's the ability's **Targeting**, one task, run as the activation starts. This section covers writing one, and what a
+task must do while its ability waits on it. Traps, last in this section, lists a targeting task's traps.
 
-| Member | Is |
-| --- | --- |
-| `Activate(data, token)` | Required. Picks, and files the pick's targeting packet with `data.SetTargetingPacket(Tags.TARGET, packet)`, or several with `data.SetTargetingPackets(Tags.TARGET, targets)`, the first the primary; or calls `WhenTargetingInvalid(data)`. |
-| `Prompt` | The words a game shows while the task waits for the player, as "Click a point on the ground"; null for a task that doesn't wait for the player. `PressWords(button)` gives "Click", "Right-click" or "Middle-click". |
-| `TargetIsValid(...)` | Which targets it takes: an `ITarget`, a `GameObject`, a `Transform` or a point. |
-| `WhenTargetingInvalid(data)` | Marks the targeting failed and, with **Break Runtime On Invalid** on (`BreakRuntimeOnInvalid`), throws `OperationCanceledException`, which ends the activation as cancelled. |
-| `ConnectInputHandler(data)`, `DisconnectInputHandler(data)` | Hook an input handler of its own as it's prepared, and unhook it as it's cleaned. A false from `ConnectInputHandler` fails the targeting. An override of `Prepare` calls the base's last. |
-| `IsCriticalSection` | True: targeting holds the activation's claim. |
+### Writing a targeting task
 
-Its helpers: `TryGetDataTarget(data, out target)` and `TryGetDataPoint(data, out point)`, a target or a point the
-activation's data holds already, as an AI's request does; and `WaitForPointerPress(button, token)`, which waits for a
-press of the game's input, `ForgeInput.Current`, and gives the ray it aims along, or null with nothing to aim through.
+A targeting task of a game's own picks an activation's target its own way, as a click near an enemy.
+
+Derive from `AbstractTargetingAbilityTask` (from `AbstractAbilityRelatedTask`). It isn't marked `[Serializable]`, so
+mark a task of your own.
+
 `AbstractGasTargetingAbilityTask` adds **Requirements** (`AvoidRequireTagGroup`), which an entity's applied tags must
 meet.
 
+Its helpers:
+
+- `TryGetDataTarget(data, out target)` and `TryGetDataPoint(data, out point)`: a target or a point the activation's data
+  holds already, as an AI's request does.
+- `WaitForPointerPress(button, token)`: waits for a press of the game's input, `ForgeInput.Current`. It gives the ray it
+  aims along, or null with nothing to aim through.
+- `PressWords(button)`: "Click", "Right-click" or "Middle-click", for a `Prompt`.
+
+#### Hooks
+
+| Hook | When PlayForge calls it |
+| --- | --- |
+| `Activate(data, token)` | Required: it picks, and files the pick's targeting packet with `data.SetTargetingPacket(Tags.TARGET, packet)`, or several with `data.SetTargetingPackets(Tags.TARGET, targets)`, the first the primary. Or it calls `WhenTargetingInvalid(data)`. |
+| `Prompt` | While the task waits for the player: the words a game shows, as "Click a point on the ground". Null for a task that doesn't wait for the player. |
+| `TargetIsValid(...)` | Which targets it takes: an `ITarget`, a `GameObject`, a `Transform` or a point. |
+| `WhenTargetingInvalid(data)` | Marks the targeting failed. With **Break Runtime On Invalid** on (`BreakRuntimeOnInvalid`), it throws `OperationCanceledException`, which ends the activation as cancelled. |
+| `ConnectInputHandler(data)`, `DisconnectInputHandler(data)` | As it's prepared, to hook an input handler of its own, and as it's cleaned, to unhook it. A false from `ConnectInputHandler` fails the targeting. |
+| `IsCriticalSection` | True: targeting holds the activation's claim. |
+
 What follows a task's pick:
 
-1. The ability's components hear it in `CanTakeTarget` and may refuse it ([Components](#components)).
-2. The pick resolves: the entity each packet under `Tags.TARGET`, or the ability's implicit tag, points at is filed
+1. The ability's components hear it in `CanTakeTarget`, and may refuse it ([Components](#components)).
+2. The pick resolves. The entity each packet under `Tags.TARGET`, or the ability's implicit tag, points at is filed
    under `Tags.TARGET_REAL`, where tasks and checks find it.
 3. Where the pick is an entity, the caster's checks and the components' `CanStart` are asked again, then the Target
-   Checks on the target. Then come the wind-ups, the cost and the first stage.
+   Checks on the target.
+4. Then come the wind-ups, the cost and the first stage.
+
+#### In the picker
+
+An ability's **Targeting** offers every class derived from `AbstractTargetingAbilityTask`
+([How a kind is found](#how-a-kind-is-found)). The picker shows `ClickNearestEnemyTargetTask`
+as **Click Nearest Enemy**.
+
+#### Example
+
+The player clicks the ground, and the enemy nearest the click is the target:
 
 ```csharp
 using System;
@@ -992,53 +1385,74 @@ namespace MyGame
 
 ### While it waits
 
-A task that waits for the player holds its ability in targeting, and the game shows it:
+A task that waits for the player holds its ability in targeting, and the game shows it.
 
 - **The slot says it's choosing.** `AbilitySpecContainer.IsTargeting` is true while a run of the ability waits on its
-  targeting; a game shows the ability's targeting's `Prompt` beside its name while it is. A task that doesn't wait for
-  the player returns a null `Prompt`.
-- **Another ability can take its place.** As another of the entity's abilities activates on a request that cancels
-  targeting, a player's press, an ability still choosing gives way where its **While Targeting** says it yields: its
-  own **Yields**, or **Entity's Rule**, which follows the entity's **Targeting Yields**. **Holds** keeps it. A trigger's
-  request and an activation at start don't cancel targeting (`AbilityActivationRequest.CancelsTargeting` is off for
-  them), and code that makes a request chooses.
-- **Giving way cancels the task's token.** Its claim lets go at once, so the other activation starts while the
-  cancelled task winds down. Nothing of the activation is paid, it ends as cancelled, and the task's `Clean` runs.
+  targeting. A game shows the ability's targeting's `Prompt` beside its name while it is.
+- A task that doesn't wait for the player returns a null `Prompt`.
+- **Another ability can take its place.** Another of the entity's abilities may activate on a request that cancels
+  targeting, as a player's press. An ability still choosing then gives way where its **While Targeting** says it yields.
+  - **Yields** gives way.
+  - **Entity's Rule** follows the entity's **Targeting Yields**.
+  - **Holds** keeps it.
+- A trigger's request and an activation at start don't cancel targeting: `AbilityActivationRequest.CancelsTargeting` is
+  off for them. Code that makes a request chooses.
+- **Giving way cancels the task's token.** Its claim lets go at once, so the other activation starts while the cancelled
+  task winds down. Nothing of the activation is paid, it ends as cancelled, and the task's `Clean` runs.
 
-So a task awaits with its token, as `WaitForPointerPress` does, and once its token is cancelled it files nothing and
-applies nothing. A pick filed after the token was cancelled lands in an activation that's gone.
+So a task awaits with its token, as `WaitForPointerPress` does. Once its token is cancelled, it files nothing and
+applies nothing: a pick filed after the token was cancelled lands in an activation that's gone.
 
 ### Traps
 
-- **No task state.** `data.GetTaskState<T>` takes an ability task; a targeting task keeps what it needs in its
+These traps apply to every targeting task.
+
+- **An override of `Prepare` calls the base's last**, which connects the input handler.
+- **No task state.** `data.GetTaskState<T>` takes an ability task. A targeting task keeps what it needs in its
   `Activate`'s locals.
-- **Take a handed target first.** An AI's or a replay's activation hands its target in its data; a task that waits for a
+- **Take a handed target first.** An AI's or a replay's activation hands its target in its data. A task that waits for a
   click whatever the data holds can't be cast by an AI.
 - **An exception other than a cancellation fails the activation**, written to the Console.
 - **The pick is a packet.** `SetTargetingPacket` files a place: an entity's packet points at its entity, and a
-  `StaticTargetingPacket(point)` at none. An activation whose pick is a point has no target, so its Target Checks
-  don't run.
+  `StaticTargetingPacket(point)` at none. An activation whose pick is a point has no target, so its Target Checks don't
+  run.
 
 ## Sequence tasks, injections and stage policies
 
 A task sequence runs stages of tasks, built in code with `TaskSequenceBuilder` ([TASK_SEQUENCES.md](TASK_SEQUENCES.md)).
+
 This section covers what a game writes for one: a task, an injection that changes a run as it goes, a stage policy that
 says when a stage ends, and a method the inspector's sequence pickers list.
 
 ### Tasks
 
-`ISequenceTask` has four members, and two bases fill in what a task doesn't need:
+A sequence task is one step of a sequence's stage, run in an async sequence or a synced one.
 
-| Member | Called |
+Implement `ISequenceTask`, or derive from one of two bases that fill in what a task doesn't need:
+
+| Base | What it fills in |
+| --- | --- |
+| `SequenceTaskBase` | `Execute` is required, and its `Step` ends at once, so it does nothing in a synced sequence. |
+| `SyncSequenceTaskBase` | `Step` is required. Its `Execute` steps it once a frame with the run's clock, holding while the run is paused, so one task serves both kinds. |
+
+#### Hooks
+
+`ISequenceTask` has four members:
+
+| Hook | When PlayForge calls it |
 | --- | --- |
 | `Prepare(SequenceDataPacket data)` | Before its first step or its run. |
 | `UniTask Execute(SequenceDataPacket data, CancellationToken token)` | Its run, in an async sequence. |
-| `bool Step(SequenceDataPacket data, float deltaTime)` | Each frame in a synced sequence, with the run's time; true ends it. |
+| `bool Step(SequenceDataPacket data, float deltaTime)` | Each frame in a synced sequence, with the run's time. True ends it. |
 | `Clean(SequenceDataPacket data)` | After it ends, however it ended. |
 
-- `SequenceTaskBase`: `Execute` is required, and its `Step` ends at once, so it does nothing in a synced sequence.
-- `SyncSequenceTaskBase`: `Step` is required, and its `Execute` steps it once a frame with the run's clock, holding while
-  the run is paused, so one task serves both kinds.
+#### In the picker
+
+No picker offers a sequence task: code builds it into a stage with `TaskSequenceBuilder`, as the example below does.
+
+#### Example
+
+This task fades a canvas group to an alpha over a time, in an async sequence or a synced one:
 
 ```csharp
 using FarEmerald.PlayForge;
@@ -1088,15 +1502,28 @@ namespace MyGame
 }
 ```
 
-`MenuSequences.FadeOut(group).RegisterAndRun(SequenceDataPacket.Default())` runs it under ProcessControl. A task keeps
-its state in its own fields here, so one object serves one run at a time: a sequence that runs several at once builds a
-task for each, or keeps a run's state in its data packet.
+`MenuSequences.FadeOut(group).RegisterAndRun(SequenceDataPacket.Default())` runs it under ProcessControl.
+
+#### Traps
+
+- **A task that keeps its state in its own fields serves one run at a time**, as this one does. A sequence that runs
+  several at once builds a task for each, or keeps a run's state in its data packet.
 
 ### A sequence the inspector lists
 
-An ability's Run Sequence task and a Sequence cue pick a sequence from a dropdown of the project's methods marked
-`[TaskSequenceMethod]`: static, taking no parameters, and returning a `TaskSequence`, a `TaskSequenceChain` or a
-`TaskSequenceDefinition`. The dropdown names each by its `[TaskSequenceMethod("...")]` name, or its method's.
+A method marked `[TaskSequenceMethod]` offers its sequence to an ability's Run Sequence task and a Sequence cue.
+
+Those two pick a sequence from a dropdown of the project's methods marked `[TaskSequenceMethod]`. Such a method is:
+
+- static;
+- taking no parameters;
+- returning a `TaskSequence`, a `TaskSequenceChain` or a `TaskSequenceDefinition`.
+
+#### In the picker
+
+The dropdown names each by its `[TaskSequenceMethod("...")]` name, or its method's.
+
+#### Example
 
 ```csharp
 using System.Threading;
@@ -1117,15 +1544,33 @@ namespace MyGame
 
 ### Injections
 
-An injection changes a run as it goes: `ISequenceInjection`'s one member, `bool Apply(TaskSequenceRuntime runtime)`,
-acts on the run and says whether it took effect. It reaches a run through `runtime.Inject(injection)`,
-`sequence.Inject(injection)` for every run of a sequence, the builder's `InjectWhen`, and an ability's Inject task,
-whose picker lists a `[Serializable]` injection with a constructor that takes nothing.
+An injection changes a run as it goes, as a skip, a jump or an interrupt.
 
-`TaskSequenceRuntime` gives an injection the run: `Data`, `StageIndex`, `CurrentStage`, `IsRunning`, `IsPaused`,
-`Pause()`, `Resume()` and `Inject`. The skips, jumps and interrupts themselves are the built-in injections'
-(`SkipStageInjection`, `JumpToStageInjection`, `InterruptSequenceInjection` and the rest), which an injection of a game's
-own composes:
+Implement `ISequenceInjection`. Its hook is handed the run, a `TaskSequenceRuntime`, which gives it `Data`,
+`StageIndex`, `CurrentStage`, `IsRunning`, `IsPaused`, `Pause()`, `Resume()` and `Inject`.
+
+The skips, jumps and interrupts themselves are the built-in injections': `SkipStageInjection`, `JumpToStageInjection`,
+`InterruptSequenceInjection` and the rest. An injection of a game's own composes them.
+
+#### Hooks
+
+| Hook | When PlayForge calls it |
+| --- | --- |
+| `bool Apply(TaskSequenceRuntime runtime)` | As it's injected into a run. It acts on the run, and says whether it took effect. |
+
+#### In the picker
+
+An injection reaches a run four ways:
+
+- `runtime.Inject(injection)`, into one run;
+- `sequence.Inject(injection)`, into every run of a sequence;
+- the builder's `InjectWhen`;
+- an ability's Inject task, whose picker lists a `[Serializable]` injection with a constructor that takes nothing. It
+  shows `SkipIfTaggedInjection` as **Skip If Tagged**.
+
+#### Example
+
+This injection skips the current stage where the caster carries a tag:
 
 ```csharp
 using System;
@@ -1154,17 +1599,38 @@ namespace MyGame
 }
 ```
 
+#### Traps
+
 - **Permissions name injections by their exact type.** A sequence or a stage that lists its allowed injections,
   `AllowInjections(typeof(SkipIfTaggedInjection))`, takes only those types, not types made from them.
 - **A critical section takes only an interrupt** unless its critical policy lists more.
-- An injection is one object every run shares; what it keeps for one run goes in the run's data.
+- **An injection is one object every run shares**: what it keeps for one run goes in the run's data.
 
 ### Stage policies
 
-A stage policy says when a stage ends: `ISequenceStagePolicy`'s one member, `UniTask AwaitCompletion(TaskSequenceRuntime
-runtime, SequenceStage stage, UniTask[] taskUnits, CancellationTokenSource stageCts)`, awaits the stage's running tasks
-as it sees fit. `stage.WithPolicy(policy)` gives a stage one. A policy of a game's own is handed a token source of its
-own, linked to the stage's, so cancelling it cuts off the stage's tasks and not the stage.
+A stage policy says when a stage ends.
+
+Implement `ISequenceStagePolicy`. A policy of a game's own is handed a token source of its own, linked to the stage's,
+so cancelling it cuts off the stage's tasks and not the stage.
+
+#### Hooks
+
+`ISequenceStagePolicy` has one member:
+
+| Hook | When PlayForge calls it |
+| --- | --- |
+| `UniTask AwaitCompletion(TaskSequenceRuntime runtime, SequenceStage stage, UniTask[] taskUnits, CancellationTokenSource stageCts)` | While the stage's tasks run. It awaits them as it sees fit, and the stage ends as it returns. |
+
+#### In the picker
+
+No picker offers a stage policy: `stage.WithPolicy(policy)` gives a stage one in code.
+
+`TaskSequenceBuilder.Create("Search").Stage(stage => stage.Task(a).Task(b).WithPolicy(FirstSuccessStagePolicy.Instance))`
+gives a stage the example's.
+
+#### Example
+
+This policy ends the stage as its first task finishes well. A task that throws ends it only where every task fails.
 
 ```csharp
 using System;
@@ -1218,8 +1684,9 @@ namespace MyGame
 }
 ```
 
-`TaskSequenceBuilder.Create("Search").Stage(stage => stage.Task(a).Task(b).WithPolicy(FirstSuccessStagePolicy.Instance))`
-gives a stage it. The Task Sequence Examples sample has another, a lead task the stage lasts as long as.
+The Task Sequence Examples sample has another, a lead task the stage lasts as long as.
+
+#### Traps
 
 - **A synced runner can't run a policy of a game's own.** It warns, and its stage waits for all its tasks.
 - **An ability's stages take All or Any alone** ([Ability tasks](#ability-tasks)).
@@ -1229,20 +1696,49 @@ gives a stage it. The Task Sequence Examples sample has another, a lead task the
 ## Processes
 
 A process is anything that runs over time under ProcessControl: a MonoBehaviour or a plain C# object stepped from
-Unity's player loop. This section covers writing one; [PROCESSES.md](PROCESSES.md) covers lifecycles, registering,
-pausing and groups.
+Unity's player loop.
+
+This section covers writing one; [PROCESSES.md](PROCESSES.md) covers lifecycles, registering, pausing and groups.
+
+### Writing a process
+
+A process of a game's own does work over time, as a regeneration that runs until its entity dies.
+
+Derive from one of four bases:
 
 | Base | Is |
 | --- | --- |
-| `AbstractMonoProcess` | A MonoBehaviour process. Its lifecycle and timing are fields of its inspector. `RunProcess(token)` is required. |
+| `AbstractMonoProcess` | A MonoBehaviour process, whose lifecycle and timing are fields of its inspector. |
 | `LazyMonoProcess` | A MonoBehaviour process whose run lasts until it's paused or ended. |
-| `AbstractRuntimeProcess` | A plain C# process, its name, timing, priority and lifecycle given to its base's constructor. `RunProcess(token)` is required. |
+| `AbstractRuntimeProcess` | A plain C# process, whose name, timing, priority and lifecycle are given to its base's constructor. |
 | `LazyRuntimeProcess` | A plain C# process whose run lasts until it's paused or ended. |
 
-Their hooks, each virtual: `WhenInitialize()`, `WhenUpdate()`, `WhenLateUpdate()` and `WhenFixedUpdate()` at its
-timing, `WhenWait()`, `WhenTerminate()`, `WhenTerminateQueued()`, `WhenDestroy()`, and `TryHandlePause()` and
-`TryHandleResume()`, true to hold a run through a pause ([PROCESSES.md](PROCESSES.md#pausing)). A process reads its
-packet as `regData`, or `Data`, and its handle as `Relay`.
+A process reads its packet as `regData`, or `Data`, and its handle as `Relay`.
+
+#### Hooks
+
+Each hook is virtual.
+
+| Hook | When PlayForge calls it |
+| --- | --- |
+| `RunProcess(token)` | The run, which ProcessControl awaits for a process that isn't Synchronous. Required under `AbstractMonoProcess` and `AbstractRuntimeProcess`. |
+| `WhenInitialize()` | As it's registered. |
+| `WhenUpdate()`, `WhenLateUpdate()`, `WhenFixedUpdate()` | At its timing. |
+| `WhenWait()` | As it goes to Waiting. |
+| `WhenTerminate()` | As it ends. |
+| `WhenTerminateQueued()` | As a Terminate is asked of it while it runs. |
+| `WhenDestroy()` | In place of `OnDestroy`, as a mono process's object is destroyed. |
+| `TryHandlePause()`, `TryHandleResume()` | As it's paused and resumed. True holds a run through a pause ([PROCESSES.md](PROCESSES.md#pausing)). |
+
+#### In the picker
+
+No picker offers a process: code registers it with ProcessControl.
+`ProcessControl.Register(new RegenProcess(hero, health, 5f)).HandledBy(hero).Run(out ProcessRelay relay)` starts the
+example, and `relay.Terminate()` ends it.
+
+#### Example
+
+This process gives an entity an amount of an attribute each second of its own time, until it dies or the process ends:
 
 ```csharp
 using FarEmerald.PlayForge;
@@ -1282,9 +1778,10 @@ namespace MyGame
 }
 ```
 
-`ProcessControl.Register(new RegenProcess(hero, health, 5f)).HandledBy(hero).Run(out ProcessRelay relay)` starts it,
-and `relay.Terminate()` ends it. It changes the attribute once a second, not each frame: a change each frame would make
-a new change, and run the attribute's workers, every frame.
+It changes the attribute once a second, not each frame. A change each frame would make a new change, and run the
+attribute's workers, every frame.
+
+#### Traps
 
 - **Call the base** in an override of `WhenInitialize` or `WhenTerminate`.
 - **`WhenDestroy` stands in for `OnDestroy`**, which a MonoBehaviour process of its own would hide.
@@ -1295,27 +1792,36 @@ a new change, and run the attribute's workers, every frame.
 ## Scalers, number kinds and conditions
 
 A number field's **Kind** says how its number is worked out, and a Conditional's or a rule's condition says whether it
-holds. This section adds to [SCALERS.md](SCALERS.md#writing-your-own-scaler), which covers the kinds' names, their
-inspectors and a number field in a class of a game's own: here are their members, the variances and behaviours, and an
-example of each.
+holds.
+
+This section adds to [SCALERS.md](SCALERS.md#writing-your-own-scaler), which covers the kinds' names, their inspectors
+and a number field in a class of a game's own. Here are their members, the variances and behaviours, and an example of
+each. Traps, last in this section, lists the traps they share.
 
 ### Number kinds
 
-A number kind derives from `NumberKind` and reads its site through a `NumberContext`. It's the simplest way to a number
-of a game's own:
+A number kind is the simplest way to a number of a game's own: it reads its site through a `NumberContext`.
 
-| Member | Is |
+Derive from `NumberKind`. A kind is a scaler, so it works in an effect's magnitude and inside a Group or a Conditional
+too. Its scaler `Evaluate` methods are sealed, and it reads none of a scaler's levels unless its `Parts` say.
+
+#### Hooks
+
+| Hook | When PlayForge calls it |
 | --- | --- |
-| `Evaluate(in NumberContext context)`, protected | Its number. |
+| `Evaluate(in NumberContext context)`, protected | As the field is read: its number. |
 | `Describe()` | Its line in the field's summary, as "the distance to the target". |
 | `Reads` | What it reads of the site, from its `[NumberKind]`: `NumberReads.Level`, `Caster`, `Target`, `Caller`, `LocalData`, `Carrier`, `Data`, `Owner`. A field offers it only where its site provides them. |
-| `CanEvaluate(in context)` | Whether the site has what it reads; where it hasn't, the field reads `Fallback`, 0 unless it says, and logs why. |
+| `CanEvaluate(in context)` | Whether the site has what it reads. Where it hasn't, the field reads `Fallback`, 0 unless it says, and logs why. |
 | `WhyNot(in context)` | Why it can't be worked out, for that line. It's `protected internal`, so an override in another assembly is `protected override`. |
 | `Explain(in context, NumberTrace trace)` | What its explanation lists, as the numbers it read. |
 
-`[NumberKind("Name", Reads = NumberReads.Caster | NumberReads.Target)]` names it and says what it reads. A kind is a
-scaler, so it works in an effect's magnitude and inside a Group or a Conditional too; its scaler `Evaluate` methods are
-sealed, and it reads none of a scaler's levels unless its `Parts` say.
+#### In the picker
+
+A number field's **Kind** menu lists a number kind with a public constructor that takes nothing.
+`[NumberKind("Name", Reads = NumberReads.Caster | NumberReads.Target)]` names it and says what it reads.
+
+#### Example
 
 ```csharp
 using System;
@@ -1348,18 +1854,33 @@ namespace MyGame
 ```
 
 A number read in code is `number.Evaluate(context)`, with a `NumberContext` made `Of` what the code has: an effect's
-spec, an activation's data, a worker's context, an entity, a cue or a process. `NumberContext.For(caster, target,
-level)` makes one with nothing else, for a test.
+spec, an activation's data, a worker's context, an entity, a cue or a process.
+`NumberContext.For(caster, target, level)` makes one with nothing else, for a test.
 
 ### Conditions
 
-A condition derives from `GameplayCondition` and has the same shape: `Evaluate(in NumberContext context)`, protected, says
-whether it holds; `Describe()`, `Reads`, `CanEvaluate`, `WhyNot` and `Explain` as a kind's; and `Initialize(carrier)`,
-which passes an effect's spec on to the numbers it holds as the spec is made. `condition.Holds(context)` reads it, and
-one that can't be worked out where it's read doesn't hold. `[GameplayCondition("Name", Reads = ...)]` names it; the
-condition menu lists only `[Serializable]` classes with a constructor that takes nothing. A condition is offered
-wherever one is picked: a Conditional, an effect's requirements, an On Hit, a modifier's rule, an ability's Condition
-check.
+A condition says whether something holds, as a Conditional's or a rule's does.
+
+Derive from `GameplayCondition`, which has the same shape as a number kind. `condition.Holds(context)` reads it, and one
+that can't be worked out where it's read doesn't hold.
+
+#### Hooks
+
+| Hook | When PlayForge calls it |
+| --- | --- |
+| `Evaluate(in NumberContext context)`, protected | As it's read: whether it holds. |
+| `Describe()`, `Reads`, `CanEvaluate`, `WhyNot`, `Explain` | As a number kind's. |
+| `Initialize(carrier)` | As an effect's spec is made. It passes the spec on to the numbers it holds. |
+
+#### In the picker
+
+A condition is offered wherever one is picked: a Conditional, an effect's requirements, an On Hit, a modifier's rule, an
+ability's Condition check.
+
+`[GameplayCondition("Name", Reads = ...)]` names a condition. The condition menu lists only `[Serializable]` classes
+with a constructor that takes nothing.
+
+#### Example
 
 ```csharp
 using System;
@@ -1397,15 +1918,15 @@ namespace MyGame
 }
 ```
 
-A kind or a condition reads its own numbers with itself as their owner, `Arc.Evaluate(in context, this)`, so a number
-of the Relative to a Field kind can read its other fields.
+A kind or a condition reads its own numbers with itself as their owner, `Arc.Evaluate(in context, this)`, so a number of
+the Relative to a Field kind can read its other fields.
 
 ### Scalers
 
-A scaler of the full kind derives from `AbstractScaler`, which holds values for each level and behaviours, for a number
-that reads levels in a way of its own. It implements `Initialize(IAttributeImpactCarrier carrier)`, which readies it
-for an effect's spec as the spec is made, and `Evaluate(IAttributeImpactCarrier carrier)`. Its protected helpers read
-its levels:
+A scaler of the full kind holds values for each level and behaviours, for a number that reads levels in a way of its
+own.
+
+Derive from `AbstractScaler`. Its protected helpers read its levels:
 
 - `EvaluateFromSpec(carrier)`: its values at the carrier's level, exactly or spread, through its behaviours.
 - `ApplyBehaviourEvaluation(carrier, value)`: a value through its behaviours. Its behaviours apply only where its
@@ -1413,8 +1934,21 @@ its levels:
 - `EvaluateAtLevel(level, relativeLevel)`, `GetEffectiveMaxLevel(carrier)`, `GetEffectiveRelativeLevel(carrier)` and
   `EvaluateScalingAtRelativeLevel(relativeLevel)`, for one that reads its levels itself.
 
-`Parts` says which of every scaler's parts its inspector draws ([SCALERS.md](SCALERS.md#writing-your-own-scaler)), and
-`IsEmpty` true reads it as no scaler at all.
+#### Hooks
+
+| Hook | When PlayForge calls it |
+| --- | --- |
+| `Initialize(IAttributeImpactCarrier carrier)` | As an effect's spec is made. It readies the scaler for the spec. |
+| `Evaluate(IAttributeImpactCarrier carrier)` | As its number is read: its value. |
+| `Parts` | Which of every scaler's parts its inspector draws ([SCALERS.md](SCALERS.md#writing-your-own-scaler)). |
+| `IsEmpty` | True reads it as no scaler at all. |
+
+#### In the picker
+
+A kind of `AbstractScaler`'s is filed under its **Scaler** submenu, unless it names another
+([How a kind is named and filed](#how-a-kind-is-named-and-filed)).
+
+#### Example
 
 ```csharp
 using System;
@@ -1441,21 +1975,40 @@ namespace MyGame
 }
 ```
 
-`AbstractCachedScaler` is the base of an attribute set element's **Scaling**, worked out from the entity's cached
-attribute values: its required `EvaluateActiveValue(blueprint, cache)` gives the value. PlayForge's own, as
-`CachedAttributeScaler`, show its shape.
+### Cached scalers
+
+A cached scaler works out an attribute set element's **Scaling** from the entity's cached attribute values.
+
+Derive from `AbstractCachedScaler`. PlayForge's own, as `CachedAttributeScaler`, show its shape.
+
+| Hook | When PlayForge calls it |
+| --- | --- |
+| `EvaluateActiveValue(blueprint, cache)` | Required. It gives the value. |
 
 ### Variances
 
-A Randomized scaler varies its value by its **Variance**, an `AbstractVariance`, handed a roll from 0 to 1:
+A variance varies a Randomized scaler's value, handed a roll from 0 to 1.
 
-| Member | Is |
+Derive from `AbstractVariance`. Its protected `Read(number, carrier, fallback)` reads one of its numbers for the
+carrier, with itself as their owner.
+
+The roll comes from `ForgeRandom`, once for each spec where the scaler's **Roll Once Per Spec** is on.
+
+#### Hooks
+
+| Hook | When PlayForge calls it |
 | --- | --- |
 | `Vary(value, roll, carrier)` | The value varied by the roll. |
 | `Lowest(value, carrier)`, `Highest(value, carrier)` | The range a tooltip shows. |
-| `Initialize(carrier)` | Readies its numbers for a spec. |
+| `Initialize(carrier)` | It readies its numbers for a spec. |
 | `Numbers()` | Its numbers with their roles, for an explanation. |
-| `Read(number, carrier, fallback)`, protected | One of its numbers read for the carrier, with itself as their owner. |
+
+#### In the picker
+
+A Randomized scaler's **Variance** offers every class derived from `AbstractVariance`. The picker shows
+`TwoDiceVariance` as **Two Dice**.
+
+#### Example
 
 ```csharp
 using System;
@@ -1487,13 +2040,25 @@ namespace MyGame
 }
 ```
 
-The roll comes from `ForgeRandom`, once for each spec where the scaler's **Roll Once Per Spec** is on.
-
 ### Scaler behaviours
 
-A scaler's **Behaviours** adjust the value it works out, in order: each an `AbstractScalerBehaviour`, with
-`Initialize(IAttributeImpactCarrier spec)` and `Evaluate(float magnitude, IAttributeImpactCarrier spec)`, both
-required. Its overloads that take a stacking container are never called.
+A scaler behaviour adjusts the value a scaler works out, as one of the scaler's **Behaviours**, in order.
+
+Derive from `AbstractScalerBehaviour`. Its overloads that take a stacking container are never called.
+
+#### Hooks
+
+| Hook | When PlayForge calls it |
+| --- | --- |
+| `Initialize(IAttributeImpactCarrier spec)` | Required. At each read, handed the carrier the value is read for. |
+| `Evaluate(float magnitude, IAttributeImpactCarrier spec)` | Required. Next, handed the value so far: the value after it. |
+
+#### In the picker
+
+A scaler's **Behaviours** offer every class derived from `AbstractScalerBehaviour`. The picker shows
+`RoundToStepScalerBehaviour` as **Round To Step**.
+
+#### Example
 
 ```csharp
 using System;
@@ -1519,6 +2084,8 @@ namespace MyGame
 
 ### Traps
 
+These traps apply to every kind in this section.
+
 - **A number is read often**, as an effect's magnitude for every application and a tooltip each time it draws: no
   allocation and no side effects in `Evaluate`.
 - **A kind is saved by its class's name** ([Before you start](#before-you-start)).
@@ -1527,17 +2094,41 @@ namespace MyGame
 
 ## Value stages
 
-A value stage reshapes a hit's value on its way to its attribute, one of a Value Pipeline's **Stages**, which an effect's
-impact names as its **Pipeline** ([VALUE_PIPELINES.md](VALUE_PIPELINES.md#stages)). This section covers writing one.
+A value stage reshapes a hit's value on its way to its attribute, as one of a Value Pipeline's **Stages**, which an
+effect's impact names as its **Pipeline** ([VALUE_PIPELINES.md](VALUE_PIPELINES.md#stages)).
 
-`AbstractValueStage`:
+This section covers writing one.
 
-- `float Apply(float value, in ValueRun run)`: the value it passes on. A loss is negative.
-- `Describe()`: what it does, as "× 1.5", which the pipeline's line and a breakdown show; its **Label** replaces it.
-- **Label** and **Enabled**: every stage's; off, the value passes it by.
+### Writing a value stage
 
-`ValueRun` holds `Carrier`, the hit's effect spec; `Context`, the hit's `NumberContext`, its caster, its target and its
-level; `Breakdown`; and `Note(text)`, which notes what the stage did on its step in the breakdown, as "critical".
+A value stage of a game's own reshapes each hit through its pipeline, as armor shrinking a loss.
+
+Derive from `AbstractValueStage`. **Label** and **Enabled** are every stage's: off, the value passes it by.
+
+Its hook is handed a `ValueRun`:
+
+| Member | Holds |
+| --- | --- |
+| `Carrier` | The hit's effect spec. |
+| `Context` | The hit's `NumberContext`: its caster, its target and its level. |
+| `Breakdown` | What the run keeps of each stage, or null. |
+| `Note(text)` | Notes what the stage did on its step in the breakdown, as "critical". |
+
+#### Hooks
+
+| Hook | When PlayForge calls it |
+| --- | --- |
+| `float Apply(float value, in ValueRun run)` | For every hit through its pipeline: the value it passes on. A loss is negative. |
+| `Describe()` | What it does, as "× 1.5", which the pipeline's line and a breakdown show. Its **Label** replaces it. |
+
+#### In the picker
+
+A Value Pipeline's **Stages** offer every class derived from `AbstractValueStage`
+([How a kind is found](#how-a-kind-is-found)).
+
+#### Example
+
+This stage shrinks a loss by the armor of the one hit: as much armor as its Halves halves the loss.
 
 ```csharp
 using System;
@@ -1571,36 +2162,86 @@ namespace MyGame
 }
 ```
 
-A stage that stops an effect outright, as a block or a dodge, derives from `AbstractStopStage`, whose **Chance**,
-**Roll** and **Stops** every stop has. It names `StoppedEvent`, the event the one hit hears, `DealerEvent`, the one its
-dealer hears, and `Verb`, as "blocked". The effect system honours every enabled stop in a pipeline, wherever it sits in
-the list: as the effect lands, the first stop that reaches it and rolls stops it.
+#### Traps
 
-- **`Apply` runs for every hit** through the pipeline: no allocation. `run.Note` with a constant string is free; one
+- **`Apply` runs for every hit** through the pipeline: no allocation. `run.Note` with a constant string is free. One
   built with `$"..."`, as above, allocates only where it notes.
 - **A stage is shared** by every hit through its pipeline: it keeps nothing of one hit.
+
+### Stop stages
+
+A stop stage stops an effect outright, as a block or a dodge.
+
+Derive from `AbstractStopStage`, whose **Chance**, **Roll** and **Stops** every stop has.
+
+#### Hooks
+
+A stop names three members:
+
+| Hook | When PlayForge calls it |
+| --- | --- |
+| `StoppedEvent` | As it stops an effect: the event the one hit hears. |
+| `DealerEvent` | The event its dealer hears. |
+| `Verb` | Its verb, as "blocked". |
+
+The effect system honours every enabled stop in a pipeline, wherever it sits in the list. As the effect lands, the first
+stop that reaches it and rolls stops it.
+
+#### In the picker
+
+A Value Pipeline's **Stages** offer it, as they offer every stage.
 
 ## Cue handlers
 
 A cue handler plays feedback, a shake, a sound, an animation, at an effect's, an ability's, an entity's or an item's
-moments, or where a cue tag routes. This section covers writing one; [CUES.md](CUES.md#handlers) covers where cues are
-raised and PlayForge's handlers.
+moments, or where a cue tag routes.
 
-`AbstractCueHandler`'s hooks, each a no-op it may override:
+This section covers writing one; [CUES.md](CUES.md#handlers) covers where cues are raised and PlayForge's handlers.
+Traps, last in this section, lists the traps of handlers and sinks.
 
-| Hook | Called |
+### Writing a cue handler
+
+A cue handler of a game's own plays feedback its own way, as setting a trigger on the Animator of the one it plays on.
+
+Derive from `AbstractCueHandler`. Its hooks are handed a `CueContext`:
+
+| Member | Holds |
+| --- | --- |
+| `Target` | The entity it plays on. |
+| `Moment` | The moment that raised it. |
+| `Tag` | The cue's tag, where one raised it. |
+| `Source` | Who's behind it: the effect's or the ability's caster, or the entity itself. |
+| `Origin` | What raised it: an effect's origin, an ability's spec, an item's, or the entity. |
+| `Spec`, `Ticks` | For an effect: its spec, and for a tick's burst, how many of its ticks executed. |
+| `Data` | An activation's data, for an ability's cue. |
+| `Magnitude`, `Point`, `Normal` | Where its raiser gave a hit: a number to scale with, as the hit's damage, and the hit's point and normal. |
+| `Key` | What pairs a lasting cue's beginning with its end. |
+| `Lasting` | Whether it was raised to last. |
+| `Transform`, `Position` | The target's object, and where it plays. |
+
+`NumberContext.Of(in cue)` reads a handler's numbers for it.
+
+#### Hooks
+
+Each hook is a no-op it may override.
+
+| Hook | When PlayForge calls it |
 | --- | --- |
 | `Burst(cue)` | At a moment that plays once. By default it calls `OnTicked` for a tick, `OnRemoved` for a removal and `OnApplied` for any other moment. |
 | `OnApplied(cue)`, `OnTicked(cue)`, `OnRemoved(cue)` | From `Burst`. |
 | `Begin(cue)`, `End(cue)` | As a lasting cue begins and ends, as a While Active one does. |
 
-`CueContext` holds `Target`, the entity it plays on; `Moment`; `Tag`; `Source`; `Origin`; `Spec` and `Ticks`, for an
-effect; `Data`, an activation's; `Magnitude`, `Point` and `Normal`, where its raiser gave a hit; `Key`; `Lasting`; and
-`Transform` and `Position`, the target's object and where it plays. `NumberContext.Of(in cue)` reads a handler's numbers
-for it.
+#### In the picker
 
-Handlers sit in the Cues components' lists, the Play Cue task's, and a cue library's routes. Code plays one with
-`ForgeCues.Burst`, `ForgeCues.Begin` and `ForgeCues.End`, handed a handler or a list and a `CueContext`.
+Handlers sit in the Cues components' lists, the Play Cue task's, and a cue library's routes. The picker shows
+`AnimatorCue` as **Animator**.
+
+Code plays one with `ForgeCues.Burst`, `ForgeCues.Begin` and `ForgeCues.End`, handed a handler or a list and a
+`CueContext`.
+
+#### Example
+
+This handler sets an Animator trigger on the one the cue plays on, and a bool while a lasting cue lasts:
 
 ```csharp
 using System;
@@ -1640,22 +2281,37 @@ namespace MyGame
 }
 ```
 
-A runtime entity has no object, so `Transform` is null on one.
+> [!NOTE]
+> A runtime entity has no object, so `Transform` is null on one.
 
 ### Sinks
 
 A sink decides whether a raise plays at all, as a server's that plays none, or a client's that plays only its own
-player's: a `ForgeCueSink` whose `WillPlay(ECueEvent cueEvent, in CueRaise raise)` says so, given every world as
-`ForgeCues.Sink` or one world with `ForgeCues.UseSink(world, sink)`. `raise.Cue` is the cue, and `raise.Source` what
-raised it. `ForgeCues.Enabled = false` plays none.
+player's.
+
+Derive from `ForgeCueSink`. `raise.Cue` is the cue, and `raise.Source` what raised it.
+
+#### Hooks
+
+| Hook | When PlayForge calls it |
+| --- | --- |
+| `WillPlay(ECueEvent cueEvent, in CueRaise raise)` | Once for each raise of a list of cues, before any of them plays: whether it plays. |
+
+#### In the picker
+
+No picker offers a sink. It's given every world as `ForgeCues.Sink`, or one world with `ForgeCues.UseSink(world, sink)`.
+`ForgeCues.Enabled = false` plays none.
 
 ### Traps
 
+These traps apply to every cue handler and sink.
+
 - **A handler is shared**: one keeps what a lasting cue placed under `cue.Key ?? cue.Spec`, which its `End` hands back,
-  as PlayForge's Prefab cue does. Two lasting cues on one entity each begin and end, so a bool the first `End` turns
-  off is off for the second too, as in the example: count them where that matters.
-- **`End` can come with no `Begin`.** A muted entity's cues and every cue while `ForgeCues.Enabled` is off don't begin,
-  and still end, so what began before the mute is taken down. `End` does nothing where it finds nothing.
+  as PlayForge's Prefab cue does.
+  - Two lasting cues on one entity each begin and end. So a bool the first `End` turns off is off for the second too, as
+    in the example: count them where that matters.
+- **`End` can come with no `Begin`.** A muted entity's cues, and every cue while `ForgeCues.Enabled` is off, don't
+  begin, and still end, so what began before the mute is taken down. `End` does nothing where it finds nothing.
 - **A sink is asked for `End` too**: it answers an `End` as it answered its `Begin`.
 - **A cue is presentation alone.** A server may play none, so game state never depends on a cue. Rolls come from
   `ForgeCues.Random`, the cues' own random numbers, so a cue never moves the game's.
@@ -1663,19 +2319,33 @@ raised it. `ForgeCues.Enabled = false` plays none.
 
 ## Entity services
 
-An entity service is an object of a game's own each entity keeps as it runs, made the first time it's asked for and
-stepped by the entity's own time: a combo count, a cooldown of the game's own, a respawn's wait. This section covers
-writing one.
+An entity service is an object of a game's own each entity keeps as it runs, as a combo count, a cooldown of the game's
+own or a respawn's wait.
 
-`AbstractEntityService`:
+It's made the first time it's asked for, and stepped by the entity's own time. This section covers writing one.
 
-- `System`: the entity it's for.
-- `Step(float deltaTime)`: each frame of the entity's step, with its own clock's time, after its effects.
-- `Revive()`: as a staying entity revives.
-- `End()`: as the entity ends, after which it keeps none.
+### Writing a service
 
-`entity.GetService<T>()` gives an entity's `T`, making it the first time; `entity.FindService<T>()` gives it only where
-it's made, or null.
+A service of a game's own keeps something for each entity, stepped with the entity.
+
+Derive from `AbstractEntityService`. `System` is the entity it's for.
+
+#### Hooks
+
+| Hook | When PlayForge calls it |
+| --- | --- |
+| `Step(float deltaTime)` | Each frame of the entity's step, with its own clock's time, after its effects. |
+| `Revive()` | As a staying entity revives. |
+| `End()` | As the entity ends, after which it keeps none. |
+
+#### In the picker
+
+No picker offers a service. `entity.GetService<T>()` gives an entity's `T`, making it the first time.
+`entity.FindService<T>()` gives it only where it's made, or null.
+
+#### Example
+
+A combo count each entity keeps, back to 0 after a pause between hits and as it revives:
 
 ```csharp
 using FarEmerald.PlayForge;
@@ -1707,32 +2377,50 @@ namespace MyGame
 }
 ```
 
-A worker or a component counts a hit with `ctx.System.GetService<ComboService>()?.Hit()`, and a number kind reads it
-with `context.SystemOf(NumberSide.Caster)?.FindService<ComboService>()?.Count ?? 0`.
+A worker or a component counts a hit with `ctx.System.GetService<ComboService>()?.Hit()`. A number kind reads it with
+`context.SystemOf(NumberSide.Caster)?.FindService<ComboService>()?.Count ?? 0`.
+
+#### Traps
 
 - **A service has no inspector**: it's made with its constructor that takes nothing, and its settings come from code.
 - **A save keeps no service.** A loaded entity makes its services again as it's asked for them.
-- **Step runs every frame** for every entity that has the service: keep it quick, as above, which returns at once while
-  there's nothing to count down. See [SERVICES.md](SERVICES.md) for PlayForge's other services.
+- **Step runs every frame** for every entity that has the service. Keep it quick, as above, which returns at once while
+  there's nothing to count down.
+
+See [SERVICES.md](SERVICES.md) for PlayForge's other services.
 
 ## Validation rules
 
-A validation rule refuses an ability's activation: one of the ability's **Caster Checks**, asked of the caster, or its
-**Target Checks**, asked of the target once its targeting has picked one. This section covers writing one;
-[ABILITIES.md](ABILITIES.md#requirements) covers the checks.
+A validation rule refuses an ability's activation, as one of the ability's **Caster Checks**, asked of the caster, or
+its **Target Checks**, asked of the target once its targeting has picked one.
 
-`IAbilityValidationRule`:
+This section covers writing one; [ABILITIES.md](ABILITIES.md#requirements) covers the checks.
 
-- `bool Validate(AbilityDataPacket data, Func<ITarget> getSource, out string error)`: whether it passes. `getSource()`
-  gives the entity it checks: the caster among the Caster Checks, the target among the Target Checks. `error` says why
-  it refused, in words a player could read.
-- `string GetName()`: its name, which a refusal names.
-- `RefusedAs`: the refusal kind it's told as among the Caster Checks, `Rule` unless it says, as the Cost check says
-  `Cost`. A Target Check's refusal is always told as `Target`.
+### Writing a rule
 
-`[ValidationSide(EValidationSide.Caster)]` or `EValidationSide.Target` offers it in one list alone; without it, both
-lists offer it. `AbstractAttributeValidationRule` and `AbstractTagValidationRule` are bases for a rule about an
-attribute or a tag.
+A rule of a game's own refuses an activation by a test of its own, as whether the caster faces its target.
+
+Implement `IAbilityValidationRule`. `AbstractAttributeValidationRule` and `AbstractTagValidationRule` are bases for a
+rule about an attribute or a tag.
+
+#### Hooks
+
+| Hook | When PlayForge calls it |
+| --- | --- |
+| `bool Validate(AbilityDataPacket data, Func<ITarget> getSource, out string error)` | As its list of checks is asked: whether it passes. `error` says why it refused, in words a player could read. |
+| `string GetName()` | Its name, which a refusal names. |
+| `RefusedAs` | The refusal kind it's told as among the Caster Checks: `Rule` unless it says, as the Cost check says `Cost`. A Target Check's refusal is always told as `Target`. |
+
+`getSource()` gives the entity a rule checks: the caster among the Caster Checks, the target among the Target Checks.
+
+#### In the picker
+
+Both lists of checks offer a rule. `[ValidationSide(EValidationSide.Caster)]` or `EValidationSide.Target` offers it in
+one list alone; without it, both lists offer it.
+
+#### Example
+
+This rule activates only where the caster faces the target within an angle:
 
 ```csharp
 using System;
@@ -1776,12 +2464,14 @@ namespace MyGame
 }
 ```
 
-- **A Caster Check is asked of every request**, an AI's among them, before anything is paid: quick, free of allocation
-  where it passes, and free of side effects.
+#### Traps
+
+- **A Caster Check is asked of every request**, an AI's among them, before anything is paid. Keep it quick, free of
+  allocation where it passes, and free of side effects.
 - **A condition of a game's own** does as much through PlayForge's **Condition** check, and serves effects' requirements
   and Conditionals as well ([Scalers, number kinds and conditions](#scalers-number-kinds-and-conditions)).
 - **A rule a component enforces** is an `AbstractComponentValidationRule<T>`, which the component returns as its
-  `TargetCheck` or `CasterCheck`; no picker offers one ([Components](#components)).
+  `TargetCheck` or `CasterCheck`. No picker offers one ([Components](#components)).
 
 ## Smaller kinds
 
@@ -1790,9 +2480,23 @@ what a purge takes, how a modifier changes an effect, a Local Data value's type,
 
 ### Respawn places
 
-A Respawn component's **At** is an `AbstractRespawnPlace`: `Vector3? Where(EntityComponentContext context, Vector3? home)`,
-where the entity revives, handed where it stood as it registered; null, where it died. `Describe()` gives the
-component's line, as "at home".
+A respawn place says where an entity revives.
+
+Derive from `AbstractRespawnPlace`.
+
+#### Hooks
+
+| Hook | When PlayForge calls it |
+| --- | --- |
+| `Vector3? Where(EntityComponentContext context, Vector3? home)` | As the entity revives, handed where it stood as it registered: where it revives. Null revives it where it died. |
+| `Describe()` | The component's line, as "at home". |
+
+#### In the picker
+
+A Respawn component's **At** offers every class derived from `AbstractRespawnPlace`. The picker shows
+`NearHomeRespawnPlace` as **Near Home**.
+
+#### Example
 
 ```csharp
 using System;
@@ -1822,28 +2526,74 @@ namespace MyGame
 
 ### Charge recharges
 
-A Charges component's **Recharge** is an `AbstractChargeRecharge`: `InHand(AbilityCharges charges)`, the charges in
-hand, by default its most less those cooling down; `Spend(AbilityCharges charges, ProcessDataPacket data)`, as a charge
-is spent, by default starting one's cooldown; and `CountsASingleCharge`.
+A charge recharge says how an ability's spent charges come back.
+
+Derive from `AbstractChargeRecharge`. Each hook has a default, so a recharge overrides only what it changes.
+
+#### Hooks
+
+| Hook | When PlayForge calls it |
+| --- | --- |
+| `InHand(AbilityCharges charges)` | The charges in hand. By default, its most less those cooling down. |
+| `Spend(AbilityCharges charges, ProcessDataPacket data)` | As a charge is spent. By default, it starts one's cooldown. |
+| `CountsASingleCharge` | Whether a single charge is still counted, rather than the ability being an ordinary cooldown. True unless it says; PlayForge's own recharges say false. |
+
+#### In the picker
+
+A Charges component's **Recharge** offers every class derived from `AbstractChargeRecharge`.
 
 ### Purge filters
 
-An effect's purge takes the effects its **Filters** let it, each an `AbstractPurgeFilter`: `bool Takes(in PurgeContext
-ctx)`, with `ctx.Container`, the effect it might take; `ctx.Purged`, the entity it's on; and `ctx.Purger`
+A purge filter says which effects an effect's purge takes.
+
+Derive from `AbstractPurgeFilter`. An effect's purge takes the effects its **Filters** let it
 ([EFFECTS.md](EFFECTS.md#purging)).
+
+#### Hooks
+
+Its one hook is `bool Takes(in PurgeContext
+ctx)`, with `ctx.Container`, the effect it might take; `ctx.Purged`, the entity it's on; and `ctx.Purger`, who
+purges, where an effect or code names one. It says whether the purge takes the effect.
+
+#### In the picker
+
+An effect's purge **Filters** offer every class derived from `AbstractPurgeFilter`.
 
 ### Effect changes
 
-A modifier's rule changes an effect it reaches through its **Changes**, each an `AbstractEffectChange`:
-`Apply(EffectChanges changes, GameplayEffectSpec spec, EffectModifierRule rule)` writes what it changes into `changes`,
-and `Describe()` gives its line ([EFFECTS.md](EFFECTS.md#modifiers)).
+An effect change is one of the changes a modifier's rule makes to an effect it reaches.
+
+Derive from `AbstractEffectChange`.
+
+#### Hooks
+
+| Hook | When PlayForge calls it |
+| --- | --- |
+| `Apply(EffectChanges changes, GameplayEffectSpec spec, EffectModifierRule rule)` | As the rule reaches an effect. It writes what it changes into `changes`. |
+| `Describe()` | Its line. |
+
+#### In the picker
+
+A modifier's rule offers it in its **Changes** ([EFFECTS.md](EFFECTS.md#modifiers)).
 
 ### Local Data values
 
-A Local Data entry's value is a `LocalDataValue`, and one that holds a single value a `LocalDataValue<T>`, whose `Value`
-it holds. `Read(in NumberContext)` gives it as a packet takes it, and `TryReadNumber(in NumberContext, out float)` as a
-number reads it, where it's one. The Local Data list offers a kind with a constructor that takes nothing, named without
-"Local".
+A Local Data value is the type of a Local Data entry's value.
+
+Derive from `LocalDataValue`, or for one that holds a single value, from `LocalDataValue<T>`, whose `Value` it holds.
+
+#### Hooks
+
+| Hook | When PlayForge calls it |
+| --- | --- |
+| `Read(in NumberContext)` | As a packet takes it: its value. |
+| `TryReadNumber(in NumberContext, out float)` | As a number reads it, where it's one. |
+
+#### In the picker
+
+The Local Data list offers a kind with a constructor that takes nothing, named without "Local".
+
+#### Example
 
 ```csharp
 using System;
@@ -1861,35 +2611,58 @@ namespace MyGame
 }
 ```
 
-`asset.TryGetLocalData(key, out DataWrapper entry) && entry.TryGet(out EElement element)` reads it. An entry is the
-asset's own: a value changed at run time changes the asset, so Local Data is read, not written, as the game runs.
+`asset.TryGetLocalData(key, out DataWrapper entry) && entry.TryGet(out EElement element)` reads it.
+
+#### Traps
+
+- **An entry is the asset's own.** A value changed at run time changes the asset, so Local Data is read, not written, as
+  the game runs.
 
 ### Clock choices
 
-A Run Sequence task's or a Sequence cue's **Clock** is an `AbstractClockChoice`: `IForgeClock ClockFor(ProcessDataPacket
+A clock choice says which clock a run takes.
+
+Derive from `AbstractClockChoice`.
+
+#### Hooks
+
+Its one hook is `IForgeClock ClockFor(ProcessDataPacket
 data)`, the clock a run on the packet takes, or null for the run's own. `OwnersClock(data)`, protected, gives the clock
 of the entity the packet is for ([SERVICES.md](SERVICES.md)).
 
+#### In the picker
+
+A Run Sequence task's or a Sequence cue's **Clock** offers every class derived from `AbstractClockChoice`.
+
 ### Stack behaviours
 
-An effect's **Stack Behaviours** are `AbstractStackingConfig`s. A game can derive one, but its members work on the
-effect system's stacking containers, which this guide doesn't cover; [EFFECTS.md](EFFECTS.md#stacking-stack-existing-only)
-covers the built-in ones.
+An effect's **Stack Behaviours** are `AbstractStackingConfig`s.
+
+A game can derive one, but its members work on the effect system's stacking containers, which this guide doesn't cover.
+[EFFECTS.md](EFFECTS.md#stacking-stack-existing-only) covers the built-in ones.
 
 ## A game's own objects
 
 PlayForge asks a game's own objects for a few things through interfaces: turning, moving, shaking the camera, and a
-pooled cue's comings and goings. This section covers each.
+pooled cue's comings and goings.
 
-- **`IForgeTurner`**, on an entity's object: `Face(Vector3 direction, float degreesPerSecond, float deltaTime)` takes each
-  step of a turn PlayForge orders, as an ability's turn to face its target, in place of PlayForge setting the object's
-  rotation. PlayForge reads how far is left from the object's rotation, so that's what the turner turns.
-- **`IForgeMover`**, on a caster's object: `Hold(bool held)` and `Stop()`, which the movement tasks, as Dash, call on
-  the caster's own movement while they move it.
-- **`ICameraShaker`**: `Shake(float strength, float duration)`, which the Camera Shake cue calls through
-  `ForgeCues.Shaker`.
-- **`IPooledCue`**, on a pooled Prefab cue's prefab: `Taken()` as its pool hands it out, placed and active, and
-  `Returned()` as it goes back ([CUES.md](CUES.md#pooling)).
+This section covers each.
+
+### Turners
+
+A turner turns an entity's object as PlayForge orders, in place of PlayForge setting the object's rotation.
+
+Implement **`IForgeTurner`** on an entity's object.
+
+#### Hooks
+
+| Hook | When PlayForge calls it |
+| --- | --- |
+| `Face(Vector3 direction, float degreesPerSecond, float deltaTime)` | At each step of a turn PlayForge orders, as an ability's turn to face its target. |
+
+#### Example
+
+This turner turns its object toward the direction PlayForge asks, at the speed it asks:
 
 ```csharp
 using FarEmerald.PlayForge;
@@ -1915,14 +2688,75 @@ namespace MyGame
 
 An animated character's turner sets its animator's turn here instead, and lets the animation turn the object.
 
+#### Traps
+
+- **PlayForge reads how far is left from the object's rotation**, so that's what the turner turns.
+
+### Movers
+
+A mover is a caster's own movement, which PlayForge's movement tasks hold and stop while they move the caster.
+
+Implement **`IForgeMover`** on a caster's object.
+
+#### Hooks
+
+| Hook | When PlayForge calls it |
+| --- | --- |
+| `Hold(bool held)`, `Stop()` | While a movement task, as Dash, moves the caster: it calls them on the caster's own movement. |
+
+### Camera shakers
+
+A camera shaker shakes the game's camera for PlayForge's Camera Shake cue.
+
+Implement **`ICameraShaker`**, and set it as `ForgeCues.Shaker`.
+
+#### Hooks
+
+| Hook | When PlayForge calls it |
+| --- | --- |
+| `Shake(float strength, float duration)` | As the Camera Shake cue plays, which calls it through `ForgeCues.Shaker`. |
+
+### Pooled cues
+
+A pooled cue hears its pool hand it out and take it back ([CUES.md](CUES.md#pooling)).
+
+Implement **`IPooledCue`** on a pooled Prefab cue's prefab.
+
+#### Hooks
+
+| Hook | When PlayForge calls it |
+| --- | --- |
+| `Taken()` | As its pool hands it out, placed and active. |
+| `Returned()` | As it goes back. |
+
 ## Readers
 
-A reader is a MonoBehaviour process that shows an entity's state, a bar or a counter: `AbstractReader`, a
-`LazyMonoProcess`, which `Assign(gas)` gives its entity. This section covers writing one.
+A reader is a MonoBehaviour process that shows an entity's state, as a bar or a counter.
 
-`Assign` keeps the entity as `Source` and calls `SubscribeIfOnChangePolicy()`, which a reader implements to hear the
-changes it shows through the entity's callbacks, or leaves empty to read the entity in `WhenUpdate`. PlayForge's
-`AttributeReader` and `AbilityReader` are readers.
+This section covers writing one.
+
+### Writing a reader
+
+A reader of a game's own shows a piece of an entity's state in the game's UI.
+
+Derive from `AbstractReader`, a `LazyMonoProcess`. `Assign(gas)` gives it its entity: it keeps the entity as `Source`,
+and calls `SubscribeIfOnChangePolicy()`. PlayForge's `AttributeReader` and `AbilityReader` are readers.
+
+#### Hooks
+
+| Hook | When PlayForge calls it |
+| --- | --- |
+| `SubscribeIfOnChangePolicy()` | As `Assign` gives it its entity. A reader implements it to hear the changes it shows through the entity's callbacks, or leaves it empty to read the entity in `WhenUpdate`. |
+| `WhenUpdate` | At its timing, as for any process. |
+| `WhenTerminate`, `WhenDestroy` | As it ends, and as its object is destroyed: where a reader that subscribed unsubscribes. |
+
+#### In the picker
+
+No picker offers a reader: it's a MonoBehaviour process on an object, which code gives its entity with `Assign(gas)`.
+
+#### Example
+
+This reader tells its listeners a tag's weight on its entity as it changes, as a stack counter shows it:
 
 ```csharp
 using FarEmerald.PlayForge;
@@ -1956,6 +2790,8 @@ namespace MyGame
 }
 ```
 
+#### Traps
+
 - **A reader that subscribes unsubscribes**, in `WhenTerminate` or `WhenDestroy`, and `Assign` called again subscribes
   again. A lambda subscribed can't be taken off: subscribe a method.
 - **A reader runs as a process**: ProcessControl registers one already in a scene as it starts.
@@ -1963,19 +2799,71 @@ namespace MyGame
 ## Time, randomness and input
 
 PlayForge reads its time, its random numbers and its pointer through sources a game can replace, so a game can run it on
-a fixed step, repeat its rolls, or aim with a gamepad. This section covers the interfaces; [SERVICES.md](SERVICES.md)
-covers clocks, rolls and input in full.
+a fixed step, repeat its rolls, or aim with a gamepad.
 
-- **`IForgeClock`**: `DeltaTime`, `UnscaledDeltaTime`, `FixedDeltaTime`, `Time`, `UnscaledTime`, `FrameCount`, and
-  `FollowsTicks`, true unless it runs while the game's time stands. `ForgeTime.Use(clock)` puts one in for the game and
-  returns the one it replaced; null puts Unity's back. A run takes one of its own through its packet's `Clock`, a
-  sequence through `TaskSequenceBuilder.WithClock(clock)`.
-- **`IForgeRandom`**: `Value`, from 0 to 1, `InsideUnitCircle` and `InsideUnitSphere`. `ForgeRandom.Use(source)` puts one
-  in and returns the one it replaced; `SeededRandom(seed)` is one of PlayForge's. The cues draw from their own,
-  `ForgeCues.Random`.
-- **`IForgeInput`**: `PointerPressed(int button)` and `TryGetPointerRay(out Ray ray)` are required; `PointerHeld`,
-  `TryGetPointerPosition`, `ScrollDelta`, `KeyPressed` and `KeyHeld` are optional. `ForgeInput.Use(input)` puts one in,
-  and the click-targeting tasks and the sequence library's waits read `ForgeInput.Current`.
+This section covers the interfaces; [SERVICES.md](SERVICES.md) covers clocks, rolls and input in full.
+
+### Clocks
+
+A clock is where PlayForge reads its time, so a game can run it on a step of its own.
+
+Implement **`IForgeClock`**.
+
+#### Hooks
+
+| Hook | When PlayForge calls it |
+| --- | --- |
+| `DeltaTime`, `UnscaledDeltaTime`, `FixedDeltaTime`, `Time`, `UnscaledTime`, `FrameCount` | As PlayForge reads its time from the clock. |
+| `FollowsTicks` | True unless it runs while the game's time stands. |
+
+#### In the picker
+
+No picker offers a clock: code puts one in.
+
+- `ForgeTime.Use(clock)` puts one in for the game, and returns the one it replaced. Null puts Unity's back.
+- A run takes one of its own through its packet's `Clock`.
+- A sequence takes one through `TaskSequenceBuilder.WithClock(clock)`.
+
+### Random sources
+
+A random source is where PlayForge draws its random numbers, so a test or a replay can repeat its rolls.
+
+Implement **`IForgeRandom`**.
+
+#### Hooks
+
+| Hook | When PlayForge calls it |
+| --- | --- |
+| `Value` | A number from 0 to 1. |
+| `InsideUnitCircle`, `InsideUnitSphere` | A point in a circle of radius 1, or in a sphere of radius 1. |
+
+#### In the picker
+
+No picker offers a random source. `ForgeRandom.Use(source)` puts one in and returns the one it replaced.
+`SeededRandom(seed)` is one of PlayForge's.
+
+The cues draw from their own, `ForgeCues.Random`.
+
+### Input
+
+An input source is where PlayForge reads the pointer, so a game can aim with a gamepad's cursor.
+
+Implement **`IForgeInput`**.
+
+#### Hooks
+
+| Hook | When PlayForge calls it |
+| --- | --- |
+| `PointerPressed(int button)`, `TryGetPointerRay(out Ray ray)` | Required. As the click-targeting tasks and the sequence library's waits read `ForgeInput.Current`. |
+| `PointerHeld`, `TryGetPointerPosition`, `ScrollDelta`, `KeyPressed`, `KeyHeld` | Optional. |
+
+#### In the picker
+
+No picker offers an input source: `ForgeInput.Use(input)` puts one in.
+
+#### Example
+
+This input is a pointer the game moves itself, as a gamepad's cursor:
 
 ```csharp
 using FarEmerald.PlayForge;
@@ -2003,13 +2891,15 @@ namespace MyGame
 }
 ```
 
-`ForgeInput.Use(new CursorInput { Camera = Camera.main })` puts it in; the game sets `Position` as its cursor moves, and
+`ForgeInput.Use(new CursorInput { Camera = Camera.main })` puts it in. The game sets `Position` as its cursor moves, and
 `PressedThisFrame` for the one frame of a press.
 
 ## Saving a game's own data
 
 A `ForgeSnapshot` holds what PlayForge saves of an entity, and nothing of a game's own: a game saves its own data beside
-it. This section covers how, and what a save leaves out; [SAVING.md](SAVING.md) covers saving and loading.
+it.
+
+This section covers how, and what a save leaves out; [SAVING.md](SAVING.md) covers saving and loading.
 
 A snapshot is plain serializable types, so a class of the game's own holds it with the rest:
 
@@ -2053,18 +2943,25 @@ What a game's code hears of a load:
   `Restoring` true ([Components](#components)).
 
 An asset made at run time, or one of the game's own a save names, goes in the catalog with `catalog.Add(id, asset)`
-([SAVING.md](SAVING.md#the-asset-catalog)). An effect from another entity is saved by that entity's id, through an
-`IForgeEntityIds` the game gives `Capture` and `Restore`: `IdOf(entity)` and `Find(id)`
-([SAVING.md](SAVING.md#effects-from-other-entities)).
+([SAVING.md](SAVING.md#the-asset-catalog)).
+
+An effect from another entity is saved by that entity's id, through an `IForgeEntityIds` the game gives `Capture` and
+`Restore` ([SAVING.md](SAVING.md#effects-from-other-entities)):
+
+| Hook | When PlayForge calls it |
+| --- | --- |
+| `IdOf(entity)` | As `Capture` saves an effect from another entity: that entity's id, or null where it has none. |
+| `Find(id)` | As `Restore` puts the effect back: the entity the id names, or null where there's none. |
 
 ## Tags in code
 
-A game's code names tags for its kinds to read: a data key, an event, a state its components grant. This section covers
-what a kind of a game's own does with tags; [TAGS.md](TAGS.md) covers tags in full.
+A game's code names tags for its kinds to read: a data key, an event, a state its components grant.
 
-- **A tag field's picker** offers the tags of the contexts its `[ForgeTagContext(...)]` names: PlayForge's
+This section covers what a kind of a game's own does with tags; [TAGS.md](TAGS.md) covers tags in full.
+
+- **A tag field's picker** offers the tags of the contexts its `[ForgeTagContext(...)]` names. They're PlayForge's
   (`ForgeContext.Granted`, `ForgeContext.Event`, `ForgeContext.DataKey`, `ForgeContext.ImpactType`,
-  `ForgeContext.ContextTag`, `ForgeContext.AssetTag` and the rest) or a project's own, by name.
+  `ForgeContext.ContextTag`, `ForgeContext.AssetTag` and the rest), or a project's own, by name.
 - **A tag written in code** is `Tag.GenerateAsUnique("State.Stunned")`, the tag the editor's New Tag makes of the path.
   `[ForgeTagExposed(context)]` on a static `Tag` field or property offers it to the pickers of that context.
 - **An event** goes to an entity with `entity.SendGameplayEvent(eventTag, data)`, which its abilities' triggers and Wait
@@ -2075,24 +2972,42 @@ what a kind of a game's own does with tags; [TAGS.md](TAGS.md) covers tags in fu
 ## The editor
 
 A game's editor code can check PlayForge's assets, draw a base type of its own as PlayForge draws its kinds, and start
-new assets from its own templates. This section covers each. The code lives in an editor-only assembly that references
-`FarEmerald.PlayForge.Editor`.
+new assets from its own templates.
+
+This section covers each. The code lives in an editor-only assembly that references `FarEmerald.PlayForge.Editor`.
 
 ### Validation rules
 
-The Problems view and each asset's inspector list what the project's rules find ([EDITOR.md](EDITOR.md)). A rule of a
-game's own derives from `ForgeValidationRule`, with a public constructor that takes nothing, and the validator finds it:
+An editor validation rule checks PlayForge's assets, and the Problems view and each asset's inspector list what it finds
+([EDITOR.md](EDITOR.md)).
 
-- `Check(Object asset, List<ForgeProblem> problems)`: adds what it finds in one PlayForge asset.
-- `Reads(Object asset)`: true for an asset the rule reads to check others, so an edit to it has the others checked again.
-- `Name`: what the Problems view groups its problems under, by default its class's name spaced out without "Rule".
+Derive from `ForgeValidationRule`, with a public constructor that takes nothing. For a rule about one kind of component,
+derive from `ForgeComponentRule<T>` instead.
 
-A problem is a `ForgeProblem(asset, severity, message, propertyPath)`, its severity `ForgeProblemSeverity.Note`,
-`Warning` or `Error`, and its `Fix` a `ForgeQuickFix(name, apply)`, the button that fixes it.
+#### Hooks
 
-A rule about one kind of component derives from `ForgeComponentRule<T>`, which hears each component of its kind an asset
-holds, whichever kind of asset holds it: `Check(Object asset, T component, int nth, string path, List<ForgeProblem>
+| Hook | When PlayForge calls it |
+| --- | --- |
+| `Check(Object asset, List<ForgeProblem> problems)` | Each time the validator runs, for each PlayForge asset. It adds what it finds in the asset. |
+| `Reads(Object asset)` | True for an asset the rule reads to check others, so an edit to it has the others checked again. |
+| `Name` | What the Problems view groups its problems under. By default, its class's name spaced out, without "Rule". |
+
+`ForgeComponentRule<T>` hears each component of its kind an asset holds, whichever kind of asset holds it, through
+`Check(Object asset, T component, int nth, string path, List<ForgeProblem>
 problems)`, with `nth` the component's count among its kind and `path` its place, as "Components.Array.data[1]".
+
+A problem is a `ForgeProblem(asset, severity, message, propertyPath)`:
+
+- its severity is `ForgeProblemSeverity.Note`, `Warning` or `Error`;
+- its `Fix` is a `ForgeQuickFix(name, apply)`, the button that fixes it.
+
+#### In the picker
+
+No picker offers a rule: the validator finds it.
+
+#### Example
+
+This rule warns of a Minimum Range component whose range of 0 refuses no target, and offers to fix it:
 
 ```csharp
 using System.Collections.Generic;
@@ -2126,22 +3041,37 @@ namespace MyGame.EditorRules
 }
 ```
 
-A rule is asked of every asset each time the validator runs: it returns at once for an asset it doesn't check.
+#### Traps
+
+- **A rule is asked of every asset** each time the validator runs. Return at once for an asset it doesn't check.
 
 ### Drawing a base type of a game's own
+
+A drawer of a game's own draws a field whose type is a base of the game's own, as PlayForge draws its kinds.
 
 PlayForge draws its kinds' fields through drawers registered for their bases, so a kind of a game's own is drawn with no
 drawer of its own. A field whose type is a base of the game's own, as a `[SerializeReference] AbstractWeatherRule` on a
 component of its own, takes a drawer made from one of PlayForge's:
 
-- `AbstractTypeRefDrawer<T>`: the kind picker and the kind's fields. Its virtual members say which kinds it offers
-  (`FilterType`, `Offers`), how it names them (`CleanTypeName`, `GetStringValue`), whether it offers None
-  (`AcceptClear`), and what follows a pick (`OnTypeChanged`).
-- `AbstractGenericDrawer<T>`: the same, folding to a line of its values, and naming kinds without the words in
-  `TypeNameSuffixes`.
-- `AbstractWorkerDrawer<T>`: a generic drawer that offers no None.
-- `AbstractComponentDrawer<T>`, for a base made from `AbstractForgeComponent`: a worker drawer that offers a kind that
-  allows one only while its list holds none.
+| Base | Draws |
+| --- | --- |
+| `AbstractTypeRefDrawer<T>` | The kind picker and the kind's fields. |
+| `AbstractGenericDrawer<T>` | The same, folding to a line of its values, and naming kinds without the words in `TypeNameSuffixes`. |
+| `AbstractWorkerDrawer<T>` | A generic drawer that offers no None. |
+| `AbstractComponentDrawer<T>` | For a base made from `AbstractForgeComponent`: a worker drawer that offers a kind that allows one only while its list holds none. |
+
+#### Hooks
+
+`AbstractTypeRefDrawer<T>`'s virtual members say how it offers and names kinds:
+
+| Hook | When PlayForge calls it |
+| --- | --- |
+| `FilterType`, `Offers` | Which kinds it offers. |
+| `CleanTypeName`, `GetStringValue` | How it names them. |
+| `AcceptClear` | Whether it offers None. |
+| `OnTypeChanged` | What follows a pick. |
+
+#### Example
 
 In the game's runtime assembly, a base of its own and a field of it:
 
@@ -2190,38 +3120,62 @@ namespace MyGame.EditorRules
 
 ### Inspectors, presets and templates
 
-`BasePlayForgeEditor` is the base of PlayForge's asset inspectors, and the Forge's presets and a project's templates are
-where new assets start ([EDITOR.md](EDITOR.md)). A `GameplayEffect` field of a game's own marked
-`[ForgeEffectTemplate("Cost")]` or `[ForgeEffectTemplate("Cooldown")]` offers, in its right-click menu, to copy or use
-the project's Cost or Cooldown template; those are the two keys it knows.
+PlayForge's inspectors share a base, and a game's own effect fields can start from the project's templates.
+
+`BasePlayForgeEditor` is the base of PlayForge's asset inspectors. The Forge's presets and a project's templates are
+where new assets start ([EDITOR.md](EDITOR.md)).
+
+A `GameplayEffect` field of a game's own marked `[ForgeEffectTemplate("Cost")]` or `[ForgeEffectTemplate("Cooldown")]`
+offers, in its right-click menu, to copy or use the project's Cost or Cooldown template. Those are the two keys it
+knows.
 
 ## Testing your extensions
 
-PlayForge's test kit runs a game's own kinds in a world of entities stepped frame by frame, in Unity's Test Runner. This
-section covers what it offers a kind of a game's own; [TESTING.md](TESTING.md) covers setting it up and writing tests.
+PlayForge's test kit runs a game's own kinds in a world of entities stepped frame by frame, in Unity's Test Runner.
 
-- **A component, a worker or a scaler** goes into an asset the kit makes: `Make.Effect(name, new EffectConfig { ... })`
-  takes `Workers`, effect workers of the game's own, and a `MagnitudeScaler`, a scaler of its own.
-- **An ability task** goes into `Make.Stage(new PulseTask { ... })`, and the stage into `Make.Ability(name, stage)`;
-  `World.Cast(caster, ability, target)` casts it.
-- **A hit** is `World.Hit(source, target, effect)`, and its rolls `World.Rolls(...)`, a scripted source put in for the
-  test; its time `World.Clock(step)`.
-- **A number kind or a condition** needs no world: `number.Evaluate(NumberContext.For(caster, target, level))` and
-  `condition.Holds(context)`.
+This section covers what it offers a kind of a game's own; [TESTING.md](TESTING.md) covers setting it up and writing
+tests.
 
-The kit's assembly, `FarEmerald.PlayForge.Testing`, is referenced by the game's test assembly; it's compiled only where
+| To test | What the kit offers |
+| --- | --- |
+| **A component, a worker or a scaler** | An asset the kit makes. `Make.Effect(name, new EffectConfig { ... })` takes `Workers`, effect workers of the game's own, and a `MagnitudeScaler`, a scaler of its own. |
+| **An ability task** | `Make.Stage(new PulseTask { ... })`, and the stage goes into `Make.Ability(name, stage)`. `World.Cast(caster, ability, target)` casts it. |
+| **A hit** | `World.Hit(source, target, effect)`. Its rolls are `World.Rolls(...)`, a scripted source put in for the test, and its time is `World.Clock(step)`. |
+| **A number kind or a condition** | No world: `number.Evaluate(NumberContext.For(caster, target, level))` and `condition.Holds(context)`. |
+
+The kit's assembly, `FarEmerald.PlayForge.Testing`, is referenced by the game's test assembly. It's compiled only where
 Unity's Test Framework package is in the project.
 
 ## The Creator Lab
 
-The Creator Lab plays a project's assets on units of its own ([CREATOR_LAB.md](CREATOR_LAB.md)). This section covers
-driving its units the game's own way, through a driver.
+The Creator Lab plays a project's assets on units of its own ([CREATOR_LAB.md](CREATOR_LAB.md)).
 
-A driver is an `ILabUnitDriver`: `MoveTo(LabUnit unit, Vector3 point)`, `Attack(LabUnit unit, LabUnit target)`,
-`bool Cast(LabUnit unit, Ability ability, ProcessDataPacket data)` and `Stop(LabUnit unit)`. `LabDriver`, a
-ScriptableObject, implements each as the lab does unless overridden, and is made with
-`Create → PlayForge → Lab Driver`; a class of the game's own derives from it, and its asset is named on the lab's rules'
-**Driver** ([CREATOR_LAB.md](CREATOR_LAB.md#your-unit)).
+This section covers driving its units the game's own way, through a driver.
+
+### Writing a driver
+
+A driver of a game's own moves, attacks with, casts with and stops the lab's units its own way, as through a NavMesh.
+
+A driver is an `ILabUnitDriver`. Derive from `LabDriver`, a ScriptableObject that implements each member as the lab does
+unless overridden.
+
+#### Hooks
+
+| Hook | When PlayForge calls it |
+| --- | --- |
+| `MoveTo(LabUnit unit, Vector3 point)` | As the lab moves a unit to a point. |
+| `Attack(LabUnit unit, LabUnit target)` | As a unit attacks another. |
+| `bool Cast(LabUnit unit, Ability ability, ProcessDataPacket data)` | As a unit casts an ability. |
+| `Stop(LabUnit unit)` | As a unit stops. |
+
+#### In the picker
+
+`LabDriver` is made with `Create → PlayForge → Lab Driver`. A class of the game's own derives from it, and its asset is
+named on the lab's rules' **Driver** ([CREATOR_LAB.md](CREATOR_LAB.md#your-unit)).
+
+#### Example
+
+This driver moves and stops its units through a NavMesh agent, where a unit has one on a NavMesh:
 
 ```csharp
 using FarEmerald.PlayForge.Lab;
@@ -2248,6 +3202,8 @@ namespace MyGame.Lab
 }
 ```
 
-The lab is its own assembly, `FarEmerald.PlayForge.Lab`, left out where the project defines `PLAYFORGE_NO_LAB`. A
-driver's assembly references it and carries the same constraint, `!PLAYFORGE_NO_LAB` among its **Define Constraints**,
-so it's left out with it.
+#### Traps
+
+- **The lab is its own assembly**, `FarEmerald.PlayForge.Lab`, left out where the project defines `PLAYFORGE_NO_LAB`. A
+  driver's assembly references it and carries the same constraint, `!PLAYFORGE_NO_LAB` among its **Define Constraints**,
+  so it's left out with it.

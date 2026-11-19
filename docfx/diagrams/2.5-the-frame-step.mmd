@@ -1,0 +1,41 @@
+sequenceDiagram
+participant U as Unity
+participant PC as ProcessControl
+participant W as ProcessWorld
+participant H as GAS hub
+participant C as GASCore
+participant T as TaskSequenceProcess
+Note over U,T: FixedUpdate
+U->>PC: FixedUpdate()
+PC->>W: StepProcesses(FixedUpdate)
+Note over U,T: Update
+U->>PC: Update()
+PC->>W: SweepDestroyed()
+alt ticks off
+PC->>W: StepProcesses(Update)
+else FixedTickRate above 0
+PC->>W: RunTicks(), up to maxTicksPerFrame
+W->>W: each tick ForgeTime.Use(tickClock), Tick.Advance()
+W->>W: StepProcesses(Update), then StepProcesses(LateUpdate)
+end
+W->>H: pcb.Step, Wrapper.WhenUpdate(relay)
+H->>C: Tick()
+C->>C: FollowTimeScale, Clock.Step()
+C->>C: EffectSystem.Tick(), TickEffectShelf, ClearFinishedEffects
+C->>C: AbilitySystem.CheckWhileActive(), StepBuffer(dt)
+C->>C: Services.Step(dt), the auras and a Respawn's wait, Turn.Step(dt), StepBarriers(dt)
+W->>T: StepAt(Update) when it has conditions, CheckConditions(), or SyncedTaskSequence.Step(data, dt)
+Note over U,T: LateUpdate
+U->>PC: LateUpdate()
+PC->>W: StepProcesses(LateUpdate), with ticks off
+W->>H: pcb.Step, Wrapper.WhenLateUpdate(relay)
+H->>C: EndOfFrame()
+C->>C: ActionQueue.ProcessAll
+C->>C: EvaluateTagWorkers, ProcessAll, TickTagWorkers, ProcessAll
+C->>C: AnalysisCache.Analyze, WatchProjectHealth, EffectSystem.CheckConditions(), ProcessAll
+C->>C: FrameComplete(snapshot) if anyone listens, FrameSummary.Clear()
+C->>C: a pending death runs Die(), FollowBody()
+C-->>H: a pending destruction, SystemDisabled, HandleDestruction()
+PC->>PC: ForgeFrameCosts.EndFrame()
+Note over H,C: A GAS that does not step in LateUpdate never runs its end of frame
+Note over PC,T: Async work resumes at UniTask's Update slot, before ProcessControl.Update, or inside RunTicks when ticks are on

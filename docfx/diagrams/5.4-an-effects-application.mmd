@@ -1,0 +1,52 @@
+sequenceDiagram
+autonumber
+participant C as Caller
+participant G as Target GAS
+participant E as GameplayEffect
+participant M as EffectModifiers
+participant S as EffectSystemComponent
+participant P as Spec and its workers
+participant A as AttributeSystemComponent
+participant D as Source ASC
+C->>G: GenerateEffectSpec(origin, effect)
+G->>E: GASCore.GenerateEffectSpec, Generate(origin, target)
+E->>E: ImpactSpecification.RebuildEntries(Duration)
+E->>P: new GameplayEffectSpec(this, origin, target)
+E->>P: ApplyImpactSpecifications, the scalers' Initialize
+E->>M: EffectModifiers.Apply(spec)
+M-->>P: outgoing and incoming rules fill spec.Changes
+C->>G: ApplyCarrier(spec) or ApplyGameplayEffect(spec)
+G->>S: ApplyGameplayEffect(spec)
+S->>S: gates: dead target, requirements, conditions, immunity, chance
+S->>S: stop stages Block or Evade, Area lands on others in range
+S->>S: Land(spec) numbers the ApplicationId
+alt Instant
+S->>S: grant the tags
+S->>P: RunWorkerApplication, components Land
+S->>A: CommitImpact(attr, SMAV(spec), OnApply impacters)
+S->>P: transfers Move, RunWorkerRemoval and components End, remove the tags
+else Durational or Infinite
+S->>S: re-application by EEffectReApplicationPolicy, components Reapply when taken in
+S->>S: GenerateContainer(spec, ongoing), Shelve, GrantedTagCompiler.AddEffect
+S->>S: LendAbilities: OnHits, modifiers, WorkerGroup, sides, components Lend, GrantedAbilities
+S->>A: RegisterModifier(attr, SMAV(spec), Continuous impacters)
+S->>P: RunWorkerApplication, components Land
+S->>A: if ongoing, TickOnApplication or the OnApply commits
+end
+S->>S: the cleanse RemovesEffectsTagged, ForgePurge.Purge(Purges)
+S->>G: FrameSummary.RecordEffectApplied, Callbacks.EffectApplied(spec)
+S->>S: the contained OnApply effects
+A->>G: after each change, RecordFrameImpactReceived
+A->>D: ProvideFrameImpactDealt(impact)
+D->>P: TrackImpact, OnEffectImpact, components Hit
+D->>D: ImpactWorkerCache.RunImpactData, RecordFrameImpactDealt
+loop each GASCore.Tick
+S->>P: TickPeriodic(dt of the target's clock), RunWorkerTick, components Tick
+S->>A: Callbacks.EffectTick, n periodic commits
+S->>S: UpdateTimeRemaining, MarkFinished when expired
+end
+S->>A: ClearFinishedEffects: OnRemove, ReverseImpact, UnregisterModifier
+S->>P: TakeBackAbilities with components TakeBack, RunWorkerRemoval and components End
+S->>G: Callbacks.EffectRemoved(spec), the tag recompile
+Note over S,A: OnApply and Periodic commits never reverse
+Note over S,P: Its cues play through its Cues component, as the components hear Lend, Land, Tick, End and TakeBack

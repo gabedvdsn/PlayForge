@@ -1,0 +1,164 @@
+classDiagram
+class Ability:::asset {
+<<ScriptableObject>>
++Definition : AbilityDefinition
++Tags : AbilityTags
++Behaviour : AbilityBehaviour
++SourceActivationRules : List~IAbilityValidationRule~
++Cost : GameplayEffect
++Cooldown : GameplayEffect
++Components : List~AbstractAbilityComponent~
++Find() T, its first component that is a T
++Generate(ISource owner, int level) AbilitySpec
+}
+class AbilityDefinition:::asset {
+<<Serializable>>
++ActivationPolicy : EAbilityActivationPolicyExtended
++WhileTargeting : EWhileTargeting
++BufferWindow : ScalableFloat
++ActivateImmediately : bool
++Triggers : List~AbilityTrigger~
++ChanceToActivate
++IgnoresCrowdControl : List~Tag~
+}
+class AbilityTags:::asset {
++AssetTag : Tag
++ContextTags
++PassiveGrantedTags
++ActiveGrantedTags
++TagRequirements : AbilityTagRequirements
+}
+class AbilityBehaviour:::asset {
+<<Serializable>>
++Targeting : AbstractTargetingAbilityTask
++UseImplicitTargeting : bool
++ImplicitTag = TARGET
++AssetLoaders : List~AbstractSetAssetsTask~
++Stages : List~AbilityTaskBehaviourStage~
++CancelledBy
++Blocks
++GenerateProxy(name) AbilityProxy
+}
+class AbilityTaskBehaviourStage:::asset {
++StagePolicy : IAbilityProxyStagePolicy
++Tasks : List~AbstractAbilityTask~
++ApplyUsageEffects
++Condition : AbilityStageCondition
+}
+class AbilitySystemComponent:::rt {
++GiveAbility(Ability, int level, out int index) bool
++RemoveAbility(Ability)
++CreateActivationRequest(index, data, policy, bufferWindow)
++TryActivateAbility(request, out ActivationRefusal) ActivationResult
++TryActivateAbility(Ability or Tag, data, policy) ActivationResult
++SendGameplayEvent(Tag, ProcessDataPacket) int
++Inject(index, ISequenceInjection)
++Callbacks : AbilitySystemCallbacks
+}
+class AbilityActivationRequest:::rt {
+<<struct>>
++Index : int
++Policy
++Data : ProcessDataPacket
++BufferWindow : float
++CancelsTargeting : bool
+}
+class AbilitySpecContainer:::rt {
+one granted slot
++Spec : AbilitySpec
++Index : int
++IsActive : bool
++IsTargeting : bool
++IsCooldown : bool
++ActivateAbility(AbilityDataPacket) bool
++Cancel()
+}
+class BasicEffectOrigin:::ext {
+<<abstract>>
+registers its level under its asset tag
+}
+class AbilitySpec:::rt {
+the origin of what the ability applies
++Base : Ability
++Source : ISource
++CooldownModel : ICooldownModel
++Find() T, its ability's component
++ApplyUsageEffects(data)
++CanPayAttributeCosts(data) bool
++Read(ScalableFloat, data) float
+}
+class AbilityActivationHandle:::rt {
+one running activation
++Data : AbilityDataPacket
++Proxy : AbilityProxy
++IsTargeting : bool
++IsExecuting : bool
+}
+class AbilityProxy:::rt {
+CompiledTargeting : TaskSequence
+CompiledSequence : TaskSequence
++ActivateTargetingTask(token, data) UniTask
++Activate(token, data) UniTask
++Inject(inj, data)
++Clean()
++HasAnyCriticalStage : bool
+}
+class AbilitySequenceCompiler:::rt {
+<<static>>
++Compile(AbilityBehaviour, name) TaskSequence
++CompileTargeting() TaskSequence
+}
+class SequenceDataPacket:::rt
+class AbilityDataPacket:::rt {
+one per activation
++EffectOrigin : IEffectOrigin
++AbilitySpec : AbilitySpec
++static GenerateFrom(origin, request, implicit, tag)
++TryGetTarget(EDataTarget, out ITarget) bool
++ResolveTarget(Tag)
++GetTaskState(task) T
+}
+class AbilitySystemCallbacks:::rt {
++OnAbilityActivate
++OnAbilityEnd
++OnAbilityRefused(ActivationRefusal)
++OnGameplayEvent(Tag, ProcessDataPacket)
++OnAbilityStageActivate
++OnAbilityTaskActivate
+}
+class ActivationRefusal:::rt {
+<<struct>>
++Reason : EActivationRefusal
++Rule
++Detail
++Refused : bool
+}
+class AbilityCharges:::rt {
+the Charges component's, per ability
++Max
++Spent
++InHand
++StartCooldown(data)
+}
+Ability *-- AbilityDefinition
+Ability *-- AbilityTags
+Ability *-- AbilityBehaviour
+AbilityBehaviour "1" *-- "many" AbilityTaskBehaviourStage
+AbilityBehaviour ..> AbilityProxy : GenerateProxy
+Ability ..> AbilitySpec : Generate
+AbilitySystemComponent "1" *-- "many" AbilitySpecContainer
+AbilitySystemComponent ..> AbilityActivationRequest
+AbilitySystemComponent *-- AbilitySystemCallbacks
+AbilitySystemCallbacks ..> ActivationRefusal
+AbilitySpecContainer *-- AbilitySpec
+AbilitySpecContainer "1" *-- "many" AbilityActivationHandle
+AbilitySpecContainer o-- AbilityProxy : pooled
+BasicEffectOrigin <|-- AbilitySpec
+AbilitySpec *-- AbilityCharges : ComponentStates
+AbilityActivationHandle --> AbilityDataPacket
+AbilityActivationHandle --> AbilityProxy
+AbilityProxy ..> AbilitySequenceCompiler : compiles lazily
+SequenceDataPacket <|-- AbilityDataPacket
+classDef rt fill:#FFE86D,stroke:#CBB333,color:#574900
+classDef ext fill:#A0C4FB,stroke:#6A8BBF,color:#14315E
+classDef asset fill:#B8ACFB,stroke:#7D6DD4,color:#231266

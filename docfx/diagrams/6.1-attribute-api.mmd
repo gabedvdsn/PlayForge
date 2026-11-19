@@ -1,0 +1,135 @@
+classDiagram
+class IAttribute:::ext {
+<<interface>>
+IHasReadableDefinition, ITagSource, IEquatable
+}
+class Attribute:::asset {
+<<ScriptableObject>>
+equality by Name
++Name
++Abbreviation
++Role : EAttributeRole
++AbsorbsFor : Attribute
++DecayPerSecond
++FadesWithEffect
++GainsScaledBy : Attribute
+}
+class RuntimeAttribute:::rt {
+an attribute built in code
+}
+class EAttributeRole:::rt {
+<<enumeration>>
+Value
+BonusShare
+Multiplier
+Resistance
+Barrier
+}
+class AttributeSet:::asset {
+<<ScriptableObject>>
++AssetTag
++Attributes : List~AttributeSetElement~
++SubSets : List~AttributeSet~
++CollisionResolutionPolicy
++WorkerGroup : StandardWorkerGroup
++Initialize(AttributeSystemComponent)
++SelfAndSubSets()
+}
+class AttributeSetElement:::asset {
++Attribute : Attribute
++Current : AttributeMagnitudeSpec
++Base : AttributeMagnitudeSpec
++LinkCurrentToBase : bool
++Overflow : AttributeOverflowData
++Constraints : AttributeConstraints
++RetentionGroup : Tag
+}
+class AttributeSystemComponent:::rt {
++RegisterModifier(IAttribute, SMAV, impacters, runEvents) ImpactData
++UnregisterModifier(IAttribute, SMAV, runEvents)
++CommitImpact(IAttribute, SMAV, impacters, runEvents)
++ModifyAttribute(IAttribute, SMAV, runEvents)
++TryGetValue(IAttribute, out AttributeValue) bool
++GetBreakdown(attr) IReadOnlyList~GroupContribution~
++ProvideAttributeSet(AttributeSet)
++ProvideWorker(AbstractAttributeWorker)
+}
+class CachedAttributeValue:::rt {
++ActiveValue : AttributeValue
++RootValue
++Blueprint : AttributeBlueprint
++RegisterModifier(carrier, impacters, cache)
++CommitImpact()
++PreviewCommit(carrier, impacters) AttributeValue
++Recompute(cache) AttributeValue
++GetGroupValue(Tag)
+}
+class AttributeBlueprint:::rt {
++SetElement
++Derivation
++RootValue
++GetInitialValue()
++GetActiveValue()
+}
+class AttributeValue:::rt {
+<<struct>>
++CurrentValue : float
++BaseValue : float
++Ratio
+}
+class SourcedModifiedAttributeValue:::rt {
+<<struct>>
+SMAV
++Carrier : IAttributeImpactCarrier
++CurrentValue
++BaseValue
++ImpactIsWorkable : bool
++static GenerateSimple(source, attr, cur, base)
+}
+class ChangeValue:::rt {
+rented per commit
++Value : SMAV
++Add()
++Multiply()
++Override()
+}
+class ImpactData:::rt {
+<<struct>>
++Target
++Attribute
++SourcedModifier
++RealImpact
++OldValue
++LiveValue
+}
+class AttributeSystemCallbacks:::rt {
++OnAttributePreChange(IAttribute, ChangeValue)
++OnAttributePostChange(IAttribute, ChangeValue)
++OnAttributeChanged(ImpactData)
++OnAttributeBaseChanged(attr, old, new)
++OnAttributeCurrentZero(attr)
++OnAttributeCurrentFull(attr)
+}
+class AttributeChangeMomentHandler:::rt {
+the attribute workers by attribute
++AddWorker()
++RemoveWorker()
++RunWorkers(WorkerContext)
+}
+IAttribute <|.. Attribute
+IAttribute <|.. RuntimeAttribute
+Attribute --> EAttributeRole
+AttributeSet "1" *-- "many" AttributeSetElement
+AttributeSetElement --> Attribute
+AttributeSet ..> AttributeSystemComponent : Initialize
+AttributeSystemComponent "1" *-- "many" CachedAttributeValue : one per IAttribute
+CachedAttributeValue --> AttributeBlueprint
+CachedAttributeValue ..> AttributeValue : Recompute
+AttributeSystemComponent ..> SourcedModifiedAttributeValue : the four verbs take
+AttributeSystemComponent ..> ChangeValue
+AttributeSystemComponent ..> ImpactData : returns
+AttributeSystemComponent *-- AttributeSystemCallbacks
+AttributeSystemComponent "1" *-- "2" AttributeChangeMomentHandler : PreChange and PostChange
+classDef rt fill:#FFE86D,stroke:#CBB333,color:#574900
+classDef ext fill:#A0C4FB,stroke:#6A8BBF,color:#14315E
+classDef asset fill:#B8ACFB,stroke:#7D6DD4,color:#231266

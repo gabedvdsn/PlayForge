@@ -1,0 +1,14 @@
+flowchart LR
+classDef general fill:#FFE86D,stroke:#CBB333,color:#574900
+classDef terminator fill:#DDDDD8,stroke:#A8A8A0,color:#434339
+c(["Created"]):::terminator
+r["Running"]:::general
+w["Waiting"]:::general
+t(["Terminated"]):::terminator
+c -->|SelfTerminating, RunThenWait or Synchronous| r
+c -->|RequiresControl| w
+w -->|relay.Run or Unpause| r
+r -->|RunThenWait or RequiresControl, RunProcess returns| w
+r -->|SelfTerminating, RunProcess returns| t
+r -->|Terminate| t
+w -->|Terminate| t

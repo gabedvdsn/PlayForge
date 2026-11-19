@@ -1,0 +1,120 @@
+classDiagram
+class IGameplayProcessHandler:::ext {
+<<interface>>
++GetRelays()
++HandlerSubscribeProcess(relay)
++HandlerVoidProcess(relay)
++GetInstantiator(AbstractMonoProcess)
+}
+class IGameplayProcess:::ext {
+<<interface>>
++SendProcessData(data, relay)
++WhenInitialize()
++WhenUpdate()
++WhenLateUpdate()
++WhenFixedUpdate()
++RunProcess(CancellationToken) UniTask
++WhenTerminate()
++TryHandlePause()
+}
+class AbstractMonoProcess:::ext {
+<<abstract MonoBehaviour>>
++ProcessLifecycle = Synchronous
++ProcessTiming = UpdateAndLate
++PriorityMethod = First
++Instantiator
++Data : ProcessDataPacket
++ProcessRelay : ProcessRelay
++abstract RunProcess(token) UniTask
+}
+class LazyMonoProcess:::ext {
+RunProcess idles on ForgeTick.Next
+}
+class AbstractGameplayMonoProcess:::ext {
++Attributes : List~ProcessAttribute~
++TryGetAttribute(IAttribute, out float) bool
++TryGetRole(Tag, out float) bool
++GiveMagnitudes(GameplayEffectSpec)
++AttributeChanged event
+}
+class AbstractEffectingMonoProcess:::ext {
++Effects : List~GameplayEffect~
+#ApplyEffects(ITarget)
+}
+class AbstractTargetedMonoProcess:::ext {
++SetTarget(ITarget, AbstractTargetingPacket)
+RunTargetedProcess(token) UniTask
+}
+class ProjectileMonoProcess:::rt {
+flies at the PROJECTILE_SPEED role
+GetProjectileSpeed() float
+}
+class AbstractRuntimeProcess:::ext {
+<<abstract>>
++ctor(name, method, priority, timing, lifecycle)
+defaults SelfTerminating, timing None
+}
+class LazyRuntimeProcess:::ext {
+RunProcess idles
+}
+class GroupProcess:::rt {
++MaxMembers : int
++OnMemberJoined
++OnMemberLeft
++PauseAll()
++TerminateAllMembers()
+}
+class ActionProcess:::rt {
+invokes an action on every WhenUpdate
+}
+class TaskSequenceProcess:::rt {
++Sequence : TaskSequence
++Chain : TaskSequenceChain
++IsSynchronous : bool
++Interrupt()
+}
+class GameplayAbilitySystem:::rt {
+<<MonoBehaviour>>
+the scene hub
+}
+class GameRoot:::rt {
++static Instance : GameRoot
++Project : ForgeProject
+}
+class RuntimeGameplayAbilitySystem:::rt {
+a hub with no GameObject
+}
+class AbstractReader:::ext {
++Assign(gas)
+}
+class AttributeReader:::rt
+class AbilityReader:::rt
+class AbstractMonoProcessInstantiator:::ext {
+<<abstract>>
++Create(process, data, isInstantiated)
+PrepareExisting()
+PrepareNew()
+CleanProcess()
+}
+IGameplayProcessHandler <|-- IGameplayProcess
+IGameplayProcess <|.. AbstractMonoProcess
+IGameplayProcess <|.. AbstractRuntimeProcess
+AbstractMonoProcess <|-- LazyMonoProcess
+LazyMonoProcess <|-- GameplayAbilitySystem
+GameplayAbilitySystem <|-- GameRoot
+LazyMonoProcess <|-- AbstractGameplayMonoProcess
+AbstractGameplayMonoProcess <|-- AbstractEffectingMonoProcess
+AbstractEffectingMonoProcess <|-- AbstractTargetedMonoProcess
+AbstractTargetedMonoProcess <|-- ProjectileMonoProcess
+LazyMonoProcess <|-- AbstractReader
+AbstractReader <|-- AttributeReader
+AbstractReader <|-- AbilityReader
+AbstractRuntimeProcess <|-- LazyRuntimeProcess
+LazyRuntimeProcess <|-- RuntimeGameplayAbilitySystem
+LazyRuntimeProcess <|-- TaskSequenceProcess
+LazyRuntimeProcess <|-- GroupProcess
+LazyRuntimeProcess <|-- ActionProcess
+AbstractMonoProcess ..> AbstractMonoProcessInstantiator : Instantiator
+classDef rt fill:#FFE86D,stroke:#CBB333,color:#574900
+classDef ext fill:#A0C4FB,stroke:#6A8BBF,color:#14315E
+classDef asset fill:#B8ACFB,stroke:#7D6DD4,color:#231266

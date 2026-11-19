@@ -20,8 +20,13 @@ https://gabedvdsn.github.io/PlayForge-Docs/.
 2. **Metadata:** DocFX reads the runtime, the Creator Lab, the editor and the test kit as one compilation into `obj/api`:
    a page for each public type.
 3. **Prepare** (`prepare.py`) writes the generated pages, all ignored by git:
-   - `guides/`: each guide a folder, with its opening at `index.md` and each `##` section a page of its own. Links
-     between guides go to the page holding the section they name, and the contents list each guide's sections.
+   - `guides/`: each guide a folder, with its opening at `index.md` and each `##` section a page of its own. A section
+     with two or more `###` parts gives each part a page too, in a folder named for the section, under a short page of
+     the section's opening and a list of its parts. Links between guides go to the page holding the heading they name,
+     and the contents list each guide's sections and parts.
+   - Figures: a `<!-- screenshot: name -->` line in a guide becomes `images/editor/name.png` where that image exists, and
+     `diagrams/diagrams.json` places each Mermaid diagram of `diagrams/`, or an image, on its page, after its opening
+     paragraph. The images and diagrams are the site's alone; the package ships the comments, which show nowhere.
    - Links between the guides and the API: a type or member a guide names in backticks, as `GameplayEffect` or
      `ForgeLog.MinimumLevel`, links to its page, once on each page. Each type's page says which guide sections
      name it (`apidoc/`, DocFX overwrite files), or else which guide covers its area.
@@ -40,4 +45,8 @@ area names, or a help topic with no page.
   types are listed under, and which guide covers them.
 - **Help buttons:** `ForgeDocs.UrlOf` opens a topic's section as its own page, named as the site names its heading, so
   a heading a help topic names keeps its words, or its topic moves with it. The build checks each topic's page.
+- **Screenshots:** Proving Grounds' **PlayForge → Docs → Capture Screenshots** draws each editor tool into a PNG,
+  with the Demo's assets; from the command line, `-executeMethod
+  FarEmerald.PlayForge.ProvingGrounds.DocsCapture.DocsScreenshots.CaptureAndQuit -docsOut "<repo>/docfx/images/editor"`
+  without `-batchmode`, as the editor draws no window in batch mode. A guide asks for one with its comment, above.
 - **DocFX** 2.81.0 is pinned in `.config/dotnet-tools.json`.

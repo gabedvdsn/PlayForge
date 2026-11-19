@@ -1,0 +1,145 @@
+classDiagram
+class GASCore:::rt {
+<<internal sealed>>
++EffectModifiers : EffectModifierSet
++Sides : SideSet
++CombatLog : CombatLog
++Clock : EntityClock
++LocalData : LocalDataStructure
++IsDead : bool
++MarkDead()
++Revive(at)
+}
+class ActionQueue:::rt {
++Enqueue(action, priority)
++EnqueueRange()
++ProcessAll(ISource) int
++HasActions : bool
++Clear()
+}
+class IRootAction:::ext {
+<<interface>>
++Priority : int
++IsValid : bool
++Description : string
++Execute(ISource)
+}
+class ActionPriority:::rt {
+Critical = 100
+High = 50
+Normal = 0
+Low = -50
+TagWorker = -100
+Analysis = -200
+Cleanup = -300
+}
+class DeathAction:::rt {
+Critical, calls MarkDead
+}
+class LambdaAction:::rt {
++ctor(Action~ISource~, desc, priority)
+}
+class ModifyAttributeAction:::rt
+class ApplyEffectAction:::rt
+class RemoveEffectAction:::rt
+class FrameSummary:::rt {
+one frame's impacts, effects and deaths
++GetTotalReduction(attr)
++GetNetImpact(attr)
++GetImpactsDealtTo()
++CreateSnapshot(n) FrameSummarySnapshot
++Clear()
+}
+class EntityClock:::rt {
+<<sealed>>
++TimeScale : float
++DeltaTime : float
++FixedDeltaTime : float
++Time : float
+}
+class SideSet:::rt {
++Count : int
++Current : List~Tag~
++Changed
+}
+class AbstractEntityService:::ext {
+<<abstract>>
+one per entity, gas.GetService or FindService
+Step(dt)
+Revive()
+End()
+}
+class AuraSet:::rt {
++Add()
++Remove()
++Step(dt)
++Clear()
+}
+class RespawnTimer:::rt {
++TimeLeft : float
++ReviveIn(seconds, where)
+}
+class CombatLog:::rt {
+a ring buffer of CombatLogEntry
++Entries
++Of(kind)
++By(effect)
++Total(kind, attr)
+}
+class EntityDeath:::asset {
+<<Serializable>>
++Policy : EDeathPolicy
++DiesAtZeroHealth : bool
++Purges
++KeepsTiers
++Body
+OnDeath and OnRevive effects
+}
+class EDeathPolicy:::rt {
+<<enumeration>>
+End
+Stay
+}
+class AbstractEntityComponent:::ext {
+<<abstract>>
+Register(ctx)
+Death(ctx)
+Revive(ctx)
+End(ctx)
+}
+class BountyEntityComponent:::rt {
++Effect
++ShareRadius
++Flat
+}
+class RespawnEntityComponent:::rt {
++Delay
++At : AbstractRespawnPlace
+places: Home, WhereItDied, Point
+}
+class AuraEntityComponent:::rt
+GASCore *-- ActionQueue
+GASCore *-- FrameSummary
+GASCore *-- EntityClock
+GASCore *-- SideSet
+GASCore "1" *-- "many" AbstractEntityService : Services
+AbstractEntityService <|-- AuraSet
+AbstractEntityService <|-- RespawnTimer
+GASCore *-- CombatLog
+ActionQueue o-- IRootAction
+IRootAction ..> ActionPriority : Priority
+IRootAction <|.. DeathAction
+IRootAction <|.. LambdaAction
+IRootAction <|.. ModifyAttributeAction
+IRootAction <|.. ApplyEffectAction
+IRootAction <|.. RemoveEffectAction
+GASCore ..> EntityDeath : the identity's Death
+EntityDeath --> EDeathPolicy
+GASCore ..> AbstractEntityComponent : the identity's Components
+AbstractEntityComponent <|-- BountyEntityComponent
+AbstractEntityComponent <|-- RespawnEntityComponent
+AbstractEntityComponent <|-- AuraEntityComponent
+RespawnEntityComponent ..> RespawnTimer : ReviveIn
+classDef rt fill:#FFE86D,stroke:#CBB333,color:#574900
+classDef ext fill:#A0C4FB,stroke:#6A8BBF,color:#14315E
+classDef asset fill:#B8ACFB,stroke:#7D6DD4,color:#231266
