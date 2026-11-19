@@ -93,6 +93,7 @@ namespace FarEmerald.PlayForge.Editor
         private const string NarrowClass = "pf-debugger--narrow";
         private const string SourceColumnClass = "pf-debugger__col-source";
         private static readonly string[] NarrowHiddenColumns = { "Handler", "Lifecycle", "Timing", "Lifetime" };
+        private const string ProcessesTable = "Debugger.Processes";
         private bool narrow;
         private bool fitted;
         private TwoPaneSplitView entitySplit;
@@ -548,13 +549,25 @@ namespace FarEmerald.PlayForge.Editor
             Lay(processSplit, 1, 380);
             Lay(tagSplit, 0, 440);
             Lay(timelineSplit, 1, 380);
-            // The list's header shows or hides a column at once, while its rows take their cells only at a rebuild Unity
-            // schedules. The window fits itself as it's laid out, so the header would resize a column the rows have no
-            // cell for yet, which throws: the rows are built again with the header
-            if (processList != null && NarrowHiddenColumns.Any(name => processList.columns[name].visible == narrow))
+            // A narrow window hides the four, and a wide one shows those the user didn't hide from the header's menu, so
+            // the fit keeps nothing as the user's choice. The list's header shows or hides a column at once, while its rows
+            // take their cells only at a rebuild Unity schedules. The window fits itself as it's laid out, so the header
+            // would resize a column the rows have no cell for yet, which throws: the rows are built again with the header
+            if (processList != null)
             {
-                foreach (var name in NarrowHiddenColumns) processList.columns[name].visible = !narrow;
-                processList.Rebuild();
+                bool changed = false;
+                ForgeColumnWidths.FitToWidth(() =>
+                {
+                    foreach (var name in NarrowHiddenColumns)
+                    {
+                        var column = processList.columns[name];
+                        bool shown = !narrow && !ForgeColumnWidths.HiddenByUser(ProcessesTable, name);
+                        if (column.visible == shown) continue;
+                        column.visible = shown;
+                        changed = true;
+                    }
+                });
+                if (changed) processList.Rebuild();
             }
             rootVisualElement.Query(className: SourceColumnClass).ForEach(cell => cell.EnableInClassList(HiddenClass, narrow));
             ShowView();

@@ -26,6 +26,30 @@ namespace FarEmerald.PlayForge.Editor
         /// <summary>The preference a table's hidden columns are kept under.</summary>
         internal static string HiddenKeyOf(string table) => PlayForgePreferences.Prefix + "HiddenColumns_" + table;
 
+        // How many fits to a width are under way: what a fit shows or hides isn't the user's choice, and isn't kept
+        private static int fitting;
+
+        /// <summary>
+        /// Shows or hides a table's columns to fit its width, as a narrow window drops some: the columns the user hid
+        /// from the header's menu stay as they were kept.
+        /// </summary>
+        public static void FitToWidth(System.Action change)
+        {
+            fitting++;
+            try
+            {
+                change();
+            }
+            finally
+            {
+                fitting--;
+            }
+        }
+
+        /// <summary>Whether the user hid a table's column from its header's menu.</summary>
+        public static bool HiddenByUser(string table, string column) =>
+            EditorPrefs.GetString(HiddenKeyOf(table), "").Split(';').Contains(column);
+
         /// <summary>
         /// Gives a table's columns the widths they were last dragged to, and keeps each width a drag gives one from now on.
         /// Only a drag, or the header's Resize to Fit, changes a column's width: as a table narrows or widens, its list lays
@@ -68,7 +92,7 @@ namespace FarEmerald.PlayForge.Editor
                 if (hidden.Contains(column.name)) column.visible = false;
                 column.propertyChanged += (_, changed) =>
                 {
-                    if (changed.propertyName.ToString() != nameof(Column.visible)) return;
+                    if (changed.propertyName.ToString() != nameof(Column.visible) || fitting > 0) return;
                     if (column.visible) hidden.Remove(column.name);
                     else hidden.Add(column.name);
                     if (hidden.Count == 0) EditorPrefs.DeleteKey(hiddenKey);

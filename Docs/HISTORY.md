@@ -1173,6 +1173,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   Asking whether its sequence was paused took 24 bytes a frame.
 
 ### Fixed
+- **The Debugger's fit to its width was kept as the user's hidden columns** (ED-98): a narrow window kept four of
+  the Processes list's columns hidden, and a wide one showed again a column hidden from the header's menu.
 - **The Forge's Tags view listed the empty tag** (ED-93): each tag field left unset counted as a use of a tag of no
   name, which the view listed first, For every context, and selected while no tag was.
 - **The Debugger's tag tree closed at each refill** (ED-94): a parent opened once, then closed as a tag was held or
