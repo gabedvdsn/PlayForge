@@ -1173,6 +1173,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   Asking whether its sequence was paused took 24 bytes a frame.
 
 ### Fixed
+- **The Dota lab's Mana Void had a warning** (ED-97): linked to a level provider never in Proving Grounds, it uses
+  its own levels, and a test checks each lab's assets.
 - **The Debugger's fit to its width was kept as the user's hidden columns** (ED-98): a narrow window kept four of
   the Processes list's columns hidden, and a wide one showed again a column hidden from the header's menu.
 - **The Forge's Tags view listed the empty tag** (ED-93): each tag field left unset counted as a use of a tag of no
