@@ -303,6 +303,12 @@ MonoBehaviour:
     Asset: {fileID: 11400000, guid: e60f5a093989d374e86da47bada204a6, type: 2}
   - Id: a43e7ecdd0e727b4cbc35d804d6f529f
     Asset: {fileID: 11400000, guid: a43e7ecdd0e727b4cbc35d804d6f529f, type: 2}
+  - Id: b69b3f6b6339d5047a194dbe43a03174
+    Asset: {fileID: 11400000, guid: b69b3f6b6339d5047a194dbe43a03174, type: 2}
+  - Id: 9fcd67f98b4b40a40957bcfcc803f87c
+    Asset: {fileID: 11400000, guid: 9fcd67f98b4b40a40957bcfcc803f87c, type: 2}
+  - Id: 6fb451377fe6489458c6f79991fda779
+    Asset: {fileID: 11400000, guid: 6fb451377fe6489458c6f79991fda779, type: 2}
   Description: 'The Survivors demo''s assets: its hero, its horde, their abilities,
     effects and attributes, and the passives, a Forge Project of their own'
   Settings:

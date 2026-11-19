@@ -80,6 +80,9 @@ namespace FarEmerald.PlayForge.Samples.Survivors
         [Tooltip("The abilities a level-up's cards offer: a new one, or a level more of one the hero holds")]
         public List<Ability> AbilityPool = new();
 
+        [Tooltip("The hero's dash, which its key casts: a starting ability of the hero's, never a card, never cast on its own")]
+        public Ability Dash;
+
         [Tooltip("The passives a boss wave's cards offer, each an item whose effects grow with its level")]
         public List<Item> PassivePool = new();
 
@@ -107,19 +110,19 @@ namespace FarEmerald.PlayForge.Samples.Survivors
 
         [Header("Waves")]
         [Tooltip("Seconds a wave lasts; the next starts as it ends")]
-        [Min(1f)] public float WaveSeconds = 15f;
+        [Min(1f)] public float WaveSeconds = 25f;
 
         [Tooltip("Every how many waves a boss wave comes")]
         [Min(1)] public int BossEvery = 2;
 
         [Tooltip("How many enemies the first wave sends over its time")]
-        [Min(1)] public int FirstWaveCount = 14;
+        [Min(1)] public int FirstWaveCount = 23;
 
         [Tooltip("How many more each wave sends than the one before")]
-        [Min(0)] public int WaveGrowth = 10;
+        [Min(0)] public int WaveGrowth = 17;
 
         [Tooltip("How many more again, by the square of the wave, so the horde builds")]
-        [Min(0f)] public float WaveCurve = 1.5f;
+        [Min(0f)] public float WaveCurve = 2.5f;
 
         [Tooltip("Every how many waves an enemy is a level higher")]
         [Min(1)] public int WavesALevel = 2;

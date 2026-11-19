@@ -23,6 +23,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 69902a20c60dc4c42a9070e5b74b8ffe, type: 2}
   - {fileID: 11400000, guid: 4dee9ff485c192b42bc3d72472390dc1, type: 2}
   - {fileID: 11400000, guid: d10a0c5904286f94b8c5b1f3f7869465, type: 2}
+  Dash: {fileID: 11400000, guid: 9fcd67f98b4b40a40957bcfcc803f87c, type: 2}
   PassivePool:
   - {fileID: 11400000, guid: c176ffa23b36ce949b032a80483f57dc, type: 2}
   - {fileID: 11400000, guid: 3a4e526320262dc4d8ff5c8d88a11a1a, type: 2}
@@ -45,11 +46,11 @@ MonoBehaviour:
   FirstLevel: 5
   LevelGrowth: 5
   LevelCurve: 0.5
-  WaveSeconds: 15
+  WaveSeconds: 25
   BossEvery: 2
-  FirstWaveCount: 14
-  WaveGrowth: 10
-  WaveCurve: 1.5
+  FirstWaveCount: 23
+  WaveGrowth: 17
+  WaveCurve: 2.5
   WavesALevel: 2
   MaxEnemies: 600
   SpawnDistance: 22
@@ -157,8 +158,8 @@ MonoBehaviour:
         Experience: 5
         SplitsInto: {fileID: 0}
         Splits: 0
-      Count: 5
-      ExtraLevels: 1
+      Count: 4
+      ExtraLevels: 0
   - Name: Ogre Warlord
     Units:
     - Kind:
@@ -183,7 +184,7 @@ MonoBehaviour:
         Experience: 5
         SplitsInto: {fileID: 0}
         Splits: 0
-      Count: 2
+      Count: 1
       ExtraLevels: 0
   - Name: The Lich
     Units:

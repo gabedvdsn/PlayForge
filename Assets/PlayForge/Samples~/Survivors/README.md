@@ -21,15 +21,18 @@ default material.
 ## Controls
 
 - **WASD** or the **arrow keys** walk the hero. Its abilities cast themselves.
+- **Space** dashes the hero a short way, the way it last walked. The horde's blows pass it by as it goes, and its
+  cooldown shows beside the abilities.
 - **1 to 5**, or a click, take a card while the cards are up. Time stands until you take one.
 - **R** starts a new run once the hero falls.
 
 ## How a run goes
 
-- **Waves.** A wave lasts 15 seconds and sends its enemies all through it. Each wave sends more than the one before,
+- **Waves.** A wave lasts 25 seconds and sends its enemies all through it. Each wave sends more than the one before,
   and new kinds join as the waves go on. An enemy's level rises every two waves, and its Health and Power with it.
 - **Boss waves.** Every second wave is a boss wave. It also sends a pack of hard enemies at once: a Brute Pack, the Ogre
-  Warlord, the Lich or the Hive Queen, in turn. Felling them all offers five passive cards.
+  Warlord, the Lich or the Hive Queen, in turn; the first two are a little gentler. Felling them all offers five
+  passive cards.
 - **Experience.** Each enemy drops a crystal where it falls. The hero draws crystals in from its Pickup Radius, and each
   level takes more experience than the last.
 - **Level-ups.** Each level offers three ability cards: a new ability while the hero holds fewer than five, or a level
@@ -42,8 +45,8 @@ default material.
 - **Left:** the wave and whether it's a boss wave, the seconds to the next one, the time survived and the kills.
 - **Right:** what the run costs: the frame rate and frame time, how many enemies stand, how many processes
   ProcessControl runs, and how many crystals lie.
-- **At the bottom:** the hero's Health, its abilities with their levels and cooldowns, and its passives with their
-  levels.
+- **At the bottom:** the hero's Health, its dash and its cooldown, its abilities with their levels and cooldowns, and
+  its passives with their levels.
 
 ## The abilities
 
@@ -63,6 +66,10 @@ Local Data says what it spawns, how many by level, and in which pattern, so a de
 
 Each ability's reach is its **Cast Range** component. The hero casts an ability once an enemy stands within it, and an
 ability's Auto Target finds its enemies within it.
+
+The **Dash** is the hero's own, on Space, apart from the pool. Its Dash task moves the hero 5 the way it last walked,
+and its Dashing effect grants a tag that every blow of the horde's avoids, in the blow's target requirements. It has
+no Cast Range: the point it's handed only sets its way.
 
 ## The passives
 

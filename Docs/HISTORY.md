@@ -10,6 +10,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## Toward 1.0.0, since 0.1.0
 
 ### Added
+- **Survivors' dash, longer waves and gentler first boss waves** (FEAT-41): Space dashes the hero past the horde's
+  blows; a wave lasts 25 seconds; the Brute Pack and the Ogre Warlord's wave are a little easier.
 - **Many more screenshots in the docs** (EP-77): every asset guide's inspector and each of its sections, and
   close-ups of the editor tools' parts and windows: 94 images on 97 pages.
 - **Diagrams large enough to read on the docs site** (EP-76): drawn at no less than 60% of their size,

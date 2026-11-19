@@ -1,0 +1,183 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d5a42dbe2415465689d11a1e8ae1fdbc, type: 3}
+  m_Name: Dash
+  m_EditorClassIdentifier: 
+  LocalData: []
+  _template: {fileID: 0}
+  _templateOverrides: []
+  _templateListSnapshots: []
+  Definition:
+    Name: Dash
+    Description: 'A dash of 5 the way the hero last walked, on Space: the horde''s
+      blows pass it by as it goes. No card offers it, and it never casts on its own.'
+    ActivationPolicy: 0
+    WhileTargeting: 0
+    BufferWindow:
+      Magnitude: 0.3
+      RealMagnitude: 2
+      Scaler:
+        rid: -2
+    BufferPriority:
+      Magnitude: 0
+      RealMagnitude: 2
+      Scaler:
+        rid: -2
+      Rounding: 0
+    ActivateImmediately: 0
+    Triggers: []
+    ChanceToActivate:
+      Magnitude: 1
+      RealMagnitude: 2
+      Scaler:
+        rid: -2
+    ActivationRoll:
+      PseudoRandom: 0
+      OwnLuck: 0
+      Luck:
+        Magnitude: 0
+        RealMagnitude: 2
+        Scaler:
+          rid: -2
+    ProcCoefficient:
+      Magnitude: 1
+      RealMagnitude: 2
+      Scaler:
+        rid: -2
+    IgnoresCrowdControl: []
+    Textures: []
+  Tags:
+    AssetTag:
+      Name: Survivors.Ability.Dash
+      DisplayName: Survivors.Ability.Dash
+    ContextTags: []
+    PassiveGrantedTags: []
+    ActiveGrantedTags: []
+    TagRequirements:
+      Name: 
+      SourceRequirements:
+        Name: 
+        SourceTemplate: {fileID: 0}
+        SyncWithTemplate: 0
+        AvoidTags: []
+        RequireTags: []
+      WhileActiveRequirements:
+        Name: 
+        SourceTemplate: {fileID: 0}
+        SyncWithTemplate: 0
+        AvoidTags: []
+        RequireTags: []
+      TargetRequirements:
+        Name: 
+        SourceTemplate: {fileID: 0}
+        SyncWithTemplate: 0
+        AvoidTags: []
+        RequireTags: []
+  Behaviour:
+    Targeting:
+      rid: 2403794551874519308
+    UseImplicitTargeting: 0
+    ImplicitTag:
+      Name: TargetzfvEmaa5gNtqhQ0_dE2_NOOAGh1QLRP8zfvEmaa5gNtqhQ0_dE2_NOOAGh
+      DisplayName: Target
+    AssetLoaders: []
+    Stages:
+    - StagePolicy:
+        rid: 2403794551874519309
+      Tasks:
+      - rid: 2403794551874519310
+      - rid: 2403794551874519311
+      ApplyUsageEffects: 1
+      ApplyUsageAtStageStart: 1
+      Condition:
+        On: 0
+        Tag:
+          Name: 
+          DisplayName: 
+        WhenMissing: 0
+      CancelledBy: []
+      Blocks: []
+    CancelledBy: []
+    Blocks: []
+  SourceActivationRules:
+  - rid: 2403794551874519150
+  - rid: 2403794551874519151
+  TargetActivationRules:
+  - rid: 2403794551874519152
+  StartingLevel: 1
+  MaxLevel: 1
+  IgnoreWhenLevelZero: 1
+  Cost: {fileID: 0}
+  AttributeCosts: []
+  Cooldown: {fileID: 11400000, guid: 6fb451377fe6489458c6f79991fda779, type: 2}
+  WorkerGroup:
+    Name: Workers
+    AttributeWorkers: []
+    ImpactWorkers: []
+    TagWorkers: []
+    AnalysisWorkers: []
+  OnHit: []
+  Modifiers: []
+  Components: []
+  LinkMode: 0
+  _linkedSource: {fileID: 0}
+  references:
+    version: 2
+    RefIds:
+    - rid: -2
+      type: {class: , ns: , asm: }
+    - rid: 2403794551874519150
+      type: {class: CooldownValidation, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data: 
+    - rid: 2403794551874519151
+      type: {class: IsAliveValidation, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data: 
+    - rid: 2403794551874519152
+      type: {class: IsAliveValidation, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data: 
+    - rid: 2403794551874519308
+      type: {class: SelectPositionTargetTask, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        BreakRuntimeOnInvalid: 1
+        RaycastLayers:
+          serializedVersion: 2
+          m_Bits: 4294967295
+        MaxDistance:
+          Magnitude: Infinity
+          RealMagnitude: 2
+          Scaler:
+            rid: -2
+        RetryOnInvalid: 0
+        MouseButton: 0
+        TakeTargetFromData: 1
+    - rid: 2403794551874519309
+      type: {class: AllProxyStagePolicy, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data: 
+    - rid: 2403794551874519310
+      type: {class: ApplyToCasterTask, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        Effects:
+        - {fileID: 11400000, guid: b69b3f6b6339d5047a194dbe43a03174, type: 2}
+    - rid: 2403794551874519311
+      type: {class: DashTask, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        Distance:
+          Magnitude: 5
+          RealMagnitude: 2
+          Scaler:
+            rid: -2
+        Duration:
+          Magnitude: 0.18
+          RealMagnitude: 2
+          Scaler:
+            rid: -2
+        AwayFromTarget: 0

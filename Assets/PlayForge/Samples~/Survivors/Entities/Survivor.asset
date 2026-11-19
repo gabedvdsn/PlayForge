@@ -17,9 +17,10 @@ MonoBehaviour:
   _templateOverrides: []
   _templateListSnapshots: []
   Name: Survivor
-  Description: 'The hero: it walks where it''s told and every ability it holds casts
-    itself as its cooldown ends. It starts with Arcane Bolt; level-ups teach it more,
-    to five, and boss waves give it passives, to five.'
+  Description: 'The hero: it walks where it''s told, each ability of the pool it
+    holds casts itself as its cooldown ends, and its dash waits for Space. It starts
+    with Arcane Bolt and its dash; level-ups teach it more, to five, and boss waves
+    give it passives, to five.'
   Textures: []
   Affiliation: []
   AssetTag:
@@ -32,13 +33,14 @@ MonoBehaviour:
   ActivationPolicy: 2
   TargetingYields: 1
   MaxAbilitiesOperation:
-    Magnitude: 8
+    Magnitude: 9
     RealMagnitude: 2
     Scaler:
       rid: -2
     Rounding: 0
   StartingAbilities:
   - {fileID: 11400000, guid: ff47153c2b3deae4e8b1d21891909470, type: 2}
+  - {fileID: 11400000, guid: 9fcd67f98b4b40a40957bcfcc803f87c, type: 2}
   AllowDuplicateAbilities: 0
   MaxItemsOperation:
     Magnitude: 8

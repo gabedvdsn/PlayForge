@@ -38,6 +38,7 @@ namespace FarEmerald.PlayForge.Samples.Survivors
         private VisualElement heroBar;
         private VisualElement heroBarFill;
         private VisualElement abilitySlots;
+        private Slot dashSlot;
         private VisualElement passiveSlots;
         private Label banner;
         private VisualElement cards;
@@ -115,10 +116,17 @@ namespace FarEmerald.PlayForge.Samples.Survivors
             healthFill = Add(health, "sv-health__fill");
             healthLabel = Text(health, "sv-health__label", "");
             var held = Add(dock, "sv-held");
+            // The dash, on its key, apart from the abilities that cast themselves
+            var dash = Add(held, "sv-slots", "Dash");
+            dashSlot = new Slot { Box = Add(dash, "sv-slot") };
+            dashSlot.Box.AddToClassList("sv-slot--dash");
+            dashSlot.Shade = Add(dashSlot.Box, "sv-slot__shade");
+            dashSlot.Name = Text(dashSlot.Box, "sv-slot__name", "Dash");
+            dashSlot.Level = Text(dashSlot.Box, "sv-slot__key", "Space");
             abilitySlots = Add(held, "sv-slots", "Abilities");
             passiveSlots = Add(held, "sv-slots", "Passives");
             passiveSlots.AddToClassList("sv-slots--passive");
-            Text(dock, "sv-keys", "WASD or the arrows move · abilities cast themselves · 1–5 or a click takes a card · R starts again");
+            Text(dock, "sv-keys", "WASD or the arrows move · Space dashes · abilities cast themselves · 1–5 or a click takes a card · R starts again");
 
             // The cards, over everything, while they're up
             cards = Add(root, "sv-cards", "Cards");
@@ -280,6 +288,14 @@ namespace FarEmerald.PlayForge.Samples.Survivors
                 slot.Shade.style.height = Length.Percent(whole > 0f ? Mathf.Clamp01(left / whole) * 100f : 0f);
             }
             Empty(abilities, abilitySlots, at, roster.MaxAbilities);
+            var dash = roster.Dash;
+            dashSlot.Box.parent.style.display = dash ? DisplayStyle.Flex : DisplayStyle.None;
+            if (dash)
+            {
+                float left = hero.CooldownLeft(dash);
+                float whole = dash.Cooldown && hero.Gas.TryGetEffectContainer(dash.Cooldown, out var dashCooldown) ? dashCooldown.TotalDuration : 0f;
+                dashSlot.Shade.style.height = Length.Percent(whole > 0f ? Mathf.Clamp01(left / whole) * 100f : 0f);
+            }
             at = 0;
             foreach (var item in hero.Items())
             {

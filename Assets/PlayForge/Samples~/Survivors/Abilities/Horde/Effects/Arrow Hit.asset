@@ -85,7 +85,7 @@ MonoBehaviour:
       Magnitude: -1
       RealMagnitude: 0
       Scaler:
-        rid: 2403794534686261377
+        rid: 2403794551874519190
     AdditionalImpacts: []
     Packets: []
   DurationSpecification:
@@ -129,7 +129,7 @@ MonoBehaviour:
       Rounding: 0
   Workers: []
   Components:
-  - rid: 2403794534686261378
+  - rid: 2403794551874519191
   WorkerGroup:
     Name: Workers
     AttributeWorkers: []
@@ -162,7 +162,13 @@ MonoBehaviour:
       Name: 
       SourceTemplate: {fileID: 0}
       SyncWithTemplate: 0
-      AvoidTags: []
+      AvoidTags:
+      - Tag:
+          Name: Survivors.State.Dashing
+          DisplayName: Survivors.State.Dashing
+        Operator: 5
+        Magnitude: 0
+        MatchMode: 0
       RequireTags: []
     OngoingRequirements:
       Name: 
@@ -187,7 +193,7 @@ MonoBehaviour:
     RefIds:
     - rid: -2
       type: {class: , ns: , asm: }
-    - rid: 2403794534686261377
+    - rid: 2403794551874519190
       type: {class: AttributeBackedScaler, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:
         Name: Caster's Power
@@ -230,11 +236,11 @@ MonoBehaviour:
           Read: 0
           Groups: []
         ReadAs: 1
-    - rid: 2403794534686261378
+    - rid: 2403794551874519191
       type: {class: CuesEffectComponent, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:
         OnApply:
-        - rid: 2403794534686261379
+        - rid: 2403794551874519192
         OnReapply: []
         OnTick: []
         OnHit: []
@@ -242,7 +248,7 @@ MonoBehaviour:
         WhileActive: []
         OnRefused: []
         OnStackChange: []
-    - rid: 2403794534686261379
+    - rid: 2403794551874519192
       type: {class: PrefabCue, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:
         Prefab: {fileID: 8150139081363391177, guid: 3fc46ebed9300c240abbfada0ab3c02a, type: 3}

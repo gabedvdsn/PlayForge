@@ -170,6 +170,26 @@
     background-color: rgba(48, 36, 26, 0.92);
 }
 
+.sv-slot--dash {
+    width: 64px;
+    background-color: rgba(24, 52, 60, 0.92);
+}
+
+.sv-slot--dash .sv-slot__name {
+    margin-bottom: 8px;
+}
+
+.sv-slot__key {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 3px;
+    font-size: 10px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    color: rgb(255, 220, 120);
+}
+
 .sv-slot--empty {
     background-color: rgba(20, 22, 28, 0.55);
 }
