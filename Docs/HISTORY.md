@@ -10,6 +10,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## Toward 1.0.0, since 0.1.0
 
 ### Added
+- **Diagrams large enough to read on the docs site** (EP-76): drawn at no less than 60% of their size,
+  scrolling sideways, with a full-screen viewer to pan and zoom.
 - **The Survivors demo** (FEAT-40): a horde shooter that shows what PlayForge carries, hundreds of enemies each a
   full entity: eight abilities that cast themselves, fourteen passives to level 20, ten enemy kinds and four boss
   waves, and a HUD that reads the run's cost.

@@ -1,0 +1,108 @@
+/* PlayForge's additions to DocFX's modern template: diagrams large enough to read, and the viewer that enlarges them.
+   Colours come from the theme's own Bootstrap variables, so both light and dark follow it. */
+
+.pf-diagram {
+  position: relative;
+  margin: 0 0 1rem;
+}
+
+.pf-diagram > pre.mermaid {
+  margin: 0;
+  padding: 12px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  border: 1px solid var(--bs-border-color);
+  border-radius: 6px;
+  background: var(--bs-body-bg);
+  cursor: zoom-in;
+}
+
+.pf-diagram > pre.mermaid > svg {
+  display: block;
+  max-width: none;
+  height: auto;
+}
+
+.pf-diagram__enlarge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 1;
+  padding: 2px 8px;
+  border: 1px solid var(--bs-border-color);
+  border-radius: 4px;
+  background: var(--bs-body-bg);
+  color: var(--bs-body-color);
+  opacity: 0.85;
+}
+
+.pf-diagram__enlarge:hover,
+.pf-diagram__enlarge:focus-visible {
+  opacity: 1;
+}
+
+.pf-viewer {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: flex;
+  flex-direction: column;
+  background: var(--bs-body-bg);
+  color: var(--bs-body-color);
+}
+
+.pf-viewer__bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--bs-border-color);
+}
+
+.pf-viewer__bar button {
+  padding: 2px 10px;
+  border: 1px solid var(--bs-border-color);
+  border-radius: 4px;
+  background: var(--bs-secondary-bg);
+  color: inherit;
+}
+
+.pf-viewer__bar [data-act="close"] {
+  margin-left: auto;
+}
+
+.pf-viewer__hint {
+  margin-left: 8px;
+  color: var(--bs-secondary-color);
+  font-size: 0.875rem;
+}
+
+.pf-viewer__stage {
+  position: relative;
+  flex: 1;
+  overflow: hidden;
+  cursor: grab;
+  touch-action: none;
+}
+
+.pf-viewer__stage.is-dragging {
+  cursor: grabbing;
+}
+
+.pf-viewer__layer {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-origin: 0 0;
+}
+
+.pf-viewer__layer > svg {
+  display: block;
+  max-width: none;
+}
+
+@media (max-width: 576px) {
+  .pf-viewer__hint {
+    display: none;
+  }
+}

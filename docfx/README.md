@@ -11,6 +11,34 @@ https://gabedvdsn.github.io/PlayForge-Docs/.
 - **Publish:** `bash docfx/publish.sh` after a commit that changes the guides or the package's public API. It builds
   the site from a copy of HEAD, so edits not yet committed never reach it, and pushes it to PlayForge-Docs.
 
+## Editing the text
+
+Every word on the site comes from a file in this repository. Don't edit PlayForge-Docs itself: each publish replaces it.
+
+| To change | Edit |
+| --- | --- |
+| A guide's text | `Assets/PlayForge/Documentation/<GUIDE>.md`, which the package ships too |
+| A page's title | That page's heading in its guide: `##` for a section's page, `###` for a part's |
+| The home page | `docfx/index.md` |
+| The API reference's opening page | `docfx/api.md` |
+| A type's or member's description | Its `///` summary in the package's C# source |
+| A diagram | `docfx/diagrams/<name>.mmd`, in Mermaid; its caption and page in `docfx/diagrams/diagrams.json` |
+| A screenshot's caption | `SHOT_CAPTIONS` in `docfx/prepare.py`, or its entry in `diagrams.json` |
+| The site's name and footer | `globalMetadata` in `docfx/docfx.json` |
+| Colours, spacing, the diagrams' frame | `docfx/template/public/main.css` |
+
+Then:
+
+1. **Look:** `python docfx/build.py --serve` and open http://localhost:8080.
+2. **Commit** the files you changed.
+3. **Publish:** `bash docfx/publish.sh`. GitHub Pages shows the new site a minute or two later.
+
+Renaming a heading changes its page's address. The build stops on any link that still points at the old one, and on a
+help topic in `ForgeDocs` that names it, so change those with it.
+
+The site is in English alone. Another language would be a translated copy of the guides, built as a second site
+beside this one.
+
 ## How a build goes
 
 `build.py` runs four steps:
@@ -49,4 +77,8 @@ area names, or a help topic with no page.
   with the Demo's assets; from the command line, `-executeMethod
   FarEmerald.PlayForge.ProvingGrounds.DocsCapture.DocsScreenshots.CaptureAndQuit -docsOut "<repo>/docfx/images/editor"`
   without `-batchmode`, as the editor draws no window in batch mode. A guide asks for one with its comment, above.
+- **Diagrams in the page:** `template/` adds to DocFX's modern template. Its `public/main.js` draws a diagram at no
+  less than 60% of its own size (`MIN_SCALE`), scrolling sideways where that's wider than the column, as fitting a wide
+  one to the column shrinks its words past reading; an Enlarge button, or a click, opens it full-screen to pan and
+  zoom. `public/main.css` styles both.
 - **DocFX** 2.81.0 is pinned in `.config/dotnet-tools.json`.
