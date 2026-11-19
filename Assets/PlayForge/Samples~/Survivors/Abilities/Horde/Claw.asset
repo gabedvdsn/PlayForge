@@ -18,8 +18,8 @@ MonoBehaviour:
   _templateListSnapshots: []
   Definition:
     Name: Claw
-    Description: 'The horde''s blow: a strike at the unit within reach, as hard as
-      its Power. Every enemy that fights hand to hand has it first.'
+    Description: 'The horde''s blow: a strike at the hero within reach, as hard as
+      its Power.'
     ActivationPolicy: 0
     WhileTargeting: 0
     BufferWindow:
@@ -90,7 +90,7 @@ MonoBehaviour:
         RequireTags: []
   Behaviour:
     Targeting:
-      rid: 2403794534686261549
+      rid: 2403794536120189251
     UseImplicitTargeting: 0
     ImplicitTag:
       Name: TargetzfvEmaa5gNtqhQ0_dE2_NOOAGh1QLRP8zfvEmaa5gNtqhQ0_dE2_NOOAGh
@@ -98,9 +98,9 @@ MonoBehaviour:
     AssetLoaders: []
     Stages:
     - StagePolicy:
-        rid: 2403794534686261550
+        rid: 2403794536120189252
       Tasks:
-      - rid: 2403794534686261551
+      - rid: 2403794536120189253
       ApplyUsageEffects: 1
       ApplyUsageAtStageStart: 1
       Condition:
@@ -114,10 +114,10 @@ MonoBehaviour:
     CancelledBy: []
     Blocks: []
   SourceActivationRules:
-  - rid: 2403794534686261370
-  - rid: 2403794534686261371
+  - rid: 2403794536120189057
+  - rid: 2403794536120189058
   TargetActivationRules:
-  - rid: 2403794534686261372
+  - rid: 2403794536120189059
   StartingLevel: 1
   MaxLevel: 1
   IgnoreWhenLevelZero: 1
@@ -132,7 +132,8 @@ MonoBehaviour:
     AnalysisWorkers: []
   OnHit: []
   Modifiers: []
-  Components: []
+  Components:
+  - rid: 2403794536120189254
   LinkMode: 0
   _linkedSource: {fileID: 0}
   references:
@@ -140,16 +141,16 @@ MonoBehaviour:
     RefIds:
     - rid: -2
       type: {class: , ns: , asm: }
-    - rid: 2403794534686261370
+    - rid: 2403794536120189057
       type: {class: CooldownValidation, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data: 
-    - rid: 2403794534686261371
+    - rid: 2403794536120189058
       type: {class: IsAliveValidation, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data: 
-    - rid: 2403794534686261372
+    - rid: 2403794536120189059
       type: {class: IsAliveValidation, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data: 
-    - rid: 2403794534686261549
+    - rid: 2403794536120189251
       type: {class: SelectGasTargetTask, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:
         BreakRuntimeOnInvalid: 1
@@ -170,10 +171,10 @@ MonoBehaviour:
         RetryOnInvalid: 0
         MouseButton: 0
         TakeTargetFromData: 1
-    - rid: 2403794534686261550
+    - rid: 2403794536120189252
       type: {class: AllProxyStagePolicy, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data: 
-    - rid: 2403794534686261551
+    - rid: 2403794536120189253
       type: {class: ApplyEffectsAbilityTask, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:
         Effects:
@@ -188,3 +189,12 @@ MonoBehaviour:
           Name: 
           DisplayName: 
         UseResolveOrder: 1
+    - rid: 2403794536120189254
+      type: {class: CastRangeAbilityComponent, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        Range:
+          Magnitude: 1.4
+          RealMagnitude: 2
+          Scaler:
+            rid: -2
+        Flat: 1

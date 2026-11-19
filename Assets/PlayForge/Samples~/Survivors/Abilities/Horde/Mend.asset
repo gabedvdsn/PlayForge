@@ -12,12 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a42dbe2415465689d11a1e8ae1fdbc, type: 3}
   m_Name: Mend
   m_EditorClassIdentifier: 
-  LocalData:
-  - Key:
-      Name: Survivors.Reach
-      DisplayName: Survivors.Reach
-    Value:
-      rid: 2403794534686261531
+  LocalData: []
   _template: {fileID: 0}
   _templateOverrides: []
   _templateListSnapshots: []
@@ -102,9 +97,9 @@ MonoBehaviour:
     AssetLoaders: []
     Stages:
     - StagePolicy:
-        rid: 2403794534686261532
+        rid: 2403794536120189209
       Tasks:
-      - rid: 2403794534686261533
+      - rid: 2403794536120189210
       ApplyUsageEffects: 1
       ApplyUsageAtStageStart: 1
       Condition:
@@ -118,10 +113,10 @@ MonoBehaviour:
     CancelledBy: []
     Blocks: []
   SourceActivationRules:
-  - rid: 2403794534686261398
-  - rid: 2403794534686261399
+  - rid: 2403794536120189090
+  - rid: 2403794536120189091
   TargetActivationRules:
-  - rid: 2403794534686261400
+  - rid: 2403794536120189092
   StartingLevel: 1
   MaxLevel: 1
   IgnoreWhenLevelZero: 1
@@ -136,7 +131,8 @@ MonoBehaviour:
     AnalysisWorkers: []
   OnHit: []
   Modifiers: []
-  Components: []
+  Components:
+  - rid: 2403794536120189211
   LinkMode: 0
   _linkedSource: {fileID: 0}
   references:
@@ -144,27 +140,19 @@ MonoBehaviour:
     RefIds:
     - rid: -2
       type: {class: , ns: , asm: }
-    - rid: 2403794534686261398
+    - rid: 2403794536120189090
       type: {class: CooldownValidation, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data: 
-    - rid: 2403794534686261399
+    - rid: 2403794536120189091
       type: {class: IsAliveValidation, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data: 
-    - rid: 2403794534686261400
+    - rid: 2403794536120189092
       type: {class: IsAliveValidation, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data: 
-    - rid: 2403794534686261531
-      type: {class: LocalFloat, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
-      data:
-        Value:
-          Magnitude: 30
-          RealMagnitude: 2
-          Scaler:
-            rid: -2
-    - rid: 2403794534686261532
+    - rid: 2403794536120189209
       type: {class: AllProxyStagePolicy, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data: 
-    - rid: 2403794534686261533
+    - rid: 2403794536120189210
       type: {class: AreaEffectTask, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:
         Radius:
@@ -181,3 +169,12 @@ MonoBehaviour:
           m_Bits: 4294967295
         Effects:
         - {fileID: 11400000, guid: 0f754b4234fd83e42b0b4a28d3596bc6, type: 2}
+    - rid: 2403794536120189211
+      type: {class: CastRangeAbilityComponent, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        Range:
+          Magnitude: 30
+          RealMagnitude: 2
+          Scaler:
+            rid: -2
+        Flat: 1

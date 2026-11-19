@@ -12,12 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a42dbe2415465689d11a1e8ae1fdbc, type: 3}
   m_Name: Slam
   m_EditorClassIdentifier: 
-  LocalData:
-  - Key:
-      Name: Survivors.Reach
-      DisplayName: Survivors.Reach
-    Value:
-      rid: 2403794534686261503
+  LocalData: []
   _template: {fileID: 0}
   _templateOverrides: []
   _templateListSnapshots: []
@@ -103,10 +98,10 @@ MonoBehaviour:
     AssetLoaders: []
     Stages:
     - StagePolicy:
-        rid: 2403794534686261504
+        rid: 2403794536120189181
       Tasks:
-      - rid: 2403794534686261505
-      - rid: 2403794534686261506
+      - rid: 2403794536120189182
+      - rid: 2403794536120189183
       ApplyUsageEffects: 1
       ApplyUsageAtStageStart: 1
       Condition:
@@ -118,9 +113,9 @@ MonoBehaviour:
       CancelledBy: []
       Blocks: []
     - StagePolicy:
-        rid: 2403794534686261507
+        rid: 2403794536120189184
       Tasks:
-      - rid: 2403794534686261508
+      - rid: 2403794536120189185
       ApplyUsageEffects: 0
       ApplyUsageAtStageStart: 1
       Condition:
@@ -134,10 +129,10 @@ MonoBehaviour:
     CancelledBy: []
     Blocks: []
   SourceActivationRules:
-  - rid: 2403794534686261428
-  - rid: 2403794534686261429
+  - rid: 2403794536120189120
+  - rid: 2403794536120189121
   TargetActivationRules:
-  - rid: 2403794534686261430
+  - rid: 2403794536120189122
   StartingLevel: 1
   MaxLevel: 1
   IgnoreWhenLevelZero: 1
@@ -152,7 +147,8 @@ MonoBehaviour:
     AnalysisWorkers: []
   OnHit: []
   Modifiers: []
-  Components: []
+  Components:
+  - rid: 2403794536120189186
   LinkMode: 0
   _linkedSource: {fileID: 0}
   references:
@@ -160,32 +156,24 @@ MonoBehaviour:
     RefIds:
     - rid: -2
       type: {class: , ns: , asm: }
-    - rid: 2403794534686261428
+    - rid: 2403794536120189120
       type: {class: CooldownValidation, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data: 
-    - rid: 2403794534686261429
+    - rid: 2403794536120189121
       type: {class: IsAliveValidation, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data: 
-    - rid: 2403794534686261430
+    - rid: 2403794536120189122
       type: {class: IsAliveValidation, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data: 
-    - rid: 2403794534686261503
-      type: {class: LocalFloat, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
-      data:
-        Value:
-          Magnitude: 4.5
-          RealMagnitude: 2
-          Scaler:
-            rid: -2
-    - rid: 2403794534686261504
+    - rid: 2403794536120189181
       type: {class: AllProxyStagePolicy, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data: 
-    - rid: 2403794534686261505
+    - rid: 2403794536120189182
       type: {class: ApplyToCasterTask, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:
         Effects:
         - {fileID: 11400000, guid: f541fbff98e7c1c4b952a236eb16ed05, type: 2}
-    - rid: 2403794534686261506
+    - rid: 2403794536120189183
       type: {class: DelayTask, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:
         DelayMilliseconds:
@@ -194,10 +182,10 @@ MonoBehaviour:
           Scaler:
             rid: -2
           Rounding: 0
-    - rid: 2403794534686261507
+    - rid: 2403794536120189184
       type: {class: AllProxyStagePolicy, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data: 
-    - rid: 2403794534686261508
+    - rid: 2403794536120189185
       type: {class: AreaEffectTask, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:
         Radius:
@@ -214,3 +202,12 @@ MonoBehaviour:
           m_Bits: 4294967295
         Effects:
         - {fileID: 11400000, guid: 9f41028dff69f6b48af14cd0231f8ea6, type: 2}
+    - rid: 2403794536120189186
+      type: {class: CastRangeAbilityComponent, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        Range:
+          Magnitude: 4.5
+          RealMagnitude: 2
+          Scaler:
+            rid: -2
+        Flat: 1

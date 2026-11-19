@@ -61,6 +61,9 @@ default material.
 Every throw, drop and orbit runs one task sequence, **Survivors: Volley**, in `SurvivorsSequences.cs`. Each ability's
 Local Data says what it spawns, how many by level, and in which pattern, so a designer changes a volley in the ability.
 
+Each ability's reach is its **Cast Range** component. The hero casts an ability once an enemy stands within it, and an
+ability's Auto Target finds its enemies within it.
+
 ## The passives
 
 Might, Haste, Swiftness, Evasion, Multishot, Piercing, Precision, Ferocity, Vitality, Regeneration, Expanse, Magnet,
@@ -81,6 +84,9 @@ Taking a passive's next level gives it again at that level.
 | Splitter | 8 | Breaks into three Splitlings as it falls. |
 | Wraith | 9 | Phases out a while: the hero's blows and targeting pass it by. |
 | Guardian | 10 | Gives the horde around it +20 Armor, through an Aura entity component. |
+
+Each enemy attacks from its attack's Cast Range, and casts within each cast's own. The melee kinds strike with a Bite,
+a Claw, a Maul or a Smash, by their size, since a Cast Range is one number for every entity that holds the ability.
 
 The bosses: the **Ogre Warlord** slams the ground where its red ring shows. The **Lich** shoots death bolts, looses
 rings of them and raises Shamblers. The **Hive Queen** spits fans of acid and broods swarms of Bats. Both summons run

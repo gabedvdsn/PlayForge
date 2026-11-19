@@ -17,27 +17,27 @@ MonoBehaviour:
       Name: Survivors.Projectile
       DisplayName: Survivors.Projectile
     Value:
-      rid: 2403794534686261598
+      rid: 2403794536120189292
   - Key:
       Name: Survivors.Count
       DisplayName: Survivors.Count
     Value:
-      rid: 2403794534686261599
+      rid: 2403794536120189293
   - Key:
       Name: Survivors.Pattern
       DisplayName: Survivors.Pattern
     Value:
-      rid: 2403794534686261600
+      rid: 2403794536120189294
   - Key:
       Name: Survivors.Spread
       DisplayName: Survivors.Spread
     Value:
-      rid: 2403794534686261601
+      rid: 2403794536120189295
   - Key:
       Name: Survivors.Interval
       DisplayName: Survivors.Interval
     Value:
-      rid: 2403794534686261602
+      rid: 2403794536120189296
   _template: {fileID: 0}
   _templateOverrides: []
   _templateListSnapshots: []
@@ -114,7 +114,7 @@ MonoBehaviour:
         RequireTags: []
   Behaviour:
     Targeting:
-      rid: 2403794534686261603
+      rid: 2403794536120189297
     UseImplicitTargeting: 0
     ImplicitTag:
       Name: TargetzfvEmaa5gNtqhQ0_dE2_NOOAGh1QLRP8zfvEmaa5gNtqhQ0_dE2_NOOAGh
@@ -122,9 +122,9 @@ MonoBehaviour:
     AssetLoaders: []
     Stages:
     - StagePolicy:
-        rid: 2403794534686261604
+        rid: 2403794536120189298
       Tasks:
-      - rid: 2403794534686261605
+      - rid: 2403794536120189299
       ApplyUsageEffects: 1
       ApplyUsageAtStageStart: 1
       Condition:
@@ -138,10 +138,10 @@ MonoBehaviour:
     CancelledBy: []
     Blocks: []
   SourceActivationRules:
-  - rid: 2403794534686261389
-  - rid: 2403794534686261390
+  - rid: 2403794536120189081
+  - rid: 2403794536120189082
   TargetActivationRules:
-  - rid: 2403794534686261391
+  - rid: 2403794536120189083
   StartingLevel: 1
   MaxLevel: 1
   IgnoreWhenLevelZero: 1
@@ -156,7 +156,8 @@ MonoBehaviour:
     AnalysisWorkers: []
   OnHit: []
   Modifiers: []
-  Components: []
+  Components:
+  - rid: 2403794536120189300
   LinkMode: 0
   _linkedSource: {fileID: 0}
   references:
@@ -164,20 +165,20 @@ MonoBehaviour:
     RefIds:
     - rid: -2
       type: {class: , ns: , asm: }
-    - rid: 2403794534686261389
+    - rid: 2403794536120189081
       type: {class: CooldownValidation, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data: 
-    - rid: 2403794534686261390
+    - rid: 2403794536120189082
       type: {class: IsAliveValidation, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data: 
-    - rid: 2403794534686261391
+    - rid: 2403794536120189083
       type: {class: IsAliveValidation, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data: 
-    - rid: 2403794534686261598
+    - rid: 2403794536120189292
       type: {class: LocalMonoBehaviour, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:
         Value: {fileID: 8300366810854340190, guid: 630b7cdbd31ae9a49b94f7cb9e8581df, type: 3}
-    - rid: 2403794534686261599
+    - rid: 2403794536120189293
       type: {class: LocalInt, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:
         Value:
@@ -186,11 +187,11 @@ MonoBehaviour:
           Scaler:
             rid: -2
           Rounding: 0
-    - rid: 2403794534686261600
+    - rid: 2403794536120189294
       type: {class: LocalString, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:
         Value: Targets
-    - rid: 2403794534686261601
+    - rid: 2403794536120189295
       type: {class: LocalFloat, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:
         Value:
@@ -198,7 +199,7 @@ MonoBehaviour:
           RealMagnitude: 2
           Scaler:
             rid: -2
-    - rid: 2403794534686261602
+    - rid: 2403794536120189296
       type: {class: LocalFloat, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:
         Value:
@@ -206,7 +207,7 @@ MonoBehaviour:
           RealMagnitude: 2
           Scaler:
             rid: -2
-    - rid: 2403794534686261603
+    - rid: 2403794536120189297
       type: {class: SelectGasTargetTask, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:
         BreakRuntimeOnInvalid: 1
@@ -227,10 +228,10 @@ MonoBehaviour:
         RetryOnInvalid: 0
         MouseButton: 0
         TakeTargetFromData: 1
-    - rid: 2403794534686261604
+    - rid: 2403794536120189298
       type: {class: AllProxyStagePolicy, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data: 
-    - rid: 2403794534686261605
+    - rid: 2403794536120189299
       type: {class: RunSequenceTask, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:
         Sequence:
@@ -239,3 +240,12 @@ MonoBehaviour:
           _methodName: Volley
         Clock:
           rid: -2
+    - rid: 2403794536120189300
+      type: {class: CastRangeAbilityComponent, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        Range:
+          Magnitude: 10
+          RealMagnitude: 2
+          Scaler:
+            rid: -2
+        Flat: 1

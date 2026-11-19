@@ -257,9 +257,3 @@ MonoBehaviour:
   ShieldTags:
   - Name: Survivors.State.Phased
     DisplayName: Survivors.State.Phased
-  AttackRangeKey:
-    Name: Survivors.AttackRange
-    DisplayName: Survivors.AttackRange
-  ReachKey:
-    Name: Survivors.Reach
-    DisplayName: Survivors.Reach

@@ -12,12 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dac855327e524f0f9473752d46a88179, type: 3}
   m_Name: Ogre Warlord
   m_EditorClassIdentifier: 
-  LocalData:
-  - Key:
-      Name: Survivors.AttackRange
-      DisplayName: Survivors.AttackRange
-    Value:
-      rid: 2403794534686261495
+  LocalData: []
   _template: {fileID: 0}
   _templateOverrides: []
   _templateListSnapshots: []
@@ -41,7 +36,7 @@ MonoBehaviour:
       rid: -2
     Rounding: 0
   StartingAbilities:
-  - {fileID: 11400000, guid: 91297cb0bbd8bdc4fb6c2a81085a77a1, type: 2}
+  - {fileID: 11400000, guid: e60f5a093989d374e86da47bada204a6, type: 2}
   - {fileID: 11400000, guid: bb4907db3ea69a3419f47ba37e11ca1c, type: 2}
   AllowDuplicateAbilities: 0
   MaxItemsOperation:
@@ -87,11 +82,3 @@ MonoBehaviour:
     RefIds:
     - rid: -2
       type: {class: , ns: , asm: }
-    - rid: 2403794534686261495
-      type: {class: LocalFloat, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
-      data:
-        Value:
-          Magnitude: 2.4
-          RealMagnitude: 2
-          Scaler:
-            rid: -2

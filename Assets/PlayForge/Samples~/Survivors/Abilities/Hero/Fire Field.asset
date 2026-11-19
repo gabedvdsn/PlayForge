@@ -17,32 +17,27 @@ MonoBehaviour:
       Name: Survivors.Projectile
       DisplayName: Survivors.Projectile
     Value:
-      rid: 2403794534686261552
+      rid: 2403794536120189240
   - Key:
       Name: Survivors.Count
       DisplayName: Survivors.Count
     Value:
-      rid: 2403794534686261553
+      rid: 2403794536120189241
   - Key:
       Name: Survivors.Pattern
       DisplayName: Survivors.Pattern
     Value:
-      rid: 2403794534686261554
+      rid: 2403794536120189242
   - Key:
       Name: Survivors.Spread
       DisplayName: Survivors.Spread
     Value:
-      rid: 2403794534686261555
+      rid: 2403794536120189243
   - Key:
       Name: Survivors.Interval
       DisplayName: Survivors.Interval
     Value:
-      rid: 2403794534686261556
-  - Key:
-      Name: Survivors.Reach
-      DisplayName: Survivors.Reach
-    Value:
-      rid: 2403794534686261557
+      rid: 2403794536120189244
   _template: {fileID: 0}
   _templateOverrides: []
   _templateListSnapshots: []
@@ -115,7 +110,7 @@ MonoBehaviour:
         RequireTags: []
   Behaviour:
     Targeting:
-      rid: 2403794534686261558
+      rid: 2403794536120189245
     UseImplicitTargeting: 0
     ImplicitTag:
       Name: TargetzfvEmaa5gNtqhQ0_dE2_NOOAGh1QLRP8zfvEmaa5gNtqhQ0_dE2_NOOAGh
@@ -123,9 +118,9 @@ MonoBehaviour:
     AssetLoaders: []
     Stages:
     - StagePolicy:
-        rid: 2403794534686261559
+        rid: 2403794536120189246
       Tasks:
-      - rid: 2403794534686261560
+      - rid: 2403794536120189247
       ApplyUsageEffects: 1
       ApplyUsageAtStageStart: 1
       Condition:
@@ -139,10 +134,10 @@ MonoBehaviour:
     CancelledBy: []
     Blocks: []
   SourceActivationRules:
-  - rid: 2403794534686261326
-  - rid: 2403794534686261327
+  - rid: 2403794536120189006
+  - rid: 2403794536120189007
   TargetActivationRules:
-  - rid: 2403794534686261328
+  - rid: 2403794536120189008
   StartingLevel: 1
   MaxLevel: 8
   IgnoreWhenLevelZero: 1
@@ -157,7 +152,8 @@ MonoBehaviour:
     AnalysisWorkers: []
   OnHit: []
   Modifiers: []
-  Components: []
+  Components:
+  - rid: 2403794536120189248
   LinkMode: 0
   _linkedSource: {fileID: 0}
   references:
@@ -165,33 +161,33 @@ MonoBehaviour:
     RefIds:
     - rid: -2
       type: {class: , ns: , asm: }
-    - rid: 2403794534686261326
+    - rid: 2403794536120189006
       type: {class: CooldownValidation, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data: 
-    - rid: 2403794534686261327
+    - rid: 2403794536120189007
       type: {class: IsAliveValidation, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data: 
-    - rid: 2403794534686261328
+    - rid: 2403794536120189008
       type: {class: IsAliveValidation, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data: 
-    - rid: 2403794534686261552
+    - rid: 2403794536120189240
       type: {class: LocalMonoBehaviour, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:
         Value: {fileID: 6393687780458398063, guid: fc419136d80db1b4e8604ed2f2774a0d, type: 3}
-    - rid: 2403794534686261553
+    - rid: 2403794536120189241
       type: {class: LocalInt, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:
         Value:
           Magnitude: 0
           RealMagnitude: 3
           Scaler:
-            rid: 2403794534686261561
+            rid: 2403794536120189249
           Rounding: 0
-    - rid: 2403794534686261554
+    - rid: 2403794536120189242
       type: {class: LocalString, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:
         Value: Spots
-    - rid: 2403794534686261555
+    - rid: 2403794536120189243
       type: {class: LocalFloat, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:
         Value:
@@ -199,7 +195,7 @@ MonoBehaviour:
           RealMagnitude: 2
           Scaler:
             rid: -2
-    - rid: 2403794534686261556
+    - rid: 2403794536120189244
       type: {class: LocalFloat, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:
         Value:
@@ -207,15 +203,7 @@ MonoBehaviour:
           RealMagnitude: 2
           Scaler:
             rid: -2
-    - rid: 2403794534686261557
-      type: {class: LocalFloat, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
-      data:
-        Value:
-          Magnitude: 12
-          RealMagnitude: 2
-          Scaler:
-            rid: -2
-    - rid: 2403794534686261558
+    - rid: 2403794536120189245
       type: {class: AutoTargetTask, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:
         BreakRuntimeOnInvalid: 1
@@ -236,7 +224,7 @@ MonoBehaviour:
           Magnitude: 0
           RealMagnitude: 3
           Scaler:
-            rid: 2403794534686261562
+            rid: 2403794536120189250
           Rounding: 0
         Takes: 1
         Range:
@@ -244,7 +232,7 @@ MonoBehaviour:
           RealMagnitude: 2
           Scaler:
             rid: -2
-        UseCastRange: 0
+        UseCastRange: 1
         DetectionLayers:
           serializedVersion: 2
           m_Bits: 4294967295
@@ -253,10 +241,10 @@ MonoBehaviour:
         UsePhysics: 0
         AttributeConditions: []
         ExcludeDead: 1
-    - rid: 2403794534686261559
+    - rid: 2403794536120189246
       type: {class: AllProxyStagePolicy, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data: 
-    - rid: 2403794534686261560
+    - rid: 2403794536120189247
       type: {class: RunSequenceTask, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:
         Sequence:
@@ -265,7 +253,16 @@ MonoBehaviour:
           _methodName: Volley
         Clock:
           rid: -2
-    - rid: 2403794534686261561
+    - rid: 2403794536120189248
+      type: {class: CastRangeAbilityComponent, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        Range:
+          Magnitude: 12
+          RealMagnitude: 2
+          Scaler:
+            rid: -2
+        Flat: 1
+    - rid: 2403794536120189249
       type: {class: SimpleScaler, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:
         Name: By level
@@ -361,7 +358,7 @@ MonoBehaviour:
           m_PostInfinity: 2
           m_RotationOrder: 4
         Behaviours: []
-    - rid: 2403794534686261562
+    - rid: 2403794536120189250
       type: {class: SimpleScaler, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:
         Name: By level

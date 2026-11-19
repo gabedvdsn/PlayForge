@@ -12,12 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a42dbe2415465689d11a1e8ae1fdbc, type: 3}
   m_Name: Lightning Strike
   m_EditorClassIdentifier: 
-  LocalData:
-  - Key:
-      Name: Survivors.Reach
-      DisplayName: Survivors.Reach
-    Value:
-      rid: 2403794534686261593
+  LocalData: []
   _template: {fileID: 0}
   _templateOverrides: []
   _templateListSnapshots: []
@@ -89,7 +84,7 @@ MonoBehaviour:
         RequireTags: []
   Behaviour:
     Targeting:
-      rid: 2403794534686261594
+      rid: 2403794536120189283
     UseImplicitTargeting: 0
     ImplicitTag:
       Name: TargetzfvEmaa5gNtqhQ0_dE2_NOOAGh1QLRP8zfvEmaa5gNtqhQ0_dE2_NOOAGh
@@ -97,9 +92,9 @@ MonoBehaviour:
     AssetLoaders: []
     Stages:
     - StagePolicy:
-        rid: 2403794534686261595
+        rid: 2403794536120189284
       Tasks:
-      - rid: 2403794534686261596
+      - rid: 2403794536120189285
       ApplyUsageEffects: 1
       ApplyUsageAtStageStart: 1
       Condition:
@@ -113,10 +108,10 @@ MonoBehaviour:
     CancelledBy: []
     Blocks: []
   SourceActivationRules:
-  - rid: 2403794534686261316
-  - rid: 2403794534686261317
+  - rid: 2403794536120188996
+  - rid: 2403794536120188997
   TargetActivationRules:
-  - rid: 2403794534686261318
+  - rid: 2403794536120188998
   StartingLevel: 1
   MaxLevel: 8
   IgnoreWhenLevelZero: 1
@@ -131,7 +126,8 @@ MonoBehaviour:
     AnalysisWorkers: []
   OnHit: []
   Modifiers: []
-  Components: []
+  Components:
+  - rid: 2403794536120189286
   LinkMode: 0
   _linkedSource: {fileID: 0}
   references:
@@ -139,24 +135,16 @@ MonoBehaviour:
     RefIds:
     - rid: -2
       type: {class: , ns: , asm: }
-    - rid: 2403794534686261316
+    - rid: 2403794536120188996
       type: {class: CooldownValidation, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data: 
-    - rid: 2403794534686261317
+    - rid: 2403794536120188997
       type: {class: IsAliveValidation, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data: 
-    - rid: 2403794534686261318
+    - rid: 2403794536120188998
       type: {class: IsAliveValidation, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data: 
-    - rid: 2403794534686261593
-      type: {class: LocalFloat, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
-      data:
-        Value:
-          Magnitude: 12
-          RealMagnitude: 2
-          Scaler:
-            rid: -2
-    - rid: 2403794534686261594
+    - rid: 2403794536120189283
       type: {class: AutoTargetTask, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:
         BreakRuntimeOnInvalid: 1
@@ -177,7 +165,7 @@ MonoBehaviour:
           Magnitude: 0
           RealMagnitude: 3
           Scaler:
-            rid: 2403794534686261597
+            rid: 2403794536120189287
           Rounding: 0
         Takes: 1
         Range:
@@ -185,7 +173,7 @@ MonoBehaviour:
           RealMagnitude: 2
           Scaler:
             rid: -2
-        UseCastRange: 0
+        UseCastRange: 1
         DetectionLayers:
           serializedVersion: 2
           m_Bits: 4294967295
@@ -194,10 +182,10 @@ MonoBehaviour:
         UsePhysics: 0
         AttributeConditions: []
         ExcludeDead: 1
-    - rid: 2403794534686261595
+    - rid: 2403794536120189284
       type: {class: AllProxyStagePolicy, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data: 
-    - rid: 2403794534686261596
+    - rid: 2403794536120189285
       type: {class: ApplyEffectsAbilityTask, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:
         Effects:
@@ -212,7 +200,16 @@ MonoBehaviour:
           Name: 
           DisplayName: 
         UseResolveOrder: 1
-    - rid: 2403794534686261597
+    - rid: 2403794536120189286
+      type: {class: CastRangeAbilityComponent, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        Range:
+          Magnitude: 12
+          RealMagnitude: 2
+          Scaler:
+            rid: -2
+        Flat: 1
+    - rid: 2403794536120189287
       type: {class: SimpleScaler, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:
         Name: By level

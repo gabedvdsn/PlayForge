@@ -1,0 +1,199 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d5a42dbe2415465689d11a1e8ae1fdbc, type: 3}
+  m_Name: Maul
+  m_EditorClassIdentifier: 
+  LocalData: []
+  _template: {fileID: 0}
+  _templateOverrides: []
+  _templateListSnapshots: []
+  Definition:
+    Name: Maul
+    Description: A big enemy's blow, from its longer reach, as hard as its Power.
+    ActivationPolicy: 0
+    WhileTargeting: 0
+    BufferWindow:
+      Magnitude: 0.3
+      RealMagnitude: 2
+      Scaler:
+        rid: -2
+    BufferPriority:
+      Magnitude: 0
+      RealMagnitude: 2
+      Scaler:
+        rid: -2
+      Rounding: 0
+    ActivateImmediately: 0
+    Triggers: []
+    ChanceToActivate:
+      Magnitude: 1
+      RealMagnitude: 2
+      Scaler:
+        rid: -2
+    ActivationRoll:
+      PseudoRandom: 0
+      OwnLuck: 0
+      Luck:
+        Magnitude: 0
+        RealMagnitude: 2
+        Scaler:
+          rid: -2
+    ProcCoefficient:
+      Magnitude: 1
+      RealMagnitude: 2
+      Scaler:
+        rid: -2
+    IgnoresCrowdControl: []
+    Textures: []
+  Tags:
+    AssetTag:
+      Name: Survivors.Ability.Maul
+      DisplayName: Survivors.Ability.Maul
+    ContextTags: []
+    PassiveGrantedTags: []
+    ActiveGrantedTags: []
+    TagRequirements:
+      Name: 
+      SourceRequirements:
+        Name: 
+        SourceTemplate: {fileID: 0}
+        SyncWithTemplate: 0
+        AvoidTags:
+        - Tag:
+            Name: Survivors.State.Frozen
+            DisplayName: Survivors.State.Frozen
+          Operator: 5
+          Magnitude: 0
+          MatchMode: 0
+        RequireTags: []
+      WhileActiveRequirements:
+        Name: 
+        SourceTemplate: {fileID: 0}
+        SyncWithTemplate: 0
+        AvoidTags: []
+        RequireTags: []
+      TargetRequirements:
+        Name: 
+        SourceTemplate: {fileID: 0}
+        SyncWithTemplate: 0
+        AvoidTags: []
+        RequireTags: []
+  Behaviour:
+    Targeting:
+      rid: 2403794536120189255
+    UseImplicitTargeting: 0
+    ImplicitTag:
+      Name: TargetzfvEmaa5gNtqhQ0_dE2_NOOAGh1QLRP8zfvEmaa5gNtqhQ0_dE2_NOOAGh
+      DisplayName: Target
+    AssetLoaders: []
+    Stages:
+    - StagePolicy:
+        rid: 2403794536120189256
+      Tasks:
+      - rid: 2403794536120189257
+      ApplyUsageEffects: 1
+      ApplyUsageAtStageStart: 1
+      Condition:
+        On: 0
+        Tag:
+          Name: 
+          DisplayName: 
+        WhenMissing: 0
+      CancelledBy: []
+      Blocks: []
+    CancelledBy: []
+    Blocks: []
+  SourceActivationRules:
+  - rid: 2403794536120189061
+  - rid: 2403794536120189062
+  TargetActivationRules:
+  - rid: 2403794536120189063
+  StartingLevel: 1
+  MaxLevel: 1
+  IgnoreWhenLevelZero: 1
+  Cost: {fileID: 0}
+  AttributeCosts: []
+  Cooldown: {fileID: 11400000, guid: cc69fbbe3f674c949981cf33fca5f6e5, type: 2}
+  WorkerGroup:
+    Name: Workers
+    AttributeWorkers: []
+    ImpactWorkers: []
+    TagWorkers: []
+    AnalysisWorkers: []
+  OnHit: []
+  Modifiers: []
+  Components:
+  - rid: 2403794536120189258
+  LinkMode: 0
+  _linkedSource: {fileID: 0}
+  references:
+    version: 2
+    RefIds:
+    - rid: -2
+      type: {class: , ns: , asm: }
+    - rid: 2403794536120189061
+      type: {class: CooldownValidation, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data: 
+    - rid: 2403794536120189062
+      type: {class: IsAliveValidation, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data: 
+    - rid: 2403794536120189063
+      type: {class: IsAliveValidation, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data: 
+    - rid: 2403794536120189255
+      type: {class: SelectGasTargetTask, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        BreakRuntimeOnInvalid: 1
+        Requirements:
+          Name: 
+          SourceTemplate: {fileID: 0}
+          SyncWithTemplate: 0
+          AvoidTags: []
+          RequireTags: []
+        RaycastLayers:
+          serializedVersion: 2
+          m_Bits: 4294967295
+        MaxDistance:
+          Magnitude: 300
+          RealMagnitude: 2
+          Scaler:
+            rid: -2
+        RetryOnInvalid: 0
+        MouseButton: 0
+        TakeTargetFromData: 1
+    - rid: 2403794536120189256
+      type: {class: AllProxyStagePolicy, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data: 
+    - rid: 2403794536120189257
+      type: {class: ApplyEffectsAbilityTask, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        Effects:
+        - {fileID: 11400000, guid: d47839ca98215c1469f1c0530cf7a2e6, type: 2}
+        DelayBetweenApplicationMs:
+          Magnitude: 0
+          RealMagnitude: 2
+          Scaler:
+            rid: -2
+          Rounding: 0
+        RecordLandedAs:
+          Name: 
+          DisplayName: 
+        UseResolveOrder: 1
+    - rid: 2403794536120189258
+      type: {class: CastRangeAbilityComponent, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        Range:
+          Magnitude: 1.7
+          RealMagnitude: 2
+          Scaler:
+            rid: -2
+        Flat: 1

@@ -12,12 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dac855327e524f0f9473752d46a88179, type: 3}
   m_Name: Guardian
   m_EditorClassIdentifier: 
-  LocalData:
-  - Key:
-      Name: Survivors.AttackRange
-      DisplayName: Survivors.AttackRange
-    Value:
-      rid: 2403794534686261492
+  LocalData: []
   _template: {fileID: 0}
   _templateOverrides: []
   _templateListSnapshots: []
@@ -42,7 +37,7 @@ MonoBehaviour:
       rid: -2
     Rounding: 0
   StartingAbilities:
-  - {fileID: 11400000, guid: 91297cb0bbd8bdc4fb6c2a81085a77a1, type: 2}
+  - {fileID: 11400000, guid: 038b9f2a22b6a70459e954a4c1a10618, type: 2}
   AllowDuplicateAbilities: 0
   MaxItemsOperation:
     Magnitude: 0
@@ -69,7 +64,7 @@ MonoBehaviour:
     AnalysisWorkers: []
   Modifiers: []
   Components:
-  - rid: 2403794534686261509
+  - rid: 2403794536120189187
   CrowdControl: {fileID: 0}
   Death:
     Policy: 0
@@ -88,15 +83,7 @@ MonoBehaviour:
     RefIds:
     - rid: -2
       type: {class: , ns: , asm: }
-    - rid: 2403794534686261492
-      type: {class: LocalFloat, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
-      data:
-        Value:
-          Magnitude: 1.6
-          RealMagnitude: 2
-          Scaler:
-            rid: -2
-    - rid: 2403794534686261509
+    - rid: 2403794536120189187
       type: {class: AuraEntityComponent, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:
         Aura:

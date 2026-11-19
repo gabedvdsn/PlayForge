@@ -167,11 +167,8 @@ namespace FarEmerald.PlayForge.Samples.Survivors
         [Tooltip("An enemy with any of these can't be targeted, as a Wraith while it's phased")]
         public List<Tag> ShieldTags = new();
 
-        [Tooltip("The Local Data key an entity's attack range is under")]
-        public Tag AttackRangeKey;
-
-        [Tooltip("The Local Data key an enemy ability's reach is under, as the enemies cast it when the hero's within it")]
-        public Tag ReachKey;
+        // How far an ability reaches, and an enemy attacks from, is each ability's own Cast Range component, which the hero,
+        // the horde and the targeting read alike
 
         /// <summary>The experience the level after <paramref name="level"/> takes.</summary>
         public float ExperienceFor(int level)
@@ -207,11 +204,12 @@ namespace FarEmerald.PlayForge.Samples.Survivors
         IReadOnlyList<Tag> ILabRules.Stops => StopTags;
         IReadOnlyList<Tag> ILabRules.Hides => Array.Empty<Tag>();
         IReadOnlyList<Tag> ILabRules.Shields => ShieldTags;
-        Tag ILabRules.AttackRangeKey => AttackRangeKey;
+        // No Local Data range: a unit attacks from its attack's Cast Range, and an ability reaches by its own
+        Tag ILabRules.AttackRangeKey => default;
         float ILabRules.AttackRange => 1.4f;
         int ILabRules.AttackSlot => 0;
         Tag ILabRules.CastOrderKey => default;
         Tag ILabRules.CastWhenKey => default;
-        Tag ILabRules.ReachKey => ReachKey;
+        Tag ILabRules.ReachKey => default;
     }
 }

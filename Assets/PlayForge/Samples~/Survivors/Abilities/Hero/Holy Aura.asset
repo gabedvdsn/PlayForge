@@ -12,12 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a42dbe2415465689d11a1e8ae1fdbc, type: 3}
   m_Name: Holy Aura
   m_EditorClassIdentifier: 
-  LocalData:
-  - Key:
-      Name: Survivors.Reach
-      DisplayName: Survivors.Reach
-    Value:
-      rid: 2403794534686261537
+  LocalData: []
   _template: {fileID: 0}
   _templateOverrides: []
   _templateListSnapshots: []
@@ -97,10 +92,10 @@ MonoBehaviour:
     AssetLoaders: []
     Stages:
     - StagePolicy:
-        rid: 2403794534686261538
+        rid: 2403794536120189228
       Tasks:
-      - rid: 2403794534686261539
-      - rid: 2403794534686261540
+      - rid: 2403794536120189229
+      - rid: 2403794536120189230
       ApplyUsageEffects: 1
       ApplyUsageAtStageStart: 1
       Condition:
@@ -114,10 +109,10 @@ MonoBehaviour:
     CancelledBy: []
     Blocks: []
   SourceActivationRules:
-  - rid: 2403794534686261296
-  - rid: 2403794534686261297
+  - rid: 2403794536120188976
+  - rid: 2403794536120188977
   TargetActivationRules:
-  - rid: 2403794534686261298
+  - rid: 2403794536120188978
   StartingLevel: 1
   MaxLevel: 8
   IgnoreWhenLevelZero: 1
@@ -132,7 +127,8 @@ MonoBehaviour:
     AnalysisWorkers: []
   OnHit: []
   Modifiers: []
-  Components: []
+  Components:
+  - rid: 2403794536120189231
   LinkMode: 0
   _linkedSource: {fileID: 0}
   references:
@@ -140,34 +136,26 @@ MonoBehaviour:
     RefIds:
     - rid: -2
       type: {class: , ns: , asm: }
-    - rid: 2403794534686261296
+    - rid: 2403794536120188976
       type: {class: CooldownValidation, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data: 
-    - rid: 2403794534686261297
+    - rid: 2403794536120188977
       type: {class: IsAliveValidation, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data: 
-    - rid: 2403794534686261298
+    - rid: 2403794536120188978
       type: {class: IsAliveValidation, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data: 
-    - rid: 2403794534686261537
-      type: {class: LocalFloat, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
-      data:
-        Value:
-          Magnitude: 3.6
-          RealMagnitude: 2
-          Scaler:
-            rid: -2
-    - rid: 2403794534686261538
+    - rid: 2403794536120189228
       type: {class: AllProxyStagePolicy, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data: 
-    - rid: 2403794534686261539
+    - rid: 2403794536120189229
       type: {class: AreaEffectTask, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:
         Radius:
           Magnitude: 0
           RealMagnitude: 3
           Scaler:
-            rid: 2403794534686261541
+            rid: 2403794536120189232
         Around: 0
         Takes: 1
         Flat: 1
@@ -177,12 +165,21 @@ MonoBehaviour:
           m_Bits: 4294967295
         Effects:
         - {fileID: 11400000, guid: 7441183d796b54c46ac6350ddc61c5b8, type: 2}
-    - rid: 2403794534686261540
+    - rid: 2403794536120189230
       type: {class: ApplyToCasterTask, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:
         Effects:
         - {fileID: 11400000, guid: 4f43941bf21cefb4fb5752cdaa355862, type: 2}
-    - rid: 2403794534686261541
+    - rid: 2403794536120189231
+      type: {class: CastRangeAbilityComponent, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        Range:
+          Magnitude: 3.6
+          RealMagnitude: 2
+          Scaler:
+            rid: -2
+        Flat: 1
+    - rid: 2403794536120189232
       type: {class: ScalerGroup, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:
         Name: Radius, times Area
@@ -219,13 +216,13 @@ MonoBehaviour:
         Behaviours: []
         Calculations:
         - Calculation:
-            rid: 2403794534686261542
+            rid: 2403794536120189233
           RelativeOperation: 0
         - Calculation:
-            rid: 2403794534686261543
+            rid: 2403794536120189234
           RelativeOperation: 1
         OverrideMemberCollisionPolicy: 0
-    - rid: 2403794534686261542
+    - rid: 2403794536120189233
       type: {class: SimpleScaler, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:
         Name: Radius, by level
@@ -321,7 +318,7 @@ MonoBehaviour:
           m_PostInfinity: 2
           m_RotationOrder: 4
         Behaviours: []
-    - rid: 2403794534686261543
+    - rid: 2403794536120189234
       type: {class: AttributeBackedScaler, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:
         Name: Caster's Area

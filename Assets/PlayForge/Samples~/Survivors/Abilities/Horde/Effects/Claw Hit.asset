@@ -18,7 +18,7 @@ MonoBehaviour:
   _templateListSnapshots: []
   Definition:
     Name: Claw Hit
-    Description: 'A claw''s blow: its caster''s Power.'
+    Description: 'A blow of the horde''s hand to hand: its caster''s Power.'
     Visibility:
       Name: Not Visibled2xuDNqtid9uamDM5aBXkxUexwFpJUF4d2xuDNqtid9uamDM5aBXk
       DisplayName: Not Visible
@@ -85,7 +85,7 @@ MonoBehaviour:
       Magnitude: -1
       RealMagnitude: 0
       Scaler:
-        rid: 2403794534686261374
+        rid: 2403794536120189050
     AdditionalImpacts: []
     Packets: []
   DurationSpecification:
@@ -129,7 +129,7 @@ MonoBehaviour:
       Rounding: 0
   Workers: []
   Components:
-  - rid: 2403794534686261375
+  - rid: 2403794536120189051
   WorkerGroup:
     Name: Workers
     AttributeWorkers: []
@@ -187,7 +187,7 @@ MonoBehaviour:
     RefIds:
     - rid: -2
       type: {class: , ns: , asm: }
-    - rid: 2403794534686261374
+    - rid: 2403794536120189050
       type: {class: AttributeBackedScaler, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:
         Name: Caster's Power
@@ -230,11 +230,11 @@ MonoBehaviour:
           Read: 0
           Groups: []
         ReadAs: 1
-    - rid: 2403794534686261375
+    - rid: 2403794536120189051
       type: {class: CuesEffectComponent, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:
         OnApply:
-        - rid: 2403794534686261376
+        - rid: 2403794536120189052
         OnReapply: []
         OnTick: []
         OnHit: []
@@ -242,7 +242,7 @@ MonoBehaviour:
         WhileActive: []
         OnRefused: []
         OnStackChange: []
-    - rid: 2403794534686261376
+    - rid: 2403794536120189052
       type: {class: PrefabCue, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:
         Prefab: {fileID: 8150139081363391177, guid: 3fc46ebed9300c240abbfada0ab3c02a, type: 3}

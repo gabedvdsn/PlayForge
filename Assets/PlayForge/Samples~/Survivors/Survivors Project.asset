@@ -291,6 +291,18 @@ MonoBehaviour:
     Asset: {fileID: 11400000, guid: 404b5a1b14fdb4b47aa4913f8dfbefbe, type: 2}
   - Id: 8ec0667e83c609543bec5236eaa197b6
     Asset: {fileID: 11400000, guid: 8ec0667e83c609543bec5236eaa197b6, type: 2}
+  - Id: ff36807e7c83bf34abd17f2c170874aa
+    Asset: {fileID: 11400000, guid: ff36807e7c83bf34abd17f2c170874aa, type: 2}
+  - Id: 142b30fa7be2f174f8f69c81583f6e65
+    Asset: {fileID: 11400000, guid: 142b30fa7be2f174f8f69c81583f6e65, type: 2}
+  - Id: 038b9f2a22b6a70459e954a4c1a10618
+    Asset: {fileID: 11400000, guid: 038b9f2a22b6a70459e954a4c1a10618, type: 2}
+  - Id: cc69fbbe3f674c949981cf33fca5f6e5
+    Asset: {fileID: 11400000, guid: cc69fbbe3f674c949981cf33fca5f6e5, type: 2}
+  - Id: e60f5a093989d374e86da47bada204a6
+    Asset: {fileID: 11400000, guid: e60f5a093989d374e86da47bada204a6, type: 2}
+  - Id: a43e7ecdd0e727b4cbc35d804d6f529f
+    Asset: {fileID: 11400000, guid: a43e7ecdd0e727b4cbc35d804d6f529f, type: 2}
   Description: 'The Survivors demo''s assets: its hero, its horde, their abilities,
     effects and attributes, and the passives, a Forge Project of their own'
   Settings:

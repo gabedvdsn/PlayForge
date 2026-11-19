@@ -12,12 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a42dbe2415465689d11a1e8ae1fdbc, type: 3}
   m_Name: Charge
   m_EditorClassIdentifier: 
-  LocalData:
-  - Key:
-      Name: Survivors.Reach
-      DisplayName: Survivors.Reach
-    Value:
-      rid: 2403794534686261522
+  LocalData: []
   _template: {fileID: 0}
   _templateOverrides: []
   _templateListSnapshots: []
@@ -94,7 +89,7 @@ MonoBehaviour:
         RequireTags: []
   Behaviour:
     Targeting:
-      rid: 2403794534686261523
+      rid: 2403794536120189200
     UseImplicitTargeting: 0
     ImplicitTag:
       Name: TargetzfvEmaa5gNtqhQ0_dE2_NOOAGh1QLRP8zfvEmaa5gNtqhQ0_dE2_NOOAGh
@@ -102,10 +97,10 @@ MonoBehaviour:
     AssetLoaders: []
     Stages:
     - StagePolicy:
-        rid: 2403794534686261524
+        rid: 2403794536120189201
       Tasks:
-      - rid: 2403794534686261525
-      - rid: 2403794534686261526
+      - rid: 2403794536120189202
+      - rid: 2403794536120189203
       ApplyUsageEffects: 1
       ApplyUsageAtStageStart: 1
       Condition:
@@ -117,9 +112,9 @@ MonoBehaviour:
       CancelledBy: []
       Blocks: []
     - StagePolicy:
-        rid: 2403794534686261527
+        rid: 2403794536120189204
       Tasks:
-      - rid: 2403794534686261528
+      - rid: 2403794536120189205
       ApplyUsageEffects: 0
       ApplyUsageAtStageStart: 1
       Condition:
@@ -131,9 +126,9 @@ MonoBehaviour:
       CancelledBy: []
       Blocks: []
     - StagePolicy:
-        rid: 2403794534686261529
+        rid: 2403794536120189206
       Tasks:
-      - rid: 2403794534686261530
+      - rid: 2403794536120189207
       ApplyUsageEffects: 0
       ApplyUsageAtStageStart: 1
       Condition:
@@ -147,10 +142,10 @@ MonoBehaviour:
     CancelledBy: []
     Blocks: []
   SourceActivationRules:
-  - rid: 2403794534686261410
-  - rid: 2403794534686261411
+  - rid: 2403794536120189102
+  - rid: 2403794536120189103
   TargetActivationRules:
-  - rid: 2403794534686261412
+  - rid: 2403794536120189104
   StartingLevel: 1
   MaxLevel: 1
   IgnoreWhenLevelZero: 1
@@ -165,7 +160,8 @@ MonoBehaviour:
     AnalysisWorkers: []
   OnHit: []
   Modifiers: []
-  Components: []
+  Components:
+  - rid: 2403794536120189208
   LinkMode: 0
   _linkedSource: {fileID: 0}
   references:
@@ -173,24 +169,16 @@ MonoBehaviour:
     RefIds:
     - rid: -2
       type: {class: , ns: , asm: }
-    - rid: 2403794534686261410
+    - rid: 2403794536120189102
       type: {class: CooldownValidation, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data: 
-    - rid: 2403794534686261411
+    - rid: 2403794536120189103
       type: {class: IsAliveValidation, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data: 
-    - rid: 2403794534686261412
+    - rid: 2403794536120189104
       type: {class: IsAliveValidation, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data: 
-    - rid: 2403794534686261522
-      type: {class: LocalFloat, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
-      data:
-        Value:
-          Magnitude: 7
-          RealMagnitude: 2
-          Scaler:
-            rid: -2
-    - rid: 2403794534686261523
+    - rid: 2403794536120189200
       type: {class: SelectGasTargetTask, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:
         BreakRuntimeOnInvalid: 1
@@ -211,15 +199,15 @@ MonoBehaviour:
         RetryOnInvalid: 0
         MouseButton: 0
         TakeTargetFromData: 1
-    - rid: 2403794534686261524
+    - rid: 2403794536120189201
       type: {class: AllProxyStagePolicy, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data: 
-    - rid: 2403794534686261525
+    - rid: 2403794536120189202
       type: {class: ApplyToCasterTask, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:
         Effects:
         - {fileID: 11400000, guid: 6078f99eb799df147878cd6b65df9c37, type: 2}
-    - rid: 2403794534686261526
+    - rid: 2403794536120189203
       type: {class: DelayTask, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:
         DelayMilliseconds:
@@ -228,10 +216,10 @@ MonoBehaviour:
           Scaler:
             rid: -2
           Rounding: 0
-    - rid: 2403794534686261527
+    - rid: 2403794536120189204
       type: {class: AllProxyStagePolicy, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data: 
-    - rid: 2403794534686261528
+    - rid: 2403794536120189205
       type: {class: DashTask, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:
         Distance:
@@ -245,10 +233,10 @@ MonoBehaviour:
           Scaler:
             rid: -2
         AwayFromTarget: 0
-    - rid: 2403794534686261529
+    - rid: 2403794536120189206
       type: {class: AllProxyStagePolicy, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data: 
-    - rid: 2403794534686261530
+    - rid: 2403794536120189207
       type: {class: AreaEffectTask, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:
         Radius:
@@ -265,3 +253,12 @@ MonoBehaviour:
           m_Bits: 4294967295
         Effects:
         - {fileID: 11400000, guid: a2abe6d1ab576d241aa1a1bde442dd81, type: 2}
+    - rid: 2403794536120189208
+      type: {class: CastRangeAbilityComponent, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        Range:
+          Magnitude: 7
+          RealMagnitude: 2
+          Scaler:
+            rid: -2
+        Flat: 1

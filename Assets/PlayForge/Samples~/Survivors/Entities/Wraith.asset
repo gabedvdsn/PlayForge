@@ -12,12 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dac855327e524f0f9473752d46a88179, type: 3}
   m_Name: Wraith
   m_EditorClassIdentifier: 
-  LocalData:
-  - Key:
-      Name: Survivors.AttackRange
-      DisplayName: Survivors.AttackRange
-    Value:
-      rid: 2403794534686261489
+  LocalData: []
   _template: {fileID: 0}
   _templateOverrides: []
   _templateListSnapshots: []
@@ -88,11 +83,3 @@ MonoBehaviour:
     RefIds:
     - rid: -2
       type: {class: , ns: , asm: }
-    - rid: 2403794534686261489
-      type: {class: LocalFloat, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
-      data:
-        Value:
-          Magnitude: 1.35
-          RealMagnitude: 2
-          Scaler:
-            rid: -2
