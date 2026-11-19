@@ -138,5 +138,64 @@
     "guide": "GETTING_STARTED",
     "caption": "Which asset holds which. Every asset derives from BaseForgeAsset, the levelled ones from BaseForgeLevelProvider. An Ability, effect, Item, AttributeSet or entity can LinkToProvider and follow another's level.",
     "section": "The pieces in one paragraph"
+  },
+  {
+    "image": "editor/demo.png",
+    "guide": "GETTING_STARTED",
+    "caption": "The Demo sample in play: pick heroes, give them items and fight."
+  },
+  {
+    "image": "editor/creator-lab.png",
+    "guide": "GETTING_STARTED",
+    "section": "Tooling tour",
+    "part": "The Creator Lab",
+    "caption": "The Creator Lab: a quick battle with the Demo's heroes."
+  },
+  {
+    "image": "editor/the-forge.png",
+    "guide": "GETTING_STARTED",
+    "section": "Tooling tour",
+    "part": "The Forge",
+    "caption": "The Forge: the active project's assets beside the one selected."
+  },
+  {
+    "image": "editor/the-forge-toolbar.png",
+    "guide": "GETTING_STARTED",
+    "section": "Tooling tour",
+    "part": "Forge Projects",
+    "caption": "The Forge's toolbar, its project menu first."
+  },
+  {
+    "image": "editor/the-forge-tags.png",
+    "guide": "GETTING_STARTED",
+    "section": "Tooling tour",
+    "part": "The Tags view",
+    "caption": "The Forge's Tags view."
+  },
+  {
+    "image": "editor/debugger.png",
+    "guide": "GETTING_STARTED",
+    "section": "Tooling tour",
+    "part": "The Debugger",
+    "caption": "The Debugger beside the Demo in play."
+  },
+  {
+    "image": "editor/problems.png",
+    "guide": "GETTING_STARTED",
+    "section": "Tooling tour",
+    "part": "The Problems view",
+    "caption": "The Problems view, by asset."
+  },
+  {
+    "image": "editor/project-settings.png",
+    "guide": "GETTING_STARTED",
+    "section": "Tooling tour",
+    "part": "The settings pages",
+    "caption": "Project Settings → PlayForge."
+  },
+  {
+    "image": "editor/creator-lab.png",
+    "guide": "CREATOR_LAB",
+    "caption": "The Creator Lab: a quick battle with the Demo's heroes, a unit selected."
   }
 ]

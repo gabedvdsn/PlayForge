@@ -10,6 +10,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## Toward 1.0.0, since 0.1.0
 
 ### Added
+- **Screenshots of the editor tools on the docs site** (EP-75): The Forge and its windows, the inspectors, the
+  Problems view, the settings pages, the Debugger beside the Demo, and the Creator Lab, drawn by Proving
+  Grounds' own capture tool.
 - **The guides rewritten for reading** (EP-73): short paragraphs, bullets, property tables and steps, with a page
   of its own on the docs site for each component, worker, scaler kind and tool part.
 - **Architecture diagrams on the docs site** (EP-74): the board's 25 diagrams, checked against the code, each on

@@ -45,7 +45,7 @@ area names, or a help topic with no page.
   types are listed under, and which guide covers them.
 - **Help buttons:** `ForgeDocs.UrlOf` opens a topic's section as its own page, named as the site names its heading, so
   a heading a help topic names keeps its words, or its topic moves with it. The build checks each topic's page.
-- **Screenshots:** Proving Grounds' **PlayForge → Docs → Capture Screenshots** draws each editor tool into a PNG,
+- **Screenshots:** Proving Grounds' **Window → PlayForge → Docs → Capture Screenshots** draws each editor tool into a PNG,
   with the Demo's assets; from the command line, `-executeMethod
   FarEmerald.PlayForge.ProvingGrounds.DocsCapture.DocsScreenshots.CaptureAndQuit -docsOut "<repo>/docfx/images/editor"`
   without `-batchmode`, as the editor draws no window in batch mode. A guide asks for one with its comment, above.
