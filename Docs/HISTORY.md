@@ -10,6 +10,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## Toward 1.0.0, since 0.1.0
 
 ### Added
+- **Many more screenshots in the docs** (EP-77): every asset guide's inspector and each of its sections, and
+  close-ups of the editor tools' parts and windows: 94 images on 97 pages.
 - **Diagrams large enough to read on the docs site** (EP-76): drawn at no less than 60% of their size,
   scrolling sideways, with a full-screen viewer to pan and zoom.
 - **The Survivors demo** (FEAT-40): a horde shooter that shows what PlayForge carries, hundreds of enemies each a

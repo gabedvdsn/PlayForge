@@ -197,5 +197,375 @@
     "image": "editor/creator-lab.png",
     "guide": "CREATOR_LAB",
     "caption": "The Creator Lab: a quick battle with the Demo's heroes, a unit selected."
+  },
+  {
+    "image": "editor/ability-activation.png",
+    "guide": "ABILITIES",
+    "section": "Activation",
+    "caption": "Fireball's Activation section."
+  },
+  {
+    "image": "editor/ability-components.png",
+    "guide": "ABILITIES",
+    "section": "Components",
+    "caption": "Fireball's Components section."
+  },
+  {
+    "image": "editor/ability-identity.png",
+    "guide": "ABILITIES",
+    "section": "Identity",
+    "caption": "Fireball's Identity section."
+  },
+  {
+    "image": "editor/ability-inspector.png",
+    "guide": "ABILITIES",
+    "caption": "Fireball's inspector."
+  },
+  {
+    "image": "editor/ability-leveling.png",
+    "guide": "ABILITIES",
+    "section": "Leveling",
+    "caption": "Fireball's Leveling section."
+  },
+  {
+    "image": "editor/ability-local-data.png",
+    "guide": "ABILITIES",
+    "section": "Local Data",
+    "caption": "Fireball's Local Data section."
+  },
+  {
+    "image": "editor/ability-requirements.png",
+    "guide": "ABILITIES",
+    "section": "Requirements",
+    "caption": "Fireball's Requirements section."
+  },
+  {
+    "image": "editor/ability-stages.png",
+    "guide": "ABILITIES",
+    "section": "Stages",
+    "caption": "Fireball's Stages section."
+  },
+  {
+    "image": "editor/ability-tags.png",
+    "guide": "ABILITIES",
+    "section": "Tags",
+    "caption": "Fireball's Tags section."
+  },
+  {
+    "image": "editor/ability-used-by.png",
+    "guide": "ABILITIES",
+    "section": "Used By",
+    "caption": "Fireball's Used By section."
+  },
+  {
+    "image": "editor/ability-workers.png",
+    "guide": "ABILITIES",
+    "section": "Workers",
+    "caption": "Fireball's Workers section."
+  },
+  {
+    "image": "editor/attribute-identity.png",
+    "guide": "ATTRIBUTES",
+    "section": "Identity",
+    "caption": "Health's Identity section."
+  },
+  {
+    "image": "editor/attribute-inspector.png",
+    "guide": "ATTRIBUTES",
+    "caption": "Health's inspector."
+  },
+  {
+    "image": "editor/attribute-local-data.png",
+    "guide": "ATTRIBUTES",
+    "section": "Local Data",
+    "caption": "Health's Local Data section."
+  },
+  {
+    "image": "editor/attribute-set-all-attributes.png",
+    "guide": "ATTRIBUTE_SETS",
+    "section": "All Attributes",
+    "caption": "Ranger Attributes's All Attributes section."
+  },
+  {
+    "image": "editor/attribute-set-attributes.png",
+    "guide": "ATTRIBUTE_SETS",
+    "section": "Attributes",
+    "caption": "Ranger Attributes's Attributes section."
+  },
+  {
+    "image": "editor/attribute-set-collision-settings.png",
+    "guide": "ATTRIBUTE_SETS",
+    "section": "Collision Settings",
+    "caption": "Ranger Attributes's Collision Settings section."
+  },
+  {
+    "image": "editor/attribute-set-identity.png",
+    "guide": "ATTRIBUTE_SETS",
+    "section": "Identity",
+    "caption": "Ranger Attributes's Identity section."
+  },
+  {
+    "image": "editor/attribute-set-inspector.png",
+    "guide": "ATTRIBUTE_SETS",
+    "caption": "Ranger Attributes's inspector."
+  },
+  {
+    "image": "editor/attribute-set-leveling.png",
+    "guide": "ATTRIBUTE_SETS",
+    "section": "Leveling",
+    "caption": "Ranger Attributes's Leveling section."
+  },
+  {
+    "image": "editor/attribute-set-local-data.png",
+    "guide": "ATTRIBUTE_SETS",
+    "section": "Local Data",
+    "caption": "Ranger Attributes's Local Data section."
+  },
+  {
+    "image": "editor/attribute-set-sub-sets.png",
+    "guide": "ATTRIBUTE_SETS",
+    "section": "Sub-Sets",
+    "caption": "Ranger Attributes's Sub-Sets section."
+  },
+  {
+    "image": "editor/attribute-set-used-by.png",
+    "guide": "ATTRIBUTE_SETS",
+    "section": "Used By",
+    "caption": "Ranger Attributes's Used By section."
+  },
+  {
+    "image": "editor/attribute-set-workers.png",
+    "guide": "ATTRIBUTE_SETS",
+    "section": "Workers",
+    "caption": "Ranger Attributes's Workers section."
+  },
+  {
+    "image": "editor/attribute-used-by.png",
+    "guide": "ATTRIBUTES",
+    "section": "Used By",
+    "caption": "Health's Used By section."
+  },
+  {
+    "image": "editor/effect-components.png",
+    "guide": "EFFECTS",
+    "section": "Components",
+    "caption": "Burning's Components section."
+  },
+  {
+    "image": "editor/effect-duration.png",
+    "guide": "EFFECTS",
+    "section": "Duration",
+    "caption": "Burning's Duration section."
+  },
+  {
+    "image": "editor/effect-identity.png",
+    "guide": "EFFECTS",
+    "section": "Identity",
+    "caption": "Burning's Identity section."
+  },
+  {
+    "image": "editor/effect-impact.png",
+    "guide": "EFFECTS",
+    "section": "Impact",
+    "caption": "Burning's Impact section."
+  },
+  {
+    "image": "editor/effect-inspector.png",
+    "guide": "EFFECTS",
+    "caption": "Burning's inspector."
+  },
+  {
+    "image": "editor/effect-leveling.png",
+    "guide": "EFFECTS",
+    "section": "Leveling",
+    "caption": "Burning's Leveling section."
+  },
+  {
+    "image": "editor/effect-local-data.png",
+    "guide": "EFFECTS",
+    "section": "Local Data",
+    "caption": "Burning's Local Data section."
+  },
+  {
+    "image": "editor/effect-requirements.png",
+    "guide": "EFFECTS",
+    "section": "Requirements",
+    "caption": "Burning's Requirements section."
+  },
+  {
+    "image": "editor/effect-tags.png",
+    "guide": "EFFECTS",
+    "section": "Tags",
+    "caption": "Burning's Tags section."
+  },
+  {
+    "image": "editor/effect-used-by.png",
+    "guide": "EFFECTS",
+    "section": "Used By",
+    "caption": "Burning's Used By section."
+  },
+  {
+    "image": "editor/effect-workers.png",
+    "guide": "EFFECTS",
+    "section": "Workers",
+    "caption": "Burning's Workers section."
+  },
+  {
+    "image": "editor/entity-abilities.png",
+    "guide": "ENTITIES",
+    "section": "Abilities",
+    "caption": "The Ranger's Abilities section."
+  },
+  {
+    "image": "editor/entity-attributes.png",
+    "guide": "ENTITIES",
+    "section": "Attributes",
+    "caption": "The Ranger's Attributes section."
+  },
+  {
+    "image": "editor/entity-components.png",
+    "guide": "ENTITIES",
+    "section": "Components",
+    "caption": "The Ranger's Components section."
+  },
+  {
+    "image": "editor/entity-death.png",
+    "guide": "ENTITIES",
+    "section": "Death",
+    "caption": "The Ranger's Death section."
+  },
+  {
+    "image": "editor/entity-hub-inspector.png",
+    "guide": "ENTITIES",
+    "caption": "The Ranger's hub, its GameplayAbilitySystem, in the Inspector in play."
+  },
+  {
+    "image": "editor/entity-identity.png",
+    "guide": "ENTITIES",
+    "section": "Identity",
+    "caption": "The Ranger's Identity section."
+  },
+  {
+    "image": "editor/entity-inspector.png",
+    "guide": "ENTITIES",
+    "caption": "The Ranger's inspector."
+  },
+  {
+    "image": "editor/entity-items.png",
+    "guide": "ENTITIES",
+    "section": "Items",
+    "caption": "The Ranger's Items section."
+  },
+  {
+    "image": "editor/entity-leveling.png",
+    "guide": "ENTITIES",
+    "section": "Leveling",
+    "caption": "The Ranger's Leveling section."
+  },
+  {
+    "image": "editor/entity-local-data.png",
+    "guide": "ENTITIES",
+    "section": "Local Data",
+    "caption": "The Ranger's Local Data section."
+  },
+  {
+    "image": "editor/entity-tags.png",
+    "guide": "ENTITIES",
+    "section": "Tags",
+    "caption": "The Ranger's Tags section."
+  },
+  {
+    "image": "editor/entity-used-by.png",
+    "guide": "ENTITIES",
+    "section": "Used By",
+    "caption": "The Ranger's Used By section."
+  },
+  {
+    "image": "editor/entity-workers.png",
+    "guide": "ENTITIES",
+    "section": "Workers",
+    "caption": "The Ranger's Workers section."
+  },
+  {
+    "image": "editor/item-abilities.png",
+    "guide": "ITEMS",
+    "section": "Abilities",
+    "caption": "Arcane Tome's Abilities section."
+  },
+  {
+    "image": "editor/item-components.png",
+    "guide": "ITEMS",
+    "section": "Components",
+    "caption": "Arcane Tome's Components section."
+  },
+  {
+    "image": "editor/item-effects.png",
+    "guide": "ITEMS",
+    "section": "Effects",
+    "caption": "Arcane Tome's Effects section."
+  },
+  {
+    "image": "editor/item-identity.png",
+    "guide": "ITEMS",
+    "section": "Identity",
+    "caption": "Arcane Tome's Identity section."
+  },
+  {
+    "image": "editor/item-inspector.png",
+    "guide": "ITEMS",
+    "caption": "Arcane Tome's inspector."
+  },
+  {
+    "image": "editor/item-leveling.png",
+    "guide": "ITEMS",
+    "section": "Leveling",
+    "caption": "Arcane Tome's Leveling section."
+  },
+  {
+    "image": "editor/item-local-data.png",
+    "guide": "ITEMS",
+    "section": "Local Data",
+    "caption": "Arcane Tome's Local Data section."
+  },
+  {
+    "image": "editor/item-tags.png",
+    "guide": "ITEMS",
+    "section": "Tags",
+    "caption": "Arcane Tome's Tags section."
+  },
+  {
+    "image": "editor/item-used-by.png",
+    "guide": "ITEMS",
+    "section": "Used By",
+    "caption": "Arcane Tome's Used By section."
+  },
+  {
+    "image": "editor/item-workers.png",
+    "guide": "ITEMS",
+    "section": "Workers",
+    "caption": "Arcane Tome's Workers section."
+  },
+  {
+    "image": "editor/scaler-inspector.png",
+    "guide": "SCALERS",
+    "section": "Scaler assets",
+    "caption": "A Scaler asset's inspector, with its Try section."
+  },
+  {
+    "image": "editor/scaler-values.png",
+    "guide": "SCALERS",
+    "section": "Values per level",
+    "caption": "A Scaler asset's Values section: a value for each level."
+  },
+  {
+    "image": "editor/value-pipeline-inspector.png",
+    "guide": "VALUE_PIPELINES",
+    "caption": "Physical Damage's inspector."
+  },
+  {
+    "image": "editor/value-pipeline-try.png",
+    "guide": "VALUE_PIPELINES",
+    "section": "Trying a pipeline",
+    "caption": "Physical Damage's Try section."
   }
 ]

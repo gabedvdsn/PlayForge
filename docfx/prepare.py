@@ -864,6 +864,20 @@ SHOT_CAPTIONS = {
     'rename-window': "The Rename window.",
     'forge-project-inspector': "A Forge Project's inspector.",
     'problems-view-by-rule': "The Problems view, By Rule.",
+    'inspector-header': "An inspector's header: the asset's icon, name, type and tag, its summary, and its buttons.",
+    'inspector-sections': "An ability's inspector, every section closed to its one-line summary.",
+    'number-field': "A number field: its name, its kind, the number or range it gives, and its menu (⋮).",
+    'tag-field': "A tag field.",
+    'template-overrides': "Fields an asset overrides from its template, each with a bar at its left and its label in bold.",
+    'effect-field-levels': "An effect field, and the line under it that says how the effect takes its levels.",
+    'asset-field': "An asset field, with its New button.",
+    'try-section': "A Scaler asset's Try section: its value at each level.",
+    'process-inspector': "A MonoBehaviour process's inspector: the Demo's Flame Wall fire.",
+    'import-values-window': "Import Values, listing the Scaler assets and fields to copy values from.",
+    'quick-fill-window': "Quick Fill, spreading a straight line over the field's levels.",
+    'save-as-scaler-asset-window': "Save as Scaler Asset.",
+    'import-window': "The Import window.",
+    'spreadsheet-import-window': "A sheet's changes, listed before they're imported, each ticked to take it.",
 }
 
 
