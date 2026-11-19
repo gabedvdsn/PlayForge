@@ -10,6 +10,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## Toward 1.0.0, since 0.1.0
 
 ### Added
+- A buyer-side smoke, Proving Grounds' `Tools/smoke-check.py` (SP-39): in the export's check project, PlayForge's
+  windows open from their menus and each sample scene plays, with nothing logged.
 - **Survivors' dash, longer waves and gentler first boss waves** (FEAT-41): Space dashes the hero past the horde's
   blows; a wave lasts 25 seconds; the Brute Pack and the Ogre Warlord's wave are a little easier.
 - **Many more screenshots in the docs** (EP-77): every asset guide's inspector and each of its sections, and
@@ -1179,6 +1181,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   Asking whether its sequence was paused took 24 bytes a frame.
 
 ### Fixed
+- **The export's rehearsal read an asset named for a warning as one** (SP-39): Unity's import progress names each
+  asset, so the Survivors cue `Slam Warning` failed the clean import. Both checks pass over that progress now.
 - **Additional Content's feedback threw in a project without TextMeshPro's Essential Resources** (SP-40): the
   Floating Text Layer and the Status Bar read TextMeshPro's default font where it had no settings, and a hit's
   callback failed the attack. There they float no words and show no letters now, and say so once.
