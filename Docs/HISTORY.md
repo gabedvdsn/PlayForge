@@ -1163,6 +1163,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   Asking whether its sequence was paused took 24 bytes a frame.
 
 ### Fixed
+- **A test that read another run's hidden columns** (ED-92): ED_48_A shows every column it drags, whatever the
+  user, or another run, hid.
 - **The samples hooked up as they ship** (SP-36): the Demo's fire process, the Task Sequence Examples' components
   and showcase each in a script of its name; Burning's stacks counted once; the sets' tags as their names give.
 - **A sample's tag under its prefix follows its name** (ED-91): The Forge's Problems took 173 for stale, and its
