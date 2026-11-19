@@ -1179,8 +1179,6 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   asks for one.
 - **The Debugger threw as it opened floating, or as it widened** (ED-96): Unity's column resize met the Processes
   list's rows before they had the cells of the columns shown again.
-- **The Dota lab's Mana Void had a warning** (ED-97): linked to a level provider never in Proving Grounds, it uses
-  its own levels, and a test checks each lab's assets.
 - **A test that read another run's hidden columns** (ED-92): ED_48_A shows every column it drags, whatever the
   user, or another run, hid.
 - **The samples hooked up as they ship** (SP-36): the Demo's fire process, the Task Sequence Examples' components
