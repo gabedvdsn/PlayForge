@@ -21,7 +21,7 @@ namespace FarEmerald.PlayForge
         public LayerMask RaycastLayers = ~0;
 
         [Tooltip("Maximum raycast distance for the camera ray (0 = infinite)")]
-        [NumberMin(0f)] public ScalableFloat MaxRayDistance = 0f;
+        [NumberMin(0f)] public ScalableFloat MaxRayDistance = float.PositiveInfinity;
 
         [Tooltip("Maximum allowed distance from caster to selected target")]
         [NumberMin(0f)] public ScalableFloat MaxTargetRange = 10f;

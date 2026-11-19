@@ -692,6 +692,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   page, through one table of links in the editor.
 
 ### Changed
+- **Every targeting task that casts its pointer's ray reaches any distance by default** (EP-80): Select Gas
+  Target, Select Gas Target In Range, Select Gas Or Position Target and Select Direction Target, as Select
+  Position does, so the inspector shows a new one's distance as infinite, not 0. A 0 saved before still
+  reaches any distance.
 - **Survivors' reaches are Cast Range components** (SP-38): each ability's and each enemy's attack's, the melee kinds
   attacking by their size's Bite, Claw, Maul or Smash; the roster's Reach and Attack Range Local Data keys are gone.
 - **The Demo's reaches are Cast Range components** (SP-37): each ability's and each hero's attack's, which the AI,

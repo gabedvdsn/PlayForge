@@ -22,7 +22,7 @@ namespace FarEmerald.PlayForge
         public LayerMask RaycastLayers = ~0;
 
         [Tooltip("How far its pointer's ray reaches; 0, any distance")]
-        [NumberMin(0f)] public ScalableFloat MaxDistance = 0f;
+        [NumberMin(0f)] public ScalableFloat MaxDistance = float.PositiveInfinity;
 
         [Tooltip("When true, the Y component of the direction is zeroed out (horizontal only)")]
         public bool FlattenY = true;
