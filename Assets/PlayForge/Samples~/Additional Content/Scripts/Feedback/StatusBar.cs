@@ -36,7 +36,7 @@ namespace FarEmerald.PlayForge.AdditionalContent
         [Tooltip("The shade over the time an effect has used")]
         public Color TimeShade = new(0f, 0f, 0f, 0.6f);
 
-        [Tooltip("The font of its letters and stacks; with none, TextMeshPro's default")]
+        [Tooltip("The font of its letters and stacks; with none, TextMeshPro's default, which a project has once it imports TextMeshPro's Essential Resources")]
         public TMP_FontAsset Font;
 
         [Tooltip("The camera the bar faces; with none, the main camera")]
@@ -78,6 +78,7 @@ namespace FarEmerald.PlayForge.AdditionalContent
         private readonly List<Slot> slots = new();
         private readonly Dictionary<GameplayEffect, int> found = new();
         private RectTransform bar;
+        private bool warned;
 
         /// <summary>The icons it shows now, in their order.</summary>
         public IReadOnlyList<Icon> Icons => icons;
@@ -168,18 +169,18 @@ namespace FarEmerald.PlayForge.AdditionalContent
                 {
                     slot.Background.sprite = SpriteOf(icon.Image);
                     slot.Background.color = Color.white;
-                    slot.Letters.text = "";
+                    if (slot.Letters != null) slot.Letters.text = "";
                 }
                 else
                 {
                     slot.Background.sprite = null;
                     slot.Background.color = ColorOf(icon.Effect.GetName());
-                    slot.Letters.text = icon.Letters;
+                    if (slot.Letters != null) slot.Letters.text = icon.Letters;
                 }
                 slot.Shade.enabled = ShowTimeLeft && icon.TimeLeft < 1f;
                 slot.Shade.fillAmount = 1f - icon.TimeLeft;
                 slot.Shade.color = TimeShade;
-                slot.Stacks.text = ShowStacks && icon.Stacks > 1 ? icon.Stacks.ToString() : "";
+                if (slot.Stacks != null) slot.Stacks.text = ShowStacks && icon.Stacks > 1 ? icon.Stacks.ToString() : "";
             }
         }
 
@@ -205,14 +206,24 @@ namespace FarEmerald.PlayForge.AdditionalContent
             return slot;
         }
 
+        // A text of an icon's letters or stacks, in the bar's font or TextMeshPro's default. With neither, as in a project
+        // without TextMeshPro's Essential Resources, there's none, and the bar says so once
         private TextMeshProUGUI MakeText(Transform parent, string name, float fontSize, TextAlignmentOptions alignment)
         {
+            var font = Font != null ? Font : TMP_Settings.instance != null ? TMP_Settings.defaultFontAsset : null;
+            if (font == null)
+            {
+                if (!warned)
+                    ForgeLog.Warning("The Status Bar has no font, so its icons show no letters or stacks: give it a Font, " +
+                                     "or import TextMeshPro's Essential Resources (Window > TextMeshPro > Import TMP Essential Resources)", this);
+                warned = true;
+                return null;
+            }
             var go = new GameObject(name, typeof(RectTransform));
             go.transform.SetParent(parent, false);
             Fill((RectTransform)go.transform);
             var text = go.AddComponent<TextMeshProUGUI>();
-            var font = Font != null ? Font : TMP_Settings.defaultFontAsset;
-            if (font != null) text.font = font;
+            text.font = font;
             text.fontSize = fontSize;
             text.alignment = alignment;
             text.textWrappingMode = TextWrappingModes.NoWrap;

@@ -39,7 +39,7 @@ namespace FarEmerald.PlayForge.AdditionalContent
         [Tooltip("The camera the words face; with none, the main camera")]
         public Camera Camera;
 
-        [Tooltip("The font; with none, TextMeshPro's default")]
+        [Tooltip("The font; with none, TextMeshPro's default, which a project has once it imports TextMeshPro's Essential Resources")]
         public TMP_FontAsset Font;
 
         [Tooltip("A material for the font, as an outlined one; with none, the font's own")]
@@ -84,6 +84,7 @@ namespace FarEmerald.PlayForge.AdditionalContent
         private readonly Stack<Floater> spare = new();
         private readonly List<Word> words = new();
         private Canvas canvas;
+        private bool warned;
 
         /// <summary>The scene's layer: the one enabled, or one made now.</summary>
         public static FloatingTextLayer Current
@@ -138,6 +139,7 @@ namespace FarEmerald.PlayForge.AdditionalContent
         {
             if (string.IsNullOrEmpty(text)) return;
             var f = spare.Count > 0 ? spare.Pop() : Make();
+            if (f == null) return;
             f.Style = style;
             f.Color = color;
             f.Age = 0f;
@@ -150,13 +152,23 @@ namespace FarEmerald.PlayForge.AdditionalContent
             Place(f);
         }
 
+        // A word's text, in the layer's font or TextMeshPro's default. With neither, as in a project without TextMeshPro's
+        // Essential Resources, there's none, and the layer says so once
         private Floater Make()
         {
+            var font = Font != null ? Font : TMP_Settings.instance != null ? TMP_Settings.defaultFontAsset : null;
+            if (font == null)
+            {
+                if (!warned)
+                    ForgeLog.Warning("The Floating Text Layer has no font, so no words float: give it a Font, or import " +
+                                     "TextMeshPro's Essential Resources (Window > TextMeshPro > Import TMP Essential Resources)", this);
+                warned = true;
+                return null;
+            }
             var go = new GameObject("Word", typeof(RectTransform));
             go.transform.SetParent(transform, false);
             var text = go.AddComponent<TextMeshProUGUI>();
-            var font = Font != null ? Font : TMP_Settings.defaultFontAsset;
-            if (font != null) text.font = font;
+            text.font = font;
             if (Material != null) text.fontSharedMaterial = Material;
             text.fontSize = FontSize;
             text.alignment = TextAlignmentOptions.Center;

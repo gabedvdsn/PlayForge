@@ -1179,6 +1179,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   Asking whether its sequence was paused took 24 bytes a frame.
 
 ### Fixed
+- **Additional Content's feedback threw in a project without TextMeshPro's Essential Resources** (SP-40): the
+  Floating Text Layer and the Status Bar read TextMeshPro's default font where it had no settings, and a hit's
+  callback failed the attack. There they float no words and show no letters now, and say so once.
 - **The Dota lab's Mana Void had a warning** (ED-97): linked to a level provider never in Proving Grounds, it uses
   its own levels, and a test checks each lab's assets.
 - **The Debugger's fit to its width was kept as the user's hidden columns** (ED-98): a narrow window kept four of

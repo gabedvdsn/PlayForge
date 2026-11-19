@@ -34,7 +34,9 @@ on kill and a boss's phase.
 
 Components and cues that show what PlayForge does, in the sample's own assembly,
 `FarEmerald.PlayForge.AdditionalContent`, which reads PlayForge, uGUI and TextMeshPro, and which nothing in PlayForge
-references. TextMeshPro asks to import its Essential Resources the first time one of them draws.
+references. TextMeshPro asks to import its Essential Resources the first time one of them draws. Until the project has
+them, or the Floating Text Layer and the Status Bar are given a font, no numbers float and the icons show no letters, and
+each says so once in the console.
 
 - On an entity, beside its hub, each showing that entity's changes to one attribute, the project's Health role's where
   none is set, with nothing set on any effect:
