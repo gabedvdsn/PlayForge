@@ -22,8 +22,8 @@ MonoBehaviour:
     speed and what of its vitals differs. A change here reaches all five.'
   Textures: []
   AssetTag:
-    Name: Demo.Set.Hero
-    DisplayName: Demo.Set.Hero
+    Name: Demo.AttributeSet.Hero
+    DisplayName: Demo.AttributeSet.Hero
   Attributes: []
   SubSets:
   - {fileID: 11400000, guid: 29c03a906f30b504da761f4e878a9072, type: 2}

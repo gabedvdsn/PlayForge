@@ -675,8 +675,9 @@ namespace FarEmerald.PlayForge.Editor
         // The tag a name gives, and whether the stored one differs from it
         private (string tag, bool stale) AssetTagState(string assetName, string typeName, Tag stored)
         {
-            var (result, display, isUnknown) = GenerateAssetTag(assetName, typeName);
-            return (result, !isUnknown && (stored.Name != result || stored.DisplayName != display));
+            // Under a prefix of its own, as a sample's, it keeps the prefix
+            var (result, _, isUnknown, follows) = ForgeAssetCreation.AssetTagFollowing(assetName, typeName, stored);
+            return (result, !isUnknown && !follows);
         }
 
         // ═══════════════════════════════════════════════════════════════════════════

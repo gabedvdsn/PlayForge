@@ -21,8 +21,8 @@ MonoBehaviour:
     own set gives its own growth.
   Textures: []
   AssetTag:
-    Name: Demo.Set.Primaries
-    DisplayName: Demo.Set.Primaries
+    Name: Demo.AttributeSet.Primaries
+    DisplayName: Demo.AttributeSet.Primaries
   Attributes:
   - Attribute: {fileID: 11400000, guid: 68b5217a78b8e544fb7586bdf897268f, type: 2}
     Current:

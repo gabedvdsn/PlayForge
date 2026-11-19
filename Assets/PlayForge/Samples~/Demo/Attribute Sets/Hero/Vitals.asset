@@ -22,8 +22,8 @@ MonoBehaviour:
     and Mana stay between 0 and their base.
   Textures: []
   AssetTag:
-    Name: Demo.Set.Vitals
-    DisplayName: Demo.Set.Vitals
+    Name: Demo.AttributeSet.Vitals
+    DisplayName: Demo.AttributeSet.Vitals
   Attributes:
   - Attribute: {fileID: 11400000, guid: b865fa5ec88ff314ab348516f14527f7, type: 2}
     Current:

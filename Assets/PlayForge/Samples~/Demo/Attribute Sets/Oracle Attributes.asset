@@ -41,8 +41,8 @@ MonoBehaviour:
     bases. The rest comes from the Hero template.'
   Textures: []
   AssetTag:
-    Name: Demo.Set.Oracle
-    DisplayName: Demo.Set.Oracle
+    Name: Demo.AttributeSet.OracleAttributes
+    DisplayName: Demo.AttributeSet.OracleAttributes
   Attributes:
   - Attribute: {fileID: 11400000, guid: 68b5217a78b8e544fb7586bdf897268f, type: 2}
     Current:

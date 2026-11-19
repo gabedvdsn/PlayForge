@@ -130,6 +130,29 @@ namespace FarEmerald.PlayForge.Editor
             return string.IsNullOrEmpty(result) ? ($"{unnamed} {typeName}!", unnamed, true) : (result, string.Join("", words), false);
         }
 
+        /// <summary>
+        /// The tag a name gives an asset whose tag is now <paramref name="stored"/>, and whether the stored one follows it.
+        /// A tag under a prefix of its own, as a sample's Demo.Effect.Burning keeps its assets apart from a game's, keeps
+        /// the prefix, and reads either as its name or as its whole path; a rename keeps the prefix too.
+        /// </summary>
+        public static (string result, string display, bool isUnknown, bool follows) AssetTagFollowing(string assetName, string typeName, Tag stored)
+        {
+            var (result, display, isUnknown) = AssetTagFor(assetName, typeName);
+            if (isUnknown) return (result, display, true, true);
+            string prefix = PrefixOf(stored.Name, typeName);
+            result = prefix + result;
+            bool follows = stored.Name == result && (stored.DisplayName == display || prefix.Length > 0 && stored.DisplayName == stored.Name);
+            return (result, display, false, follows);
+        }
+
+        /// <summary>The prefix a tag has before its type: "Demo." of Demo.Effect.Burning, and none of Effect.Burning.</summary>
+        public static string PrefixOf(string tagName, string typeName)
+        {
+            if (string.IsNullOrEmpty(tagName) || tagName.StartsWith(typeName + ".", StringComparison.Ordinal)) return "";
+            int at = tagName.IndexOf("." + typeName + ".", StringComparison.Ordinal);
+            return at > 0 ? tagName.Substring(0, at + 1) : "";
+        }
+
         // Names an asset and stores the tag its name gives, as its inspector does on a rename
         private static void Name(BaseForgeAsset asset, string name)
         {

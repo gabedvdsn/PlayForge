@@ -15,8 +15,10 @@ framework; these examples show it working.
 | --- | --- |
 | `TaskSequenceExamples.cs` | The framework a feature at a time: building, every kind of task, delays and waits, stage policies, sub-stages, branches, repeats, conditions and injections and the permissions over them, critical sections, timeouts and max durations, clocks of a sequence's own, exceptions, lifecycle hooks, metadata, the data packet, every way to run a sequence, chains, pausing, and the runtime's own members. It ends with a task, a stage policy and an injection of your own. |
 | `TaskSequenceExamples_Mechanics.cs` | Gameplay mechanics built from those features: a channeled beam, charges, a recall, a combo chain, a respawn timer with a buy-back, a boss that enrages, a spell shield, a toggled drain, ground targeting, a charged shot, a recast, a meteor shower, and a turn-based duel. |
-| `TaskSequenceLibraryExamples.cs` | Every helper of `SequenceTaskLibrary` and `SyncSequenceTaskLibrary`, each async helper beside its synced twin, and the Library Showcase component that runs them on a scene's objects. |
-| `SyncSequenceExamples.cs` | Synced sequences as scene components, each a `LazyMonoProcess` with the Synchronous lifecycle: a ticker, a patrol, a chase, a bob, an orbit, a burn, a pulse and a signal, and a `LazyRuntimeProcess` that code starts. |
+| `TaskSequenceLibraryExamples.cs` | Every helper of `SequenceTaskLibrary` and `SyncSequenceTaskLibrary`, each async helper beside its synced twin. |
+| `TaskSequenceLibraryShowcase.cs` | The Library Showcase component, which runs them on a scene's objects. |
+| `SyncSequenceExamples.cs` | What the synced scene components share, `SyncedSequenceComponent`, a `LazyMonoProcess` with the Synchronous lifecycle, and `SyncedChoreography`, a `LazyRuntimeProcess` that code starts. |
+| `SyncedTicker.cs` to `SyncedSignal.cs` | Synced sequences as scene components, each in a script of its own name, as Unity adds and saves a component by its script: a ticker, a patrol, a chase, a bob, an orbit, a burn, a pulse and a signal. |
 | `TaskSequenceExampleRunner.cs` | A component that runs any example from a scene, on a key. |
 
 Each method marked `[TaskSequenceMethod]` builds a sequence or a chain and returns it without running it. Their names

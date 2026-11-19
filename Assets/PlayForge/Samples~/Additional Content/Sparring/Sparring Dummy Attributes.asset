@@ -20,8 +20,8 @@ MonoBehaviour:
   Description: 
   Textures: []
   AssetTag:
-    Name: Starter.Set.SparringDummy
-    DisplayName: Starter.Set.SparringDummy
+    Name: Starter.AttributeSet.SparringDummy
+    DisplayName: Starter.AttributeSet.SparringDummy
   Attributes:
   - Attribute: {fileID: 11400000, guid: 1a451b4c7d2bb934a98a21b053faf5a8, type: 2}
     Current:

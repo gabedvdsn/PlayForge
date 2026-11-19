@@ -141,8 +141,9 @@ namespace FarEmerald.PlayForge.Editor
         /// </summary>
         internal static void StoreAssetTag(Object asset, string assetName, string typeName, Tag stored, Action<Tag> store)
         {
-            var (result, display, isUnknown) = ForgeAssetCreation.AssetTagFor(assetName, typeName);
-            if (isUnknown || (stored.Name == result && stored.DisplayName == display)) return;
+            // A tag under a prefix of its own keeps it
+            var (result, display, isUnknown, follows) = ForgeAssetCreation.AssetTagFollowing(assetName, typeName, stored);
+            if (isUnknown || follows) return;
 
             Undo.RecordObject(asset, "Update Asset Tag");
             var from = stored.Name;

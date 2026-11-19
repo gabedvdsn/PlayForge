@@ -71,8 +71,9 @@ namespace FarEmerald.PlayForge.Editor
                 _ => (null, null, default(Tag)),
             };
             if (typeName == null) return;
-            var (result, display, isUnknown) = ForgeAssetCreation.AssetTagFor(name, typeName);
-            if (isUnknown || (stored.Name == result && stored.DisplayName == display)) return;
+            // Under a prefix of its own, as a sample's tag keeps its assets apart from a game's, a tag follows its name too
+            var (result, display, isUnknown, follows) = ForgeAssetCreation.AssetTagFollowing(name, typeName, stored);
+            if (isUnknown || follows) return;
             var was = string.IsNullOrEmpty(stored.Name) ? "not set" : stored.Name;
             // A tag whose path is right reads by its display name, which its name gives too: the message named the same
             // path twice

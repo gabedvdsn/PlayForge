@@ -21,8 +21,8 @@ MonoBehaviour:
     bounds.
   Textures: []
   AssetTag:
-    Name: Demo.Set.Utility
-    DisplayName: Demo.Set.Utility
+    Name: Demo.AttributeSet.Utility
+    DisplayName: Demo.AttributeSet.Utility
   Attributes:
   - Attribute: {fileID: 11400000, guid: f91616365c2f4394581d66675b9208fa, type: 2}
     Current:

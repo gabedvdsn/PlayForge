@@ -21,8 +21,8 @@ MonoBehaviour:
     and the damage model''s workers, so it takes blows as a hero does. No sub-sets.'
   Textures: []
   AssetTag:
-    Name: Demo.Set.TrainingDummyAttributes
-    DisplayName: Demo.Set.TrainingDummyAttributes
+    Name: Demo.AttributeSet.TrainingDummyAttributes
+    DisplayName: Demo.AttributeSet.TrainingDummyAttributes
   Attributes:
   - Attribute: {fileID: 11400000, guid: b865fa5ec88ff314ab348516f14527f7, type: 2}
     Current:

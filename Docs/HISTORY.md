@@ -1159,6 +1159,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   Asking whether its sequence was paused took 24 bytes a frame.
 
 ### Fixed
+- **The samples hooked up as they ship** (SP-36): the Demo's fire process, the Task Sequence Examples' components
+  and showcase each in a script of its name; Burning's stacks counted once; the sets' tags as their names give.
+- **A sample's tag under its prefix follows its name** (ED-91): The Forge's Problems took 173 for stale, and its
+  fix dropped the prefix.
 - **The Demo's HUD left no room to play** (SP-35): short and centred under the arena, the attributes in the panel,
   with what a cast waits for above it and the keys under it.
 - **The Creator Lab's buttons and fields were hard to read** (LAB-21): Unity's light runtime controls took the dark

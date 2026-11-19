@@ -21,8 +21,8 @@ MonoBehaviour:
     items add to them.
   Textures: []
   AssetTag:
-    Name: Demo.Set.Offense
-    DisplayName: Demo.Set.Offense
+    Name: Demo.AttributeSet.Offense
+    DisplayName: Demo.AttributeSet.Offense
   Attributes:
   - Attribute: {fileID: 11400000, guid: 3e8e0a8d8742715489be084df6157132, type: 2}
     Current:
