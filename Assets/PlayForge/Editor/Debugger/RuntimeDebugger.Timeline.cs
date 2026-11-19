@@ -192,6 +192,8 @@ namespace FarEmerald.PlayForge.Editor
             trackList.SetSelectionWithoutNotify(at >= 0 ? new[] { at } : Array.Empty<int>());
             if (shownTrack != null && !recorder.Tracks.Contains(shownTrack)) ShowTrack(null);
             else if (shownTrack != null) ShowTrack(shownTrack, keepRun: true);
+            // With none selected, its note says whether there's a track to select now
+            else ShowTrack(null);
         }
 
         // A track's detail: an ability's graph, its stages and their tasks, beside its runs, or an effect's applications

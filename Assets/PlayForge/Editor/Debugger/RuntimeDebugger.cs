@@ -548,8 +548,14 @@ namespace FarEmerald.PlayForge.Editor
             Lay(processSplit, 1, 380);
             Lay(tagSplit, 0, 440);
             Lay(timelineSplit, 1, 380);
-            if (processList != null)
+            // The list's header shows or hides a column at once, while its rows take their cells only at a rebuild Unity
+            // schedules. The window fits itself as it's laid out, so the header would resize a column the rows have no
+            // cell for yet, which throws: the rows are built again with the header
+            if (processList != null && NarrowHiddenColumns.Any(name => processList.columns[name].visible == narrow))
+            {
                 foreach (var name in NarrowHiddenColumns) processList.columns[name].visible = !narrow;
+                processList.Rebuild();
+            }
             rootVisualElement.Query(className: SourceColumnClass).ForEach(cell => cell.EnableInClassList(HiddenClass, narrow));
             ShowView();
             ShowStatus();

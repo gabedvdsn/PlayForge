@@ -512,9 +512,8 @@ namespace FarEmerald.PlayForge.Editor
         /// </summary>
         private static bool IsTagSetForScanning(Tag tag)
         {
-            // Only skip if Name is null (truly uninitialized)
-            // Allow empty string names so they show up as "unnamed" in the tag browser
-            return tag.Name != null;
+            // A tag with a name: a tag field left unset holds a tag of no name, which uses no tag
+            return tag.IsValid;
         }
         
         /// <summary>

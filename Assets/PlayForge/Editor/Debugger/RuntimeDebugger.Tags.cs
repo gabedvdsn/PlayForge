@@ -17,10 +17,10 @@ namespace FarEmerald.PlayForge.Editor
         // What a sample changes in the tag's detail, in place
         private readonly List<Action> tagUpdates = new();
 
-        // Each path's id in the tree, kept across rebuilds so a row keeps its fold and its selection, and the ids the tree
-        // has opened once, so a fold the user closed stays closed
+        // Each path's id in the tree, kept across rebuilds so a row keeps its fold and its selection, and each parent's fold
+        // as it was left, open or closed, by its id: the tree takes its items anew at each refill, with every parent closed
         private readonly Dictionary<string, int> tagIds = new();
-        private readonly HashSet<int> tagsOpened = new();
+        private readonly Dictionary<int, bool> tagFolds = new();
         private readonly Dictionary<string, TagNode> tagNodes = new();
 
         // A row of the tree: a tag's path, or the part of one that tags share. A parent's counts take in its children's
@@ -111,16 +111,24 @@ namespace FarEmerald.PlayForge.Editor
         private void RefillTags()
         {
             if (tagTree == null) return;
+            // Each parent's fold as the tree shows it, before its items are set anew
+            foreach (var shown in tagNodes.Values)
+            {
+                int id = tagIds[shown.Path];
+                if (shown.Children.Count > 0) tagFolds[id] = tagTree.IsExpanded(id);
+            }
             var roots = TagRoots(out var nodes);
             tagNodes.Clear();
             foreach (var node in nodes) tagNodes[node.Path] = node;
             tagTree.SetRootItems(roots.Select(TreeItem).ToList());
             tagTree.Rebuild();
-            // A parent opens the first time it's shown
+            // Each parent as it was left, and one new to the tree open
             foreach (var node in nodes)
             {
+                if (node.Children.Count == 0) continue;
                 int id = tagIds[node.Path];
-                if (node.Children.Count > 0 && tagsOpened.Add(id)) tagTree.ExpandItem(id, false, false);
+                if (!tagFolds.TryGetValue(id, out bool open)) tagFolds[id] = open = true;
+                if (open) tagTree.ExpandItem(id, false, false);
             }
             tagTree.RefreshItems();
             if (shownTagPath != null && tagNodes.ContainsKey(shownTagPath))

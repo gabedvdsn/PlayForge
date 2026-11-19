@@ -1171,6 +1171,16 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   Asking whether its sequence was paused took 24 bytes a frame.
 
 ### Fixed
+- **The Forge's Tags view listed the empty tag** (ED-93): each tag field left unset counted as a use of a tag of no
+  name, which the view listed first, For every context, and selected while no tag was.
+- **The Debugger's tag tree closed at each refill** (ED-94): a parent opened once, then closed as a tag was held or
+  let go. Each parent stays as it was left, and one new to the tree opens.
+- **The Debugger's Timeline said nothing was recorded** (ED-95) beside the tracks it listed; with none selected, it
+  asks for one.
+- **The Debugger threw as it opened floating, or as it widened** (ED-96): Unity's column resize met the Processes
+  list's rows before they had the cells of the columns shown again.
+- **The Dota lab's Mana Void had a warning** (ED-97): linked to a level provider never in Proving Grounds, it uses
+  its own levels, and a test checks each lab's assets.
 - **A test that read another run's hidden columns** (ED-92): ED_48_A shows every column it drags, whatever the
   user, or another run, hid.
 - **The samples hooked up as they ship** (SP-36): the Demo's fire process, the Task Sequence Examples' components
