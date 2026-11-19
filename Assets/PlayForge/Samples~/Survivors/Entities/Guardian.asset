@@ -1,0 +1,115 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dac855327e524f0f9473752d46a88179, type: 3}
+  m_Name: Guardian
+  m_EditorClassIdentifier: 
+  LocalData:
+  - Key:
+      Name: Survivors.AttackRange
+      DisplayName: Survivors.AttackRange
+    Value:
+      rid: 2403794534686261492
+  _template: {fileID: 0}
+  _templateOverrides: []
+  _templateListSnapshots: []
+  Name: Guardian
+  Description: Shields the horde around it with an aura of +20 Armor, an entity component
+    of its own.
+  Textures: []
+  Affiliation: []
+  AssetTag:
+    Name: Survivors.Entity.Guardian
+    DisplayName: Survivors.Entity.Guardian
+  GrantedTags: []
+  ContextTags: []
+  StartingLevel: 1
+  MaxLevel: 20
+  ActivationPolicy: 2
+  TargetingYields: 1
+  MaxAbilitiesOperation:
+    Magnitude: 4
+    RealMagnitude: 2
+    Scaler:
+      rid: -2
+    Rounding: 0
+  StartingAbilities:
+  - {fileID: 11400000, guid: 91297cb0bbd8bdc4fb6c2a81085a77a1, type: 2}
+  AllowDuplicateAbilities: 0
+  MaxItemsOperation:
+    Magnitude: 0
+    RealMagnitude: 2
+    Scaler:
+      rid: -2
+    Rounding: 0
+  MaxEquippedItemsOperation:
+    Magnitude: 0
+    RealMagnitude: 2
+    Scaler:
+      rid: -2
+    Rounding: 0
+  StartingItems: []
+  AllowDuplicateItems: 0
+  AllowDuplicateEquippedItems: 0
+  AttributeSet: {fileID: 11400000, guid: 4c5033ab0d362c0489c6002fb4eef3d1, type: 2}
+  TimeScaleAttribute: {fileID: 0}
+  WorkerGroup:
+    Name: Workers
+    AttributeWorkers: []
+    ImpactWorkers: []
+    TagWorkers: []
+    AnalysisWorkers: []
+  Modifiers: []
+  Components:
+  - rid: 2403794534686261509
+  CrowdControl: {fileID: 0}
+  Death:
+    Policy: 0
+    DiesAtZeroHealth: 1
+    Purges: 1
+    KeepsAsProject: 1
+    KeepsTiers: []
+    KeepsCategories: 0
+    OnDeath: []
+    OnRevive: []
+    Body: {fileID: 0}
+  LinkMode: 0
+  _linkedSource: {fileID: 0}
+  references:
+    version: 2
+    RefIds:
+    - rid: -2
+      type: {class: , ns: , asm: }
+    - rid: 2403794534686261492
+      type: {class: LocalFloat, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        Value:
+          Magnitude: 1.6
+          RealMagnitude: 2
+          Scaler:
+            rid: -2
+    - rid: 2403794534686261509
+      type: {class: AuraEntityComponent, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        Aura:
+          Effect: {fileID: 11400000, guid: 25df66c418ebff54f812e45863a944b2, type: 2}
+          Radius:
+            Magnitude: 5
+            RealMagnitude: 2
+            Scaler:
+              rid: -2
+          Flat: 1
+          Takes: 3
+          Interval:
+            Magnitude: 0.25
+            RealMagnitude: 2
+            Scaler:
+              rid: -2

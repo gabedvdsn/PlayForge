@@ -1,0 +1,265 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: beebd04eeb79efa49bdd207ee55bb035, type: 3}
+  m_Name: Survivors Roster
+  m_EditorClassIdentifier: 
+  Hero: {fileID: 11400000, guid: c5a3e5a586260fc4bba8e80d834c2b70, type: 2}
+  HeroColor: {r: 0.35, g: 0.75, b: 1, a: 1}
+  AbilityPool:
+  - {fileID: 11400000, guid: ff47153c2b3deae4e8b1d21891909470, type: 2}
+  - {fileID: 11400000, guid: 037da2b19342d8f4f8f3c49165d0b324, type: 2}
+  - {fileID: 11400000, guid: 0988bdc5b5bfff649b55b826879b2356, type: 2}
+  - {fileID: 11400000, guid: d8d36988aed45ae4c90111c7d6f4b833, type: 2}
+  - {fileID: 11400000, guid: 56c4c19d4c788f7458217039cccbdf64, type: 2}
+  - {fileID: 11400000, guid: 69902a20c60dc4c42a9070e5b74b8ffe, type: 2}
+  - {fileID: 11400000, guid: 4dee9ff485c192b42bc3d72472390dc1, type: 2}
+  - {fileID: 11400000, guid: d10a0c5904286f94b8c5b1f3f7869465, type: 2}
+  PassivePool:
+  - {fileID: 11400000, guid: c176ffa23b36ce949b032a80483f57dc, type: 2}
+  - {fileID: 11400000, guid: 3a4e526320262dc4d8ff5c8d88a11a1a, type: 2}
+  - {fileID: 11400000, guid: 5079a16dcd9042c4e83cfe0e8f7a1cad, type: 2}
+  - {fileID: 11400000, guid: 76656cc9ef560a34bbbb4555bfc0b8fa, type: 2}
+  - {fileID: 11400000, guid: 67147287e9e70564baf38d98a27e1aa5, type: 2}
+  - {fileID: 11400000, guid: 7586195f227751a41afe43bd9b49fe19, type: 2}
+  - {fileID: 11400000, guid: 0f7f56b848eb075469c149b3690322b9, type: 2}
+  - {fileID: 11400000, guid: 2269f406ee129d849a6eb571e03c3375, type: 2}
+  - {fileID: 11400000, guid: f3191fdb218501b44a0cbc5ba2fe58f7, type: 2}
+  - {fileID: 11400000, guid: ee7f71c91c65d9244a1afb8847d59f58, type: 2}
+  - {fileID: 11400000, guid: 95722b2bf6bc189489ef30fa26767a1b, type: 2}
+  - {fileID: 11400000, guid: aff356e0bb34b124fbc9e2813c69d3d9, type: 2}
+  - {fileID: 11400000, guid: f3b29fa51208e604d94277e7d841101e, type: 2}
+  - {fileID: 11400000, guid: 7ca9db7e53bcf434496f16bade3649d2, type: 2}
+  MaxAbilities: 5
+  MaxPassives: 5
+  AbilityCards: 3
+  PassiveCards: 5
+  FirstLevel: 5
+  LevelGrowth: 5
+  LevelCurve: 0.5
+  WaveSeconds: 15
+  BossEvery: 2
+  FirstWaveCount: 14
+  WaveGrowth: 10
+  WaveCurve: 1.5
+  WavesALevel: 2
+  MaxEnemies: 600
+  SpawnDistance: 22
+  Enemies:
+  - Identity: {fileID: 11400000, guid: 43559428e30efac4aa1459856f948f79, type: 2}
+    Color: {r: 0.45, g: 0.6, b: 0.35, a: 1}
+    Size: 1
+    FirstWave: 1
+    Weight: 10
+    Group: 1
+    Experience: 1
+    SplitsInto: {fileID: 0}
+    Splits: 0
+  - Identity: {fileID: 11400000, guid: caaf292125e3e234391b102fe481ebc9, type: 2}
+    Color: {r: 0.45, g: 0.32, b: 0.5, a: 1}
+    Size: 0.6
+    FirstWave: 2
+    Weight: 5
+    Group: 5
+    Experience: 1
+    SplitsInto: {fileID: 0}
+    Splits: 0
+  - Identity: {fileID: 11400000, guid: 4b221b72310dc3d44ac3d98795dcd0aa, type: 2}
+    Color: {r: 0.78, g: 0.72, b: 0.45, a: 1}
+    Size: 0.95
+    FirstWave: 3
+    Weight: 4
+    Group: 1
+    Experience: 2
+    SplitsInto: {fileID: 0}
+    Splits: 0
+  - Identity: {fileID: 11400000, guid: 97473b3de55f37f4bb03668a5bd60c13, type: 2}
+    Color: {r: 0.62, g: 0.35, b: 0.3, a: 1}
+    Size: 1.6
+    FirstWave: 4
+    Weight: 3
+    Group: 1
+    Experience: 5
+    SplitsInto: {fileID: 0}
+    Splits: 0
+  - Identity: {fileID: 11400000, guid: a62e39791c1bbb4429713e04ba3c8e31, type: 2}
+    Color: {r: 0.92, g: 0.5, b: 0.2, a: 1}
+    Size: 0.9
+    FirstWave: 5
+    Weight: 3
+    Group: 1
+    Experience: 2
+    SplitsInto: {fileID: 0}
+    Splits: 0
+  - Identity: {fileID: 11400000, guid: e686d36b27c24164694f610d74d33cd2, type: 2}
+    Color: {r: 0.35, g: 0.5, b: 0.82, a: 1}
+    Size: 1
+    FirstWave: 6
+    Weight: 2
+    Group: 1
+    Experience: 3
+    SplitsInto: {fileID: 0}
+    Splits: 0
+  - Identity: {fileID: 11400000, guid: 313876bb6a1026649ae8696b26a01f30, type: 2}
+    Color: {r: 0.56, g: 0.45, b: 0.3, a: 1}
+    Size: 1.2
+    FirstWave: 7
+    Weight: 2
+    Group: 1
+    Experience: 3
+    SplitsInto: {fileID: 0}
+    Splits: 0
+  - Identity: {fileID: 11400000, guid: e19818758b6b9f64897019290f6a225f, type: 2}
+    Color: {r: 0.4, g: 0.82, b: 0.55, a: 1}
+    Size: 1.3
+    FirstWave: 8
+    Weight: 3
+    Group: 1
+    Experience: 2
+    SplitsInto: {fileID: 11400000, guid: 259fa121bdd0f0d4ebeb3ab365124538, type: 2}
+    Splits: 3
+  - Identity: {fileID: 11400000, guid: 816a7125a8db8c54481d34a4ff2601c4, type: 2}
+    Color: {r: 0.72, g: 0.72, b: 0.88, a: 1}
+    Size: 1
+    FirstWave: 9
+    Weight: 3
+    Group: 1
+    Experience: 3
+    SplitsInto: {fileID: 0}
+    Splits: 0
+  - Identity: {fileID: 11400000, guid: 9a230d46a0bfc624d8a314ebd5ee71d9, type: 2}
+    Color: {r: 0.5, g: 0.6, b: 0.78, a: 1}
+    Size: 1.4
+    FirstWave: 10
+    Weight: 2
+    Group: 1
+    Experience: 4
+    SplitsInto: {fileID: 0}
+    Splits: 0
+  BossWaves:
+  - Name: Brute Pack
+    Units:
+    - Kind:
+        Identity: {fileID: 11400000, guid: 97473b3de55f37f4bb03668a5bd60c13, type: 2}
+        Color: {r: 0.62, g: 0.35, b: 0.3, a: 1}
+        Size: 1.6
+        FirstWave: 4
+        Weight: 3
+        Group: 1
+        Experience: 5
+        SplitsInto: {fileID: 0}
+        Splits: 0
+      Count: 5
+      ExtraLevels: 1
+  - Name: Ogre Warlord
+    Units:
+    - Kind:
+        Identity: {fileID: 11400000, guid: 158df41d6136de6479ee6f949362956f, type: 2}
+        Color: {r: 0.58, g: 0.42, b: 0.3, a: 1}
+        Size: 2.6
+        FirstWave: 1
+        Weight: 0
+        Group: 1
+        Experience: 6
+        SplitsInto: {fileID: 0}
+        Splits: 0
+      Count: 1
+      ExtraLevels: 0
+    - Kind:
+        Identity: {fileID: 11400000, guid: 97473b3de55f37f4bb03668a5bd60c13, type: 2}
+        Color: {r: 0.62, g: 0.35, b: 0.3, a: 1}
+        Size: 1.6
+        FirstWave: 4
+        Weight: 3
+        Group: 1
+        Experience: 5
+        SplitsInto: {fileID: 0}
+        Splits: 0
+      Count: 2
+      ExtraLevels: 0
+  - Name: The Lich
+    Units:
+    - Kind:
+        Identity: {fileID: 11400000, guid: f6c740c20201a7b4bbd797610d2311e5, type: 2}
+        Color: {r: 0.55, g: 0.45, b: 0.78, a: 1}
+        Size: 1.8
+        FirstWave: 1
+        Weight: 0
+        Group: 1
+        Experience: 6
+        SplitsInto: {fileID: 0}
+        Splits: 0
+      Count: 1
+      ExtraLevels: 0
+    - Kind:
+        Identity: {fileID: 11400000, guid: e686d36b27c24164694f610d74d33cd2, type: 2}
+        Color: {r: 0.35, g: 0.5, b: 0.82, a: 1}
+        Size: 1
+        FirstWave: 6
+        Weight: 2
+        Group: 1
+        Experience: 3
+        SplitsInto: {fileID: 0}
+        Splits: 0
+      Count: 4
+      ExtraLevels: 0
+  - Name: Hive Queen
+    Units:
+    - Kind:
+        Identity: {fileID: 11400000, guid: 8ec0667e83c609543bec5236eaa197b6, type: 2}
+        Color: {r: 0.62, g: 0.56, b: 0.25, a: 1}
+        Size: 2.4
+        FirstWave: 1
+        Weight: 0
+        Group: 1
+        Experience: 6
+        SplitsInto: {fileID: 0}
+        Splits: 0
+      Count: 1
+      ExtraLevels: 0
+    - Kind:
+        Identity: {fileID: 11400000, guid: a62e39791c1bbb4429713e04ba3c8e31, type: 2}
+        Color: {r: 0.92, g: 0.5, b: 0.2, a: 1}
+        Size: 0.9
+        FirstWave: 5
+        Weight: 3
+        Group: 1
+        Experience: 2
+        SplitsInto: {fileID: 0}
+        Splits: 0
+      Count: 4
+      ExtraLevels: 0
+  HealthAttribute: {fileID: 11400000, guid: 66821d6800a0bcb4690d84ba0046b449, type: 2}
+  MovementSpeedAttribute: {fileID: 11400000, guid: 00e43075fbeff5d4b8a860ad4cd395c7, type: 2}
+  PickupRadius: {fileID: 11400000, guid: b8707b370ea1527438f81007a9339136, type: 2}
+  HealthRegeneration: {fileID: 11400000, guid: b2fa75727c5033048b229aa29035e724, type: 2}
+  ProjectileAmount: {fileID: 11400000, guid: 13fe80053953e0046a09922ea3d9a0ee, type: 2}
+  ProjectilePierce: {fileID: 11400000, guid: cbe5ba239ac6138479ad89cc1be4b46a, type: 2}
+  Area: {fileID: 11400000, guid: 45b6ec10d450be04c87dd68fad83e375, type: 2}
+  Duration: {fileID: 11400000, guid: 609d3b81fc4a9d9458393be6888d8ce8, type: 2}
+  HeroSide:
+    Name: Survivors.Side.Hero
+    DisplayName: Survivors.Side.Hero
+  EnemySide:
+    Name: Survivors.Side.Horde
+    DisplayName: Survivors.Side.Horde
+  StopTags:
+  - Name: Survivors.State.Frozen
+    DisplayName: Survivors.State.Frozen
+  ShieldTags:
+  - Name: Survivors.State.Phased
+    DisplayName: Survivors.State.Phased
+  AttackRangeKey:
+    Name: Survivors.AttackRange
+    DisplayName: Survivors.AttackRange
+  ReachKey:
+    Name: Survivors.Reach
+    DisplayName: Survivors.Reach

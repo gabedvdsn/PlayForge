@@ -1,0 +1,131 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &5935855520892226874
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2300800307270323931}
+  - component: {fileID: 2624758614406133479}
+  m_Layer: 0
+  m_Name: Look
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2300800307270323931
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5935855520892226874}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1792033530426067537}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2624758614406133479
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5935855520892226874}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9e93a52224ea8d246b69ff2c3df1f58d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Shape: 2
+  Size: {x: 1, y: 0.02, z: 1}
+  Offset: {x: 0, y: 0, z: 0}
+  Rotation: {x: 0, y: 0, z: 0}
+  Color: {r: 1, g: 0.45, b: 0.12, a: 1}
+  Spin: 0
+--- !u!1 &7740772191469972892
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1792033530426067537}
+  - component: {fileID: 6393687780458398063}
+  m_Layer: 0
+  m_Name: Fire Field Pool
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1792033530426067537
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7740772191469972892}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 2300800307270323931}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &6393687780458398063
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7740772191469972892}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e9fd7e33323050f45a354a5c45f59686, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ProcessLifecycle: 0
+  ProcessTiming: 0
+  PriorityMethod: 1
+  ProcessStepPriority: 0
+  Instantiator:
+    rid: -2
+  UseHandlerInstantiator: 0
+  ParticipateInSiblingCascade: 1
+  Attributes: []
+  AttributePairs:
+  - Key:
+      Name: Survivors.Role.Area
+      DisplayName: Survivors.Role.Area
+    Attribute: {fileID: 11400000, guid: 45b6ec10d450be04c87dd68fad83e375, type: 2}
+  - Key:
+      Name: Survivors.Role.Duration
+      DisplayName: Survivors.Role.Duration
+    Attribute: {fileID: 11400000, guid: 609d3b81fc4a9d9458393be6888d8ce8, type: 2}
+  - Key:
+      Name: Survivors.Role.Pierce
+      DisplayName: Survivors.Role.Pierce
+    Attribute: {fileID: 11400000, guid: cbe5ba239ac6138479ad89cc1be4b46a, type: 2}
+  Effects:
+  - {fileID: 11400000, guid: 5c1c646c25937a94daa6e2d3cf313a4f, type: 2}
+  Hits: 1
+  Radius: 1.9
+  Lifetime: 3
+  Interval: 0.5
+  Look: {fileID: 2300800307270323931}
+  references:
+    version: 2
+    RefIds:
+    - rid: -2
+      type: {class: , ns: , asm: }

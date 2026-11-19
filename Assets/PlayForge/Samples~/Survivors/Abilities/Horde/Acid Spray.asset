@@ -1,0 +1,254 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d5a42dbe2415465689d11a1e8ae1fdbc, type: 3}
+  m_Name: Acid Spray
+  m_EditorClassIdentifier: 
+  LocalData:
+  - Key:
+      Name: Survivors.Projectile
+      DisplayName: Survivors.Projectile
+    Value:
+      rid: 2403794534686261614
+  - Key:
+      Name: Survivors.Count
+      DisplayName: Survivors.Count
+    Value:
+      rid: 2403794534686261615
+  - Key:
+      Name: Survivors.Pattern
+      DisplayName: Survivors.Pattern
+    Value:
+      rid: 2403794534686261616
+  - Key:
+      Name: Survivors.Spread
+      DisplayName: Survivors.Spread
+    Value:
+      rid: 2403794534686261617
+  - Key:
+      Name: Survivors.Interval
+      DisplayName: Survivors.Interval
+    Value:
+      rid: 2403794534686261618
+  - Key:
+      Name: Survivors.Reach
+      DisplayName: Survivors.Reach
+    Value:
+      rid: 2403794534686261619
+  _template: {fileID: 0}
+  _templateOverrides: []
+  _templateListSnapshots: []
+  Definition:
+    Name: Acid Spray
+    Description: A Hive Queen spits a fan of acid at the hero.
+    ActivationPolicy: 0
+    WhileTargeting: 0
+    BufferWindow:
+      Magnitude: 0.3
+      RealMagnitude: 2
+      Scaler:
+        rid: -2
+    BufferPriority:
+      Magnitude: 0
+      RealMagnitude: 2
+      Scaler:
+        rid: -2
+      Rounding: 0
+    ActivateImmediately: 0
+    Triggers: []
+    ChanceToActivate:
+      Magnitude: 1
+      RealMagnitude: 2
+      Scaler:
+        rid: -2
+    ActivationRoll:
+      PseudoRandom: 0
+      OwnLuck: 0
+      Luck:
+        Magnitude: 0
+        RealMagnitude: 2
+        Scaler:
+          rid: -2
+    ProcCoefficient:
+      Magnitude: 1
+      RealMagnitude: 2
+      Scaler:
+        rid: -2
+    IgnoresCrowdControl: []
+    Textures: []
+  Tags:
+    AssetTag:
+      Name: Survivors.Ability.AcidSpray
+      DisplayName: Survivors.Ability.AcidSpray
+    ContextTags: []
+    PassiveGrantedTags: []
+    ActiveGrantedTags: []
+    TagRequirements:
+      Name: 
+      SourceRequirements:
+        Name: 
+        SourceTemplate: {fileID: 0}
+        SyncWithTemplate: 0
+        AvoidTags:
+        - Tag:
+            Name: Survivors.State.Frozen
+            DisplayName: Survivors.State.Frozen
+          Operator: 5
+          Magnitude: 0
+          MatchMode: 0
+        RequireTags: []
+      WhileActiveRequirements:
+        Name: 
+        SourceTemplate: {fileID: 0}
+        SyncWithTemplate: 0
+        AvoidTags: []
+        RequireTags: []
+      TargetRequirements:
+        Name: 
+        SourceTemplate: {fileID: 0}
+        SyncWithTemplate: 0
+        AvoidTags: []
+        RequireTags: []
+  Behaviour:
+    Targeting:
+      rid: 2403794534686261620
+    UseImplicitTargeting: 0
+    ImplicitTag:
+      Name: TargetzfvEmaa5gNtqhQ0_dE2_NOOAGh1QLRP8zfvEmaa5gNtqhQ0_dE2_NOOAGh
+      DisplayName: Target
+    AssetLoaders: []
+    Stages:
+    - StagePolicy:
+        rid: 2403794534686261621
+      Tasks:
+      - rid: 2403794534686261622
+      ApplyUsageEffects: 1
+      ApplyUsageAtStageStart: 1
+      Condition:
+        On: 0
+        Tag:
+          Name: 
+          DisplayName: 
+        WhenMissing: 0
+      CancelledBy: []
+      Blocks: []
+    CancelledBy: []
+    Blocks: []
+  SourceActivationRules:
+  - rid: 2403794534686261456
+  - rid: 2403794534686261457
+  TargetActivationRules:
+  - rid: 2403794534686261458
+  StartingLevel: 1
+  MaxLevel: 1
+  IgnoreWhenLevelZero: 1
+  Cost: {fileID: 0}
+  AttributeCosts: []
+  Cooldown: {fileID: 11400000, guid: a1daee59efddae54bb740101b841fde9, type: 2}
+  WorkerGroup:
+    Name: Workers
+    AttributeWorkers: []
+    ImpactWorkers: []
+    TagWorkers: []
+    AnalysisWorkers: []
+  OnHit: []
+  Modifiers: []
+  Components: []
+  LinkMode: 0
+  _linkedSource: {fileID: 0}
+  references:
+    version: 2
+    RefIds:
+    - rid: -2
+      type: {class: , ns: , asm: }
+    - rid: 2403794534686261456
+      type: {class: CooldownValidation, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data: 
+    - rid: 2403794534686261457
+      type: {class: IsAliveValidation, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data: 
+    - rid: 2403794534686261458
+      type: {class: IsAliveValidation, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data: 
+    - rid: 2403794534686261614
+      type: {class: LocalMonoBehaviour, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        Value: {fileID: 6993842839205623338, guid: 35982149150f5414081613efa1138687, type: 3}
+    - rid: 2403794534686261615
+      type: {class: LocalInt, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        Value:
+          Magnitude: 5
+          RealMagnitude: 2
+          Scaler:
+            rid: -2
+          Rounding: 0
+    - rid: 2403794534686261616
+      type: {class: LocalString, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        Value: Fan
+    - rid: 2403794534686261617
+      type: {class: LocalFloat, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        Value:
+          Magnitude: 60
+          RealMagnitude: 2
+          Scaler:
+            rid: -2
+    - rid: 2403794534686261618
+      type: {class: LocalFloat, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        Value:
+          Magnitude: 0
+          RealMagnitude: 2
+          Scaler:
+            rid: -2
+    - rid: 2403794534686261619
+      type: {class: LocalFloat, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        Value:
+          Magnitude: 11
+          RealMagnitude: 2
+          Scaler:
+            rid: -2
+    - rid: 2403794534686261620
+      type: {class: SelectGasTargetTask, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        BreakRuntimeOnInvalid: 1
+        Requirements:
+          Name: 
+          SourceTemplate: {fileID: 0}
+          SyncWithTemplate: 0
+          AvoidTags: []
+          RequireTags: []
+        RaycastLayers:
+          serializedVersion: 2
+          m_Bits: 4294967295
+        MaxDistance:
+          Magnitude: 300
+          RealMagnitude: 2
+          Scaler:
+            rid: -2
+        RetryOnInvalid: 0
+        MouseButton: 0
+        TakeTargetFromData: 1
+    - rid: 2403794534686261621
+      type: {class: AllProxyStagePolicy, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data: 
+    - rid: 2403794534686261622
+      type: {class: RunSequenceTask, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        Sequence:
+          _typeName: FarEmerald.PlayForge.Samples.Survivors.SurvivorsSequences, FarEmerald.PlayForge.Samples.Survivors,
+            Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+          _methodName: Volley
+        Clock:
+          rid: -2

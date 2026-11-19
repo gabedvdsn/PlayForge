@@ -1,0 +1,132 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &4007199051270391534
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 7375974792081605674}
+  - component: {fileID: 4501481087194459749}
+  m_Layer: 0
+  m_Name: Sweep
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &7375974792081605674
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4007199051270391534}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2845225300282687372}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &4501481087194459749
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4007199051270391534}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 67f200de3a7df89409a10426dc64b285, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Shape: 1
+  Radius: 3.2
+  Arc: 150
+  Height: 9
+  Width: 0.3
+  Color: {r: 1, g: 0.95, b: 0.85, a: 1}
+  Fade: 0.18
+--- !u!1 &6070424499252605931
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2845225300282687372}
+  - component: {fileID: 2739161009637807020}
+  m_Layer: 0
+  m_Name: Cleave Arc
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2845225300282687372
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6070424499252605931}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 7375974792081605674}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2739161009637807020
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6070424499252605931}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1e5f2b1b5fa99d94dbf7cfe2a9fc54e3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ProcessLifecycle: 0
+  ProcessTiming: 0
+  PriorityMethod: 1
+  ProcessStepPriority: 0
+  Instantiator:
+    rid: -2
+  UseHandlerInstantiator: 0
+  ParticipateInSiblingCascade: 1
+  Attributes: []
+  AttributePairs:
+  - Key:
+      Name: Survivors.Role.Area
+      DisplayName: Survivors.Role.Area
+    Attribute: {fileID: 11400000, guid: 45b6ec10d450be04c87dd68fad83e375, type: 2}
+  - Key:
+      Name: Survivors.Role.Duration
+      DisplayName: Survivors.Role.Duration
+    Attribute: {fileID: 11400000, guid: 609d3b81fc4a9d9458393be6888d8ce8, type: 2}
+  - Key:
+      Name: Survivors.Role.Pierce
+      DisplayName: Survivors.Role.Pierce
+    Attribute: {fileID: 11400000, guid: cbe5ba239ac6138479ad89cc1be4b46a, type: 2}
+  Effects:
+  - {fileID: 11400000, guid: 328a1eb82f13b75418a9584b8409fb97, type: 2}
+  Hits: 1
+  Radius: 3.2
+  Arc: 150
+  Show: 0.18
+  Sweep: {fileID: 4501481087194459749}
+  references:
+    version: 2
+    RefIds:
+    - rid: -2
+      type: {class: , ns: , asm: }

@@ -1,0 +1,366 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d5a42dbe2415465689d11a1e8ae1fdbc, type: 3}
+  m_Name: Holy Aura
+  m_EditorClassIdentifier: 
+  LocalData:
+  - Key:
+      Name: Survivors.Reach
+      DisplayName: Survivors.Reach
+    Value:
+      rid: 2403794534686261537
+  _template: {fileID: 0}
+  _templateOverrides: []
+  _templateListSnapshots: []
+  Definition:
+    Name: Holy Aura
+    Description: A ring of holy light around the hero that burns every enemy near,
+      a pulse each second. Wider and harder as it levels; Expanse widens it.
+    ActivationPolicy: 0
+    WhileTargeting: 0
+    BufferWindow:
+      Magnitude: 0.3
+      RealMagnitude: 2
+      Scaler:
+        rid: -2
+    BufferPriority:
+      Magnitude: 0
+      RealMagnitude: 2
+      Scaler:
+        rid: -2
+      Rounding: 0
+    ActivateImmediately: 0
+    Triggers: []
+    ChanceToActivate:
+      Magnitude: 1
+      RealMagnitude: 2
+      Scaler:
+        rid: -2
+    ActivationRoll:
+      PseudoRandom: 0
+      OwnLuck: 0
+      Luck:
+        Magnitude: 0
+        RealMagnitude: 2
+        Scaler:
+          rid: -2
+    ProcCoefficient:
+      Magnitude: 1
+      RealMagnitude: 2
+      Scaler:
+        rid: -2
+    IgnoresCrowdControl: []
+    Textures: []
+  Tags:
+    AssetTag:
+      Name: Survivors.Ability.HolyAura
+      DisplayName: Survivors.Ability.HolyAura
+    ContextTags: []
+    PassiveGrantedTags: []
+    ActiveGrantedTags: []
+    TagRequirements:
+      Name: 
+      SourceRequirements:
+        Name: 
+        SourceTemplate: {fileID: 0}
+        SyncWithTemplate: 0
+        AvoidTags: []
+        RequireTags: []
+      WhileActiveRequirements:
+        Name: 
+        SourceTemplate: {fileID: 0}
+        SyncWithTemplate: 0
+        AvoidTags: []
+        RequireTags: []
+      TargetRequirements:
+        Name: 
+        SourceTemplate: {fileID: 0}
+        SyncWithTemplate: 0
+        AvoidTags: []
+        RequireTags: []
+  Behaviour:
+    Targeting:
+      rid: -2
+    UseImplicitTargeting: 1
+    ImplicitTag:
+      Name: TargetzfvEmaa5gNtqhQ0_dE2_NOOAGh1QLRP8zfvEmaa5gNtqhQ0_dE2_NOOAGh
+      DisplayName: Target
+    AssetLoaders: []
+    Stages:
+    - StagePolicy:
+        rid: 2403794534686261538
+      Tasks:
+      - rid: 2403794534686261539
+      - rid: 2403794534686261540
+      ApplyUsageEffects: 1
+      ApplyUsageAtStageStart: 1
+      Condition:
+        On: 0
+        Tag:
+          Name: 
+          DisplayName: 
+        WhenMissing: 0
+      CancelledBy: []
+      Blocks: []
+    CancelledBy: []
+    Blocks: []
+  SourceActivationRules:
+  - rid: 2403794534686261296
+  - rid: 2403794534686261297
+  TargetActivationRules:
+  - rid: 2403794534686261298
+  StartingLevel: 1
+  MaxLevel: 8
+  IgnoreWhenLevelZero: 1
+  Cost: {fileID: 0}
+  AttributeCosts: []
+  Cooldown: {fileID: 11400000, guid: ea39a3ba6bd99e14f8999bc1f532d067, type: 2}
+  WorkerGroup:
+    Name: Workers
+    AttributeWorkers: []
+    ImpactWorkers: []
+    TagWorkers: []
+    AnalysisWorkers: []
+  OnHit: []
+  Modifiers: []
+  Components: []
+  LinkMode: 0
+  _linkedSource: {fileID: 0}
+  references:
+    version: 2
+    RefIds:
+    - rid: -2
+      type: {class: , ns: , asm: }
+    - rid: 2403794534686261296
+      type: {class: CooldownValidation, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data: 
+    - rid: 2403794534686261297
+      type: {class: IsAliveValidation, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data: 
+    - rid: 2403794534686261298
+      type: {class: IsAliveValidation, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data: 
+    - rid: 2403794534686261537
+      type: {class: LocalFloat, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        Value:
+          Magnitude: 3.6
+          RealMagnitude: 2
+          Scaler:
+            rid: -2
+    - rid: 2403794534686261538
+      type: {class: AllProxyStagePolicy, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data: 
+    - rid: 2403794534686261539
+      type: {class: AreaEffectTask, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        Radius:
+          Magnitude: 0
+          RealMagnitude: 3
+          Scaler:
+            rid: 2403794534686261541
+        Around: 0
+        Takes: 1
+        Flat: 1
+        UsePhysics: 0
+        DetectionLayers:
+          serializedVersion: 2
+          m_Bits: 4294967295
+        Effects:
+        - {fileID: 11400000, guid: 7441183d796b54c46ac6350ddc61c5b8, type: 2}
+    - rid: 2403794534686261540
+      type: {class: ApplyToCasterTask, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        Effects:
+        - {fileID: 11400000, guid: 4f43941bf21cefb4fb5752cdaa355862, type: 2}
+    - rid: 2403794534686261541
+      type: {class: ScalerGroup, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        Name: Radius, times Area
+        Configuration: 0
+        MaxLevel: 10
+        LevelValues:
+        - 1
+        Interpolation: 1
+        StretchOverLevels: 1
+        Scaling:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        Behaviours: []
+        Calculations:
+        - Calculation:
+            rid: 2403794534686261542
+          RelativeOperation: 0
+        - Calculation:
+            rid: 2403794534686261543
+          RelativeOperation: 1
+        OverrideMemberCollisionPolicy: 0
+    - rid: 2403794534686261542
+      type: {class: SimpleScaler, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        Name: Radius, by level
+        Configuration: 0
+        MaxLevel: 8
+        LevelValues:
+        - 2.8
+        - 3
+        - 3.2
+        - 3.4
+        - 3.6
+        - 3.8
+        - 4
+        - 4.4
+        Interpolation: 1
+        StretchOverLevels: 0
+        Scaling:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 2.8
+            inSlope: 0
+            outSlope: 1.4000002
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.14285715
+            value: 3
+            inSlope: 1.4000002
+            outSlope: 1.4000002
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.2857143
+            value: 3.2
+            inSlope: 1.4000002
+            outSlope: 1.4000005
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.42857143
+            value: 3.4
+            inSlope: 1.4000005
+            outSlope: 1.3999984
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.5714286
+            value: 3.6
+            inSlope: 1.3999984
+            outSlope: 1.4000005
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.71428573
+            value: 3.8
+            inSlope: 1.4000005
+            outSlope: 1.4000005
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.85714287
+            value: 4
+            inSlope: 1.4000005
+            outSlope: 2.800001
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 4.4
+            inSlope: 2.800001
+            outSlope: 0
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        Behaviours: []
+    - rid: 2403794534686261543
+      type: {class: AttributeBackedScaler, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        Name: Caster's Area
+        Configuration: 0
+        MaxLevel: 10
+        LevelValues:
+        - 1
+        Interpolation: 1
+        StretchOverLevels: 1
+        Scaling:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        Behaviours: []
+        CaptureAttribute: {fileID: 11400000, guid: 45b6ec10d450be04c87dd68fad83e375, type: 2}
+        CaptureFrom: 1
+        CaptureWhen: 1
+        CaptureWhat: 0
+        Groups:
+          Read: 0
+          Groups: []
+        ReadAs: 1

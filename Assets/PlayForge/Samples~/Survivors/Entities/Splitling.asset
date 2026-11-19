@@ -1,0 +1,96 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dac855327e524f0f9473752d46a88179, type: 3}
+  m_Name: Splitling
+  m_EditorClassIdentifier: 
+  LocalData:
+  - Key:
+      Name: Survivors.AttackRange
+      DisplayName: Survivors.AttackRange
+    Value:
+      rid: 2403794534686261483
+  _template: {fileID: 0}
+  _templateOverrides: []
+  _templateListSnapshots: []
+  Name: Splitling
+  Description: 'What a Splitter breaks into: small and quick.'
+  Textures: []
+  Affiliation: []
+  AssetTag:
+    Name: Survivors.Entity.Splitling
+    DisplayName: Survivors.Entity.Splitling
+  GrantedTags: []
+  ContextTags: []
+  StartingLevel: 1
+  MaxLevel: 20
+  ActivationPolicy: 2
+  TargetingYields: 1
+  MaxAbilitiesOperation:
+    Magnitude: 4
+    RealMagnitude: 2
+    Scaler:
+      rid: -2
+    Rounding: 0
+  StartingAbilities:
+  - {fileID: 11400000, guid: 91297cb0bbd8bdc4fb6c2a81085a77a1, type: 2}
+  AllowDuplicateAbilities: 0
+  MaxItemsOperation:
+    Magnitude: 0
+    RealMagnitude: 2
+    Scaler:
+      rid: -2
+    Rounding: 0
+  MaxEquippedItemsOperation:
+    Magnitude: 0
+    RealMagnitude: 2
+    Scaler:
+      rid: -2
+    Rounding: 0
+  StartingItems: []
+  AllowDuplicateItems: 0
+  AllowDuplicateEquippedItems: 0
+  AttributeSet: {fileID: 11400000, guid: e57c9254f6c740c448efd203dc115da2, type: 2}
+  TimeScaleAttribute: {fileID: 0}
+  WorkerGroup:
+    Name: Workers
+    AttributeWorkers: []
+    ImpactWorkers: []
+    TagWorkers: []
+    AnalysisWorkers: []
+  Modifiers: []
+  Components: []
+  CrowdControl: {fileID: 0}
+  Death:
+    Policy: 0
+    DiesAtZeroHealth: 1
+    Purges: 1
+    KeepsAsProject: 1
+    KeepsTiers: []
+    KeepsCategories: 0
+    OnDeath: []
+    OnRevive: []
+    Body: {fileID: 0}
+  LinkMode: 0
+  _linkedSource: {fileID: 0}
+  references:
+    version: 2
+    RefIds:
+    - rid: -2
+      type: {class: , ns: , asm: }
+    - rid: 2403794534686261483
+      type: {class: LocalFloat, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        Value:
+          Magnitude: 1.1
+          RealMagnitude: 2
+          Scaler:
+            rid: -2

@@ -34,6 +34,7 @@ The samples need nothing more:
 - **Battle**: a battle that plays itself.
 - **Demo**: a hero arena to pick heroes, give items and fight. It reads the Input System where the project has it, and
   the Input Manager otherwise.
+- **Survivors**: a horde shooter with hundreds of enemies at once, to see what PlayForge carries.
 - **Task Sequence Examples** and **Process Group Examples**.
 
 The samples render in the **Built-in Render Pipeline** or **URP**. HDRP isn't supported.

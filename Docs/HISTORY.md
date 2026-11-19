@@ -10,6 +10,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## Toward 1.0.0, since 0.1.0
 
 ### Added
+- **The Survivors demo** (FEAT-40): a horde shooter that shows what PlayForge carries, hundreds of enemies each a
+  full entity: eight abilities that cast themselves, fourteen passives to level 20, ten enemy kinds and four boss
+  waves, and a HUD that reads the run's cost.
 - **Screenshots of the editor tools on the docs site** (EP-75): The Forge and its windows, the inspectors, the
   Problems view, the settings pages, the Debugger beside the Demo, and the Creator Lab, drawn by Proving
   Grounds' own capture tool.

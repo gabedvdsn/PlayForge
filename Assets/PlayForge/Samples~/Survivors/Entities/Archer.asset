@@ -1,0 +1,96 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dac855327e524f0f9473752d46a88179, type: 3}
+  m_Name: Archer
+  m_EditorClassIdentifier: 
+  LocalData:
+  - Key:
+      Name: Survivors.AttackRange
+      DisplayName: Survivors.AttackRange
+    Value:
+      rid: 2403794534686261468
+  _template: {fileID: 0}
+  _templateOverrides: []
+  _templateListSnapshots: []
+  Name: Archer
+  Description: Keeps its distance and shoots arrows at the hero.
+  Textures: []
+  Affiliation: []
+  AssetTag:
+    Name: Survivors.Entity.Archer
+    DisplayName: Survivors.Entity.Archer
+  GrantedTags: []
+  ContextTags: []
+  StartingLevel: 1
+  MaxLevel: 20
+  ActivationPolicy: 2
+  TargetingYields: 1
+  MaxAbilitiesOperation:
+    Magnitude: 4
+    RealMagnitude: 2
+    Scaler:
+      rid: -2
+    Rounding: 0
+  StartingAbilities:
+  - {fileID: 11400000, guid: 5af11ff4a4cb8ec4a88262e3c8c452ce, type: 2}
+  AllowDuplicateAbilities: 0
+  MaxItemsOperation:
+    Magnitude: 0
+    RealMagnitude: 2
+    Scaler:
+      rid: -2
+    Rounding: 0
+  MaxEquippedItemsOperation:
+    Magnitude: 0
+    RealMagnitude: 2
+    Scaler:
+      rid: -2
+    Rounding: 0
+  StartingItems: []
+  AllowDuplicateItems: 0
+  AllowDuplicateEquippedItems: 0
+  AttributeSet: {fileID: 11400000, guid: 65b81df6ff75b1d4dac0c75e5fb18108, type: 2}
+  TimeScaleAttribute: {fileID: 0}
+  WorkerGroup:
+    Name: Workers
+    AttributeWorkers: []
+    ImpactWorkers: []
+    TagWorkers: []
+    AnalysisWorkers: []
+  Modifiers: []
+  Components: []
+  CrowdControl: {fileID: 0}
+  Death:
+    Policy: 0
+    DiesAtZeroHealth: 1
+    Purges: 1
+    KeepsAsProject: 1
+    KeepsTiers: []
+    KeepsCategories: 0
+    OnDeath: []
+    OnRevive: []
+    Body: {fileID: 0}
+  LinkMode: 0
+  _linkedSource: {fileID: 0}
+  references:
+    version: 2
+    RefIds:
+    - rid: -2
+      type: {class: , ns: , asm: }
+    - rid: 2403794534686261468
+      type: {class: LocalFloat, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        Value:
+          Magnitude: 9
+          RealMagnitude: 2
+          Scaler:
+            rid: -2

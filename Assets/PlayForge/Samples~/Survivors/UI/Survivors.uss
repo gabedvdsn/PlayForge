@@ -1,0 +1,339 @@
+/* The Survivors demo's screen: the experience bar and the run across the top, the hero's health and what it holds
+   at the bottom, the cards and the run's end over everything. Only the cards and the end take clicks. */
+
+.sv-root {
+    flex-grow: 1;
+    font-size: 14px;
+    color: rgb(232, 234, 238);
+}
+
+/* Across the top */
+
+.sv-top {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    padding: 6px 10px 0 10px;
+}
+
+.sv-experience {
+    height: 18px;
+    background-color: rgba(10, 12, 18, 0.85);
+    border-radius: 4px;
+    overflow: hidden;
+    justify-content: center;
+}
+
+.sv-experience__fill {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 0;
+    background-color: rgb(70, 150, 235);
+}
+
+.sv-experience__level {
+    -unity-text-align: middle-center;
+    -unity-font-style: bold;
+    font-size: 12px;
+    color: rgb(245, 247, 250);
+}
+
+.sv-status {
+    position: absolute;
+    left: 10px;
+    right: 10px;
+    top: 30px;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.sv-run,
+.sv-cost {
+    background-color: rgba(10, 12, 18, 0.7);
+    border-radius: 4px;
+    padding: 4px 8px;
+}
+
+.sv-cost {
+    align-items: flex-end;
+}
+
+.sv-run__wave {
+    font-size: 18px;
+    -unity-font-style: bold;
+}
+
+.sv-run__time,
+.sv-run__kills,
+.sv-cost__counts {
+    font-size: 13px;
+    color: rgb(196, 202, 212);
+}
+
+.sv-cost__frame {
+    font-size: 15px;
+    -unity-font-style: bold;
+    color: rgb(150, 230, 160);
+}
+
+/* The banner as a wave starts */
+
+.sv-banner {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 22%;
+    -unity-text-align: middle-center;
+    font-size: 34px;
+    -unity-font-style: bold;
+    color: rgb(255, 228, 150);
+    text-shadow: 2px 2px 3px rgba(0, 0, 0, 0.8);
+}
+
+/* The bar over the hero */
+
+.sv-herobar {
+    position: absolute;
+    width: 48px;
+    height: 6px;
+    background-color: rgba(10, 12, 18, 0.85);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.sv-herobar__fill {
+    height: 100%;
+    width: 100%;
+    background-color: rgb(90, 220, 110);
+}
+
+/* At the bottom */
+
+.sv-dock {
+    position: absolute;
+    left: 10px;
+    right: 10px;
+    bottom: 8px;
+    align-items: flex-start;
+}
+
+.sv-health {
+    width: 340px;
+    height: 20px;
+    background-color: rgba(10, 12, 18, 0.85);
+    border-radius: 4px;
+    overflow: hidden;
+    justify-content: center;
+    margin-bottom: 4px;
+}
+
+.sv-health__fill {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 100%;
+    background-color: rgb(200, 60, 60);
+}
+
+.sv-health__label {
+    -unity-text-align: middle-center;
+    -unity-font-style: bold;
+    font-size: 12px;
+}
+
+.sv-held {
+    flex-direction: row;
+}
+
+.sv-slots {
+    flex-direction: row;
+    margin-right: 12px;
+}
+
+.sv-slot {
+    width: 84px;
+    height: 46px;
+    margin-right: 4px;
+    background-color: rgba(28, 34, 48, 0.92);
+    border-radius: 4px;
+    overflow: hidden;
+    justify-content: center;
+    padding: 2px 4px;
+}
+
+.sv-slots--passive .sv-slot {
+    background-color: rgba(48, 36, 26, 0.92);
+}
+
+.sv-slot--empty {
+    background-color: rgba(20, 22, 28, 0.55);
+}
+
+.sv-slots--passive .sv-slot--empty {
+    background-color: rgba(20, 22, 28, 0.55);
+}
+
+.sv-slot__shade {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 0;
+    background-color: rgba(0, 0, 0, 0.55);
+}
+
+.sv-slot__name {
+    font-size: 11px;
+    white-space: normal;
+    -unity-text-align: middle-center;
+    overflow: hidden;
+}
+
+.sv-slot__level {
+    position: absolute;
+    right: 3px;
+    top: 1px;
+    font-size: 11px;
+    -unity-font-style: bold;
+    color: rgb(255, 220, 120);
+}
+
+.sv-keys {
+    margin-top: 4px;
+    font-size: 12px;
+    color: rgb(170, 178, 190);
+    background-color: rgba(10, 12, 18, 0.6);
+    border-radius: 3px;
+    padding: 2px 6px;
+}
+
+/* The cards */
+
+.sv-cards {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(4, 6, 10, 0.72);
+    align-items: center;
+    justify-content: center;
+}
+
+.sv-cards__title {
+    font-size: 26px;
+    -unity-font-style: bold;
+    margin-bottom: 16px;
+    color: rgb(255, 230, 160);
+}
+
+.sv-cards__row {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.sv-card {
+    width: 220px;
+    min-height: 200px;
+    margin: 6px;
+    padding: 10px;
+    background-color: rgb(30, 38, 56);
+    border-width: 2px;
+    border-color: rgb(80, 110, 170);
+    border-radius: 6px;
+    align-items: stretch;
+    justify-content: flex-start;
+    color: rgb(236, 238, 242);
+}
+
+.sv-card:hover {
+    background-color: rgb(42, 54, 80);
+    border-color: rgb(150, 190, 255);
+}
+
+.sv-card--passive {
+    background-color: rgb(52, 40, 28);
+    border-color: rgb(170, 120, 70);
+}
+
+.sv-card--passive:hover {
+    background-color: rgb(74, 56, 38);
+    border-color: rgb(240, 180, 110);
+}
+
+.sv-card__key {
+    position: absolute;
+    right: 8px;
+    top: 6px;
+    font-size: 13px;
+    color: rgb(170, 180, 200);
+}
+
+.sv-card__name {
+    font-size: 18px;
+    -unity-font-style: bold;
+    white-space: normal;
+    margin-bottom: 4px;
+}
+
+.sv-card__new {
+    -unity-font-style: bold;
+    color: rgb(130, 230, 140);
+    margin-bottom: 8px;
+}
+
+.sv-card__level {
+    -unity-font-style: bold;
+    color: rgb(255, 210, 110);
+    margin-bottom: 8px;
+}
+
+.sv-card__words {
+    white-space: normal;
+    font-size: 13px;
+    color: rgb(206, 212, 222);
+}
+
+/* The run's end */
+
+.sv-end {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(30, 4, 6, 0.75);
+    align-items: center;
+    justify-content: center;
+}
+
+.sv-end__title {
+    font-size: 40px;
+    -unity-font-style: bold;
+    color: rgb(255, 140, 130);
+}
+
+.sv-end__stats {
+    font-size: 18px;
+    margin: 10px 0 18px 0;
+}
+
+.sv-button {
+    font-size: 16px;
+    padding: 8px 18px;
+    background-color: rgb(60, 70, 92);
+    color: rgb(240, 242, 246);
+    border-width: 1px;
+    border-color: rgb(120, 136, 170);
+    border-radius: 4px;
+}
+
+.sv-button:hover {
+    background-color: rgb(80, 94, 124);
+}

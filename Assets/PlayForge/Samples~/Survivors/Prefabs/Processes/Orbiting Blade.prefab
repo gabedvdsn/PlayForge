@@ -1,0 +1,132 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &7984224053983445854
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 7862240000676740127}
+  - component: {fileID: 7508000175746183882}
+  m_Layer: 0
+  m_Name: Orbiting Blade
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &7862240000676740127
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7984224053983445854}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 6615446862211321295}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &7508000175746183882
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7984224053983445854}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d5458aade0567e14c8e10b5102b2e777, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ProcessLifecycle: 0
+  ProcessTiming: 0
+  PriorityMethod: 1
+  ProcessStepPriority: 0
+  Instantiator:
+    rid: -2
+  UseHandlerInstantiator: 0
+  ParticipateInSiblingCascade: 1
+  Attributes: []
+  AttributePairs:
+  - Key:
+      Name: Survivors.Role.Area
+      DisplayName: Survivors.Role.Area
+    Attribute: {fileID: 11400000, guid: 45b6ec10d450be04c87dd68fad83e375, type: 2}
+  - Key:
+      Name: Survivors.Role.Duration
+      DisplayName: Survivors.Role.Duration
+    Attribute: {fileID: 11400000, guid: 609d3b81fc4a9d9458393be6888d8ce8, type: 2}
+  - Key:
+      Name: Survivors.Role.Pierce
+      DisplayName: Survivors.Role.Pierce
+    Attribute: {fileID: 11400000, guid: cbe5ba239ac6138479ad89cc1be4b46a, type: 2}
+  Effects:
+  - {fileID: 11400000, guid: aa3c1a449c18c3944a3af76921b941cb, type: 2}
+  Hits: 1
+  Radius: 2
+  Lifetime: 3.2
+  Turns: 0.8
+  HitRadius: 0.8
+  Rehit: 0.4
+  references:
+    version: 2
+    RefIds:
+    - rid: -2
+      type: {class: , ns: , asm: }
+--- !u!1 &8625551043119940308
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6615446862211321295}
+  - component: {fileID: 3103144452705816164}
+  m_Layer: 0
+  m_Name: Look
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &6615446862211321295
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8625551043119940308}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 7862240000676740127}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &3103144452705816164
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8625551043119940308}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9e93a52224ea8d246b69ff2c3df1f58d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Shape: 3
+  Size: {x: 0.9, y: 0.12, z: 0.26}
+  Offset: {x: 0, y: 1, z: 0}
+  Rotation: {x: 0, y: 0, z: 0}
+  Color: {r: 0.85, g: 0.9, b: 0.95, a: 1}
+  Spin: 720

@@ -1,0 +1,133 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &474631804330152419
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5227989689560027274}
+  - component: {fileID: 6366058773487347416}
+  m_Layer: 0
+  m_Name: Frost Nova Ring
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5227989689560027274
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 474631804330152419}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 1978712859126282060}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &6366058773487347416
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 474631804330152419}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 79a665e07d61d5d43b51992ea85c2251, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ProcessLifecycle: 0
+  ProcessTiming: 0
+  PriorityMethod: 1
+  ProcessStepPriority: 0
+  Instantiator:
+    rid: -2
+  UseHandlerInstantiator: 0
+  ParticipateInSiblingCascade: 1
+  Attributes: []
+  AttributePairs:
+  - Key:
+      Name: Survivors.Role.Area
+      DisplayName: Survivors.Role.Area
+    Attribute: {fileID: 11400000, guid: 45b6ec10d450be04c87dd68fad83e375, type: 2}
+  - Key:
+      Name: Survivors.Role.Duration
+      DisplayName: Survivors.Role.Duration
+    Attribute: {fileID: 11400000, guid: 609d3b81fc4a9d9458393be6888d8ce8, type: 2}
+  - Key:
+      Name: Survivors.Role.Pierce
+      DisplayName: Survivors.Role.Pierce
+    Attribute: {fileID: 11400000, guid: cbe5ba239ac6138479ad89cc1be4b46a, type: 2}
+  Effects:
+  - {fileID: 11400000, guid: 4362b046c2c4da8488f7d85aa72414c9, type: 2}
+  - {fileID: 11400000, guid: bd1d767763e0a404f9bd882dce0284df, type: 2}
+  Hits: 1
+  Radius: 5.5
+  Grow: 0.4
+  Linger: 0.15
+  Edge: {fileID: 5700168294679505005}
+  references:
+    version: 2
+    RefIds:
+    - rid: -2
+      type: {class: , ns: , asm: }
+--- !u!1 &6933001662448976331
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1978712859126282060}
+  - component: {fileID: 5700168294679505005}
+  m_Layer: 0
+  m_Name: Edge
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1978712859126282060
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6933001662448976331}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 5227989689560027274}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &5700168294679505005
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6933001662448976331}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 67f200de3a7df89409a10426dc64b285, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Shape: 0
+  Radius: 0.5
+  Arc: 360
+  Height: 9
+  Width: 0.3
+  Color: {r: 0.6, g: 0.85, b: 1, a: 1}
+  Fade: 0

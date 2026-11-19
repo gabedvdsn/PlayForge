@@ -1,0 +1,191 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ba2465a807e6461192abc117106cd3f3, type: 3}
+  m_Name: Horde Damage
+  m_EditorClassIdentifier: 
+  Description: "Every blow the horde deals: on the hero's Dodge Chance, none of it;
+    then lessened by the hero's Armor, 100 \xF7 (100 + Armor) of it landing"
+  Stages:
+  - rid: 2403794534686261257
+  - rid: 2403794534686261258
+  references:
+    version: 2
+    RefIds:
+    - rid: -2
+      type: {class: , ns: , asm: }
+    - rid: 2403794534686261257
+      type: {class: ChanceStage, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        Label: Dodged
+        Enabled: 1
+        Chance:
+          Magnitude: 0
+          RealMagnitude: 3
+          Scaler:
+            rid: 2403794534686261259
+        Multiplier:
+          Magnitude: 0
+          RealMagnitude: 2
+          Scaler:
+            rid: -2
+        Note: dodged
+        Roll:
+          PseudoRandom: 0
+          OwnLuck: 0
+          Luck:
+            Magnitude: 0
+            RealMagnitude: 2
+            Scaler:
+              rid: -2
+    - rid: 2403794534686261258
+      type: {class: MultiplyStage, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        Label: Armor
+        Enabled: 1
+        By:
+          Magnitude: 0
+          RealMagnitude: 3
+          Scaler:
+            rid: 2403794534686261260
+    - rid: 2403794534686261259
+      type: {class: AttributeBackedScaler, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        Name: Target's Dodge Chance
+        Configuration: 0
+        MaxLevel: 10
+        LevelValues:
+        - 1
+        Interpolation: 1
+        StretchOverLevels: 1
+        Scaling:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        Behaviours: []
+        CaptureAttribute: {fileID: 11400000, guid: 5c88d4a14eae8434689331d491026493, type: 2}
+        CaptureFrom: 0
+        CaptureWhen: 1
+        CaptureWhat: 0
+        Groups:
+          Read: 0
+          Groups: []
+        ReadAs: 1
+    - rid: 2403794534686261260
+      type: {class: StackingCurveKind, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        Name: "100 \xF7 (100 + Armor)"
+        Configuration: 0
+        MaxLevel: 10
+        LevelValues:
+        - 1
+        Interpolation: 1
+        StretchOverLevels: 1
+        Scaling:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        Behaviours: []
+        Count:
+          Magnitude: 0
+          RealMagnitude: 3
+          Scaler:
+            rid: 2403794534686261261
+        Curve: 2
+        Coefficient:
+          Magnitude: 0.01
+          RealMagnitude: 2
+          Scaler:
+            rid: -2
+        Plus: 0
+    - rid: 2403794534686261261
+      type: {class: AttributeBackedScaler, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        Name: Target's Armor
+        Configuration: 0
+        MaxLevel: 10
+        LevelValues:
+        - 1
+        Interpolation: 1
+        StretchOverLevels: 1
+        Scaling:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        Behaviours: []
+        CaptureAttribute: {fileID: 11400000, guid: b635c4cc0f10a4d44bc740d420fe65f3, type: 2}
+        CaptureFrom: 0
+        CaptureWhen: 1
+        CaptureWhat: 0
+        Groups:
+          Read: 0
+          Groups: []
+        ReadAs: 1

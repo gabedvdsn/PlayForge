@@ -1,0 +1,403 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2d34fc1f98f8a0b4c9b37da3e706e0e1, type: 3}
+  m_Name: Armor Plating Bonus
+  m_EditorClassIdentifier: 
+  LocalData: []
+  _template: {fileID: 0}
+  _templateOverrides: []
+  _templateListSnapshots: []
+  Definition:
+    Name: Armor Plating Bonus
+    Description: Armor Plating's bonus to Armor, by its level, while the hero holds
+      it.
+    Visibility:
+      Name: Not Visibled2xuDNqtid9uamDM5aBXkxUexwFpJUF4d2xuDNqtid9uamDM5aBXk
+      DisplayName: Not Visible
+    Textures: []
+    InheritFromOrigin: 0
+    OriginTexture:
+      Name: PrimaryYKmcVmH4Jn9iqWqQsYjmr_mmcquW7EYPYKmcVmH4Jn9iqWqQsYjmr_mmc
+      DisplayName: Primary
+    RetentionGroup:
+      Name: BonusyjJTN9mNKWQRBtyrTZCKCEbhD63hGgFGyjJTN9mNKWQRBtyrTZCKCEbhD63
+      DisplayName: Bonus
+  Tags:
+    AssetTag:
+      Name: Survivors.Effect.ArmorPlatingBonus
+      DisplayName: Survivors.Effect.ArmorPlatingBonus
+    ContextTags: []
+    GrantedTags: []
+    RemovesEffectsTagged: []
+    BlocksEffectsTagged: []
+  Purges:
+    Strength:
+      Name: 
+      DisplayName: 
+    Kinds: []
+    AppliedBy: 7
+    Filters: []
+  GrantedAbilities: []
+  OnHit: []
+  Modifiers: []
+  OwnProcCoefficient: 0
+  ProcCoefficient:
+    Magnitude: 1
+    RealMagnitude: 2
+    Scaler:
+      rid: -2
+  ImpactSpecification:
+    AttributeTarget: {fileID: 11400000, guid: b635c4cc0f10a4d44bc740d420fe65f3, type: 2}
+    TargetImpact: 0
+    ImpactOperation: 0
+    MultiplyBehaviour: 0
+    AddBehaviour: 0
+    Pipeline: {fileID: 0}
+    AffiliationPolicy: 3
+    AffiliationComparison: 0
+    Affiliations: []
+    ChanceToApply:
+      Magnitude: 1
+      RealMagnitude: 2
+      Scaler:
+        rid: -2
+    ChanceRoll:
+      PseudoRandom: 0
+      OwnLuck: 0
+      Luck:
+        Magnitude: 0
+        RealMagnitude: 2
+        Scaler:
+          rid: -2
+    ImpactTypes: []
+    ReverseImpactOnRemoval: 1
+    MagnitudeOperation:
+      Magnitude: 0
+      RealMagnitude: 3
+      Scaler:
+        rid: 2403794534686261368
+    AdditionalImpacts: []
+    Packets: []
+  DurationSpecification:
+    DurationPolicy: 2
+    DurationOperation:
+      Magnitude: 0
+      RealMagnitude: 2
+      Scaler:
+        rid: -2
+    RealDeltaTime: 1
+    DeltaTimeScaler:
+      rid: -2
+    EnablePeriodicTicks: 0
+    TickOnApplication: 0
+    TicksOperation:
+      Magnitude: 0
+      RealMagnitude: 2
+      Scaler:
+        rid: -2
+      Rounding: 0
+    TickIntervalOperation:
+      Magnitude: 1
+      RealMagnitude: 2
+      Scaler:
+        rid: -2
+    AdditionalExecuteTicksOperation:
+      Magnitude: 0
+      RealMagnitude: 2
+      Scaler:
+        rid: -2
+      Rounding: 0
+    ReApplicationPolicy: 2
+    ReApplicationInteraction: 0
+    StackPolicy: 0
+    StackingConfigs: []
+    StackAmountOperation:
+      Magnitude: 1
+      RealMagnitude: 2
+      Scaler:
+        rid: -2
+      Rounding: 0
+  Workers: []
+  Components: []
+  WorkerGroup:
+    Name: Workers
+    AttributeWorkers: []
+    ImpactWorkers: []
+    TagWorkers: []
+    AnalysisWorkers: []
+  SourceRequirements:
+    Name: 
+    ApplicationRequirements:
+      Name: 
+      SourceTemplate: {fileID: 0}
+      SyncWithTemplate: 0
+      AvoidTags: []
+      RequireTags: []
+    OngoingRequirements:
+      Name: 
+      SourceTemplate: {fileID: 0}
+      SyncWithTemplate: 0
+      AvoidTags: []
+      RequireTags: []
+    RemovalRequirements:
+      Name: 
+      SourceTemplate: {fileID: 0}
+      SyncWithTemplate: 0
+      AvoidTags: []
+      RequireTags: []
+  TargetRequirements:
+    Name: 
+    ApplicationRequirements:
+      Name: 
+      SourceTemplate: {fileID: 0}
+      SyncWithTemplate: 0
+      AvoidTags: []
+      RequireTags: []
+    OngoingRequirements:
+      Name: 
+      SourceTemplate: {fileID: 0}
+      SyncWithTemplate: 0
+      AvoidTags: []
+      RequireTags: []
+    RemovalRequirements:
+      Name: 
+      SourceTemplate: {fileID: 0}
+      SyncWithTemplate: 0
+      AvoidTags: []
+      RequireTags: []
+  Conditions:
+    Application: []
+    Ongoing: []
+    Removal: []
+  LinkMode: 1
+  _linkedSource: {fileID: 11400000, guid: f3b29fa51208e604d94277e7d841101e, type: 2}
+  references:
+    version: 2
+    RefIds:
+    - rid: -2
+      type: {class: , ns: , asm: }
+    - rid: 2403794534686261368
+      type: {class: SimpleScaler, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        Name: By the passive's level
+        Configuration: 0
+        MaxLevel: 20
+        LevelValues:
+        - 3
+        - 6
+        - 9
+        - 12
+        - 15
+        - 18
+        - 21
+        - 24
+        - 27
+        - 30
+        - 33
+        - 36
+        - 39
+        - 42
+        - 45
+        - 48
+        - 51
+        - 54
+        - 57
+        - 60
+        Interpolation: 1
+        StretchOverLevels: 0
+        Scaling:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 3
+            inSlope: 0
+            outSlope: 57
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.05263158
+            value: 6
+            inSlope: 57
+            outSlope: 57
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.10526316
+            value: 9
+            inSlope: 57
+            outSlope: 57.000008
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.15789473
+            value: 12
+            inSlope: 57.000008
+            outSlope: 56.999992
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.21052632
+            value: 15
+            inSlope: 56.999992
+            outSlope: 56.999992
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.2631579
+            value: 18
+            inSlope: 56.999992
+            outSlope: 57.000023
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.31578946
+            value: 21
+            inSlope: 57.000023
+            outSlope: 56.999992
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.36842105
+            value: 24
+            inSlope: 56.999992
+            outSlope: 56.999992
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.42105263
+            value: 27
+            inSlope: 56.999992
+            outSlope: 56.999992
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.47368422
+            value: 30
+            inSlope: 56.999992
+            outSlope: 56.999992
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.5263158
+            value: 33
+            inSlope: 56.999992
+            outSlope: 57.000023
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.57894737
+            value: 36
+            inSlope: 57.000023
+            outSlope: 57.000023
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.6315789
+            value: 39
+            inSlope: 57.000023
+            outSlope: 56.999958
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.68421054
+            value: 42
+            inSlope: 56.999958
+            outSlope: 57.000023
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.7368421
+            value: 45
+            inSlope: 57.000023
+            outSlope: 56.999958
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.7894737
+            value: 48
+            inSlope: 56.999958
+            outSlope: 57.000023
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.84210527
+            value: 51
+            inSlope: 57.000023
+            outSlope: 57.000023
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.8947368
+            value: 54
+            inSlope: 57.000023
+            outSlope: 56.999958
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.94736844
+            value: 57
+            inSlope: 56.999958
+            outSlope: 57.000023
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 60
+            inSlope: 57.000023
+            outSlope: 0
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        Behaviours: []

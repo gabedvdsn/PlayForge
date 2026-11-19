@@ -30,7 +30,7 @@ The first release.
 - **The Forge**, an editor for every asset of a Forge Project; **the Debugger**, for a game's live entities, with each
   effect's journal and each hit's steps; and **the Creator Lab**, a scene to try assets on units, test dummies and bots,
   with stops, stepping, watches and logs.
-- **Samples**: Battle, Demo, Additional Content, Task Sequence Examples and Process Group Examples; and a **test kit** for a game's own tests.
+- **Samples**: Battle, Demo, Survivors, Additional Content, Task Sequence Examples and Process Group Examples; and a **test kit** for a game's own tests.
 - **Online documentation** at [gabedvdsn.github.io/PlayForge-Docs](https://gabedvdsn.github.io/PlayForge-Docs/): the guides,
   with a page for each section and for each component, worker, scaler kind and editor tool, architecture
   diagrams and screenshots of the editor tools; and an API reference with a page for every public type,

@@ -1,0 +1,294 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ba2465a807e6461192abc117106cd3f3, type: 3}
+  m_Name: Survivor Damage
+  m_EditorClassIdentifier: 
+  Description: "Every blow the hero deals: harder by its Damage Amplification, as
+    1 + it; on its Crit Chance, times its Crit Damage; then lessened by its target's
+    Armor, 100 \xF7 (100 + Armor) of it landing"
+  Stages:
+  - rid: 2403794534686261248
+  - rid: 2403794534686261249
+  - rid: 2403794534686261250
+  references:
+    version: 2
+    RefIds:
+    - rid: -2
+      type: {class: , ns: , asm: }
+    - rid: 2403794534686261248
+      type: {class: MultiplyStage, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        Label: Damage Amplification
+        Enabled: 1
+        By:
+          Magnitude: 0
+          RealMagnitude: 3
+          Scaler:
+            rid: 2403794534686261251
+    - rid: 2403794534686261249
+      type: {class: ChanceStage, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        Label: Critical
+        Enabled: 1
+        Chance:
+          Magnitude: 0
+          RealMagnitude: 3
+          Scaler:
+            rid: 2403794534686261252
+        Multiplier:
+          Magnitude: 0
+          RealMagnitude: 3
+          Scaler:
+            rid: 2403794534686261253
+        Note: critical
+        Roll:
+          PseudoRandom: 0
+          OwnLuck: 0
+          Luck:
+            Magnitude: 0
+            RealMagnitude: 2
+            Scaler:
+              rid: -2
+    - rid: 2403794534686261250
+      type: {class: MultiplyStage, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        Label: Armor
+        Enabled: 1
+        By:
+          Magnitude: 0
+          RealMagnitude: 3
+          Scaler:
+            rid: 2403794534686261254
+    - rid: 2403794534686261251
+      type: {class: AttributeBackedScaler, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        Name: Caster's Damage Amplification, plus 1
+        Configuration: 0
+        MaxLevel: 10
+        LevelValues:
+        - 1
+        Interpolation: 1
+        StretchOverLevels: 1
+        Scaling:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        Behaviours:
+        - rid: 2403794534686261255
+        CaptureAttribute: {fileID: 11400000, guid: fe23194444dec9c4fb55c64f221b4d20, type: 2}
+        CaptureFrom: 1
+        CaptureWhen: 1
+        CaptureWhat: 0
+        Groups:
+          Read: 0
+          Groups: []
+        ReadAs: 1
+    - rid: 2403794534686261252
+      type: {class: AttributeBackedScaler, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        Name: Caster's Crit Chance
+        Configuration: 0
+        MaxLevel: 10
+        LevelValues:
+        - 1
+        Interpolation: 1
+        StretchOverLevels: 1
+        Scaling:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        Behaviours: []
+        CaptureAttribute: {fileID: 11400000, guid: 98f84088814bfd645b41e69bad415b9e, type: 2}
+        CaptureFrom: 1
+        CaptureWhen: 1
+        CaptureWhat: 0
+        Groups:
+          Read: 0
+          Groups: []
+        ReadAs: 1
+    - rid: 2403794534686261253
+      type: {class: AttributeBackedScaler, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        Name: Caster's Crit Damage
+        Configuration: 0
+        MaxLevel: 10
+        LevelValues:
+        - 1
+        Interpolation: 1
+        StretchOverLevels: 1
+        Scaling:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        Behaviours: []
+        CaptureAttribute: {fileID: 11400000, guid: 7996daf80d388254d939d00aa6d61610, type: 2}
+        CaptureFrom: 1
+        CaptureWhen: 1
+        CaptureWhat: 0
+        Groups:
+          Read: 0
+          Groups: []
+        ReadAs: 1
+    - rid: 2403794534686261254
+      type: {class: StackingCurveKind, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        Name: "100 \xF7 (100 + Armor)"
+        Configuration: 0
+        MaxLevel: 10
+        LevelValues:
+        - 1
+        Interpolation: 1
+        StretchOverLevels: 1
+        Scaling:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        Behaviours: []
+        Count:
+          Magnitude: 0
+          RealMagnitude: 3
+          Scaler:
+            rid: 2403794534686261256
+        Curve: 2
+        Coefficient:
+          Magnitude: 0.01
+          RealMagnitude: 2
+          Scaler:
+            rid: -2
+        Plus: 0
+    - rid: 2403794534686261255
+      type: {class: AttenuateScalerBehaviour, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        Policy: 2
+    - rid: 2403794534686261256
+      type: {class: AttributeBackedScaler, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        Name: Target's Armor
+        Configuration: 0
+        MaxLevel: 10
+        LevelValues:
+        - 1
+        Interpolation: 1
+        StretchOverLevels: 1
+        Scaling:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        Behaviours: []
+        CaptureAttribute: {fileID: 11400000, guid: b635c4cc0f10a4d44bc740d420fe65f3, type: 2}
+        CaptureFrom: 0
+        CaptureWhen: 1
+        CaptureWhat: 0
+        Groups:
+          Read: 0
+          Groups: []
+        ReadAs: 1

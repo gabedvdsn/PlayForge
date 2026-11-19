@@ -25,6 +25,11 @@
       "path": "Samples~/Demo"
     },
     {
+      "displayName": "Survivors",
+      "description": "A horde shooter that shows what PlayForge carries: hundreds of enemies at once, each a full entity with its own attributes, effects and abilities. The hero's abilities cast themselves as their cooldowns end; each level offers abilities and each boss wave passives, to level 20. Every ability, passive, enemy and effect is an asset; together they are a Forge Project of their own, and the HUD shows what the run costs. It needs nothing beyond PlayForge, reads the Input System or the Input Manager, and renders in the Built-in pipeline or URP.",
+      "path": "Samples~/Survivors"
+    },
+    {
       "displayName": "Task Sequence Examples",
       "description": "Task sequences, every part of them, as code to read and run: each feature a step at a time, gameplay mechanics built from them, every task of both task libraries, synced sequences as scene components, and a component that runs any example from a scene. Their own assembly; they need nothing beyond PlayForge.",
       "path": "Samples~/Task Sequence Examples"

@@ -1,0 +1,607 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f540c3b03f1458d459ad17cf8a6b5c71, type: 3}
+  m_Name: Ogre Warlord Attributes
+  m_EditorClassIdentifier: 
+  LocalData: []
+  _template: {fileID: 0}
+  _templateOverrides: []
+  _templateListSnapshots: []
+  Name: Ogre Warlord Attributes
+  Description: 'The Ogre Warlord''s own: Health and Power that grow with its level,
+    which the wave sets, its speed and its Armor.'
+  Textures: []
+  AssetTag:
+    Name: Survivors.AttributeSet.OgreWarlordAttributes
+    DisplayName: Survivors.AttributeSet.OgreWarlordAttributes
+  Attributes:
+  - Attribute: {fileID: 11400000, guid: 66821d6800a0bcb4690d84ba0046b449, type: 2}
+    Current:
+      Magnitude: 0
+      Scaling:
+        rid: -2
+      RealMagnitude: 2
+    Base:
+      Magnitude: 0
+      Scaling:
+        rid: 2403794534686261493
+      RealMagnitude: 3
+    LinkCurrentToBase: 1
+    Overflow:
+      Policy: 0
+      Floor:
+        CurrentValue: 0
+        BaseValue: 0
+      Ceil:
+        CurrentValue: 0
+        BaseValue: 0
+    RetentionGroup:
+      Name: DefaultHZrocVrnTyCe46yj0U4URw7eigNeYI7THZrocVrnTyCe46yj0U4URw7ei
+      DisplayName: Default
+    CollisionPolicy: 0
+    Constraints:
+      AutoClamp: 1
+      AutoScaleWithBase: 0
+      RoundingMode: 0
+      SnapInterval:
+        Magnitude: 0
+        RealMagnitude: 2
+        Scaler:
+          rid: -2
+  - Attribute: {fileID: 11400000, guid: 00e43075fbeff5d4b8a860ad4cd395c7, type: 2}
+    Current:
+      Magnitude: 0
+      Scaling:
+        rid: -2
+      RealMagnitude: 2
+    Base:
+      Magnitude: 2
+      Scaling:
+        rid: -2
+      RealMagnitude: 2
+    LinkCurrentToBase: 1
+    Overflow:
+      Policy: 4
+      Floor:
+        CurrentValue: 0
+        BaseValue: 0
+      Ceil:
+        CurrentValue: 0
+        BaseValue: 0
+    RetentionGroup:
+      Name: DefaultHZrocVrnTyCe46yj0U4URw7eigNeYI7THZrocVrnTyCe46yj0U4URw7ei
+      DisplayName: Default
+    CollisionPolicy: 0
+    Constraints:
+      AutoClamp: 1
+      AutoScaleWithBase: 0
+      RoundingMode: 0
+      SnapInterval:
+        Magnitude: 0
+        RealMagnitude: 2
+        Scaler:
+          rid: -2
+  - Attribute: {fileID: 11400000, guid: b635c4cc0f10a4d44bc740d420fe65f3, type: 2}
+    Current:
+      Magnitude: 0
+      Scaling:
+        rid: -2
+      RealMagnitude: 2
+    Base:
+      Magnitude: 20
+      Scaling:
+        rid: -2
+      RealMagnitude: 2
+    LinkCurrentToBase: 1
+    Overflow:
+      Policy: 4
+      Floor:
+        CurrentValue: 0
+        BaseValue: 0
+      Ceil:
+        CurrentValue: 0
+        BaseValue: 0
+    RetentionGroup:
+      Name: DefaultHZrocVrnTyCe46yj0U4URw7eigNeYI7THZrocVrnTyCe46yj0U4URw7ei
+      DisplayName: Default
+    CollisionPolicy: 0
+    Constraints:
+      AutoClamp: 1
+      AutoScaleWithBase: 0
+      RoundingMode: 0
+      SnapInterval:
+        Magnitude: 0
+        RealMagnitude: 2
+        Scaler:
+          rid: -2
+  - Attribute: {fileID: 11400000, guid: 115bdc7fea9b3ef44936e84663774342, type: 2}
+    Current:
+      Magnitude: 0
+      Scaling:
+        rid: -2
+      RealMagnitude: 2
+    Base:
+      Magnitude: 0
+      Scaling:
+        rid: 2403794534686261494
+      RealMagnitude: 3
+    LinkCurrentToBase: 1
+    Overflow:
+      Policy: 4
+      Floor:
+        CurrentValue: 0
+        BaseValue: 0
+      Ceil:
+        CurrentValue: 0
+        BaseValue: 0
+    RetentionGroup:
+      Name: DefaultHZrocVrnTyCe46yj0U4URw7eigNeYI7THZrocVrnTyCe46yj0U4URw7ei
+      DisplayName: Default
+    CollisionPolicy: 0
+    Constraints:
+      AutoClamp: 1
+      AutoScaleWithBase: 0
+      RoundingMode: 0
+      SnapInterval:
+        Magnitude: 0
+        RealMagnitude: 2
+        Scaler:
+          rid: -2
+  SubSets: []
+  CollisionResolutionPolicy: 3
+  WorkerGroup:
+    Name: Workers
+    AttributeWorkers: []
+    ImpactWorkers: []
+    TagWorkers: []
+    AnalysisWorkers: []
+  StartingLevel: 1
+  MaxLevel: 20
+  LinkMode: 1
+  _linkedSource: {fileID: 11400000, guid: 158df41d6136de6479ee6f949362956f, type: 2}
+  references:
+    version: 2
+    RefIds:
+    - rid: -2
+      type: {class: , ns: , asm: }
+    - rid: 2403794534686261493
+      type: {class: CachedSimpleScaler, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        Name: By the entity's level
+        Configuration: 0
+        MaxLevel: 20
+        LevelValues:
+        - 1200
+        - 1680
+        - 2160
+        - 2640
+        - 3120
+        - 3600
+        - 4080
+        - 4560
+        - 5040
+        - 5520
+        - 6000
+        - 6480
+        - 6960
+        - 7440
+        - 7920
+        - 8400
+        - 8880
+        - 9360
+        - 9840
+        - 10320
+        Interpolation: 1
+        StretchOverLevels: 0
+        Scaling:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 1200
+            inSlope: 0
+            outSlope: 9120
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.05263158
+            value: 1680
+            inSlope: 9120
+            outSlope: 9120
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.10526316
+            value: 2160
+            inSlope: 9120
+            outSlope: 9120.001
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.15789473
+            value: 2640
+            inSlope: 9120.001
+            outSlope: 9119.999
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.21052632
+            value: 3120
+            inSlope: 9119.999
+            outSlope: 9119.999
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.2631579
+            value: 3600
+            inSlope: 9119.999
+            outSlope: 9120.004
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.31578946
+            value: 4080
+            inSlope: 9120.004
+            outSlope: 9119.999
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.36842105
+            value: 4560
+            inSlope: 9119.999
+            outSlope: 9119.999
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.42105263
+            value: 5040
+            inSlope: 9119.999
+            outSlope: 9119.999
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.47368422
+            value: 5520
+            inSlope: 9119.999
+            outSlope: 9119.999
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.5263158
+            value: 6000
+            inSlope: 9119.999
+            outSlope: 9120.004
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.57894737
+            value: 6480
+            inSlope: 9120.004
+            outSlope: 9120.004
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.6315789
+            value: 6960
+            inSlope: 9120.004
+            outSlope: 9119.993
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.68421054
+            value: 7440
+            inSlope: 9119.993
+            outSlope: 9120.004
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.7368421
+            value: 7920
+            inSlope: 9120.004
+            outSlope: 9119.993
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.7894737
+            value: 8400
+            inSlope: 9119.993
+            outSlope: 9120.004
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.84210527
+            value: 8880
+            inSlope: 9120.004
+            outSlope: 9120.004
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.8947368
+            value: 9360
+            inSlope: 9120.004
+            outSlope: 9119.993
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.94736844
+            value: 9840
+            inSlope: 9119.993
+            outSlope: 9120.004
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 10320
+            inSlope: 9120.004
+            outSlope: 0
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        Behaviours: []
+    - rid: 2403794534686261494
+      type: {class: CachedSimpleScaler, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        Name: By the entity's level
+        Configuration: 0
+        MaxLevel: 20
+        LevelValues:
+        - 22
+        - 26.4
+        - 30.8
+        - 35.2
+        - 39.6
+        - 44
+        - 48.4
+        - 52.8
+        - 57.2
+        - 61.6
+        - 66
+        - 70.4
+        - 74.8
+        - 79.2
+        - 83.6
+        - 88
+        - 92.4
+        - 96.8
+        - 101.2
+        - 105.6
+        Interpolation: 1
+        StretchOverLevels: 0
+        Scaling:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 22
+            inSlope: 0
+            outSlope: 83.59999
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.05263158
+            value: 26.4
+            inSlope: 83.59999
+            outSlope: 83.59999
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.10526316
+            value: 30.8
+            inSlope: 83.59999
+            outSlope: 83.60004
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.15789473
+            value: 35.2
+            inSlope: 83.60004
+            outSlope: 83.599945
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.21052632
+            value: 39.6
+            inSlope: 83.599945
+            outSlope: 83.60001
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.2631579
+            value: 44
+            inSlope: 83.60001
+            outSlope: 83.60007
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.31578946
+            value: 48.4
+            inSlope: 83.60007
+            outSlope: 83.599945
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.36842105
+            value: 52.8
+            inSlope: 83.599945
+            outSlope: 83.60001
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.42105263
+            value: 57.2
+            inSlope: 83.60001
+            outSlope: 83.599945
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.47368422
+            value: 61.6
+            inSlope: 83.599945
+            outSlope: 83.60001
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.5263158
+            value: 66
+            inSlope: 83.60001
+            outSlope: 83.60007
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.57894737
+            value: 70.4
+            inSlope: 83.60007
+            outSlope: 83.60007
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.6315789
+            value: 74.8
+            inSlope: 83.60007
+            outSlope: 83.59982
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.68421054
+            value: 79.2
+            inSlope: 83.59982
+            outSlope: 83.60007
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.7368421
+            value: 83.6
+            inSlope: 83.60007
+            outSlope: 83.59997
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.7894737
+            value: 88
+            inSlope: 83.59997
+            outSlope: 83.60007
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.84210527
+            value: 92.4
+            inSlope: 83.60007
+            outSlope: 83.60007
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.8947368
+            value: 96.8
+            inSlope: 83.60007
+            outSlope: 83.59982
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.94736844
+            value: 101.2
+            inSlope: 83.59982
+            outSlope: 83.60007
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 105.6
+            inSlope: 83.60007
+            outSlope: 0
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        Behaviours: []

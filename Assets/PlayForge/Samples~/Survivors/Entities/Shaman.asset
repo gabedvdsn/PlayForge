@@ -1,0 +1,97 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dac855327e524f0f9473752d46a88179, type: 3}
+  m_Name: Shaman
+  m_EditorClassIdentifier: 
+  LocalData:
+  - Key:
+      Name: Survivors.AttackRange
+      DisplayName: Survivors.AttackRange
+    Value:
+      rid: 2403794534686261477
+  _template: {fileID: 0}
+  _templateOverrides: []
+  _templateListSnapshots: []
+  Name: Shaman
+  Description: Casts fire bolts from afar and mends the horde around it.
+  Textures: []
+  Affiliation: []
+  AssetTag:
+    Name: Survivors.Entity.Shaman
+    DisplayName: Survivors.Entity.Shaman
+  GrantedTags: []
+  ContextTags: []
+  StartingLevel: 1
+  MaxLevel: 20
+  ActivationPolicy: 2
+  TargetingYields: 1
+  MaxAbilitiesOperation:
+    Magnitude: 4
+    RealMagnitude: 2
+    Scaler:
+      rid: -2
+    Rounding: 0
+  StartingAbilities:
+  - {fileID: 11400000, guid: a3d06842c6774cf4fafc6a986a69342e, type: 2}
+  - {fileID: 11400000, guid: 5bb3fa668edd0eb44927584560616cb4, type: 2}
+  AllowDuplicateAbilities: 0
+  MaxItemsOperation:
+    Magnitude: 0
+    RealMagnitude: 2
+    Scaler:
+      rid: -2
+    Rounding: 0
+  MaxEquippedItemsOperation:
+    Magnitude: 0
+    RealMagnitude: 2
+    Scaler:
+      rid: -2
+    Rounding: 0
+  StartingItems: []
+  AllowDuplicateItems: 0
+  AllowDuplicateEquippedItems: 0
+  AttributeSet: {fileID: 11400000, guid: ba026878140cd8e45afb13fec5db1505, type: 2}
+  TimeScaleAttribute: {fileID: 0}
+  WorkerGroup:
+    Name: Workers
+    AttributeWorkers: []
+    ImpactWorkers: []
+    TagWorkers: []
+    AnalysisWorkers: []
+  Modifiers: []
+  Components: []
+  CrowdControl: {fileID: 0}
+  Death:
+    Policy: 0
+    DiesAtZeroHealth: 1
+    Purges: 1
+    KeepsAsProject: 1
+    KeepsTiers: []
+    KeepsCategories: 0
+    OnDeath: []
+    OnRevive: []
+    Body: {fileID: 0}
+  LinkMode: 0
+  _linkedSource: {fileID: 0}
+  references:
+    version: 2
+    RefIds:
+    - rid: -2
+      type: {class: , ns: , asm: }
+    - rid: 2403794534686261477
+      type: {class: LocalFloat, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        Value:
+          Magnitude: 10
+          RealMagnitude: 2
+          Scaler:
+            rid: -2

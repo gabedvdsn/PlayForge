@@ -1,0 +1,18 @@
+{
+    "name": "FarEmerald.PlayForge.Samples.Survivors",
+    "rootNamespace": "FarEmerald.PlayForge.Samples.Survivors",
+    "references": [
+        "FarEmerald.PlayForge",
+        "FarEmerald.PlayForge.Lab",
+        "UniTask"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
