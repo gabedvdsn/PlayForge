@@ -19,11 +19,6 @@ MonoBehaviour:
     Value:
       rid: 2403794261189067210
   - Key:
-      Name: Demo.Reach
-      DisplayName: Demo.Reach
-    Value:
-      rid: 2403794261189067211
-  - Key:
       Name: Demo.Volley.Arrow
       DisplayName: Demo.Volley.Arrow
     Value:
@@ -170,7 +165,8 @@ MonoBehaviour:
     AnalysisWorkers: []
   OnHit: []
   Modifiers: []
-  Components: []
+  Components:
+  - rid: 2403794261189067211
   LinkMode: 0
   _linkedSource: {fileID: 0}
   references:
@@ -220,13 +216,14 @@ MonoBehaviour:
       data:
         Value: InRange
     - rid: 2403794261189067211
-      type: {class: LocalFloat, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      type: {class: CastRangeAbilityComponent, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:
-        Value:
+        Range:
           Magnitude: 9
           RealMagnitude: 2
           Scaler:
             rid: -2
+        Flat: 1
     - rid: 2403794261189067212
       type: {class: LocalMonoBehaviour, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:

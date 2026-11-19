@@ -44,14 +44,12 @@ namespace FarEmerald.PlayForge.Samples.Demo
         [Tooltip("A unit with it stands still, as while it channels")]
         public Tag Channeling;
 
+        // How far an ability reaches, and a hero attacks from, is each ability's own Cast Range component, which the AI,
+        // the reach ring and the targeting read alike
         [Header("Keys")]
-        [Tooltip("The Local Data key a hero's attack range is under")]
-        public Tag AttackRange;
         [Tooltip("The Local Data key a hero's AI casting order is under, as \"W Q E\"")]
         public Tag CastOrder;
-        [Tooltip("The Local Data key an ability's reach for the AI is under; 0 is anywhere")]
-        public Tag Reach;
-        [Tooltip("The Local Data key for when the AI casts an ability: \"InRange\", \"Hurt\", \"Low\" (away from its foe), \"Stunned\" or \"FoeLow\"")]
+        [Tooltip("The Local Data key for when the AI casts an ability: \"InRange\", within its Cast Range, \"Hurt\", \"Low\" (away from its foe), \"Stunned\" or \"FoeLow\"")]
         public Tag CastWhen;
         [Tooltip("The Set By Caller key the AI's difficulty is under, which every damage effect multiplies by")]
         public Tag Difficulty;
@@ -70,12 +68,13 @@ namespace FarEmerald.PlayForge.Samples.Demo
         IReadOnlyList<Tag> ILabRules.Stops => stops ??= new List<Tag> { Stunned, Channeling };
         IReadOnlyList<Tag> ILabRules.Hides => hides ??= new List<Tag> { Invisible };
         IReadOnlyList<Tag> ILabRules.Shields => shields ??= new List<Tag> { Untargetable };
-        Tag ILabRules.AttackRangeKey => AttackRange;
+        // No Local Data range: a hero attacks from its attack's Cast Range, and an ability reaches by its own
+        Tag ILabRules.AttackRangeKey => default;
         float ILabRules.AttackRange => 2f;
         int ILabRules.AttackSlot => 0;
         Tag ILabRules.CastOrderKey => CastOrder;
         Tag ILabRules.CastWhenKey => CastWhen;
-        Tag ILabRules.ReachKey => Reach;
+        Tag ILabRules.ReachKey => default;
 
         [Header("Damage types, as impact types, by which damage numbers are colored")]
         public Tag Physical;

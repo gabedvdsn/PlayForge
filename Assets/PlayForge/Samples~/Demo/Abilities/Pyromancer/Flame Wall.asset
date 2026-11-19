@@ -18,11 +18,6 @@ MonoBehaviour:
       DisplayName: Demo.CastWhen
     Value:
       rid: 2403794261189067252
-  - Key:
-      Name: Demo.Reach
-      DisplayName: Demo.Reach
-    Value:
-      rid: 2403794261189067253
   _template: {fileID: 0}
   _templateOverrides: []
   _templateListSnapshots: []
@@ -156,7 +151,8 @@ MonoBehaviour:
     AnalysisWorkers: []
   OnHit: []
   Modifiers: []
-  Components: []
+  Components:
+  - rid: 2403794261189067253
   LinkMode: 0
   _linkedSource: {fileID: 0}
   references:
@@ -211,10 +207,11 @@ MonoBehaviour:
       data:
         Value: InRange
     - rid: 2403794261189067253
-      type: {class: LocalFloat, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      type: {class: CastRangeAbilityComponent, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:
-        Value:
+        Range:
           Magnitude: 9
           RealMagnitude: 2
           Scaler:
             rid: -2
+        Flat: 1

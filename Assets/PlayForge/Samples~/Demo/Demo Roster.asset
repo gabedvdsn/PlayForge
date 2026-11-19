@@ -83,15 +83,9 @@ MonoBehaviour:
   Channeling:
     Name: State.Channeling
     DisplayName: State.Channeling
-  AttackRange:
-    Name: Demo.AttackRange
-    DisplayName: Demo.AttackRange
   CastOrder:
     Name: Demo.CastOrder
     DisplayName: Demo.CastOrder
-  Reach:
-    Name: Demo.Reach
-    DisplayName: Demo.Reach
   CastWhen:
     Name: Demo.CastWhen
     DisplayName: Demo.CastWhen

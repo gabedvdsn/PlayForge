@@ -59,7 +59,7 @@ Every hero also has Second Wind, a passive that gives it Regeneration as it come
 | Stacking | Burning stacks to five, each stack ticking its own damage; a sixth bursts as Flashpoint, its overflow effect. |
 | Cleanse and immunity | Iron Skin blocks and removes stuns; Renewal removes every debuff. |
 | Tag logic | Stuns and silences block abilities by their requirements; Smoke Veil ends as the Shade attacks; Combustion's second stage runs only on a burning target; Cut picks its damage type by a stage condition. |
-| Targeting | Click targeting that an AI hands its target in data; a Cast Range, shown among the Target Checks as Check Range (Shield Bash); Auto Target by Affinity (Thunderclap). |
+| Targeting | Click targeting that an AI hands its target in data. Every reach is a Cast Range component, each hero's attack's and each ability's that reaches so far: the reach ring draws it, Select Target In Range (Shield Bash) and Auto Target by Affinity (Thunderclap) pick within it, the AI casts within it, and it's shown among the Target Checks as Check Range. |
 | Processes with their own attributes | The projectiles carry their speed; Flame Wall's fire carries its radius, lifetime and pace, its radius by the ability's level. |
 | Task sequences and asset loading | Volley and Renewal run sequences in `Scripts/Forge/DemoSequences.cs`; Renewal loads its heal and cleanse with Set Effects. |
 | Workers of your own | Ember Brand's impact worker, Drain Life's heal, the Shade's tag worker, Eviscerate's effect worker. |

@@ -12,19 +12,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dac855327e524f0f9473752d46a88179, type: 3}
   m_Name: Hero
   m_EditorClassIdentifier: 
-  LocalData:
-  - Key:
-      Name: Demo.AttackRange
-      DisplayName: Demo.AttackRange
-    Value:
-      rid: 2403794261189067146
+  LocalData: []
   _template: {fileID: 0}
   _templateOverrides: []
   _templateListSnapshots: []
   Name: Hero
   Description: 'The template every hero takes: levels 1 to 10, a death watcher on
-    its Health, a melee attack range and the Hero attribute set. A hero sets its
-    own set, abilities and Local Data.'
+    its Health and the Hero attribute set. A hero sets its own set, abilities
+    and Local Data; its attack''s Cast Range is the range it attacks from.'
   Textures:
   - Tag:
       Name: PrimaryYKmcVmH4Jn9iqWqQsYjmr_mmcquW7EYPYKmcVmH4Jn9iqWqQsYjmr_mmc
@@ -112,11 +107,3 @@ MonoBehaviour:
         Event:
           Name: 
           DisplayName: 
-    - rid: 2403794261189067146
-      type: {class: LocalFloat, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
-      data:
-        Value:
-          Magnitude: 2.2
-          RealMagnitude: 2
-          Scaler:
-            rid: -2

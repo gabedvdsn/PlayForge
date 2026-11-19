@@ -18,11 +18,6 @@ MonoBehaviour:
       DisplayName: Demo.CastWhen
     Value:
       rid: 2403794261189067230
-  - Key:
-      Name: Demo.Reach
-      DisplayName: Demo.Reach
-    Value:
-      rid: 2403794261189067231
   _template: {fileID: 0}
   _templateOverrides: []
   _templateListSnapshots: []
@@ -184,11 +179,3 @@ MonoBehaviour:
       type: {class: LocalString, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:
         Value: Stunned
-    - rid: 2403794261189067231
-      type: {class: LocalFloat, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
-      data:
-        Value:
-          Magnitude: 0
-          RealMagnitude: 2
-          Scaler:
-            rid: -2

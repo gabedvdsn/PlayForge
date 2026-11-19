@@ -140,7 +140,8 @@ MonoBehaviour:
     AnalysisWorkers: []
   OnHit: []
   Modifiers: []
-  Components: []
+  Components:
+  - rid: 2403794261189067234
   LinkMode: 0
   _linkedSource: {fileID: 0}
   references:
@@ -217,3 +218,12 @@ MonoBehaviour:
         InternalMonoProcesses:
         - {fileID: 3954408890895230097, guid: d56ab22d819e7e244a435d52c0fbb5c2, type: 3}
         SpawnAt: 1
+    - rid: 2403794261189067234
+      type: {class: CastRangeAbilityComponent, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        Range:
+          Magnitude: 9
+          RealMagnitude: 2
+          Scaler:
+            rid: -2
+        Flat: 1

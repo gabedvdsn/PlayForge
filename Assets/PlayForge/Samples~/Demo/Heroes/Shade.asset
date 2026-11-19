@@ -14,11 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   LocalData:
   - Key:
-      Name: Demo.AttackRange
-      DisplayName: Demo.AttackRange
-    Value:
-      rid: 2403794261189067177
-  - Key:
       Name: Demo.CastOrder
       DisplayName: Demo.CastOrder
     Value:
@@ -28,8 +23,7 @@ MonoBehaviour:
   - AttributeSet
   _templateListSnapshots:
   - PropertyPath: LocalData
-    ElementIdentifiers:
-    - composite:5|False|0|2.2|null|0|0|null|0|0|null|0|0|null|0|0|null|0|0|null|0|0|null|0|0
+    ElementIdentifiers: []
   - PropertyPath: Affiliation
     ElementIdentifiers: []
   - PropertyPath: GrantedTags
@@ -166,14 +160,6 @@ MonoBehaviour:
             rid: -2
           Rounding: 0
         Effect: {fileID: 11400000, guid: 3d053ad3e3b838c47beda936b86609dd, type: 2}
-    - rid: 2403794261189067177
-      type: {class: LocalFloat, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
-      data:
-        Value:
-          Magnitude: 2.2
-          RealMagnitude: 2
-          Scaler:
-            rid: -2
     - rid: 2403794261189067178
       type: {class: LocalString, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:

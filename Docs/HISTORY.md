@@ -684,6 +684,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   page, through one table of links in the editor.
 
 ### Changed
+- **The Demo's reaches are Cast Range components** (SP-37): each ability's and each hero's attack's, which the AI,
+  the reach ring and the targeting read; the roster's Reach and Attack Range Local Data keys are gone.
 - Local Data's value is a class (FEAT-30): a `DataWrapper` holds its `Key` and a `[SerializeReference]` `Value`, one
   of twelve kinds from `LocalFloat` to `LocalScriptableObject`, read with `TryGet<T>`, `TryReadNumber` or `Read`.
   `EDataWrapperType` and the twelve value fields are gone, and an entry saves its own value alone.
