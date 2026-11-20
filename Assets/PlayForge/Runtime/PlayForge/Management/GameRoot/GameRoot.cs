@@ -13,9 +13,21 @@ namespace FarEmerald.PlayForge
     /// </summary>
     public class GameRoot : GameplayAbilitySystem, IManagerial
     {
-        [Header("Game Root")]
-        
-        public static GameRoot Instance;
+        /// <summary>
+        /// The scene's GameRoot, and so ProcessControl's default handler, which a registration naming no handler takes, and
+        /// the parent of a scene root's processes.
+        /// </summary>
+        public static GameRoot Instance
+        {
+            get => instance;
+            set
+            {
+                instance = value;
+                ProcessControl.DefaultHandler = value;
+                ProcessControl.DefaultParent = value ? value.transform : null;
+            }
+        }
+        private static GameRoot instance;
 
         // Statics outlive play mode when domain reload is off, so the last session's destroyed GameRoot was still
         // Instance when the next began

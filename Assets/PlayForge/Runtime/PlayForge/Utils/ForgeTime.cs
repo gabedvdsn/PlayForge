@@ -193,18 +193,18 @@ namespace FarEmerald.PlayForge
         public static float DeltaTime => clock.DeltaTime;
 
         /// <summary>
-        /// The clock an owner's time runs by: an entity's own, its time scale times the game's, or the game's for anything
-        /// else, <see cref="GameClock"/>, which reads the clock in force as it's asked.
+        /// The clock an owner's time runs by: the one an <see cref="IProcessOwner"/> gives, as an entity gives its own, its
+        /// time scale times the game's, or the game's for anything else, <see cref="GameClock"/>, which reads the clock in
+        /// force as it's asked.
         /// </summary>
         public static IForgeClock ClockOf(object owner) =>
-            owner is IGameplayAbilitySystem gas && gas.GetClock() is { } entity ? entity : GameClock.Instance;
+            owner is IProcessOwner processOwner && processOwner.ProcessClock is { } clock ? clock : GameClock.Instance;
 
         /// <summary>
         /// The clock the work done with a packet runs by: the one it names (<see cref="ProcessDataPacket.Clock"/>), or its
-        /// owner's: an ability's caster's, or the game's.
+        /// source's (<see cref="ProcessDataPacket.Source"/>): an ability's caster's, or the game's.
         /// </summary>
-        public static IForgeClock ClockFor(ProcessDataPacket data) =>
-            data?.Clock ?? ClockOf(data is AbilityDataPacket ability ? ability.EffectOrigin?.GetSource() : null);
+        public static IForgeClock ClockFor(ProcessDataPacket data) => data?.Clock ?? ClockOf(data?.Source);
 
         /// <summary>
         /// The frame's step of an owner's time: an entity's own clock's, its time scale times the game's, or the game's

@@ -81,37 +81,37 @@ namespace FarEmerald.PlayForge
             => _onProcessStateChanged?.Invoke(relay, oldState, newState, data);
 
         // ═══════════════════════════════════════════════════════════════════════
-        // GAS-SPECIFIC LIFECYCLE
-        // Fires only when the registering handler is an IGameplayAbilitySystem.
+        // OWNED PROCESSES
+        // Fires only for a process with an owner, an IProcessOwner.
         // ═══════════════════════════════════════════════════════════════════════
 
         /// <summary>
-        /// A handler of <c>OnGASProcessRegistered</c> and <c>OnGASProcessUnregistered</c>, ProcessControl's callbacks,
-        /// invoked for a process a GAS owns, one registered with the GAS as its handler or with an ability's packet
-        /// whose caster is the GAS, as it registers and just before it's removed, and handed the GAS, the process's
-        /// relay and its data packet.
+        /// A handler of <c>OnOwnedProcessRegistered</c> and <c>OnOwnedProcessUnregistered</c>, ProcessControl's callbacks,
+        /// invoked for a process with an owner, one registered with the owner as its handler or with a packet whose source
+        /// is the owner, as an ability's packet's is its caster, as it registers and just before it's removed, and handed
+        /// the owner, the process's relay and its data packet.
         /// </summary>
-        public delegate void GASProcessDelegate(IGameplayAbilitySystem gas, ProcessRelay relay, ProcessDataPacket data);
+        public delegate void OwnedProcessDelegate(IProcessOwner owner, ProcessRelay relay, ProcessDataPacket data);
 
-        private GASProcessDelegate _onGASProcessRegistered;
-        public event GASProcessDelegate OnGASProcessRegistered
+        private OwnedProcessDelegate _onOwnedProcessRegistered;
+        public event OwnedProcessDelegate OnOwnedProcessRegistered
         {
-            add => _onGASProcessRegistered += value;
-            remove => _onGASProcessRegistered -= value;
+            add => _onOwnedProcessRegistered += value;
+            remove => _onOwnedProcessRegistered -= value;
         }
 
-        public void GASProcessRegistered(IGameplayAbilitySystem gas, ProcessRelay relay, ProcessDataPacket data)
-            => _onGASProcessRegistered?.Invoke(gas, relay, data);
+        public void OwnedProcessRegistered(IProcessOwner owner, ProcessRelay relay, ProcessDataPacket data)
+            => _onOwnedProcessRegistered?.Invoke(owner, relay, data);
 
-        private GASProcessDelegate _onGASProcessUnregistered;
-        public event GASProcessDelegate OnGASProcessUnregistered
+        private OwnedProcessDelegate _onOwnedProcessUnregistered;
+        public event OwnedProcessDelegate OnOwnedProcessUnregistered
         {
-            add => _onGASProcessUnregistered += value;
-            remove => _onGASProcessUnregistered -= value;
+            add => _onOwnedProcessUnregistered += value;
+            remove => _onOwnedProcessUnregistered -= value;
         }
 
-        public void GASProcessUnregistered(IGameplayAbilitySystem gas, ProcessRelay relay, ProcessDataPacket data)
-            => _onGASProcessUnregistered?.Invoke(gas, relay, data);
+        public void OwnedProcessUnregistered(IProcessOwner owner, ProcessRelay relay, ProcessDataPacket data)
+            => _onOwnedProcessUnregistered?.Invoke(owner, relay, data);
 
         // ═══════════════════════════════════════════════════════════════════════
         // CONTROL STATE

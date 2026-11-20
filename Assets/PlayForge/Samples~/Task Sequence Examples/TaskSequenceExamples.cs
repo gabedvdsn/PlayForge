@@ -1229,8 +1229,8 @@ namespace FarEmerald.PlayForge.Samples.TaskSequences
         /// <summary>
         /// The packet carries a run's data, each piece under a tag, and its controls. What one task puts in, the next reads.
         /// It also says where the run is: its stage, its time, its chain. New packets come from SequenceDataPacket: Default's
-        /// is empty, SceneRoot's puts what a run makes under GameRoot, and SceneLocal's under a transform you name. A copy
-        /// takes another's data, for a run of its own.
+        /// is empty, SceneRoot's puts what a run makes under the scene's root, the GameRoot where there is one, and
+        /// SceneLocal's under a transform you name. A copy takes another's data, for a run of its own.
         /// </summary>
         [TaskSequenceMethod("Data: The Packet")]
         public static TaskSequence ThePacket()

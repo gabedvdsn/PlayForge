@@ -8,9 +8,9 @@ namespace FarEmerald.PlayForge.Samples.TaskSequences
 {
     /// <summary>
     /// Runs the library examples on a scene's objects: give it the objects the chosen group needs, enter Play mode, and
-    /// press its key. Each group runs through ProcessControl, so the scene needs PlayForge up, a ProcessControl and a
-    /// GameRoot, as a Bootstrapper brings them. The examples move, turn and recolor what they're given, and put most of it
-    /// back as they end.
+    /// press its key. Each group runs through ProcessControl, so the scene needs a ProcessControl up, as a Process
+    /// Bootstrapper brings it. The examples move, turn and recolor what they're given, and put most of it back as they
+    /// end.
     /// </summary>
     [AddComponentMenu("PlayForge/Samples/Task Sequences/Library Showcase")]
     public sealed class TaskSequenceLibraryShowcase : MonoBehaviour
@@ -78,9 +78,9 @@ namespace FarEmerald.PlayForge.Samples.TaskSequences
         {
             if (!ForgeInput.Current.KeyPressed(RunKey)) return;
 
-            if (!ProcessControl.Instance || !GameRoot.Instance)
+            if (!ProcessControl.Instance)
             {
-                ForgeLog.Warning("PlayForge isn't up: the scene needs a Bootstrapper.", this);
+                ForgeLog.Warning("ProcessControl isn't up: the scene needs a Process Bootstrapper.", this);
                 return;
             }
 

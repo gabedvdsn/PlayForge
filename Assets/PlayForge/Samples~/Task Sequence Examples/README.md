@@ -27,13 +27,15 @@ and Library, so a dropdown sorts them together.
 
 ## Running them
 
-Every way needs PlayForge up in the scene, a ProcessControl and a GameRoot, as a Bootstrapper brings them. Each example
-says what it does, and which keys it waits for, in the Console.
+Every way needs a ProcessControl up in the scene, as a **Process Bootstrapper** brings it. A **Bootstrapper** brings
+one too, with the GameRoot that entities and abilities need. Each example says what it does, and which keys it waits
+for, in the Console.
 
 ### From an ability
 
-An ability's **Sequence** task lists every `[TaskSequenceMethod]` in its dropdown. Pick an example there, and the
-ability runs it as it activates, on the ability's own packet.
+With the full package, an ability's **Sequence** task lists every `[TaskSequenceMethod]` in its dropdown. Pick an
+example there, and the ability runs it as it activates, on the ability's own packet. PlayForge Core has no abilities,
+so it runs them the other ways.
 
 ### With the runner
 

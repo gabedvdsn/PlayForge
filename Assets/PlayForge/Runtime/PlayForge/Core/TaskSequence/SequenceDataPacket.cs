@@ -241,7 +241,8 @@ namespace FarEmerald.PlayForge
         public SequenceDataPacket(ProcessDataPacket other) : base(other) { }
         
         /// <summary>
-        /// Empty data packet handled by GameRoot.
+        /// An empty packet. A registration that names no handler hands its process to ProcessControl's default handler,
+        /// the GameRoot where there is one.
         /// </summary>
         public new static SequenceDataPacket Default()
         {
@@ -249,15 +250,16 @@ namespace FarEmerald.PlayForge
         }
 
         /// <summary>
-        /// Data packet handled by GameRoot, automatically assigned as a child of GameRoot in-scene.
+        /// A packet that parents its MonoBehaviour process under the scene's root, <see cref="ProcessControl.DefaultParent"/>:
+        /// the GameRoot, where there is one, or nothing.
         /// </summary>
         public new static SequenceDataPacket SceneRoot()
         {
-            return Internal_GenerateDataPacket(true, GameRoot.Instance.transform);
+            return Internal_GenerateDataPacket(true, ProcessControl.DefaultParent);
         }
         
         /// <summary>
-        /// Data packet handled by GameRoot, assigned as a child of parent in-scene
+        /// A packet that parents its MonoBehaviour process under <paramref name="parent"/>.
         /// </summary>
         /// <param name="parent">Parent transform to assign</param>
         /// <returns></returns>

@@ -11,7 +11,7 @@ namespace FarEmerald.PlayForge.Editor
     /// Whether it's folded is kept with the object the field holds, so it follows the object through its list. It
     /// drew colored badges for a folded field's values, and its arrow and its look from styles set in C#.
     /// </summary>
-    public abstract class AbstractGenericDrawer<T> : AbstractTypeRefDrawer<T> where T : class
+    public abstract partial class AbstractGenericDrawer<T> : AbstractTypeRefDrawer<T> where T : class
     {
         public const string CollapsedClass = "pf-element--collapsed";
 
@@ -132,11 +132,10 @@ namespace FarEmerald.PlayForge.Editor
         protected virtual string GetSummaryText(SerializedProperty prop)
         {
             var label = ObjectNames.NicifyVariableName(prop.name);
-            if (prop.propertyType == SerializedPropertyType.Generic && prop.type is nameof(ScalableFloat) or nameof(ScalableInt))
-            {
-                string number = MagnitudeField.SummaryOf(prop, "");
-                return string.IsNullOrEmpty(number) ? null : $"{label} {number}";
-            }
+            bool scalable = false;
+            string summary = null;
+            SummarizeScalable(prop, label, ref scalable, ref summary);
+            if (scalable) return summary;
             return prop.propertyType switch
             {
                 SerializedPropertyType.Integer => $"{label} {prop.intValue.ToString(CultureInfo.CurrentCulture)}",
@@ -149,5 +148,9 @@ namespace FarEmerald.PlayForge.Editor
                 _ => null,
             };
         }
+
+        // A Scalable number as its own field sums it up, where the package has them: whether the property is one, and its
+        // summary, or null for none
+        static partial void SummarizeScalable(SerializedProperty prop, string label, ref bool scalable, ref string summary);
     }
 }

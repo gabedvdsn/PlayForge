@@ -28,11 +28,18 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// The clock the work done with this packet runs by: a sequence's waits, timers, tweens and synced tasks, and an
-        /// ability's waits. Null, as it is unless set, for the packet's owner's: an ability's caster's, or the game's. A
+        /// ability's waits. Null, as it is unless set, for its source's: an ability's caster's, or the game's. A
         /// sequence's own clock (<see cref="TaskSequenceBuilder.WithClock"/>) gives way to this one.
         /// </summary>
         public IForgeClock Clock { get; set; }
-        
+
+        /// <summary>
+        /// What the packet's processes come from: an ability's caster, for an ability's packet; none here. A registration
+        /// that names no handler hands its process to it, ProcessControl counts the process as its own where it's an
+        /// <see cref="IProcessOwner"/>, and the work done with the packet runs by its clock.
+        /// </summary>
+        public virtual IGameplayProcessHandler Source => null;
+
         protected readonly Dictionary<int, ProcessRelay> HandlerRelays = new();
         
         public AbstractMonoProcessInstantiator CustomInstantiator;
@@ -140,7 +147,8 @@ namespace FarEmerald.PlayForge
         #region Construction
 
         /// <summary>
-        /// Empty data packet handled by GameRoot.
+        /// An empty packet. A registration that names no handler hands its process to ProcessControl's default handler,
+        /// the GameRoot where there is one.
         /// </summary>
         public static ProcessDataPacket Default()
         {
@@ -148,15 +156,16 @@ namespace FarEmerald.PlayForge
         }
 
         /// <summary>
-        /// Data packet handled by GameRoot, automatically assigned as a child of GameRoot in-scene.
+        /// A packet that parents its MonoBehaviour process under the scene's root, <see cref="ProcessControl.DefaultParent"/>:
+        /// the GameRoot, where there is one, or nothing.
         /// </summary>
         public static ProcessDataPacket SceneRoot()
         {
-            return Internal_GenerateDataPacket(true, GameRoot.Instance.transform);
+            return Internal_GenerateDataPacket(true, ProcessControl.DefaultParent);
         }
         
         /// <summary>
-        /// Data packet handled by GameRoot, assigned as a child of parent in-scene
+        /// A packet that parents its MonoBehaviour process under <paramref name="parent"/>.
         /// </summary>
         /// <param name="parent">Parent transform to assign</param>
         /// <returns></returns>
@@ -469,7 +478,7 @@ namespace FarEmerald.PlayForge
         }
         public bool HandlerValidateAgainst(IGameplayProcessHandler handler)
         {
-            return (AbilityDataPacket)handler == this;
+            return ReferenceEquals(handler, this);
         }
         public bool HandlerProcessIsSubscribed(ProcessRelay relay)
         {

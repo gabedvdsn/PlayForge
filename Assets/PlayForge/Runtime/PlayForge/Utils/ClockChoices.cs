@@ -15,11 +15,10 @@ namespace FarEmerald.PlayForge
         public virtual IForgeClock ClockFor(ProcessDataPacket data) => null;
 
         /// <summary>
-        /// The clock of a packet's owner: an ability's caster's own, its time scale times the game's, or the game's for any
-        /// other packet. A packet's own clock isn't asked: a choice is what gives one.
+        /// The clock of a packet's source: an ability's caster's own, its time scale times the game's, or the game's for
+        /// any other packet. A packet's own clock isn't asked: a choice is what gives one.
         /// </summary>
-        protected static IForgeClock OwnersClock(ProcessDataPacket data) =>
-            ForgeTime.ClockOf(data is AbilityDataPacket ability ? ability.EffectOrigin?.GetSource() : null);
+        protected static IForgeClock OwnersClock(ProcessDataPacket data) => ForgeTime.ClockOf(data?.Source);
     }
 
     /// <summary>An ability's caster's own time: its time scale times the game's; the game's for anything else.</summary>

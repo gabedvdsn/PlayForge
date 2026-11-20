@@ -8,8 +8,8 @@ namespace FarEmerald.PlayForge.Samples.ProcessGroups
     /// Process groups, each shown from a key. A group is a process that holds other processes: each member still runs as a
     /// process of its own, registered with ProcessControl, and the group adds what they have in common: how many there
     /// may be and what happens to one more, a data packet they can share, what's done to all of them at once, and how long
-    /// the group itself lasts. Put this component and a Bootstrapper in a scene, enter Play mode and press the keys; the
-    /// Console says what each one did.
+    /// the group itself lasts. Put this component and a Process Bootstrapper in a scene, enter Play mode and press the
+    /// keys; the Console says what each one did.
     /// </summary>
     public class ProcessGroupExamples : MonoBehaviour
     {

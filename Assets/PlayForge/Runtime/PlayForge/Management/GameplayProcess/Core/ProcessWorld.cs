@@ -182,11 +182,9 @@ namespace FarEmerald.PlayForge
         // Group process registry — maps user-facing Tag to the GroupProcess instance
         private Dictionary<Tag, GroupProcess> _groups = new();
 
-        // GAS-owned process registry — maps the registering IGameplayAbilitySystem to
-        // the set of process cache indices it owns. A process is associated with a GAS
-        // when its handler is an IGameplayAbilitySystem (either directly passed as the
-        // handler or derived from an AbilityDataPacket's EffectOrigin.GetOwner()).
-        private Dictionary<IGameplayAbilitySystem, HashSet<int>> _gasProcesses = new();
+        // The processes each owner owns, by cache index: a process is its handler's, where the handler is an
+        // IProcessOwner, or else its packet's source's, where that is one
+        private Dictionary<IProcessOwner, HashSet<int>> _ownedProcesses = new();
 
         /// <summary>
         /// High-level lifecycle callbacks for observers (debuggers, recorders, etc.).
@@ -622,7 +620,7 @@ namespace FarEmerald.PlayForge
             _waiting = new HashSet<int>();
             _hierarchy.Clear();
             _groups = new Dictionary<Tag, GroupProcess>();
-            _gasProcesses = new Dictionary<IGameplayAbilitySystem, HashSet<int>>();
+            _ownedProcesses = new Dictionary<IProcessOwner, HashSet<int>>();
 
             _steppedAs = new Dictionary<int, EProcessStepTiming>();
             _dormant.Clear();
@@ -642,20 +640,9 @@ namespace FarEmerald.PlayForge
             if (oldState != nextState) Callbacks?.ControlStateChanged(oldState, nextState);
         }
 
-        /// <summary>
-        /// Resolves the owning IGameplayAbilitySystem (if any) for a registration.
-        /// Checks the handler first, then falls back to data.EffectOrigin.GetOwner().
-        /// </summary>
-        private static IGameplayAbilitySystem ResolveOwningGAS(IGameplayProcessHandler handler, ProcessDataPacket data)
-        {
-            if (handler is IGameplayAbilitySystem handlerGas) return handlerGas;
-            if (data is AbilityDataPacket ability)
-            {
-                var owner = ability.EffectOrigin?.GetSource();
-                if (owner is IGameplayAbilitySystem ownerGas) return ownerGas;
-            }
-            return null;
-        }
+        // A registration's owner, if it has one: its handler, where that's an owner, or else its packet's source
+        private static IProcessOwner ResolveOwner(IGameplayProcessHandler handler, ProcessDataPacket data) =>
+            handler as IProcessOwner ?? data?.Source as IProcessOwner;
         
         // A MonoBehaviour process's registration, as the builder makes it, and why it's refused when it is
         internal ProcessRegistrationResult RegisterMono(AbstractMonoProcess process, IGameplayProcessHandler handler, ProcessDataPacket data,
@@ -763,12 +750,12 @@ namespace FarEmerald.PlayForge
             // Remove from hierarchy
             _hierarchy.Unregister(pcb.CacheIndex);
 
-            // Clear GAS association
-            var gas = ResolveOwningGAS(pcb.Handler, pcb.Wrapper.Data);
-            if (gas != null && _gasProcesses.TryGetValue(gas, out var set))
+            // Off its owner's count
+            var owner = ResolveOwner(pcb.Handler, pcb.Wrapper.Data);
+            if (owner != null && _ownedProcesses.TryGetValue(owner, out var set))
             {
                 set.Remove(pcb.CacheIndex);
-                if (set.Count == 0) _gasProcesses.Remove(gas);
+                if (set.Count == 0) _ownedProcesses.Remove(owner);
             }
 
             if (OutputLogs)
@@ -783,7 +770,7 @@ namespace FarEmerald.PlayForge
                 try
                 {
                     Callbacks?.ProcessUnregistered(pcb.Relay, pcb.Wrapper.Data);
-                    if (gas != null) Callbacks?.GASProcessUnregistered(gas, pcb.Relay, pcb.Wrapper.Data);
+                    if (owner != null) Callbacks?.OwnedProcessUnregistered(owner, pcb.Relay, pcb.Wrapper.Data);
                 }
                 catch (Exception ex)
                 {
@@ -1022,14 +1009,14 @@ namespace FarEmerald.PlayForge
             _active[pcb.CacheIndex] = pcb;
             ForgeCounters.Registrations.Value++;
 
-            // Track GAS-owned processes so observers can query "what processes does this GAS own?"
-            var gas = ResolveOwningGAS(pcb.Handler, pcb.Wrapper.Data);
-            if (gas != null)
+            // Counted under its owner, so code can ask what an owner owns
+            var owner = ResolveOwner(pcb.Handler, pcb.Wrapper.Data);
+            if (owner != null)
             {
-                if (!_gasProcesses.TryGetValue(gas, out var set))
+                if (!_ownedProcesses.TryGetValue(owner, out var set))
                 {
                     set = new HashSet<int>();
-                    _gasProcesses[gas] = set;
+                    _ownedProcesses[owner] = set;
                 }
                 set.Add(pcb.CacheIndex);
             }
@@ -1067,7 +1054,7 @@ namespace FarEmerald.PlayForge
 
             // Fire callbacks AFTER pcb.Initialize so state is fully consistent
             Callbacks?.ProcessRegistered(pcb.Relay, pcb.Wrapper.Data);
-            if (gas != null) Callbacks?.GASProcessRegistered(gas, pcb.Relay, pcb.Wrapper.Data);
+            if (owner != null) Callbacks?.OwnedProcessRegistered(owner, pcb.Relay, pcb.Wrapper.Data);
 
             return true;
         }
@@ -1534,30 +1521,30 @@ namespace FarEmerald.PlayForge
         /// <summary>Whether a group of the tag is registered here.</summary>
         public bool HasGroup(Tag groupTag) => _groups.ContainsKey(groupTag);
 
-        /// <summary>The cache indices of the processes the GAS owns here.</summary>
-        public IReadOnlyCollection<int> ProcessIdsForGAS(IGameplayAbilitySystem gas) =>
-            gas != null && _gasProcesses.TryGetValue(gas, out var set) ? (IReadOnlyCollection<int>)set : Array.Empty<int>();
+        /// <summary>The cache indices of the processes the owner owns here.</summary>
+        public IReadOnlyCollection<int> ProcessIdsFor(IProcessOwner owner) =>
+            owner != null && _ownedProcesses.TryGetValue(owner, out var set) ? (IReadOnlyCollection<int>)set : Array.Empty<int>();
 
-        /// <summary>The relays of the processes the GAS owns here.</summary>
-        public IEnumerable<ProcessRelay> ProcessesForGAS(IGameplayAbilitySystem gas)
+        /// <summary>The relays of the processes the owner owns here.</summary>
+        public IEnumerable<ProcessRelay> ProcessesFor(IProcessOwner owner)
         {
-            if (gas == null || !_gasProcesses.TryGetValue(gas, out var set)) yield break;
+            if (owner == null || !_ownedProcesses.TryGetValue(owner, out var set)) yield break;
             foreach (int idx in set)
             {
                 if (_active.TryGetValue(idx, out var pcb)) yield return pcb.Relay;
             }
         }
 
-        /// <summary>How many processes the GAS owns here.</summary>
-        public int ProcessCountForGAS(IGameplayAbilitySystem gas) => gas != null && _gasProcesses.TryGetValue(gas, out var set) ? set.Count : 0;
+        /// <summary>How many processes the owner owns here.</summary>
+        public int ProcessCountFor(IProcessOwner owner) => owner != null && _ownedProcesses.TryGetValue(owner, out var set) ? set.Count : 0;
 
         /// <summary>
-        /// Terminates every process the GAS owns here, at once when <paramref name="immediate"/> is set. Returns how many
+        /// Terminates every process the owner owns here, at once when <paramref name="immediate"/> is set. Returns how many
         /// were told to.
         /// </summary>
-        public int TerminateAllForGAS(IGameplayAbilitySystem gas, bool immediate = false)
+        public int TerminateAllFor(IProcessOwner owner, bool immediate = false)
         {
-            if (gas == null || !_gasProcesses.TryGetValue(gas, out var set) || set.Count == 0) return 0;
+            if (owner == null || !_ownedProcesses.TryGetValue(owner, out var set) || set.Count == 0) return 0;
 
             // Copy because Terminate paths may mutate the backing set
             var indices = new List<int>(set);

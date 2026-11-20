@@ -11,8 +11,8 @@ namespace FarEmerald.PlayForge.Samples.TaskSequences
     /// fresh sequence from its method and a fresh packet, SceneRoot's, which carries the Clock picked, where one is. A
     /// sequence runs through ProcessControl, as an
     /// ability's does, so its conditions are asked each frame and its process pauses it. A chain runs here, awaited, and
-    /// this asks its conditions each frame, as ProcessControl would. The scene needs PlayForge up, a ProcessControl and a
-    /// GameRoot, as a Bootstrapper brings them.
+    /// this asks its conditions each frame, as ProcessControl would. The scene needs a ProcessControl up, as a Process
+    /// Bootstrapper brings it.
     /// </summary>
     [AddComponentMenu("PlayForge/Samples/Task Sequences/Example Runner")]
     public sealed class TaskSequenceExampleRunner : MonoBehaviour
@@ -81,9 +81,9 @@ namespace FarEmerald.PlayForge.Samples.TaskSequences
                 return;
             }
 
-            if (!ProcessControl.Instance || !GameRoot.Instance)
+            if (!ProcessControl.Instance)
             {
-                ForgeLog.Warning("PlayForge isn't up: the scene needs a Bootstrapper.", this);
+                ForgeLog.Warning("ProcessControl isn't up: the scene needs a Process Bootstrapper.", this);
                 return;
             }
 

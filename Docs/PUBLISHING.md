@@ -111,3 +111,23 @@ with no error. Additional Content warned, as it should, that the fresh project h
   it's submitted. The detailed history, change by change, is the repository's `Docs/HISTORY.md` (Decision 87).
 - ☑ `Tests/` and the test kit ship; `Documentation/IMPACT_MODEL_REFACTOR.md`, internal design history, and this
   checklist don't (Decision 87).
+
+## ☐ 7. PlayForge Core, the core edition (EP-84)
+
+PlayForge Core is ProcessControl and task sequences without the ability system, sold on its own, as the full
+package's own files with the rest left out. Each file keeps its GUID and its assembly, so PlayForge imports over it.
+
+- ☑ Its files: Proving Grounds' `Tests/Editor/CoreEdition.txt` names them, and `CoreEditionTests` compile them with
+  nothing else of PlayForge's: the runtime for a player and in the editor, the editor as its own assembly over it, and
+  its two samples. A change that ties a core file to the ability system fails them.
+- ☐ The export: `python Tools/export-unitypackage.py --edition core --tests --build`, then
+  `python Tools/smoke-check.py --edition core`. They make `PlayForge-Core-<version>.unitypackage` beside the full one,
+  in projects of their own, `build-core` and `check-core`, and check it as the full one is checked. The smoke opens
+  the Debugger, and in play mode a Process Bootstrapper brings ProcessControl up with no ability system in the
+  package, and a sequence runs on it.
+- ☐ A package of its own in the publisher portal, uploaded from `build-core`'s `Assets/Plugins/PlayForge` with the
+  Asset Store Tools, from 6000.0 as the full one is.
+- ☐ Its listing: a draft is in `Docs/Store/LISTING_CORE.md`, for the user's word. Both listings carry the comparison
+  table (rule 3.1.c), and each says plainly what it has, as packages that are largely the same are refused (rule
+  2.1.f). A lite edition is allowed where what it includes works as the full one's does (rule 1.4.c).
+- ☐ Its key images, and whether PlayForge offers PlayForge Core's buyers an upgrade price: the user's choice.

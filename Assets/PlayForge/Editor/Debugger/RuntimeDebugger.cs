@@ -20,7 +20,8 @@ namespace FarEmerald.PlayForge.Editor
     /// ProcessControl as processes join and leave, and the values change in place, at the rate the window menu sets,
     /// while the game plays. Outside Play mode it offers Play Mode. The GAS Debugger scanned the scene for
     /// MonoBehaviour hubs and rebuilt its details every 0.25 s; Process Control and the Tag Debugger were IMGUI
-    /// windows of their own.
+    /// windows of their own. The Entities, Tags and Timeline views come with the ability system, in files of their own
+    /// that this one's hooks call, so PlayForge Core, which has none, has the Processes view alone.
     /// </summary>
     public sealed partial class RuntimeDebugger : EditorWindow, IHasCustomMenu
     {
@@ -37,6 +38,7 @@ namespace FarEmerald.PlayForge.Editor
         // How many windows time the processes' steps, so the last one to stop turns the timing off
         private static int timing;
 
+        // The views; PlayForge Core has the Processes view alone
         private enum View
         {
             Entities,
@@ -45,20 +47,11 @@ namespace FarEmerald.PlayForge.Editor
             Timeline,
         }
 
-        private enum HubKind
-        {
-            Both,
-            Mono,
-            Runtime,
-        }
-
         // The view, the search, the filters, the rate and Follow Selection, which a domain reload keeps
         [SerializeField] private View view;
         [SerializeField] private string search = "";
-        [SerializeField] private HubKind hubFilter;
         [SerializeField] private string processFilter = AllStates;
         [SerializeField] private int samplesPerSecond = 4;
-        [SerializeField] private bool followSelection = true;
 
         // The ProcessControl the window follows, and whether a process has joined or left it since the lists were read
         private ProcessControl followed;
@@ -68,21 +61,16 @@ namespace FarEmerald.PlayForge.Editor
 
         private VisualElement prompt;
         private VisualElement views;
-        private VisualElement entitiesView;
         private VisualElement processesView;
-        private VisualElement tagsView;
         private readonly Dictionary<View, ToolbarToggle> viewToggles = new();
         private ToolbarSearchField searchField;
-        private ToolbarMenu hubMenu;
         private ToolbarMenu filterMenu;
-        private ToolbarToggle followToggle;
         private Label controlLabel;
         private ToolbarMenu controlMenu;
         private Label frameLabel;
         private VisualElement statusBar;
         private Label controlStatus;
         private Label processStatus;
-        private Label entityStatus;
         private Label actionStatus;
         private Label frameStatus;
         private ToolbarSpacer toolbarSpacer;
@@ -96,10 +84,7 @@ namespace FarEmerald.PlayForge.Editor
         private const string ProcessesTable = "Debugger.Processes";
         private bool narrow;
         private bool fitted;
-        private TwoPaneSplitView entitySplit;
         private TwoPaneSplitView processSplit;
-        private TwoPaneSplitView tagSplit;
-        private bool timelineLive;
 
         // ═══════════════════════════════════════════════════════════════════════════
         // Opening
@@ -132,17 +117,15 @@ namespace FarEmerald.PlayForge.Editor
         private void OnEnable()
         {
             EditorApplication.playModeStateChanged += OnPlayModeChanged;
-            Selection.selectionChanged += OnSelectionChanged;
+            EnableAbilityViews();
         }
 
         private void OnDisable()
         {
             EditorApplication.playModeStateChanged -= OnPlayModeChanged;
-            Selection.selectionChanged -= OnSelectionChanged;
             StopSampling();
             Unfollow();
-            ForgetShownEntity();
-            recorder?.Dispose();
+            DisableAbilityViews();
         }
 
         private void OnPlayModeChanged(PlayModeStateChange change) => ShowState();
@@ -156,10 +139,7 @@ namespace FarEmerald.PlayForge.Editor
             ForgeStack.Show(views, live);
             statusBar.EnableInClassList(HiddenClass, !live);
             searchField.SetEnabled(live);
-            // The Timeline records afresh each time the game starts playing, and stops hearing as it ends
-            if (live && !timelineLive) StartTimeline();
-            if (!live) StopTimeline();
-            timelineLive = live;
+            ShowAbilityState(live);
             if (live)
             {
                 StartSampling();
@@ -209,14 +189,11 @@ namespace FarEmerald.PlayForge.Editor
             if (listsStale) ReadLists();
             else
             {
-                entityList.RefreshItems();
                 processList.RefreshItems();
-                SampleTagTree();
+                RefreshAbilityLists();
             }
-            SampleEntity();
             SampleProcess();
-            SampleTag();
-            SampleTimeline();
+            SampleAbilityViews();
             ShowStatus();
         }
 
@@ -252,33 +229,12 @@ namespace FarEmerald.PlayForge.Editor
         private void ReadLists()
         {
             listsStale = false;
-            hubs.Clear();
             processes.Clear();
-            if (followed != null)
-            {
-                foreach (var pcb in followed.FetchActiveProcesses().Values)
-                {
-                    processes.Add(pcb);
-                    if (pcb.Wrapper != null && pcb.Wrapper.TryGetProcess<IGameplayAbilitySystem>(out var gas) && Alive(gas) && !hubs.Contains(gas))
-                        hubs.Add(gas);
-                }
-            }
-            hubs.Sort((a, b) => EditorUtility.NaturalCompare(NameOf(a), NameOf(b)));
+            if (followed != null) processes.AddRange(followed.FetchActiveProcesses().Values);
             processes.Sort((a, b) => a.CacheIndex.CompareTo(b.CacheIndex));
             ForgetLeftProcesses();
-            RefillEntities();
             RefillProcesses();
-            RefillTags();
-        }
-
-        // Follow Selection: a hub's GameObject selected in the scene is the entity the Entities view shows
-        private void OnSelectionChanged()
-        {
-            if (!followSelection || !Live() || entityList == null) return;
-            var body = Selection.activeGameObject;
-            if (body == null) return;
-            var gas = body.GetComponentInParent<GameplayAbilitySystem>();
-            if (gas != null && hubs.Contains(gas)) SelectEntity(gas);
+            ReadAbilityLists();
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
@@ -301,13 +257,9 @@ namespace FarEmerald.PlayForge.Editor
 
             views = ForgeStack.Make(new VisualElement { name = "Views" });
             views.AddToClassList("pf-debugger__views");
-            entitiesView = BuildEntitiesView();
             processesView = BuildProcessesView();
-            tagsView = BuildTagsView();
-            views.Add(entitiesView);
             views.Add(processesView);
-            views.Add(tagsView);
-            views.Add(BuildTimelineView());
+            BuildAbilityViews(views);
             body.Add(views);
             root.Add(body);
 
@@ -315,7 +267,7 @@ namespace FarEmerald.PlayForge.Editor
             statusBar.AddToClassList("pf-debugger__status");
             controlStatus = StatusPart("ControlStatus");
             processStatus = StatusPart("ProcessStatus");
-            entityStatus = StatusPart("EntityStatus");
+            BuildAbilityStatus();
             actionStatus = StatusPart("ActionStatus");
             actionStatus.AddToClassList("pf-debugger__status-action");
             frameStatus = StatusPart("FrameStatus");
@@ -339,13 +291,9 @@ namespace FarEmerald.PlayForge.Editor
             toolbar.AddToClassList("pf-debugger__toolbar");
             var segments = new VisualElement { name = "ViewToggles" };
             segments.AddToClassList("pf-debugger__views-toggles");
-            foreach (var (each, text, tip) in new[]
-                     {
-                         (View.Entities, "Entities", "Each entity, with its attributes, effects, abilities and tags"),
-                         (View.Processes, "Processes", "Each process ProcessControl runs"),
-                         (View.Tags, "Tags", "Each tag the entities hold, and who holds it"),
-                         (View.Timeline, "Timeline", "What the entities' abilities and effects did, over time"),
-                     })
+            var shown = new List<(View View, string Text, string Tip)> { (View.Processes, "Processes", "Each process ProcessControl runs") };
+            AddAbilityViewToggles(shown);
+            foreach (var (each, text, tip) in shown)
             {
                 var toggle = new ToolbarToggle { name = $"Show{text}", text = text, tooltip = tip };
                 toggle.AddToClassList("pf-debugger__view-toggle");
@@ -367,23 +315,11 @@ namespace FarEmerald.PlayForge.Editor
             searchField.RegisterValueChangedCallback(change =>
             {
                 search = change.newValue ?? "";
-                RefillEntities();
                 RefillProcesses();
-                RefillTags();
-                RefillTracks();
+                RefillAbilityViews();
             });
             toolbar.Add(searchField);
-
-            hubMenu = new ToolbarMenu { name = "HubFilter", tooltip = "Show the entities of one kind of hub" };
-            foreach (var (kind, text) in HubFilters)
-                hubMenu.menu.AppendAction(text, _ =>
-                {
-                    hubFilter = kind;
-                    ShowView();
-                    RefillEntities();
-                    RefillTags();
-                }, _ => hubFilter == kind ? DropdownMenuAction.Status.Checked : DropdownMenuAction.Status.Normal);
-            toolbar.Add(hubMenu);
+            BuildEntityFilter(toolbar);
 
             filterMenu = new ToolbarMenu { name = "Filter", tooltip = "Show the processes in one state" };
             foreach (var each in Filters)
@@ -394,22 +330,11 @@ namespace FarEmerald.PlayForge.Editor
                     RefillProcesses();
                 }, _ => processFilter == each ? DropdownMenuAction.Status.Checked : DropdownMenuAction.Status.Normal);
             toolbar.Add(filterMenu);
-            BuildTimelineTools(toolbar);
+            BuildTimelineToolbar(toolbar);
 
             toolbarSpacer = new ToolbarSpacer { flex = true };
             toolbar.Add(toolbarSpacer);
-
-            followToggle = new ToolbarToggle { name = "FollowSelection", tooltip = "Show the entity whose GameObject is selected in the scene" };
-            followToggle.AddToClassList("pf-debugger__follow");
-            followToggle.Add(new ForgeGlyph(ForgeGlyphShape.Pointer));
-            followToggle.Add(new Label("Follow Selection"));
-            followToggle.SetValueWithoutNotify(followSelection);
-            followToggle.RegisterValueChangedCallback(change =>
-            {
-                followSelection = change.newValue;
-                OnSelectionChanged();
-            });
-            toolbar.Add(followToggle);
+            BuildFollowToggle(toolbar);
 
             controlLabel = new Label("ProcessControl") { name = "ControlLabel" };
             controlLabel.AddToClassList("pf-debugger__toolbar-label");
@@ -426,13 +351,6 @@ namespace FarEmerald.PlayForge.Editor
             toolbar.Add(frameLabel);
             return toolbar;
         }
-
-        private static readonly (HubKind Kind, string Text)[] HubFilters =
-        {
-            (HubKind.Both, "Both hubs"),
-            (HubKind.Mono, "Mono hubs"),
-            (HubKind.Runtime, "Runtime hubs"),
-        };
 
         private const string AllStates = "All states";
 
@@ -471,20 +389,16 @@ namespace FarEmerald.PlayForge.Editor
         {
             if (views == null) return;
             bool live = Live();
+            // A view the package doesn't have, as PlayForge Core has no Entities view, gives way to the Processes view
+            if (!viewToggles.ContainsKey(view)) view = View.Processes;
             foreach (var (each, toggle) in viewToggles) toggle.SetValueWithoutNotify(each == view);
-            ForgeStack.Show(entitiesView, view == View.Entities);
             ForgeStack.Show(processesView, view == View.Processes);
-            ForgeStack.Show(tagsView, view == View.Tags);
-            ForgeStack.Show(timelineView, view == View.Timeline);
-            hubMenu.EnableInClassList(HiddenClass, !live || view == View.Processes || view == View.Timeline);
-            ShowTimelineTools(live);
+            ShowAbilityViews(live);
             filterMenu.EnableInClassList(HiddenClass, !live || view != View.Processes);
-            followToggle.EnableInClassList(HiddenClass, !live || view != View.Entities);
             controlLabel.EnableInClassList(HiddenClass, !live || view != View.Processes || narrow);
             controlMenu.EnableInClassList(HiddenClass, !live || view != View.Processes);
             frameLabel.EnableInClassList(HiddenClass, !live || narrow);
             toolbarSpacer.EnableInClassList(HiddenClass, narrow);
-            hubMenu.text = HubFilters.First(each => each.Kind == hubFilter).Text;
             filterMenu.text = processFilter;
             var placeholder = view switch
             {
@@ -513,22 +427,20 @@ namespace FarEmerald.PlayForge.Editor
             {
                 controlStatus.text = "ProcessControl: None";
                 processStatus.text = "";
-                entityStatus.text = "";
-                return;
             }
-            controlStatus.text = $"ProcessControl: {ControlStates.First(each => each.State == followed.State).Text}";
-            int running = processes.Count(pcb => pcb.State == EProcessState.Running);
-            int waiting = processes.Count(pcb => pcb.State == EProcessState.Waiting);
-            int created = processes.Count(pcb => pcb.State == EProcessState.Created);
-            var parts = new List<string> { $"{running} running", $"{waiting} waiting" };
-            if (created > 0) parts.Add($"{created} created");
-            processStatus.text = narrow
-                ? CountOf(processes.Count, "process", "processes")
-                : $"{CountOf(processes.Count, "process", "processes")}: {string.Join(", ", parts)}";
-            int mono = hubs.Count(gas => gas.ToGASObject() != null);
-            entityStatus.text = narrow
-                ? CountOf(hubs.Count, "entity", "entities")
-                : $"{CountOf(hubs.Count, "entity", "entities")}: {mono} Mono, {hubs.Count - mono} runtime";
+            else
+            {
+                controlStatus.text = $"ProcessControl: {ControlStates.First(each => each.State == followed.State).Text}";
+                int running = processes.Count(pcb => pcb.State == EProcessState.Running);
+                int waiting = processes.Count(pcb => pcb.State == EProcessState.Waiting);
+                int created = processes.Count(pcb => pcb.State == EProcessState.Created);
+                var parts = new List<string> { $"{running} running", $"{waiting} waiting" };
+                if (created > 0) parts.Add($"{created} created");
+                processStatus.text = narrow
+                    ? CountOf(processes.Count, "process", "processes")
+                    : $"{CountOf(processes.Count, "process", "processes")}: {string.Join(", ", parts)}";
+            }
+            ShowAbilityStatus();
         }
 
         /// <summary>
@@ -545,10 +457,8 @@ namespace FarEmerald.PlayForge.Editor
             fitted = true;
             narrow = now;
             rootVisualElement.EnableInClassList(NarrowClass, narrow);
-            Lay(entitySplit, 0, 440);
             Lay(processSplit, 1, 380);
-            Lay(tagSplit, 0, 440);
-            Lay(timelineSplit, 1, 380);
+            FitAbilityViews();
             // A narrow window hides the four, and a wide one shows those the user didn't hide from the header's menu, so
             // the fit keeps nothing as the user's choice. The list's header shows or hides a column at once, while its rows
             // take their cells only at a rebuild Unity schedules. The window fits itself as it's laid out, so the header
@@ -600,24 +510,34 @@ namespace FarEmerald.PlayForge.Editor
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
-        // Text
+        // The ability system's views
         // ═══════════════════════════════════════════════════════════════════════════
 
-        /// <summary>
-        /// An entity's name: a MonoBehaviour hub's GameObject's, which tells two of one asset apart, as "Goblin Raider
-        /// (2)", or a runtime hub's own.
-        /// </summary>
-        internal static string NameOf(IGameplayAbilitySystem gas)
-        {
-            if (gas == null) return "";
-            var body = gas.ToGASObject();
-            if (body != null) return body.name;
-            var name = gas.GetName();
-            return !string.IsNullOrWhiteSpace(name) ? name : "Unnamed";
-        }
+        // The hooks the Entities, Tags and Timeline views fill, where the package has the ability system. Without it,
+        // as in PlayForge Core, each is nothing, and the window has the Processes view alone
+        partial void EnableAbilityViews();
+        partial void DisableAbilityViews();
+        partial void AddAbilityViewToggles(List<(View View, string Text, string Tip)> toggles);
+        partial void BuildAbilityViews(VisualElement views);
+        partial void BuildEntityFilter(Toolbar toolbar);
+        partial void BuildTimelineToolbar(Toolbar toolbar);
+        partial void BuildFollowToggle(Toolbar toolbar);
+        partial void BuildAbilityStatus();
+        partial void ShowAbilityState(bool live);
+        partial void ShowAbilityViews(bool live);
+        partial void ShowAbilityStatus();
+        partial void FitAbilityViews();
+        partial void ReadAbilityLists();
+        partial void RefreshAbilityLists();
+        partial void RefillAbilityViews();
+        partial void SampleAbilityViews();
 
-        // A hub of either kind that's still there: a MonoBehaviour hub's object goes with its scene
-        private static bool Alive(IGameplayAbilitySystem gas) => gas is Object unity ? unity != null : gas != null;
+        // A handler's name as the views name it: an entity's as the Entities view lists it
+        static partial void NameHandler(IGameplayProcessHandler handler, ref string name);
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Text
+        // ═══════════════════════════════════════════════════════════════════════════
 
         private bool Matches(string text) =>
             string.IsNullOrWhiteSpace(search) || (text ?? "").IndexOf(search.Trim(), StringComparison.OrdinalIgnoreCase) >= 0;

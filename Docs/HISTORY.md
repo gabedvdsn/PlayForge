@@ -10,6 +10,13 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## Toward 1.0.0, since 0.1.0
 
 ### Added
+- **PlayForge Core** (EP-84): ProcessControl and task sequences, sold on their own, as the package's own files with
+  the ability system left out, each keeping its GUID and assembly, so PlayForge imports over it. A **Process
+  Bootstrapper** brings ProcessControl up in a scene with no entities, as `ProcessControl.BringUp` does from code.
+- `IProcessOwner` (EP-84): what owns processes. ProcessControl counts a process under its handler, where that's an
+  owner, or else its packet's new `Source`, and the work done with the packet runs by its clock. An entity is one.
+- `ProcessControl.DefaultHandler` and `DefaultParent` (EP-84): the handler a registration naming none takes, and what
+  a scene root's packet parents its process under: the GameRoot, where there is one.
 - A buyer-side smoke, Proving Grounds' `Tools/smoke-check.py` (SP-39): in the export's check project, PlayForge's
   windows open from their menus and each sample scene plays, with nothing logged.
 - **Survivors' dash, longer waves and gentler first boss waves** (FEAT-41): Space dashes the hero past the horde's
@@ -692,6 +699,16 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   page, through one table of links in the editor.
 
 ### Changed
+- **An entity's processes are an owner's** (EP-84): `ProcessControl.GetProcessIdsForGAS`, `GetProcessesForGAS`,
+  `GetProcessCountForGAS` and `TerminateAllForGAS` are `GetProcessIdsFor`, `GetProcessesFor`, `GetProcessCountFor`
+  and `TerminateAllFor`, which take any `IProcessOwner`, an entity among them. The callbacks' `OnGASProcessRegistered`
+  and `OnGASProcessUnregistered` are `OnOwnedProcessRegistered` and `OnOwnedProcessUnregistered`.
+- The list and dictionary helpers, `RandomChoice`, `Shuffle`, `WeightedSample`, `SafeAdd` and the rest, are
+  `ForgeCollections`', out of `ForgeHelper` (EP-84). Called as extension methods, as they are, they read as before.
+- A scene root's packet with no GameRoot parents its process nowhere, and a registration naming no handler has none
+  (EP-84): the packet threw.
+- The Task Sequence and Process Group examples need ProcessControl alone, as a Process Bootstrapper brings it
+  (EP-84); they needed a GameRoot too.
 - **Every targeting task that casts its pointer's ray reaches any distance by default** (EP-80): Select Gas
   Target, Select Gas Target In Range, Select Gas Or Position Target and Select Direction Target, as Select
   Position does, so the inspector shows a new one's distance as infinite, not 0. A 0 saved before still
@@ -1185,6 +1202,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   Asking whether its sequence was paused took 24 bytes a frame.
 
 ### Fixed
+- **A packet validating a handler threw for any but an ability's packet** (EP-84): it cast the handler to one, a
+  plain packet itself too. It validates against itself alone.
 - **The export's rehearsal read an asset named for a warning as one** (SP-39): Unity's import progress names each
   asset, so the Survivors cue `Slam Warning` failed the clean import. Both checks pass over that progress now.
 - **Additional Content's feedback threw in a project without TextMeshPro's Essential Resources** (SP-40): the

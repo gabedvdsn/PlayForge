@@ -99,9 +99,9 @@ namespace FarEmerald.PlayForge
             {
                 transform.position = pos;
             }
-            else if (regData.TryGetFirst<IGameplayAbilitySystem>(Tags.POSITION, out var gasPos))
+            else if (regData.TryGetFirst<IProcessOwner>(Tags.POSITION, out var ownerPos))
             {
-                transform.position = gasPos.GetTargetingPacket().position;
+                transform.position = ownerPos.ProcessPosition;
             }
             else if (regData.TryGetFirst<Transform>(Tags.POSITION, out var tPos))
             {
@@ -113,9 +113,9 @@ namespace FarEmerald.PlayForge
             {
                 transform.rotation = rot;
             }
-            else if (regData.TryGetFirst<IGameplayAbilitySystem>(Tags.ROTATION, out var gasRot))
+            else if (regData.TryGetFirst<IProcessOwner>(Tags.ROTATION, out var ownerRot))
             {
-                transform.rotation = gasRot.GetTargetingPacket().rotation;
+                transform.rotation = ownerRot.ProcessRotation;
             }
             else if (regData.TryGetFirst<Transform>(Tags.ROTATION, out var tRot))
             {

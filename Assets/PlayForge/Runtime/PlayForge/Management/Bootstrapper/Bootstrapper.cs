@@ -9,7 +9,8 @@ namespace FarEmerald.PlayForge
     /// Brings PlayForge up as a scene starts: ProcessControl, then the GameRoot, which runs as the Game Root entity of the
     /// Forge Project the Bootstrapper names. It names prefabs for both, which code makes in the
     /// PlayForge folder's Bootstrap folder as the first Forge Project is made; without them it makes each itself, so a
-    /// scene needs nothing but a Bootstrapper. PlayForge ships no prefab.
+    /// scene needs nothing but a Bootstrapper. PlayForge ships no prefab. A scene of processes and task sequences alone,
+    /// with no entities, can take the <see cref="ProcessBootstrapper"/> instead.
     /// </summary>
     public class Bootstrapper : MonoBehaviour
     {
@@ -68,24 +69,9 @@ namespace FarEmerald.PlayForge
                 }
             }
             
-            // Bootstrap ProcessControl. Unity's null, so a destroyed one is replaced; `is null` kept it
-            ProcessControl made = null;
-            if (!ProcessControl.Instance)
-            {
-                ProcessControl control;
-                if (ProcessControlPrefab) control = Instantiate(ProcessControlPrefab, Vector3.zero, Quaternion.identity);
-                else
-                {
-                    var obj = new GameObject();
-                    control = obj.AddComponent<ProcessControl>();
-                }
-
-                control.name = "ProcessControl";
-
-                // Ready until GameRoot is in, as a StartState that refuses processes refused GameRoot too
-                control.Bootstrap(deferStartState: true);
-                made = control;
-            }
+            // Bootstrap ProcessControl, where none is up, Ready until GameRoot is in, as a StartState that refuses
+            // processes refused GameRoot too
+            var made = ProcessControl.BringUp(ProcessControlPrefab, deferStartState: true);
             
             // Bootstrap GameRoot, by Unity's null as above
             if (!GameRoot.Instance)

@@ -38,32 +38,6 @@ namespace FarEmerald.PlayForge.Editor
     }
 
     /// <summary>
-    /// The PlayForge GAS module in Unity's Profiler: the GAS's counters, charted: its entities by
-    /// hub, its effects, impacts, activations and refusals, and its tag compiles and recomputes.
-    /// </summary>
-    [Serializable]
-    [ProfilerModuleMetadata("PlayForge GAS")]
-    public class PlayForgeGASProfilerModule : ProfilerModule
-    {
-        /// <summary>The counters it charts, ten at most.</summary>
-        public static readonly ProfilerCounterDescriptor[] Counters =
-        {
-            new("Mono Entities", ForgeCounters.CategoryName),
-            new("Runtime Entities", ForgeCounters.CategoryName),
-            new("Effects Active", ForgeCounters.CategoryName),
-            new("Effects Applied", ForgeCounters.CategoryName),
-            new("Effects Removed", ForgeCounters.CategoryName),
-            new("Impacts", ForgeCounters.CategoryName),
-            new("Activations", ForgeCounters.CategoryName),
-            new("Refused Activations", ForgeCounters.CategoryName),
-            new("Tag Compiles", ForgeCounters.CategoryName),
-            new("Recomputes", ForgeCounters.CategoryName),
-        };
-
-        public PlayForgeGASProfilerModule() : base(Counters) { }
-    }
-
-    /// <summary>
     /// The PlayForge Processes module's details: the selected frame's costliest processes, the costliest first, each by its
     /// ID, its type and its steps' time, read from the frame's metadata, so a saved capture shows them too. A table, as the
     /// Debugger's are, whose Process column gives way first in a narrow window.

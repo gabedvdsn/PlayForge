@@ -158,12 +158,13 @@ namespace FarEmerald.PlayForge.Editor
         private static string NameOf(ProcessControlBlock pcb) => pcb.Wrapper?.ProcessName ?? "Process";
 
         // What handles a process: a hub by its entity's name, as the Entities view lists it
-        private static string HandlerOf(ProcessControlBlock pcb) => pcb.Handler switch
+        private static string HandlerOf(ProcessControlBlock pcb)
         {
-            null => "None",
-            IGameplayAbilitySystem gas => NameOf(gas),
-            var handler => handler.GetName() ?? "None",
-        };
+            if (pcb.Handler == null) return "None";
+            var name = pcb.Handler.GetName() ?? "None";
+            NameHandler(pcb.Handler, ref name);
+            return name;
+        }
 
         // The steps a process takes, as the list shows them
         private static string TimingOf(EProcessStepTiming timing) => timing switch

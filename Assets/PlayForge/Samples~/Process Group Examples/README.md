@@ -17,7 +17,7 @@ A group is found by a tag, so any code that has the tag can reach it. Only runti
 
 ## Running it
 
-1. Add a **Bootstrapper** to a scene. It brings PlayForge up, and needs nothing else.
+1. Add a **Process Bootstrapper** to a scene. It brings ProcessControl up, and needs nothing else.
 2. Add **Process Group Examples** to any GameObject. For the squad, give it a leader and a few units, any transforms in
    the scene.
 3. Enter Play mode and press the keys. The Console says what each one did.

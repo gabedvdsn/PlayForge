@@ -18,6 +18,9 @@ namespace FarEmerald.PlayForge
         public readonly AbilitySystemComponent.AbilityActivationRequest Request;
         public bool UsageEffectsApplied { get; set; }
 
+        /// <summary>The ability's caster: its effect origin's source.</summary>
+        public override IGameplayProcessHandler Source => EffectOrigin?.GetSource();
+
         /// <summary>
         /// Set by targeting tasks when targeting fails (e.g. invalid target selected with BreakRuntimeOnInvalid).
         /// Checked by AbilitySpecContainer to cancel the ability before execution proceeds.

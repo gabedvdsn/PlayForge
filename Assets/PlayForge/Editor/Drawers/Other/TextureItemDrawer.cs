@@ -2,7 +2,6 @@
 using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
-using static FarEmerald.PlayForge.Editor.ForgeDrawerStyles;
 
 namespace FarEmerald.PlayForge.Editor
 {

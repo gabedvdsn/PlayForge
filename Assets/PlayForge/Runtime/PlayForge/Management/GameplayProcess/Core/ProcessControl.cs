@@ -25,9 +25,38 @@ namespace FarEmerald.PlayForge
         public static ProcessControl Instance;
 
         // Statics outlive play mode when domain reload is off, so the last session's destroyed ProcessControl was
-        // still Instance when the next began
+        // still Instance when the next began, and the defaults went on with it
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        private static void ClearInstance() => Instance = null;
+        private static void ClearInstance()
+        {
+            Instance = null;
+            defaultHandler = null;
+            defaultParent = null;
+        }
+
+        private static IGameplayProcessHandler defaultHandler;
+        private static Transform defaultParent;
+
+        /// <summary>
+        /// The handler a registration that names none hands its process to, outside a world of its own, where its packet
+        /// has no <see cref="ProcessDataPacket.Source"/>: the GameRoot, where there is one, or none.
+        /// </summary>
+        public static IGameplayProcessHandler DefaultHandler
+        {
+            // Unity's null, so a destroyed handler is none
+            get => defaultHandler is UnityEngine.Object made && !made ? null : defaultHandler;
+            set => defaultHandler = value;
+        }
+
+        /// <summary>
+        /// What a scene root's packet parents its process under (<see cref="ProcessDataPacket.SceneRoot"/>): the GameRoot,
+        /// where there is one, or nothing.
+        /// </summary>
+        public static Transform DefaultParent
+        {
+            get => defaultParent ? defaultParent : null;
+            set => defaultParent = value;
+        }
 
         [Header("Process Control")]
         [SerializeField] private EProcessControlState StartState = EProcessControlState.Ready;
@@ -131,6 +160,23 @@ namespace FarEmerald.PlayForge
 
             World.ResetProcessControl(deferStartState ? EProcessControlState.Ready : StartState);
             ApplyTickRate();
+        }
+
+        /// <summary>
+        /// Brings a ProcessControl up where none is, the prefab's copy or one it makes, and bootstraps it; null where one is
+        /// up already. With <paramref name="deferStartState"/> set it waits in Ready for <see cref="EnterStartState"/>.
+        /// </summary>
+        public static ProcessControl BringUp(ProcessControl prefab = null, bool deferStartState = false)
+        {
+            // Unity's null, so a destroyed one is replaced; `is null` kept it
+            if (Instance) return null;
+
+            var control = prefab
+                ? Instantiate(prefab, Vector3.zero, Quaternion.identity)
+                : new GameObject().AddComponent<ProcessControl>();
+            control.name = "ProcessControl";
+            control.Bootstrap(deferStartState);
+            return control;
         }
 
         /// <summary>
@@ -466,37 +512,30 @@ namespace FarEmerald.PlayForge
         public bool TryGetPCB(int cacheIndex, out ProcessControlBlock pcb) => World.TryGetPCB(cacheIndex, out pcb);
 
         // ───────────────────────────────────────────────────────────────────────
-        // GAS-SPECIFIC QUERIES
+        // OWNERS' QUERIES
         //
-        // A process registered with an IGameplayAbilitySystem handler, or whose
-        // data packet resolves to one, is tracked under that GAS.
+        // A process registered with an IProcessOwner as its handler, or with a
+        // packet whose Source is one, is counted under that owner.
         // ───────────────────────────────────────────────────────────────────────
 
-        /// <summary>
-        /// Returns the cache indices of all active processes owned by the given GAS.
-        /// </summary>
-        public static IReadOnlyCollection<int> GetProcessIdsForGAS(IGameplayAbilitySystem gas) =>
-            gas == null || Instance == null ? Array.Empty<int>() : Instance.World.ProcessIdsForGAS(gas);
+        /// <summary>The cache indices of every active process the owner owns.</summary>
+        public static IReadOnlyCollection<int> GetProcessIdsFor(IProcessOwner owner) =>
+            owner == null || Instance == null ? Array.Empty<int>() : Instance.World.ProcessIdsFor(owner);
+
+        /// <summary>The relays of every active process the owner owns.</summary>
+        public static IEnumerable<ProcessRelay> GetProcessesFor(IProcessOwner owner) =>
+            owner == null || Instance == null ? Enumerable.Empty<ProcessRelay>() : Instance.World.ProcessesFor(owner);
+
+        /// <summary>How many active processes the owner owns.</summary>
+        public static int GetProcessCountFor(IProcessOwner owner) =>
+            owner == null || Instance == null ? 0 : Instance.World.ProcessCountFor(owner);
 
         /// <summary>
-        /// Returns ProcessRelays for all active processes owned by the given GAS.
+        /// Terminates every process the owner owns, at once when <paramref name="immediate"/> is set, or else queued to end
+        /// gracefully. Returns how many were told to.
         /// </summary>
-        public static IEnumerable<ProcessRelay> GetProcessesForGAS(IGameplayAbilitySystem gas) =>
-            gas == null || Instance == null ? Enumerable.Empty<ProcessRelay>() : Instance.World.ProcessesForGAS(gas);
-
-        /// <summary>
-        /// Number of active processes owned by the given GAS.
-        /// </summary>
-        public static int GetProcessCountForGAS(IGameplayAbilitySystem gas) =>
-            gas == null || Instance == null ? 0 : Instance.World.ProcessCountForGAS(gas);
-
-        /// <summary>
-        /// Terminates every process owned by the given GAS. When <paramref name="immediate"/>
-        /// is true, uses TerminateImmediate; otherwise queues graceful termination.
-        /// Returns the number of processes that received a termination request.
-        /// </summary>
-        public static int TerminateAllForGAS(IGameplayAbilitySystem gas, bool immediate = false) =>
-            gas == null || Instance == null ? 0 : Instance.World.TerminateAllForGAS(gas, immediate);
+        public static int TerminateAllFor(IProcessOwner owner, bool immediate = false) =>
+            owner == null || Instance == null ? 0 : Instance.World.TerminateAllFor(owner, immediate);
 
         #endregion
 

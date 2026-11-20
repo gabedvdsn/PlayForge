@@ -409,7 +409,7 @@ These draw from `ForgeRandom`:
 - every chance PlayForge rolls ([Chance](#chance));
 - auto targeting whose **Mode** is **Random**;
 - a **Randomized** scaler's roll ([SCALERS.md](SCALERS.md#a-magnitude-field));
-- `ForgeHelper`'s random picks and points ([ForgeHelper](#forgehelper));
+- `ForgeCollections`' random picks and `ForgeHelper`'s points ([ForgeHelper](#forgehelper));
 - the Creator Lab.
 
 Cues don't. A placement's scatter and a floating text's random velocity draw from `ForgeCues.Random`, a `SeededRandom`
@@ -1037,9 +1037,17 @@ conditions and tools can call it too.
 | Signs | `SignPolicy`, `SignPolicyExtended`, `SignInt`, `SignFloat`, `AlignedSignInt`, `AlignedSignFloat`, `AlignToSign` | A change's sign as an `ESignPolicy` ([Sign and math policies](#sign-and-math-policies)); a sign as −1, 0 or 1, alone or several multiplied; and a value's size given a sign, negative for `Negative` and positive for the rest |
 | Sums | `PerformCalculationOperation`, `MagnitudeAndScalerOperation`, `PerformScalerRelativeOperation`, `AttributeMathEvent` | An `ECalculationOperation` on two values; a magnitude with its scaler's value by an `EMagnitudeOperation`, with an `ERoundingOperation` for a whole number, whose Round takes a half away from zero; and an operation on attribute values whose operand an `EMathApplicationPolicy` turns first |
 | Enums | `Translate` | One enum read as another: an `EAbilityActivationPolicyExtended` as an `EAbilityActivationPolicy`, an `EMagnitudeOperation` as an `ECalculationOperation`, an `EAttributeTargetLimited` as an `EAttributeTarget` |
-| Collections | `RandomChoice`, `Shuffle`, `WeightedSample`, `SafeAdd`, `SafeAddRange`, `SafeRemove`, `ContainsAll`, `TrueForAny` | A list's item at random; the list shuffled in place; N items picked by their weights, an item as often as it's drawn; a dictionary's entries added, or added to a key's list or set, and removed; and whether a sequence holds every item of another, or has an item a condition holds for. The random ones draw from `ForgeRandom` |
 | Points | `RandomPointWithinCircle`, `RandomPointWithinSphere` | A point at random within a radius of the origin, drawn from `ForgeRandom`. The circle's lies in the XY plane, a `Vector3` with a z of 0, and one nearer than its `minRadius` is moved out to it |
 | Icons | `GetTextureItem`, `TextureUnder` | An icon from an asset's **Textures**: `GetTextureItem` the texture under a tag, else the first that has one, and `TextureUnder` the one under exactly that tag, or null |
+
+### ForgeCollections
+
+The collection helpers are `ForgeCollections`', beside `ForgeHelper`: extension methods, so `list.RandomChoice()`
+reads as the list's own.
+
+| Members | What they do |
+| --- | --- |
+| `RandomChoice`, `Shuffle`, `WeightedSample`, `SafeAdd`, `SafeAddRange`, `SafeRemove`, `ContainsAll`, `TrueForAny` | A list's item at random; the list shuffled in place; N items picked by their weights, an item as often as it's drawn; a dictionary's entries added, or added to a key's list or set, and removed; and whether a sequence holds every item of another, or has an item a condition holds for. The random ones draw from `ForgeRandom` |
 
 ## Packet helpers
 

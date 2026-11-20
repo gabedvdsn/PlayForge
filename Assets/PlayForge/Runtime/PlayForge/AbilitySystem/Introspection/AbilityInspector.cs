@@ -73,14 +73,6 @@ namespace FarEmerald.PlayForge
         public List<SequenceAnnotation> Annotations = new();
     }
 
-    /// <summary>Who an effect application lands on, as statically determinable.</summary>
-    public enum EEffectTargetScope
-    {
-        Caster,
-        AcquiredTarget,
-        Unknown,
-    }
-
     /// <summary>
     /// Per-level evaluation of one impact entry: the magnitude the entry contributes at
     /// each level, and the total delivered over the effect's lifetime (ticks × magnitude

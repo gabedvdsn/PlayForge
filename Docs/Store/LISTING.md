@@ -56,6 +56,24 @@ what they did.
 **Documentation**: guides and an API reference at https://gabedvdsn.github.io/PlayForge-Docs/. Each (?) button in
 PlayForge's inspectors and The Forge opens its page.
 
+## PlayForge and PlayForge Core
+
+PlayForge Core, sold on its own, is ProcessControl and task sequences without the ability system
+(`LISTING_CORE.md`). Both listings carry this table (rule 3.1.c).
+
+| | PlayForge | PlayForge Core |
+| --- | --- | --- |
+| ProcessControl: processes, lifecycles, timing, priorities, groups, fixed ticks | Yes | Yes |
+| Task sequences, both task libraries and clocks | Yes | Yes |
+| Abilities, effects, attributes and items, as assets | Yes | No |
+| Tags as assets, weighted and by hierarchy | Yes | No: tags in code, for groups |
+| The Debugger | Entities, Processes, Tags and Timeline | Processes |
+| The Profiler's modules | Processes and GAS | Processes |
+| The Forge, Problems and the Creator Lab | Yes | No |
+| Saving, the combat log and spreadsheets | Yes | No |
+| Test kit and golden tests | Yes | No |
+| Samples | Demo, Survivors, Battle, Additional Content, Task Sequence Examples, Process Group Examples | Task Sequence Examples, Process Group Examples |
+
 ## Technical details
 
 - Unity 6000.0 or later.

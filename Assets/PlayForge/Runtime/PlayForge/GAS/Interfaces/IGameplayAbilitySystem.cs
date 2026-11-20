@@ -10,7 +10,7 @@ namespace FarEmerald.PlayForge
     /// services and Local Data, and its turning, death and revival; <c>ToGASObject</c> gives the component, where there
     /// is one. Code that works with any entity takes one.
     /// </summary>
-    public interface IGameplayAbilitySystem : ISource, ILocalDataUser, IAnalysisUser, IProxyTaskBehaviourCaller
+    public interface IGameplayAbilitySystem : ISource, ILocalDataUser, IAnalysisUser, IProxyTaskBehaviourCaller, IProcessOwner
     {
         /// <summary>
         /// Brings a staying entity back, at <paramref name="at"/> or where it was: alive, its revive effects taken, its

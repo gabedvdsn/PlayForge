@@ -60,12 +60,12 @@ namespace FarEmerald.PlayForge
     /// var result = ProcessControl.Register(projectile).HandledBy(gas).With(data).Run();
     /// if (!result) Debug.Log(result.Refusal);
     /// </code>
-    /// What isn't given takes its default. The handler follows the packet's run-time type: an ability's packet hands the
-    /// process to its source, and any other to GameRoot, or to none in a world of its own, which reaches for nothing of
-    /// the scene's. ProcessControl had 28 static Register overloads, and the
-    /// argument's static type picked the handler, so an ability's packet passed as a SequenceDataPacket filed its
-    /// sequence under GameRoot, and the sequence didn't end with its entity. Those overloads are
-    /// wrappers of this now, marked obsolete, and go before the first Asset Store submission.
+    /// What isn't given takes its default. The handler follows the packet: one with a source, as an ability's is, hands
+    /// the process to its source (<see cref="ProcessDataPacket.Source"/>), and any other to ProcessControl's default
+    /// handler, the GameRoot where there is one, or to none in a world of its own, which reaches for nothing of the
+    /// scene's. ProcessControl had 28 static Register overloads, and the argument's static type picked the handler, so
+    /// an ability's packet passed as a SequenceDataPacket filed its sequence under GameRoot, and the sequence didn't end
+    /// with its entity.
     /// </summary>
     public readonly struct ProcessRegistration
     {
@@ -99,8 +99,9 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// The packet the process carries. A sequence's is a <see cref="SequenceDataPacket"/>. Left out, a MonoBehaviour
-        /// process takes the scene root's, which parents it under GameRoot, a runtime process the default, and a
-        /// sequence the scene root's sequence packet. In a world of its own, each takes the default, parented nowhere.
+        /// process takes the scene root's, which parents it under <see cref="ProcessControl.DefaultParent"/>, the
+        /// GameRoot where there is one, a runtime process the default, and a sequence the scene root's sequence packet.
+        /// In a world of its own, each takes the default, parented nowhere.
         /// </summary>
         public ProcessRegistration With(ProcessDataPacket packet) => new(process, handler, handlerGiven, packet, world, instantiator);
 
@@ -163,12 +164,13 @@ namespace FarEmerald.PlayForge
                 (SequenceDataPacket)data ?? (ownWorld ? SequenceDataPacket.Default() : SequenceDataPacket.SceneRoot()));
         }
 
-        // An ability's packet hands its process to the packet's source; any other packet, or none, to GameRoot, or in a
-        // world of its own to no handler, as its owner ends what it holds
+        // A packet with a source hands its process to it, as an ability's does to its caster; any other packet, or none,
+        // to ProcessControl's default handler, the GameRoot where there is one, or in a world of its own to no handler,
+        // as its owner ends what it holds
         private static IGameplayProcessHandler DefaultHandler(ProcessDataPacket packet, bool ownWorld)
         {
-            if (packet is AbilityDataPacket ability && ability.EffectOrigin?.GetSource() is { } source) return source;
-            return ownWorld ? null : GameRoot.Instance;
+            if (packet?.Source is { } source) return source;
+            return ownWorld ? null : ProcessControl.DefaultHandler;
         }
     }
 }
