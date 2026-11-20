@@ -54,12 +54,16 @@ function frame(pre) {
   });
 }
 
-// The full-screen viewer: the diagram at its own size, panned by a drag and zoomed by the wheel or the toolbar
+// The full-screen viewer: the diagram at its own size, panned by a drag and zoomed by the wheel, a pinch or the toolbar
 function open(pre, returnTo) {
   const svg = pre.querySelector('svg');
   const size = svg && sizeOf(svg);
   if (!size) return;
 
+  // A touch screen's own words for its gestures
+  const hint = window.matchMedia && window.matchMedia('(pointer: coarse)').matches
+    ? 'Pinch to zoom, drag to move'
+    : 'Scroll to zoom, drag to move';
   const viewer = document.createElement('div');
   viewer.className = 'pf-viewer';
   viewer.setAttribute('role', 'dialog');
@@ -71,7 +75,7 @@ function open(pre, returnTo) {
     '<button type="button" data-act="in" title="Zoom in (+)" aria-label="Zoom in"><i class="bi bi-zoom-in" aria-hidden="true"></i></button>' +
     '<button type="button" data-act="fit" title="Fit to the window (0)">Fit</button>' +
     '<button type="button" data-act="actual" title="Actual size (1)">100%</button>' +
-    '<span class="pf-viewer__hint">Scroll to zoom, drag to move</span>' +
+    `<span class="pf-viewer__hint">${hint}</span>` +
     '<button type="button" data-act="close" title="Close (Esc)" aria-label="Close"><i class="bi bi-x-lg" aria-hidden="true"></i></button>' +
     '</div>' +
     '<div class="pf-viewer__stage"><div class="pf-viewer__layer"></div></div>';
@@ -94,8 +98,9 @@ function open(pre, returnTo) {
     layer.style.transform = `translate(${x}px, ${y}px) scale(${scale})`;
   };
   const bounds = () => stage.getBoundingClientRect();
+  const limited = value => Math.min(4, Math.max(0.05, value));
   const zoomAt = (factor, px, py) => {
-    const next = Math.min(4, Math.max(0.05, scale * factor));
+    const next = limited(scale * factor);
     x = px - (px - x) * (next / scale);
     y = py - (py - y) * (next / scale);
     scale = next;
@@ -140,25 +145,54 @@ function open(pre, returnTo) {
     zoomAt(Math.exp(-event.deltaY * 0.0015), event.clientX - r.left, event.clientY - r.top);
   }, { passive: false });
 
-  let drag = null;
+  // The pointers on the stage, by id: one drags the diagram; two pinch it, zooming about the point between them. Each
+  // pointer that comes or goes starts the gesture again from where the diagram is, so lifting a finger doesn't jump it
+  const pointers = new Map();
+  let gesture = null;
+  const begin = () => {
+    const [a, b] = [...pointers.values()];
+    if (!a) gesture = null;
+    else if (!b) gesture = { from: a, at: [x, y] };
+    else gesture = { apart: Math.hypot(b[0] - a[0], b[1] - a[1]) || 1, middle: [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2], scale, at: [x, y] };
+  };
   stage.addEventListener('pointerdown', event => {
-    drag = { id: event.pointerId, from: [event.clientX, event.clientY], at: [x, y] };
-    stage.setPointerCapture(event.pointerId);
+    pointers.set(event.pointerId, [event.clientX, event.clientY]);
+    try {
+      stage.setPointerCapture(event.pointerId);
+    } catch {
+      // A pointer the browser no longer tracks can't be captured; its moves still reach the stage
+    }
     stage.classList.add('is-dragging');
+    begin();
   });
   stage.addEventListener('pointermove', event => {
-    if (!drag || drag.id !== event.pointerId) return;
-    x = drag.at[0] + event.clientX - drag.from[0];
-    y = drag.at[1] + event.clientY - drag.from[1];
+    if (!gesture || !pointers.has(event.pointerId)) return;
+    pointers.set(event.pointerId, [event.clientX, event.clientY]);
+    const [a, b] = [...pointers.values()];
+    if (!b) {
+      x = gesture.at[0] + a[0] - gesture.from[0];
+      y = gesture.at[1] + a[1] - gesture.from[1];
+      apply();
+      return;
+    }
+    // The point of the diagram that was between the fingers stays between them, at the scale they spread it to
+    const r = bounds();
+    const next = limited(gesture.scale * (Math.hypot(b[0] - a[0], b[1] - a[1]) || 1) / gesture.apart);
+    const ratio = next / gesture.scale;
+    x = (a[0] + b[0]) / 2 - r.left - (gesture.middle[0] - r.left - gesture.at[0]) * ratio;
+    y = (a[1] + b[1]) / 2 - r.top - (gesture.middle[1] - r.top - gesture.at[1]) * ratio;
+    scale = next;
     apply();
   });
-  const endDrag = event => {
-    if (!drag || drag.id !== event.pointerId) return;
-    drag = null;
-    stage.classList.remove('is-dragging');
+  const lift = event => {
+    if (!pointers.delete(event.pointerId)) return;
+    if (pointers.size === 0) stage.classList.remove('is-dragging');
+    begin();
   };
-  stage.addEventListener('pointerup', endDrag);
-  stage.addEventListener('pointercancel', endDrag);
+  stage.addEventListener('pointerup', lift);
+  stage.addEventListener('pointercancel', lift);
+  // Safari zooms the page on a pinch whatever the stage's touch-action says, unless its own gesture event is stopped
+  viewer.addEventListener('gesturestart', event => event.preventDefault());
 
   const close = () => {
     document.removeEventListener('keydown', keys, true);
