@@ -1,8 +1,9 @@
 # The Asset Store listing: a draft
 
 A draft of the listing's text, for the user's word before it goes into the publisher portal. Each claim comes from
-the package's own `CHANGELOG.md`, `PUBLISHING.md` or the store shots' captions in `README.md`. The price, the category
-and the publisher's name are the user's to set, and the portal's own length limits come first.
+the package's own `CHANGELOG.md`, `PUBLISHING.md`, its guides or the store shots' captions in `README.md`. What sets
+it apart names no other asset, as the store's guidelines keep other products' names out of a listing. The price, the
+category and the publisher's name are the user's to set, and the portal's own length limits come first.
 
 ## Name
 
@@ -18,6 +19,21 @@ editor, a live debugger and a lab to try them in.
 PlayForge is a gameplay framework for Unity 6, modelled on Unreal's Gameplay Ability System. Abilities, effects,
 attributes, tags and items are assets you build in the inspector. PlayForge runs them, and its editor tools show you
 what they did.
+
+**What sets PlayForge apart**
+
+- **Made to be seen, not only coded.** Build every asset in The Forge, let validation catch mistakes before you press
+  Play, and read on the Debugger's Timeline what each ability and effect did.
+- **Every number explains itself.** A cost, a cooldown or a damage value can be a constant, a table by level, a share
+  of an attribute or a pipeline of stages. Its field says what it reads, and its summary what it gives at each level.
+- **Answers to "why?"** Each effect keeps a journal, each hit its breakdown and each number its trace, so a wrong
+  value leads straight to its cause.
+- **Templates that work like prefabs.** Make assets from a template, override only what differs, and push the
+  template's changes to every child.
+- **Entities with or without GameObjects.** An entity's hub is a MonoBehaviour or a plain C# object made from code,
+  and both run from Unity's player loop.
+- **Proven in two complete games.** An arena with an AI opponent and a horde shooter with hundreds of enemies ship as
+  samples, beside an online manual, an API reference, and the tests PlayForge is built with.
 
 **Build gameplay as data**
 
