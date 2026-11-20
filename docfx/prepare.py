@@ -878,6 +878,15 @@ SHOT_CAPTIONS = {
     'save-as-scaler-asset-window': "Save as Scaler Asset.",
     'import-window': "The Import window.",
     'spreadsheet-import-window': "A sheet's changes, listed before they're imported, each ticked to take it.",
+    'kind-field': "A kind field: a targeting task's kind, Select Gas.",
+    'forge-dropdown': "PlayForge's dropdown as a number field's kind menu: its title, a search field, the kinds in their submenus, and the Context at its foot for the choice the keys are on.",
+    'number-field-menu': "A number field's menu (⋮), on a scaler that holds its own values, so it offers every item.",
+    'the-forge-window-menu': "The window menu on The Forge's tab: PlayForge's windows, spreadsheets and documentation, above Unity's own items.",
+    'the-forge-create-menu': "Create, on The Forge's toolbar: each type The Forge lists, a type with presets as a submenu.",
+    'the-forge-asset-menu': "The asset menu, from a right-click on an asset in The Forge's list.",
+    'move-to-trash-dialog': "Move to Trash asks first, naming the assets that refer to the one it would move.",
+    'profiler-modules': "Unity's Profiler recording the Demo: PlayForge's GAS and Processes modules, and the frame's costliest processes below.",
+    'the-forge-first-project': "The Forge in a Unity project with no Forge Project, asking for the first one.",
 }
 
 

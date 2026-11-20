@@ -1,7 +1,8 @@
 # Processes
 
-A **process** is anything that runs over time under **ProcessControl**. An entity's GAS, a projectile, an aura's
-pulse, a task sequence ([TASK_SEQUENCES.md](TASK_SEQUENCES.md)) and a regeneration are all processes.
+A **process** is anything that runs over time under **ProcessControl**. A projectile and a task sequence
+([TASK_SEQUENCES.md](TASK_SEQUENCES.md)) are processes, and in the full package so are an entity's GAS, an aura's
+pulse and a regeneration.
 
 ProcessControl does three things with each process:
 
@@ -9,7 +10,8 @@ ProcessControl does three things with each process:
 - It moves the process between its states.
 - It ends the process.
 
-A Bootstrapper in the scene brings ProcessControl up.
+A bootstrapper in the scene brings ProcessControl up. The **Process Bootstrapper** does it for a scene of processes
+and task sequences alone. The full package's **Bootstrapper** brings up the GameRoot too, for a scene with entities.
 
 ## Lifecycles
 
@@ -39,7 +41,8 @@ A process is one of two kinds: a mono process or a runtime process.
 You register a process with ProcessControl, which gives you a relay to control it with.
 
 ```csharp
-ProcessControl.Register(process).HandledBy(gas).With(data).Run(out ProcessRelay relay);
+// The handler is an IGameplayProcessHandler, as an entity's GAS is in the full package
+ProcessControl.Register(process).HandledBy(handler).With(data).Run(out ProcessRelay relay);
 
 relay.Pause();       // Waiting at once, out of the steps
 relay.Unpause();     // Running again

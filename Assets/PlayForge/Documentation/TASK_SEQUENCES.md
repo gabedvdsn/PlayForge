@@ -257,12 +257,14 @@ A run takes the first clock it finds:
    ability's Run Sequence task's pick. So a packet others share keeps its own.
 2. Its packet's, `data.Clock`, which whatever starts the run sets.
 3. Its sequence's own, `WithClock(clock)` on the builder.
-4. Its packet's owner's: an ability's caster's own clock, its time scale times the game's.
+4. Its packet's owner's, the `ProcessClock` of an `IProcessOwner` that has one: in the full package, an entity's own
+   clock, as an ability's caster's is, its time scale times the game's.
 5. The game's, `GameClock.Instance`, which reads the clock in force, `ForgeTime.Clock`, as it's asked.
 
 ### Clocks you can use
 
-Besides the game's clock, a run can go by an unscaled clock, a scaled clock, an entity's clock or a clock of your own.
+Besides the game's clock, a run can go by an unscaled clock, a scaled clock, a clock of your own or, in the full
+package, an entity's clock.
 
 ```csharp
 // A pause menu's runs while the game's time stands
@@ -272,15 +274,15 @@ var menu = TaskSequenceBuilder.Create("Menu").WithClock(UnscaledClock.Instance) 
 var slowMotion = new ScaledClock(0.25f);
 var finisher = TaskSequenceBuilder.Create("Finisher").WithClock(slowMotion) /* … */;
 
-// One run on an entity's time, from its packet
+// One run on another clock, from its packet: the finisher's here; in the full package, an entity's, gas.GetClock()
 var data = SequenceDataPacket.Default();
-data.Clock = gas.GetClock();
+data.Clock = slowMotion;
 ```
 
 - `UnscaledClock.Instance` reads the game's time without its time scale.
 - A `ScaledClock` runs at a `Scale` of its own over its `Source`, the clock in force unless it's given one. It counts
   its own `Time` through each change of scale.
-- An entity's `EntityClock` is a clock as any other is.
+- In the full package, an entity's `EntityClock` is a clock as any other is.
 - A clock of your own implements `IForgeClock`, and is read as it is.
 
 The clocks above read the clock in force, so a world of its own's steps and the fixed tick still drive them. A clock

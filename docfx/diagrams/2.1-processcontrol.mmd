@@ -50,8 +50,8 @@ class ProcessWorld:::rt {
 +Tick : ForgeTickSource
 +Callbacks : ProcessControlCallbacks
 +MaxTicksPerFrame : int
-+ProcessesForGAS(gas)
-+TerminateAllForGAS(gas)
++ProcessesFor(owner)
++TerminateAllFor(owner)
 }
 class ProcessControlBlock:::rt {
 +State : EProcessState
@@ -94,7 +94,7 @@ class ProcessControlCallbacks:::rt {
 +OnProcessRegistered
 +OnProcessUnregistered
 +OnProcessStateChanged
-+OnGASProcessRegistered
++OnOwnedProcessRegistered
 +OnControlStateChanged
 }
 class ForgeTick:::rt {
