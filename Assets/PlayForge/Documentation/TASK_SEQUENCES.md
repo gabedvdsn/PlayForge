@@ -3,8 +3,8 @@
 A **task sequence** is a workflow over time, built in code. Its stages run one after another, and each stage is a set
 of tasks run together.
 
-An ability runs as a task sequence. So can anything with steps: a projectile's flight, a channel, a cutscene, a
-tutorial, a boss's phases.
+Anything with steps can run as a task sequence: a projectile's flight, a channel, a cutscene, a tutorial, a boss's
+phases. In the full package, an ability runs as one too.
 
 A sequence runs as a process ([PROCESSES.md](PROCESSES.md)), so ProcessControl starts, pauses and ends it like any
 other.
@@ -77,10 +77,10 @@ The builder ends with one of three methods:
 
 A static method marked `[TaskSequenceMethod]` that returns a sequence, a chain or a definition appears in two places:
 
-- an ability's sequence dropdown;
+- in the full package, an ability's sequence dropdown;
 - a `TaskSequenceReference` field.
 
-An ability runs a chain as a process too, which asks its conditions each frame.
+In the full package, an ability runs a chain as a process too, which asks its conditions each frame.
 
 ### The data packet
 
@@ -253,8 +253,8 @@ A run's time is its **clock**'s. These all go by it:
 
 A run takes the first clock it finds:
 
-1. Its own, `runtime.Clock`, which whatever runs it sets: a chain's `Clock`, a `TaskSequenceProcess`'s, or an
-   ability's Run Sequence task's pick. So a packet others share keeps its own.
+1. Its own, `runtime.Clock`, which whatever runs it sets: a chain's `Clock`, a `TaskSequenceProcess`'s, or, in
+   the full package, an ability's Run Sequence task's pick. So a packet others share keeps its own.
 2. Its packet's, `data.Clock`, which whatever starts the run sets.
 3. Its sequence's own, `WithClock(clock)` on the builder.
 4. Its packet's owner's, the `ProcessClock` of an `IProcessOwner` that has one: in the full package, an entity's own
@@ -314,10 +314,11 @@ run on a packet.
 
 These have a clock choice:
 
-- An ability's Run Sequence task. It gives the sequence it runs a clock of its own, and leaves the ability's other
-  tasks the caster's.
+- In the full package, an ability's Run Sequence task. It gives the sequence it runs a clock of its own, and leaves
+  the ability's other tasks the caster's.
 - The Task Sequence Examples' components.
-- A Sequence cue. Its run goes by its pick, else the sequence's own clock, else that of the one the cue plays on.
+- In the full package, a Sequence cue. Its run goes by its pick, else the sequence's own clock, else that of the one
+  the cue plays on.
 
 ### Clocks and fixed ticks
 
