@@ -107,8 +107,8 @@ with no error. Additional Content warned, as it should, that the fresh project h
   [submission guidelines](https://assetstore.unity.com/publishing/submission-guidelines) (updated 2026-10-23) require
   them of anything submitted from 6.5 (rule 1.3.c) and 6.6 (rule 2.5.h). Decision 17 does both anyway.
 - ☑ Menus under an existing menu (rule 2.5.1.a): every item sits under `Window/PlayForge/` (ED-19).
-- ☑ Version `1.0.0` in `package.json`, with its entry in `CHANGELOG.md`, a buyer's: a short one, its date set as
-  it's submitted. The detailed history, change by change, is the repository's `Docs/HISTORY.md` (Decision 87).
+- ☑ Version `1.0.0` in `package.json`, with its entry in `CHANGELOG.md`, a buyer's: a short one, dated
+  2026-11-20, the final export's day. The detailed history, change by change, is the repository's `Docs/HISTORY.md` (Decision 87).
 - ☑ `Tests/` and the test kit ship; `Documentation/IMPACT_MODEL_REFACTOR.md`, internal design history, and this
   checklist don't (Decision 87).
 

@@ -1761,6 +1761,9 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 
 Record baselines, gate results and notable decisions here, newest first.
 
+- 2026-11-20, **SP-31: the 1.0.0 entry dated.** The user's word, "Yes, set it": `CHANGELOG.md`'s 1.0.0 entry is dated
+  2026-11-20, the day of the final export, in place of Unreleased. No runtime change, so no gate run.
+
 - 2026-11-20, **EP-91, more: the docs site's logo, the play anvil.** The user's word, "Yes, swap it".
   `docfx/images/logo.svg`, the site's logo and its favicon, had the spark the user turned down for the store's icon.
   It's the play anvil now, in the site's own grey and orange, which read on its light and dark themes alike,
