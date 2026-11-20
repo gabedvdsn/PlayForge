@@ -95,7 +95,9 @@ with no error. Additional Content warned, as it should, that the fresh project h
   reference. `bash docfx/publish.sh` builds it from HEAD and publishes it again, after a commit that
   changes a guide or the public API. The listing's description links to it.
 - ☐ Key images: icon 160×160, card 420×280, cover 1950×1300; ≥5 screenshots (The Forge
-  and the Debugger are the strongest material); optional video.
+  and the Debugger are the strongest material); optional video. The screenshots to upload, in order, are
+  `Docs/Store/gallery/` (EP-81). The trailer to voice over is `Docs/Store/video/`, out of git, with its script in
+  `Docs/Store/VIDEO_SCRIPT.md`.
 - ☐ Description; tags; state "samples render in the Built-in RP and URP; the runtime is render-pipeline-agnostic". A
   draft of the name, summary, description, technical details and keywords is in `Docs/Store/LISTING.md` (SP-39), for
   the user's word.

@@ -1,0 +1,22 @@
+flowchart TB
+classDef step fill:#FFF0B3,stroke:#CBB333,color:#463A00
+classDef check fill:#DCE8FC,stroke:#6A8BBF,color:#14315E
+classDef end_ fill:#E4E4DF,stroke:#A8A8A0,color:#3A3A33
+subgraph first[" "]
+direction LR
+apply(["<b>Apply</b><br/>from an ability,<br/>an item<br/>or your code"]):::end_
+gates["<b>Gates</b><br/>requirements, immunity,<br/>chance, block or evade"]:::check
+duration["<b>Duration</b><br/>instant, lasting<br/>or periodic,<br/>and stacking"]:::step
+number["<b>Its number</b><br/>a constant, by level<br/>or a scaler, read against<br/>its caster and target"]:::step
+apply --> gates --> duration --> number
+end
+subgraph second[" "]
+direction LR
+pipeline["<b>Value pipeline</b><br/>stages such as multiply,<br/>and chance for crits"]:::step
+attribute["<b>The attribute</b><br/>workers, barriers<br/>and overflow"]:::step
+shown(["<b>Shown</b><br/>cues, callbacks<br/>and the<br/>combat log"]):::end_
+pipeline --> attribute --> shown
+end
+first ==> second
+style first fill:none,stroke:none
+style second fill:none,stroke:none

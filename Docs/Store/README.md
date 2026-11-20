@@ -19,10 +19,40 @@ folder beside the docs' own. Keep the editor in front for the whole run: play mo
 | `lab.png` | The Creator Lab: three of the Demo's heroes a side in battle, a unit selected | Try your heroes and abilities in the Creator Lab |
 | `cover-base.png` | The Demo in play | The cover's base, to lay the wordmark and the pillars over |
 
-Still to make by hand:
+## The page's set, in order (EP-81)
+
+`gallery/` is the set to upload, in this order. Each image is 1920 × 1080 with its caption on it. The first two are
+frames of the trailer, which casts abilities as the capture above can't; the rest are the shots above under a title
+band, and three diagrams.
+
+| # | File | Shows |
+|---|---|---|
+| 1 | `01-survivors.png` | Survivors: 281 enemies at once, frozen, burning and slammed |
+| 2 | `02-demo.png` | The Demo: the Pyromancer stunned by a Shield Bash, its Flame Wall burning |
+| 3 | `03-forge.png` | The Forge |
+| 4 | `04-ability.png` | Fireball's stages |
+| 5 | `05-effect.png` | Burning, its duration and stacking |
+| 6 | `06-pipeline.png` | The Physical Damage value pipeline |
+| 7 | `07-debugger.png` | The Debugger's Entities view |
+| 8 | `08-timeline.png` | The Debugger's Timeline, cropped to its rows |
+| 9 | `09-problems.png` | The Problems view, cropped to its rows |
+| 10 | `10-lab.png` | The Creator Lab |
+| 11 | `11-architecture.png` | Diagram: how PlayForge fits together |
+| 12 | `12-ability-flow.png` | Diagram: an ability, from cast to end |
+| 13 | `13-effect-flow.png` | Diagram: an effect, as it lands |
+
+The diagrams' sources are in `diagrams/`. They're Mermaid, drawn with the docs site's own Mermaid in headless Edge, and
+simplified from the docs' diagrams of the same flows. Each runs in rows or columns, never one long line, so it stays
+legible at the store's small size.
+
+## The trailer
+
+A 1:31 film of Survivors, the Demo, the tools and the diagrams, with no sound, for a voice-over. `VIDEO_SCRIPT.md` is
+its script, timed to its cuts. The film itself, `video/PlayForge-trailer.mp4`, stays out of git; upload it to YouTube or
+Vimeo for the listing's video.
+
+## Still to make by hand
 
 - **The key images.** The icon (160 × 160), the card (420 × 280) and the cover (1950 × 1300), each with the wordmark.
-  Unity's own logo stays out.
-- **The caption bands.** The captions above go on a band added to each screenshot.
-- **A livelier cover frame.** The capture can't cast abilities. For Flame Wall burning or Flashpoint bursting, play the
-  Demo as the Pyromancer and take the frame from the Game view.
+  Unity's own logo stays out. `01-survivors.png`'s frame may make a livelier cover base than `cover-base.png`.
+- **The voice-over**, to `VIDEO_SCRIPT.md`.

@@ -1,0 +1,23 @@
+flowchart LR
+classDef tool fill:#E7EEFB,stroke:#7A92C2,color:#1C2B4A
+classDef core fill:#FFF0B3,stroke:#CBB333,color:#463A00
+subgraph A["Author in the editor"]
+direction TB
+forge["<b>The Forge</b><br/>every ability, effect,<br/>attribute and item an asset,<br/>and the project's tags"]:::tool
+problems["<b>Problems</b><br/>mistakes caught<br/>before you press Play"]:::tool
+forge ~~~ problems
+end
+subgraph R["Run in play"]
+direction TB
+hub["<b>One hub per entity</b><br/>its attributes, effects,<br/>abilities, tags, items<br/>and workers"]:::core
+seq["<b>Task sequences</b><br/>each ability<br/>a staged workflow"]:::core
+pc["<b>ProcessControl</b><br/>every process, stepped<br/>from Unity's player loop"]:::core
+hub ~~~ seq ~~~ pc
+end
+subgraph S["See what happened"]
+direction TB
+debugger["<b>The Debugger</b><br/>live entities,<br/>and a timeline of every<br/>ability and effect"]:::tool
+lab["<b>The Creator Lab</b><br/>try assets on units,<br/>dummies and bots"]:::tool
+debugger ~~~ lab
+end
+A ==> R ==> S

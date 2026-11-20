@@ -1,0 +1,23 @@
+flowchart TB
+classDef step fill:#FFF0B3,stroke:#CBB333,color:#463A00
+classDef check fill:#DCE8FC,stroke:#6A8BBF,color:#14315E
+classDef end_ fill:#E4E4DF,stroke:#A8A8A0,color:#3A3A33
+subgraph first[" "]
+direction LR
+cast(["<b>Cast</b><br/>a press, a trigger<br/>or an AI"]):::end_
+checks["<b>Checks</b><br/>tags, crowd control,<br/>rules and cooldown;<br/>a refusal in the<br/>check's own words"]:::check
+target["<b>Targeting</b><br/>a unit or a point;<br/>a cast still choosing<br/>gives way"]:::step
+range["<b>Target checks</b><br/>Cast Range and<br/>the target's rules,<br/>nothing paid yet"]:::check
+cast --> checks --> target --> range
+end
+subgraph second[" "]
+direction LR
+windup["<b>Wind-up</b><br/>as turning<br/>to face"]:::step
+pay["<b>Usage</b><br/>the cost and<br/>the cooldown paid"]:::step
+stages["<b>Stages</b><br/>its tasks: apply effects,<br/>wait, move, spawn"]:::step
+done(["<b>End</b>"]):::end_
+windup --> pay --> stages --> done
+end
+first ==> second
+style first fill:none,stroke:none
+style second fill:none,stroke:none
