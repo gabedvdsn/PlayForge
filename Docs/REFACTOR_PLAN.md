@@ -1764,8 +1764,8 @@ Record baselines, gate results and notable decisions here, newest first.
 - 2026-11-20, **EP-91, more: the docs site's logo, the play anvil.** The user's word, "Yes, swap it".
   `docfx/images/logo.svg`, the site's logo and its favicon, had the spark the user turned down for the store's icon.
   It's the play anvil now, in the site's own grey and orange, which read on its light and dark themes alike,
-  centered in its square as the icon is. Checked at 16, 32 and 64 pixels on white and on the dark theme's #212529,
-  then published with `docfx/publish.sh`.
+  centered in its square as the icon is. Checked at 16, 32 and 64 pixels on white and on the dark theme's #212529.
+  The site shows it from the next `docfx/publish.sh`.
 
 - 2026-11-20, **EP-91: the store's key images, with the play anvil.** The user's word.
   - The icon is the second of three drafted: the docs' anvil with a play triangle on it where the spark was. The
