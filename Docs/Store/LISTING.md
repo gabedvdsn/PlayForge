@@ -22,36 +22,20 @@ what they did.
 
 **What sets PlayForge apart**
 
-- **ProcessControl, one scheduler for everything that runs.** Entities, projectiles, auras and sequences are all
-  processes, stepped from Unity's player loop in Update, FixedUpdate or LateUpdate. Each takes a lifecycle
-  (SelfTerminating, RunThenWait, RequiresControl or Synchronous) and hands back a relay to pause, resume, terminate or
-  await it. Processes join capped groups that share a data packet, and a fixed tick rate makes a run come out the same
-  at any frame rate.
-- **Task sequences, the engine under every ability.** An ability runs as a staged task sequence on UniTask: stages of
-  concurrent tasks with completion policies, injections that interrupt, skip or jump a run, timeouts, repeats, chains,
-  input waits, and per-run clocks, scaled, unscaled or your own. A synced runner steps the same sequence frame by
-  frame with no async, and two task libraries ship movement, rotation, scale and tween tasks. Projectiles, channels,
-  cutscenes and boss phases use the same API.
-- **Save/Load and rollback, built in.** ForgeSave captures what lasts on an entity (attribute commits, levels,
-  abilities, items, tags, and effects with their exact timers) into a plain, versioned ForgeSnapshot, and restores it
-  onto the same entity or a fresh one. With a fixed tick and a seeded random source, a rollback replays to the last
-  digit.
-- **Continuous asset validation.** The validator checks each asset again as it's edited, imported, moved or deleted,
-  with no polling, against built-in rules that include cross-asset lint: stacks read twice, filters that never match,
-  events nothing sends. The Problems view lists findings by asset or by rule, with one-click quick fixes, and takes
-  rules of your own.
-- **An advanced editor suite.** The Forge browses, creates and refactors every asset in one window: presets,
-  templates that push to their children and mark overrides as prefab instances do, and a delete that first names the
-  assets, prefabs and scenes still referring to its target. Every number field picks a kind (constant, table, by
-  level, attribute-scaled, set by caller, group and more), states what it reads, and takes values from a Scaler
-  asset, a quick fill or a spreadsheet. Numbers and item stats go to and from spreadsheets.
-- **Runtime introspection.** The Debugger shows every entity's attributes, effects, abilities and tags live, every
-  process, and a Timeline of each ability and effect, down to an effect journal with each number's trace and each
-  hit's breakdown. Two Profiler modules chart PlayForge's counters and each frame's costliest processes. The Creator
-  Lab pits your heroes against units, dummies and bots, with stops, stepping, watches and logs.
-- **Production-ready.** Full C# source, entity hubs as MonoBehaviours or plain C# objects, domain reloading off, a
-  render-pipeline-agnostic runtime, a combat log for each entity, a test kit and golden tests, and online guides and an
-  API reference behind every inspector's (?) button.
+- **ProcessControl: one scheduler for everything.** Entities, projectiles and sequences run on Unity's player loop with
+  explicit lifecycles and fixed ticks. Timing stays predictable, and every process can be inspected, paused or ended.
+- **Task sequences: abilities as workflows.** Staged async tasks on UniTask, with interrupts, timeouts and chains, keep
+  complex abilities readable. The same API drives projectiles, cutscenes and boss phases.
+- **Save/Load and rollback, built in.** Snapshot an entity and restore it exactly, effect timers included. Save games,
+  checkpoints and rollback need no hand-written state capture.
+- **Validation as you edit.** Every asset is checked the moment it changes, with quick fixes. Broken data shows up in
+  the editor, not in a playtest.
+- **The Forge: every asset in one window.** Build, template and refactor in place, with numbers that show what they
+  read at every level. Designers tune balance without code.
+- **See why, not just what.** A live Debugger and a hit-by-hit Timeline trace a wrong value to its cause, and Profiler
+  modules show what each frame costs.
+- **Production-ready.** Full C# source, MonoBehaviour or pure C# entities, domain reloading off, a test kit and complete
+  documentation.
 
 **Build gameplay as data**
 

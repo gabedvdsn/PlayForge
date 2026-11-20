@@ -1758,6 +1758,10 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 
 Record baselines, gate results and notable decisions here, newest first.
 
+- 2026-11-19, **EP-87, a third pass: shorter, and why each part matters.** The user's word: "Too wordy. Keep it
+  clean, technical, professional, but immediately catchy." Each bullet now names the part, then what it buys a
+  project, in about twenty words.
+
 - 2026-11-19, **EP-87, more: the section in technical terms.** The user's word: ProcessControl, task sequences,
   Save/Load, asset validation and the editor suite, each by what it does and its names. See what happened and Built
   to last folded into it, so the description says each thing once.
