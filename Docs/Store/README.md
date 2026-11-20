@@ -71,22 +71,27 @@ A 1:31 film of Survivors, the Demo, the tools and the diagrams, with no sound, f
 its script, timed to its cuts. The film itself, `video/PlayForge-trailer.mp4`, stays out of git; upload it to YouTube or
 Vimeo for the listing's video.
 
-## The icon
+## The key images
 
-`icon/` is PlayForge's anvil, the docs site's logo, centered on a square (EP-88):
+`key/` is the store's three key images, with PlayForge's mark: the anvil with a play triangle on it as the hot metal
+(EP-91). Each PNG is 24-bit, at its exact size.
 
-| File | Size | Background |
+| File | Upload as | Shows |
 |---|---|---|
-| `playforge-icon-160-dark.png` | 160 × 160, the store's icon | The store set's dark tile |
-| `playforge-icon-160.png` | 160 × 160 | None |
-| `playforge-icon-512-dark.png` | 512 × 512 | The store set's dark tile |
-| `playforge-icon-512.png` | 512 × 512 | None |
-| `playforge-icon-1024.png` | 1024 × 1024 | None |
-| `playforge-icon.svg` | Any: the square vector, for the card and the cover | None |
+| `playforge-icon-160.png` | The icon, 160 × 160 | The mark on the store set's dark tile, with no text, as the store asks |
+| `playforge-card-420x280.png` | The card, 420 × 280 | A frame of Survivors' horde, under the mark and the title |
+| `playforge-cover-1950x1300.png` | The cover, 1950 × 1300 | The same frame, with the title and "for Unity 6" |
+
+Beside them are their sources: `playforge-icon-1024.png`, the icon at 1024 × 1024 for anything else that takes a
+square; `playforge-icon.svg`, the icon as a vector with its tile; and `playforge-mark.svg`, the mark alone, in the
+lighter colors the card and the cover draw it in, for a dark background.
+
+The frame is Survivors staged as the trailer's fight, 10.5 seconds in: the hero with its abilities at their most, in a
+horde of every kind. It's the camera alone, with no HUD, rendered at twice the cover's size and scaled down. The
+card's text is the listing's name alone, "PlayForge: Gameplay Ability System", as the store allows a card no text but
+its title and its publisher's name; the cover adds "for Unity 6". Unity's own logo stays out of both.
 
 ## Still to make by hand
 
-- **The key images.** The card (420 × 280) and the cover (1950 × 1300), each with the wordmark; the icon is `icon/`.
-  Unity's own logo stays out. `01-survivors.png`'s frame may make a livelier cover base than `cover-base.png`.
 - **The voice-over**, to `VIDEO_SCRIPT.md`.
 - **PlayForge Process Sequencer's key images**, its icon, card and cover, as PlayForge's are.
