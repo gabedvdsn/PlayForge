@@ -1,5 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-1.5 -2 31 31" width="32" height="32">
   <title>PlayForge</title>
-  <path fill="#e2622a" d="M22 1l1.2 2.8L26 5l-2.8 1.2L22 9l-1.2-2.8L18 5l2.8-1.2z"/>
   <path fill="#8a93a3" d="M1 10h26v3c0 2-2 3-4 3h-4l1 5h4v4H8v-4h4l1-5h-3c-4 0-7-2-9-6z"/>
+  <path fill="#e2622a" stroke="#e2622a" stroke-width="1.4" stroke-linejoin="round" d="M11.2 2.6v6.6l7.4-3.3z"/>
 </svg>
