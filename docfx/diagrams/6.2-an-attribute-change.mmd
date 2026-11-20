@@ -1,19 +1,50 @@
-flowchart TD
+---
+config:
+  flowchart:
+    wrappingWidth: 210
+    padding: 8
+    nodeSpacing: 30
+    rankSpacing: 30
+---
+flowchart TB
 classDef general fill:#FFE86D,stroke:#CBB333,color:#574900
-classDef decision fill:#A0C4FB,stroke:#6A8BBF,color:#14315E
 classDef terminator fill:#DDDDD8,stroke:#A8A8A0,color:#434339
-v(["a verb: RegisterModifier (Continuous), UnregisterModifier (its reversal),<br/>CommitImpact (permanent) or ModifyAttribute (a Commit with no impacters)"]):::terminator
+subgraph r1 ["The call"]
+direction LR
+v("a verb: RegisterModifier (Continuous), UnregisterModifier (its reversal), CommitImpact (permanent) or ModifyAttribute (a Commit with no impacters)"):::terminator
 c1["CommitWithCarrier(attr, smav, runEvents, mode, impacters)"]:::general
-m{"mode?"}:::decision
-f["freeze the impacters: ScalerImpacter.Evaluate,<br/>ValuePipeline.Run, the modifier stages through RunAfter,<br/>then CachedAttributeValue.PreviewCommit makes the ChangeValue"]:::general
-pre["Callbacks.AttributePreChange(attr, change)<br/>then, when runEvents, the PreChange attribute workers:<br/>PreValidateWorkFor, ValidateWorkFor, an inline Intercept<br/>that may edit the change, or DeferredIntercept actions"]:::general
-soak["Commit only: a workable loss soaks into the Barrier-role<br/>attributes that absorb for it, and a workable gain<br/>is scaled by GainsScaledBy"]:::general
-arc["apply: Register adds the modifier, Unregister removes it,<br/>Commit records it under its retention group<br/>Recompute: root, Adds, Multiply, FlatBonus, the commits,<br/>Override (the lowest SortOrder wins)<br/>constrain: overflow clamp, rounding, AutoScaleWithBase"]:::general
-post["the PostChange attribute workers,<br/>then Callbacks.AttributePostChange"]:::general
-id["ImpactData.Generate: the target's RecordFrameImpactReceived<br/>(FrameSummary, OnImpactReceived, the combat log, IMPACT_TAKEN),<br/>then the dealer's ProvideFrameImpactDealt"]:::general
-cb["Callbacks.AttributeChanged, AttributeBaseChanged,<br/>AttributeCurrentZero or AttributeCurrentFull<br/>regulated attributes: RefreshRegulatedAttributes recomputes<br/>the dependents and runs their post-change workers and callbacks"]:::general
-eof(["at the end of frame: the deferred actions,<br/>the analysis workers and WatchProjectHealth"]):::terminator
-v --> c1 --> m
-m -->|Commit| f --> pre
-m -->|Register or Unregister| pre
-pre --> soak --> arc --> post --> id --> cb --> eof
+v --> c1
+end
+subgraph r2 ["Before the change"]
+direction LR
+f["Commit only: freeze the impacters: ScalerImpacter.Evaluate, ValuePipeline.Run, the modifier stages through RunAfter, then CachedAttributeValue<br/>.PreviewCommit makes the ChangeValue"]:::general
+pre["Callbacks.AttributePreChange<br/>(attr, change), then, when runEvents, the PreChange workers: PreValidateWorkFor, ValidateWorkFor, an inline Intercept that may edit the change, or DeferredIntercept actions"]:::general
+soak["Commit only: a workable loss soaks into the Barrier-role attributes that absorb for it, and a workable gain is scaled by GainsScaledBy"]:::general
+f --> pre --> soak
+end
+subgraph r3 ["The change"]
+direction LR
+ap["apply: Register adds the modifier, Unregister removes it, Commit records it under its retention group"]:::general
+rc["Recompute: root, Adds, Multiply, FlatBonus, the commits, Override (the lowest SortOrder wins)"]:::general
+cn["constrain: overflow clamp, rounding, AutoScaleWithBase"]:::general
+ap --> rc --> cn
+end
+subgraph r4 ["After the change"]
+direction LR
+post["the PostChange attribute workers, then Callbacks<br/>.AttributePostChange"]:::general
+imp["ImpactData.Generate: the target's RecordFrameImpactReceived (FrameSummary, OnImpactReceived, the combat log, IMPACT_TAKEN), then the dealer's ProvideFrameImpactDealt"]:::general
+cb["Callbacks.AttributeChanged, AttributeBaseChanged, AttributeCurrentZero or AttributeCurrentFull"]:::general
+post --> imp --> cb
+end
+subgraph r5 ["Then"]
+direction LR
+reg["regulated attributes: RefreshRegulatedAttributes recomputes the dependents and runs their post-change workers and callbacks"]:::general
+eof("at the end of frame: the deferred actions, the analysis workers and WatchProjectHealth"):::terminator
+reg --> eof
+end
+r1 ==> r2 ==> r3 ==> r4 ==> r5
+style r1 fill:none,stroke:none
+style r2 fill:none,stroke:none
+style r3 fill:none,stroke:none
+style r4 fill:none,stroke:none
+style r5 fill:none,stroke:none

@@ -1,30 +1,45 @@
-flowchart TD
+---
+config:
+  flowchart:
+    wrappingWidth: 210
+    padding: 8
+    nodeSpacing: 30
+    rankSpacing: 30
+---
+flowchart TB
 classDef general fill:#FFE86D,stroke:#CBB333,color:#574900
 classDef decision fill:#A0C4FB,stroke:#6A8BBF,color:#14315E
 classDef terminator fill:#DDDDD8,stroke:#A8A8A0,color:#434339
-t1(["DeathWatcherAnalysisWorker<br/>reaches its threshold<br/>at the end of frame"]):::terminator
-t2(["GASCore.WatchProjectHealth<br/>the Health-role attribute is at or below 0,<br/>DiesAtZeroHealth is on, no death watcher"]):::terminator
+subgraph r1 ["Death"]
+direction LR
+t1("DeathWatcherAnalysisWorker reaches its threshold at the end of frame: a DeathAction, Critical"):::terminator
+t2("GASCore.WatchProjectHealth: the Health-role attribute is at or below 0, DiesAtZeroHealth is on, no death watcher: a DeathAction, Critical"):::terminator
 t3(["code calls gas.MarkDead()"]):::terminator
-da["DeathAction, Critical"]:::general
-md["GASCore.MarkDead<br/>IsDead = true, EntityDied, FrameSummary<br/>the killer is the source of the last workable loss<br/>sends DIED to itself and KILL to the killer"]:::general
-ec["each entity component's Death(ctx)<br/>Bounty gives its effect to the killer and allies<br/>Respawn calls RespawnTimer.ReviveIn(delay, place)<br/>EffectSystem.HearDeath(): effect components' Death"]:::general
-p{"EntityDeath<br/>policy?"}:::decision
-st["Stay: at the end of frame, Die()<br/>ForgePurge.PurgeOnDeath when Purges is set<br/>end the body, apply the OnDeath effects"]:::general
-st2(["stays registered: its abilities refuse as Dead,<br/>and others' effects are refused"]):::terminator
-en["End: at the end of frame<br/>Callbacks.SystemDisabled,<br/>then the hub's HandleDestruction()"]:::general
-mono["Mono hub: Relay.TerminateImmediate(),<br/>else Destroy(gameObject)"]:::general
-rth["Runtime hub: Relay.Terminate(),<br/>which queues"]:::general
-wt(["hub.WhenTerminate(), GASCore.WhenTerminate()<br/>components End, services End, transfers given back,<br/>sides cleared, AbilitySystem.ShutDown, ForgeEntities.Remove"]):::terminator
-rv(["Revive, Stay only: a RespawnTimer's countdown,<br/>ReviveOnRemovalEffectWorker, or gas.Revive(at)"]):::terminator
-r1["GASCore.Revive: IsDead = false, services Revive, analysis workers Rearm<br/>the OnRevive effects, spawn the body<br/>Callbacks.EntityRevived, REVIVED, components Revive"]:::general
-t1 --> da
-t2 --> da
-da --> md
+md["GASCore.MarkDead: IsDead = true, EntityDied, FrameSummary; the killer is the source of the last workable loss; sends DIED to itself and KILL to the killer"]:::general
+ec["each entity component's Death(ctx): Bounty gives its effect to the killer and allies; Respawn calls RespawnTimer.ReviveIn(delay, place); EffectSystem.HearDeath() runs effect components' Death"]:::general
+t1 --> md
+t2 --> md
 t3 --> md
-md --> ec --> p
+md --> ec
+end
+subgraph r2 ["At the end of frame"]
+direction LR
+p{"EntityDeath<br/>policy?"}:::decision
+st["Stay: Die(), ForgePurge.PurgeOnDeath when Purges is set, end the body, apply the OnDeath effects"]:::general
+st2("stays registered: its abilities refuse as Dead, and others' effects are refused"):::terminator
+en["End: Callbacks.SystemDisabled, then the hub's HandleDestruction(): a Mono hub's Relay.TerminateImmediate(), else Destroy(gameObject); a runtime hub's Relay.Terminate(), which queues"]:::general
+wt("hub.WhenTerminate(), GASCore.WhenTerminate(): components End, services End, transfers given back, sides cleared, AbilitySystem.ShutDown, ForgeEntities.Remove"):::terminator
 p -->|Stay| st --> st2
-p -->|End| en
-en --> mono --> wt
-en --> rth --> wt
-st2 -.-> rv
-rv --> r1
+p -->|End| en --> wt
+end
+subgraph r3 ["Revive, Stay only"]
+direction LR
+rv("a RespawnTimer's countdown, ReviveOnRemovalEffectWorker, or gas.Revive(at)"):::terminator
+rev["GASCore.Revive: IsDead = false, services Revive, analysis workers Rearm, the OnRevive effects, spawn the body; Callbacks.EntityRevived, REVIVED, components Revive"]:::general
+rv --> rev
+end
+r1 ==> r2
+r2 -.->|later| r3
+style r1 fill:none,stroke:none
+style r2 fill:none,stroke:none
+style r3 fill:none,stroke:none

@@ -1,32 +1,56 @@
-flowchart TD
+---
+config:
+  flowchart:
+    wrappingWidth: 190
+    padding: 8
+    nodeSpacing: 30
+    rankSpacing: 30
+---
+flowchart TB
 classDef general fill:#FFE86D,stroke:#CBB333,color:#574900
 classDef decision fill:#A0C4FB,stroke:#6A8BBF,color:#14315E
 classDef terminator fill:#DDDDD8,stroke:#A8A8A0,color:#434339
-s(["number.Evaluate(NumberContext.Of(x)), where x is a spec,<br/>container, packet, worker context, entity, cue or ItemSpec<br/>tasks call Read(number, data), abilities AbilitySpec.Read"]):::terminator
-i["at spec creation, Initialize(spec) takes snapshots:<br/>a times-Attribute read OnCreation, a Randomized roll"]:::general
-c{"IsConstant?<br/>no scaler, or UseMagnitude"}:::decision
+subgraph r1 ["The call"]
+direction LR
+s("number.Evaluate<br/>(NumberContext.Of(x)), where x is a spec, container, packet, worker context, entity, cue or ItemSpec; tasks call Read(number, data), abilities AbilitySpec.Read"):::terminator
+i["at spec creation, Initialize(spec) takes snapshots: a times-Attribute read OnCreation, a Randomized roll"]:::general
+s --> i
+end
+subgraph r2 ["The checks"]
+direction LR
+c{"IsConstant?<br/>(no scaler, or<br/>UseMagnitude)"}:::decision
 k(["Constant"]):::terminator
-r{"does a NumberKind read what<br/>the context cannot provide?"}:::decision
-fb(["Magnitude on the context path, logged once,<br/>or the kind's Fallback on the carrier path"]):::terminator
-sc{"which scaler?"}:::decision
-nk["a NumberKind: Evaluate(in ctx)<br/>attributes, stacks, Local Data, tracked impacts,<br/>NumberWorkers.TryAsk, set-by-caller, sibling fields, conditions"]:::general
-grp["a ScalerGroup: its members,<br/>combined by EGroupOperation"]:::general
-pl["a plain scaler: Evaluate(ctx.Carrier),<br/>or through the internal NumberBridge"]:::general
-lv["the level: carrier.GetOrigin().GetLevel()<br/>an AbilitySpec or ItemSpec reads Source.GetLevel(assetTag),<br/>an entity its own, a LevelerEffectOrigin its fixed level"]:::general
-tb["the table LevelValues, or the Scaling curve<br/>over a max set by ELevelConfig:<br/>LockToLevelProvider, Unlocked or Clamped"]:::general
-bh["then the AbstractScalerBehaviour chain"]:::general
-cm["combine Magnitude and the scaler by EMagnitudeOperation:<br/>MultiplyWithScaler, AddScaler, UseMagnitude, UseScaler<br/>a ScalableInt then applies its Rounding"]:::general
-ip(["in an impact commit, the entry's ValuePipeline.Run<br/>and the modifier stages follow"]):::terminator
-s --> i --> c
+r{"a NumberKind<br/>reading what the<br/>context lacks?"}:::decision
+fb("Magnitude on the context path, logged once, or the kind's Fallback on the carrier path"):::terminator
 c -->|yes| k
 c -->|no| r
 r -->|yes| fb
-r -->|no| sc
-sc -->|NumberKind| nk
-sc -->|ScalerGroup| grp
-sc -->|plain| pl
-pl --> lv --> tb --> bh
-nk --> cm
-grp --> cm
-bh --> cm
+end
+subgraph r3 ["Which scaler?"]
+direction TB
+nk["a NumberKind: Evaluate(in ctx): attributes, stacks, Local Data, tracked impacts, NumberWorkers.TryAsk, set-by-caller, sibling fields, conditions"]:::general
+grp["a ScalerGroup: its members, combined by EGroupOperation"]:::general
+subgraph r3p [" "]
+direction LR
+pl["a plain scaler: Evaluate(ctx.Carrier), or through the internal NumberBridge"]:::general
+lv["the level: carrier.GetOrigin()<br/>.GetLevel(); an AbilitySpec or ItemSpec reads Source.GetLevel(assetTag), an entity its own, a LevelerEffectOrigin its fixed level"]:::general
+tb["the table LevelValues, or the Scaling curve over a max set by ELevelConfig: LockToLevelProvider, Unlocked or Clamped; then the AbstractScalerBehaviour chain"]:::general
+pl --> lv --> tb
+end
+nk ~~~ r3p
+grp ~~~ r3p
+end
+subgraph r4 ["The value"]
+direction LR
+cm["combine Magnitude and the scaler by EMagnitudeOperation: MultiplyWithScaler, AddScaler, UseMagnitude, UseScaler; then a ScalableInt applies its Rounding"]:::general
+ip("in an impact commit, the entry's ValuePipeline.Run and the modifier stages follow"):::terminator
 cm --> ip
+end
+r1 ==> r2
+r2 ==>|no| r3
+r3 ==> r4
+style r1 fill:none,stroke:none
+style r2 fill:none,stroke:none
+style r3 fill:none,stroke:none
+style r3p fill:none,stroke:none
+style r4 fill:none,stroke:none
