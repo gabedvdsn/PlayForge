@@ -1761,6 +1761,16 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 
 Record baselines, gate results and notable decisions here, newest first.
 
+- 2026-11-20, **SP-33: the final export, PlayForge 1.0.0 from 00fc317f.** The user's word, "Yes, run them".
+  - Proving Grounds' `export-unitypackage.py --tests --build`, with `--out C:\Users\17074\Documents\PlayForgeRelease`:
+    `PlayForge-1.0.0.unitypackage`, 2.6 MB; a fresh project's import with no error or warning; 0 missing scripts,
+    references or types in the samples; the golden tests 25 of 25; and the Windows player with 0 errors and 0
+    warnings, 85 MB.
+  - Then `smoke-check.py`: The Forge, the Debugger and Problems opened, 3 of 3, and Sparring, Battle, the Demo and
+    Survivors each played 10 seconds with no error, 5 of 5. Additional Content warned, as it should, of no TextMeshPro
+    Essential Resources.
+  - The folder's `build` stays for the Asset Store Tools' upload, and its `check` for the look by hand.
+
 - 2026-11-20, **SP-31: the 1.0.0 entry dated.** The user's word, "Yes, set it": `CHANGELOG.md`'s 1.0.0 entry is dated
   2026-11-20, the day of the final export, in place of Unreleased. No runtime change, so no gate run.
 

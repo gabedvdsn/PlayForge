@@ -72,10 +72,12 @@ reserved all rights, is gone; the Demo has an outline of its own.
 `python Tools/export-unitypackage.py --tests --build`, in Proving Grounds, does the first four. After it,
 `python Tools/smoke-check.py` does 5 and 6 as far as a machine can, in the check project, the package where a buyer's
 import puts it (SP-39). It opens the windows from their menus and plays each sample scene for 10 seconds, failing on
-anything logged. The rest is by hand. The four passed again on 2026-11-19 on PlayForge a3e5715e, after FEAT-41 and
-SP-40: a 2.6 MB package, no warning on import, 0 missing in the samples, the golden tests 25 of 25, and the player built
-with 0 errors and 0 warnings. The smoke passed there too: the three windows opened and the four sample scenes played
-with no error. Additional Content warned, as it should, that the fresh project has no TextMeshPro Essential Resources.
+anything logged. The rest is by hand. The final export passed all four on 2026-11-20 on PlayForge 00fc317f, with
+`--out C:\Users\17074\Documents\PlayForgeRelease`: a 2.6 MB `PlayForge-1.0.0.unitypackage`, no warning on import, 0
+missing in the samples, the golden tests 25 of 25, and the player built with 0 errors and 0 warnings. The smoke passed
+there too: the three windows opened and the four sample scenes played with no error. Additional Content warned, as it
+should, that the fresh project has no TextMeshPro Essential Resources. That folder's `build` is the project to upload
+from, and its `check` the one for the look by hand.
 
 1. ☑ Export `Assets/Plugins/PlayForge` (and nothing else) as a `.unitypackage`.
 2. ☑ Import it into a **brand-new** Unity 6 project.
@@ -83,8 +85,8 @@ with no error. Additional Content warned, as it should, that the fresh project h
    the samples. `Tools/clean-import.py` checks the UPM import the same way.
 4. ☑ Run the golden tests, and make a **Windows standalone build** (an IL2CPP one too, if claiming support): with no
    scene enabled in the build settings, `BuildVerification` builds an empty scene it makes for the purpose.
-5. ☐ In the check project, `%TEMP%\claude\export\check`, open The Forge and the Debugger. `smoke-check.py` opens them
-   and Problems from `Window/PlayForge`; a look at them by hand remains.
+5. ☐ In the check project, the export's `check` (`%TEMP%\claude\export\check` by default), open The Forge and the
+   Debugger. `smoke-check.py` opens them and Problems from `Window/PlayForge`; a look at them by hand remains.
 6. ☐ Open and play each sample scene. `smoke-check.py` plays each for 10 seconds; playing them by hand remains, the
    Demo and Survivors above all.
 
