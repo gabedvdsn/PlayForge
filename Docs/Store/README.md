@@ -71,9 +71,22 @@ A 1:31 film of Survivors, the Demo, the tools and the diagrams, with no sound, f
 its script, timed to its cuts. The film itself, `video/PlayForge-trailer.mp4`, stays out of git; upload it to YouTube or
 Vimeo for the listing's video.
 
+## The icon
+
+`icon/` is PlayForge's anvil, the docs site's logo, centered on a square (EP-88):
+
+| File | Size | Background |
+|---|---|---|
+| `playforge-icon-160-dark.png` | 160 × 160, the store's icon | The store set's dark tile |
+| `playforge-icon-160.png` | 160 × 160 | None |
+| `playforge-icon-512-dark.png` | 512 × 512 | The store set's dark tile |
+| `playforge-icon-512.png` | 512 × 512 | None |
+| `playforge-icon-1024.png` | 1024 × 1024 | None |
+| `playforge-icon.svg` | Any: the square vector, for the card and the cover | None |
+
 ## Still to make by hand
 
-- **The key images.** The icon (160 × 160), the card (420 × 280) and the cover (1950 × 1300), each with the wordmark.
+- **The key images.** The card (420 × 280) and the cover (1950 × 1300), each with the wordmark; the icon is `icon/`.
   Unity's own logo stays out. `01-survivors.png`'s frame may make a livelier cover base than `cover-base.png`.
 - **The voice-over**, to `VIDEO_SCRIPT.md`.
 - **PlayForge Process Sequencer's key images**, its icon, card and cover, as PlayForge's are.
