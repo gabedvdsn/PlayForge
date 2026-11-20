@@ -56,12 +56,12 @@ what they did.
 **Documentation**: guides and an API reference at https://gabedvdsn.github.io/PlayForge-Docs/. Each (?) button in
 PlayForge's inspectors and The Forge opens its page.
 
-## PlayForge and PlayForge Core
+## PlayForge and PlayForge Process Sequencer
 
-PlayForge Core, sold on its own, is ProcessControl and task sequences without the ability system
-(`LISTING_CORE.md`). Both listings carry this table (rule 3.1.c).
+PlayForge Process Sequencer, sold on its own, is ProcessControl and task sequences without the ability system
+(`LISTING_SEQUENCER.md`). Both listings carry this table (rule 3.1.c).
 
-| | PlayForge | PlayForge Core |
+| | PlayForge | PlayForge Process Sequencer |
 | --- | --- | --- |
 | ProcessControl: processes, lifecycles, timing, priorities, groups, fixed ticks | Yes | Yes |
 | Task sequences, both task libraries and clocks | Yes | Yes |

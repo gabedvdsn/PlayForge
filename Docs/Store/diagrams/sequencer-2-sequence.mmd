@@ -1,0 +1,23 @@
+flowchart TB
+classDef step fill:#FFF0B3,stroke:#CBB333,color:#463A00
+classDef check fill:#DCE8FC,stroke:#6A8BBF,color:#14315E
+classDef end_ fill:#E4E4DF,stroke:#A8A8A0,color:#3A3A33
+subgraph first[" "]
+direction LR
+build(["<b>Build</b><br/>from the builder,<br/>in code"]):::end_
+stage["<b>Stages</b><br/>one after another;<br/>each done when all,<br/>any or N of its<br/>tasks are"]:::step
+task["<b>Tasks</b><br/>awaited, done at once,<br/>or stepped a frame<br/>at a time"]:::step
+run["<b>Run</b><br/>as a process:<br/>ProcessControl starts,<br/>pauses and ends it"]:::step
+build --> stage --> task --> run
+end
+subgraph second[" "]
+direction LR
+waits["<b>Waits and repeats</b><br/>timers, input and<br/>branches, by the<br/>run's own clock"]:::step
+change["<b>Changes</b><br/>a condition, a task or<br/>outside code skips,<br/>jumps or interrupts"]:::check
+ends["<b>Endings</b><br/>done, stopped, out<br/>of time; its handlers<br/>hear which"]:::check
+done(["<b>Next</b><br/>a chain runs the next<br/>on the same packet"]):::end_
+waits --> change --> ends --> done
+end
+first ==> second
+style first fill:none,stroke:none
+style second fill:none,stroke:none

@@ -1,8 +1,9 @@
-# PlayForge Core's Asset Store listing: a draft
+# PlayForge Process Sequencer's Asset Store listing: a draft
 
-A draft of the core edition's listing (EP-84), for the user's word before it goes into the publisher portal, as
-`LISTING.md` is the full package's. PlayForge Core is the full package's own files with the ability system left out:
-Proving Grounds' `Tests/Editor/CoreEdition.txt` names them, and its `CoreEditionTests` compile them with nothing else.
+A draft of the core edition's listing (EP-84, its name EP-86), for the user's word before it goes into the publisher
+portal, as `LISTING.md` is the full package's. PlayForge Process Sequencer is the full package's own files with the
+ability system left out: Proving Grounds' `Tests/Editor/CoreEdition.txt` names them, and its `CoreEditionTests`
+compile them with nothing else.
 Each claim here comes from those files, the two guides it ships and its samples' descriptions. The price, the category
 and the publisher's name are the user's to set, and the portal's own length limits come first.
 
@@ -12,7 +13,7 @@ listings say plainly what each has, and each carries the comparison below (rule 
 
 ## Name
 
-PlayForge Core: Process Control and Task Sequences
+PlayForge Process Sequencer: Task Sequences and Process Control
 
 ## Summary
 
@@ -21,10 +22,10 @@ player loop, and staged workflows built in code, with a live debugger.
 
 ## Description
 
-PlayForge Core is the part of PlayForge that everything else runs on. ProcessControl schedules every process from
-Unity's player loop, and task sequences run staged workflows, built in code on UniTask. It has no ability system: no
-abilities, effects, attributes or items. It is the same code as PlayForge's, so PlayForge imports over it, and code
-written for PlayForge Core runs unchanged.
+PlayForge Process Sequencer is the part of PlayForge that everything else runs on. ProcessControl schedules every
+process from Unity's player loop, and task sequences run staged workflows, built in code on UniTask. It has no ability
+system: no abilities, effects, attributes or items. It is the same code as PlayForge's, so PlayForge imports over it,
+and code written for PlayForge Process Sequencer runs unchanged.
 
 **Processes**
 
@@ -64,11 +65,11 @@ Full C# source.
 **Documentation**: the Processes and Task Sequences guides, in the package and at
 https://gabedvdsn.github.io/PlayForge-Docs/.
 
-## PlayForge Core and PlayForge
+## PlayForge Process Sequencer and PlayForge
 
 Both listings carry this table.
 
-| | PlayForge Core | PlayForge |
+| | PlayForge Process Sequencer | PlayForge |
 | --- | --- | --- |
 | ProcessControl: processes, lifecycles, timing, priorities, groups, fixed ticks | Yes | Yes |
 | Task sequences, both task libraries and clocks | Yes | Yes |
@@ -91,8 +92,12 @@ Both listings carry this table.
 - The Input System is optional: input waits read it where the project has it, and the Input Manager otherwise.
 - Works with domain reloading off.
 - The package goes in `Assets/Plugins/PlayForge`. A **Process Bootstrapper** in a scene brings ProcessControl up.
-- Moving up to PlayForge: import it over PlayForge Core. Every file keeps its GUID and its assembly, so nothing in
-  your project needs changing.
+- Moving up to PlayForge: import it over PlayForge Process Sequencer. Every file keeps its GUID and its assembly, so
+  nothing in your project needs changing.
+
+## Screenshots
+
+The set to upload, in order, is `process-sequencer/`, which the store folder's README lists (EP-86).
 
 ## Keywords
 

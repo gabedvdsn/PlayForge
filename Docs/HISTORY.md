@@ -10,9 +10,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## Toward 1.0.0, since 0.1.0
 
 ### Added
-- **PlayForge Core** (EP-84): ProcessControl and task sequences, sold on their own, as the package's own files with
-  the ability system left out, each keeping its GUID and assembly, so PlayForge imports over it. A **Process
-  Bootstrapper** brings ProcessControl up in a scene with no entities, as `ProcessControl.BringUp` does from code.
+- **PlayForge Process Sequencer** (EP-84, EP-86): ProcessControl and task sequences, sold on their own, as the
+  package's own files with the ability system left out, each keeping its GUID and assembly, so PlayForge imports over
+  it. A **Process Bootstrapper** brings ProcessControl up in a scene with no entities, as `ProcessControl.BringUp`
+  does from code.
 - `IProcessOwner` (EP-84): what owns processes. ProcessControl counts a process under its handler, where that's an
   owner, or else its packet's new `Source`, and the work done with the packet runs by its clock. An entity is one.
 - `ProcessControl.DefaultHandler` and `DefaultParent` (EP-84): the handler a registration naming none takes, and what

@@ -21,7 +21,7 @@ namespace FarEmerald.PlayForge.Editor
     /// while the game plays. Outside Play mode it offers Play Mode. The GAS Debugger scanned the scene for
     /// MonoBehaviour hubs and rebuilt its details every 0.25 s; Process Control and the Tag Debugger were IMGUI
     /// windows of their own. The Entities, Tags and Timeline views come with the ability system, in files of their own
-    /// that this one's hooks call, so PlayForge Core, which has none, has the Processes view alone.
+    /// that this one's hooks call, so PlayForge Process Sequencer, which has none, has the Processes view alone.
     /// </summary>
     public sealed partial class RuntimeDebugger : EditorWindow, IHasCustomMenu
     {
@@ -38,7 +38,7 @@ namespace FarEmerald.PlayForge.Editor
         // How many windows time the processes' steps, so the last one to stop turns the timing off
         private static int timing;
 
-        // The views; PlayForge Core has the Processes view alone
+        // The views; PlayForge Process Sequencer has the Processes view alone
         private enum View
         {
             Entities,
@@ -389,7 +389,8 @@ namespace FarEmerald.PlayForge.Editor
         {
             if (views == null) return;
             bool live = Live();
-            // A view the package doesn't have, as PlayForge Core has no Entities view, gives way to the Processes view
+            // A view the package doesn't have, as PlayForge Process Sequencer has no Entities view, gives way to the
+            // Processes view
             if (!viewToggles.ContainsKey(view)) view = View.Processes;
             foreach (var (each, toggle) in viewToggles) toggle.SetValueWithoutNotify(each == view);
             ForgeStack.Show(processesView, view == View.Processes);
@@ -514,7 +515,7 @@ namespace FarEmerald.PlayForge.Editor
         // ═══════════════════════════════════════════════════════════════════════════
 
         // The hooks the Entities, Tags and Timeline views fill, where the package has the ability system. Without it,
-        // as in PlayForge Core, each is nothing, and the window has the Processes view alone
+        // as in PlayForge Process Sequencer, each is nothing, and the window has the Processes view alone
         partial void EnableAbilityViews();
         partial void DisableAbilityViews();
         partial void AddAbilityViewToggles(List<(View View, string Text, string Tip)> toggles);

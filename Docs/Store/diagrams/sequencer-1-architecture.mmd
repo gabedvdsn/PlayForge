@@ -1,0 +1,22 @@
+flowchart LR
+classDef tool fill:#E7EEFB,stroke:#7A92C2,color:#1C2B4A
+classDef core fill:#FFF0B3,stroke:#CBB333,color:#463A00
+subgraph W["Write in code"]
+direction TB
+seq["<b>Task sequences</b><br/>stages of tasks, with<br/>waits, conditions,<br/>timers and chains"]:::core
+proc["<b>Processes</b><br/>your MonoBehaviours<br/>and C# classes, each<br/>registered in one call"]:::core
+seq ~~~ proc
+end
+subgraph R["Run in play"]
+direction TB
+pc["<b>ProcessControl</b><br/>every process stepped<br/>from Unity's player loop,<br/>by lifecycle and priority"]:::core
+groups["<b>Groups and clocks</b><br/>caps and shared data;<br/>game, unscaled or scaled<br/>time, and fixed ticks"]:::core
+pc ~~~ groups
+end
+subgraph S["See what happens"]
+direction TB
+debugger["<b>The Debugger</b><br/>every process, its state<br/>and its steps' time, live"]:::tool
+profiler["<b>The Profiler</b><br/>its counters, and each<br/>frame's costliest<br/>processes"]:::tool
+debugger ~~~ profiler
+end
+W ==> R ==> S

@@ -45,6 +45,26 @@ The diagrams' sources are in `diagrams/`. They're Mermaid, drawn with the docs s
 simplified from the docs' diagrams of the same flows. Each runs in rows or columns, never one long line, so it stays
 legible at the store's small size.
 
+## PlayForge Process Sequencer's set
+
+`process-sequencer/` is PlayForge Process Sequencer's set to upload, in this order (EP-86). Each image is 1920 × 1080
+with its caption on it. The editor shots come from the edition's own check project, where the Debugger has the
+Processes view alone. The code shots show the samples' own code, as they ship.
+
+| # | File | Shows |
+|---|---|---|
+| 1 | `01-scene.png` | The samples' synced sequences in play, beside one's inspector |
+| 2 | `02-code-recall.png` | Code: a recall, cut short by a hit or a move |
+| 3 | `03-debugger.png` | The Debugger's Processes view, live |
+| 4 | `04-code-charged-shot.png` | Code: a charged shot, racing input against a full draw |
+| 5 | `05-code-timed-buff.png` | Code: a buff, a process of its own |
+| 6 | `06-code-process-groups.png` | Code: a process group, capped at three |
+| 7 | `07-profiler.png` | The Profiler's PlayForge Processes module, cropped to it |
+| 8 | `08-architecture.png` | Diagram: how it fits together |
+| 9 | `09-sequence-flow.png` | Diagram: a sequence, from build to end |
+
+Its diagrams' sources are `diagrams/sequencer-1-architecture.mmd` and `diagrams/sequencer-2-sequence.mmd`.
+
 ## The trailer
 
 A 1:31 film of Survivors, the Demo, the tools and the diagrams, with no sound, for a voice-over. `VIDEO_SCRIPT.md` is
@@ -56,3 +76,4 @@ Vimeo for the listing's video.
 - **The key images.** The icon (160 × 160), the card (420 × 280) and the cover (1950 × 1300), each with the wordmark.
   Unity's own logo stays out. `01-survivors.png`'s frame may make a livelier cover base than `cover-base.png`.
 - **The voice-over**, to `VIDEO_SCRIPT.md`.
+- **PlayForge Process Sequencer's key images**, its icon, card and cover, as PlayForge's are.

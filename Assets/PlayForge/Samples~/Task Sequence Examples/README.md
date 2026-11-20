@@ -34,8 +34,8 @@ for, in the Console.
 ### From an ability
 
 With the full package, an ability's **Sequence** task lists every `[TaskSequenceMethod]` in its dropdown. Pick an
-example there, and the ability runs it as it activates, on the ability's own packet. PlayForge Core has no abilities,
-so it runs them the other ways.
+example there, and the ability runs it as it activates, on the ability's own packet. PlayForge Process Sequencer has
+no abilities, so it runs them the other ways.
 
 ### With the runner
 
