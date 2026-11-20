@@ -6,9 +6,10 @@ using Object = UnityEngine.Object;
 namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
-    /// What The Forge's summary says of an asset whose inspector has no sections to summarize it: a Scaler asset and a
-    /// Requirement Template. Each's summary was empty, and its description could only be read in the box that edits it.
-    /// The summary says the description, as text, and a line for each of its parts.
+    /// What The Forge's summary says of an asset whose inspector has no sections to summarize it: a Scaler asset, a
+    /// Requirement Template, and the rules assets, a Value Pipeline, an Effect Modifier and Crowd Control Rules. Each's
+    /// summary was empty, and its description could only be read in the box that edits it. The summary says the
+    /// description, as text, and a line for each of its parts.
     /// </summary>
     internal static class ForgeSummaries
     {
@@ -18,6 +19,9 @@ namespace FarEmerald.PlayForge.Editor
             BaseForgeAsset forge => forge.GetDescription(),
             ScalerAsset scaler => scaler.Description,
             RequirementTemplate template => template.Description,
+            ValuePipeline pipeline => pipeline.Description,
+            EffectModifier modifier => modifier.Description,
+            CrowdControlRules rules => rules.Description,
             _ => null,
         };
 
@@ -39,6 +43,33 @@ namespace FarEmerald.PlayForge.Editor
                     yield return ("Requires", Tags(group?.RequireTags));
                     yield return ("Must Not Have", Tags(group?.AvoidTags));
                     break;
+
+                case ValuePipeline pipeline:
+                    // In order, each by its label or what it does, as "Armor → Barrier → × 2 on a 10% chance"
+                    yield return ("Stages", Listed((pipeline.Stages ?? Enumerable.Empty<AbstractValueStage>())
+                        .Where(stage => stage != null)
+                        .Select(stage => stage.Enabled ? stage.Name() : $"{stage.Name()} (off)"), " → "));
+                    break;
+
+                case EffectModifier modifier:
+                    var rule = modifier.Rule;
+                    if (rule == null) break;
+                    yield return ("Direction", rule.Direction.ToString());
+                    // No tags picks every effect
+                    yield return ("Tags", rule.EffectTags is { Count: > 0 } ? Tags(rule.EffectTags) : "Every effect");
+                    // No condition always holds
+                    yield return ("When", rule.When == null ? "Always" : NumberText.Of(rule.When));
+                    yield return ("Changes", Listed((rule.Changes ?? Enumerable.Empty<AbstractEffectChange>())
+                        .Where(change => change != null)
+                        .Select(change => change.Describe()), " · "));
+                    break;
+
+                case CrowdControlRules rules:
+                    // Each rule's tag and what it stops, as "Stunned: every ability · Silenced: Spell"
+                    yield return ("Rules", Listed((rules.Rules ?? Enumerable.Empty<CrowdControlRule>())
+                        .Where(each => each != null && each.Tag.IsValid)
+                        .Select(each => $"{TheForge.TagText(each.Tag)}: {(each.Stops == ECrowdControlStops.EveryAbility ? "every ability" : Tags(each.AbilityTags))}"), " · "));
+                    break;
             }
         }
 
@@ -59,10 +90,17 @@ namespace FarEmerald.PlayForge.Editor
         }
 
         // Tags by their display names, as The Forge shows a tag, or None
-        private static string Tags(IEnumerable<TagQuery> queries)
+        private static string Tags(IEnumerable<TagQuery> queries) =>
+            Tags((queries ?? Enumerable.Empty<TagQuery>()).Where(query => query != null).Select(query => query.Tag));
+
+        private static string Tags(IEnumerable<Tag> tags) =>
+            Listed((tags ?? Enumerable.Empty<Tag>()).Where(tag => tag.IsValid).Select(TheForge.TagText), ", ");
+
+        // The parts joined, or None where there are none
+        private static string Listed(IEnumerable<string> parts, string separator)
         {
-            var names = (queries ?? Enumerable.Empty<TagQuery>()).Where(query => query != null && query.Tag.IsValid).Select(query => TheForge.TagText(query.Tag)).ToList();
-            return names.Count == 0 ? "None" : string.Join(", ", names);
+            var list = parts.ToList();
+            return list.Count == 0 ? "None" : string.Join(separator, list);
         }
     }
 }

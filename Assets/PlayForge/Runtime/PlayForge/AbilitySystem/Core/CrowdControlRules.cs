@@ -39,6 +39,10 @@ namespace FarEmerald.PlayForge
     [CreateAssetMenu(menuName = "PlayForge/Crowd Control Rules", fileName = "Crowd Control Rules", order = 44)]
     public class CrowdControlRules : ScriptableObject
     {
+        [Tooltip("Description of what these crowd control rules are used for")]
+        [TextArea(2, 4)]
+        public string Description;
+
         [Tooltip("Each rule: a tag its holder carries, and what that stops")]
         public List<CrowdControlRule> Rules = new();
 

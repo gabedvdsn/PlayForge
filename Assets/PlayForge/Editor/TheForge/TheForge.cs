@@ -785,7 +785,7 @@ namespace FarEmerald.PlayForge.Editor
             var title = new Label("Summary");
             title.AddToClassList("pf-forge__summary-title");
             summary.Add(title);
-            // A Scaler asset's and a Requirement Template's description too, as text to read
+            // A Scaler asset's, a Requirement Template's and a rules asset's description too, as text to read
             var description = ForgeSummaries.DescriptionOf(asset);
             if (!string.IsNullOrWhiteSpace(description))
             {
